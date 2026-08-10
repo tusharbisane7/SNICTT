@@ -73,6 +73,54 @@ const cleanMembership = (membership) => {
 };
 
 // =========================================================
+// HELPER - GET CLIENT URL
+// =========================================================
+// Production:
+// CLIENT_URL=https://your-netlify-site.netlify.app
+//
+// Local:
+// http://localhost:5173
+// =========================================================
+
+const getClientUrl = () => {
+  return (
+    process.env.CLIENT_URL ||
+    "http://localhost:5173"
+  ).replace(/\/+$/, "");
+};
+
+// =========================================================
+// HELPER - GENERATE MEMBERSHIP QR
+// =========================================================
+
+const generateMembershipQr = async (
+  membershipNumber
+) => {
+  const clientUrl =
+    getClientUrl();
+
+  const verificationUrl =
+    `${clientUrl}/membership/verify/${membershipNumber}`;
+
+  console.log(
+    "Generating membership QR:",
+    verificationUrl
+  );
+
+  return QRCode.toDataURL(
+    verificationUrl,
+    {
+      width: 500,
+
+      margin: 2,
+
+      errorCorrectionLevel:
+        "H",
+    }
+  );
+};
+
+// =========================================================
 // USER - GET MY MEMBERSHIP
 // GET /api/membership/me
 // =========================================================
@@ -634,6 +682,14 @@ const approveMembership =
       const adminId =
         req.adminId || null;
 
+      console.log(
+        "Approving membership:",
+        {
+          membershipId: id,
+          adminId,
+        }
+      );
+
       await client.query(
         "BEGIN"
       );
@@ -726,12 +782,6 @@ const approveMembership =
       // ===================================================
       // PREVENT DUPLICATE MEMBERSHIP NUMBER
       // ===================================================
-      //
-      // Advisory lock ensures that two admins approving
-      // at exactly the same time do not generate the
-      // same membership number.
-      //
-      // ===================================================
 
       await client.query(
         `
@@ -776,28 +826,9 @@ const approveMembership =
       // CREATE QR DATA
       // ===================================================
 
-      const clientUrl =
-        process.env.CLIENT_URL ||
-        "http://localhost:5173";
-
-      const verificationUrl =
-        `${clientUrl}/membership/verify/${membershipNumber}`;
-
-      // ===================================================
-      // GENERATE QR CODE
-      // ===================================================
-
       const qrCode =
-        await QRCode.toDataURL(
-          verificationUrl,
-          {
-            width: 500,
-
-            margin: 2,
-
-            errorCorrectionLevel:
-              "H",
-          }
+        await generateMembershipQr(
+          membershipNumber
         );
 
       // ===================================================
@@ -847,6 +878,11 @@ const approveMembership =
 
       await client.query(
         "COMMIT"
+      );
+
+      console.log(
+        "Membership approved:",
+        membershipNumber
       );
 
       return res.json({
@@ -1064,17 +1100,10 @@ const rejectMembership =
 // =========================================================
 
 module.exports = {
-
   getMyMembership,
-
   applyMembership,
-
   getAllMemberships,
-
   getMembershipById,
-
   approveMembership,
-
   rejectMembership,
-
 };

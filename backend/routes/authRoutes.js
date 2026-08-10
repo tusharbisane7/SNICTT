@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
   registerUser,
+  checkUsername,
   loginUser,
   forgotPassword,
   resetPassword,
@@ -11,79 +12,124 @@ const {
   logoutUser,
 } = require("../controllers/authController");
 
-const authMiddleware =
-  require("../middleware/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
-
 
 // =========================================================
 // PUBLIC ROUTES
 // =========================================================
 
-// Signup
+// =========================================================
+// CHECK USERNAME
+// GET /api/auth/check-username?username=test
+// =========================================================
+
+router.get(
+  "/check-username",
+  checkUsername
+);
+
+// =========================================================
+// REGISTER / SIGNUP
+// POST /api/auth/register
+// =========================================================
+
+router.post(
+  "/register",
+  registerUser
+);
+
+// =========================================================
+// OLD SIGNUP ROUTE
+// POST /api/auth/signup
+//
+// Kept for backward compatibility so existing frontend
+// code using /signup will continue to work.
+// =========================================================
+
 router.post(
   "/signup",
   registerUser
 );
 
+// =========================================================
+// LOGIN
+// POST /api/auth/login
+// =========================================================
 
-// Login
 router.post(
   "/login",
   loginUser
 );
 
+// =========================================================
+// FORGOT PASSWORD
+// POST /api/auth/forgot-password
+// =========================================================
 
-// Forgot password
 router.post(
   "/forgot-password",
   forgotPassword
 );
 
+// =========================================================
+// RESET PASSWORD
+// POST /api/auth/reset-password
+// =========================================================
 
-// Reset password
 router.post(
   "/reset-password",
   resetPassword
 );
 
+// =========================================================
+// PROTECTED USER ROUTES
+// =========================================================
 
 // =========================================================
-// PROTECTED ROUTES
+// GET PROFILE
+// GET /api/auth/profile
 // =========================================================
 
-// Get profile
 router.get(
   "/profile",
   authMiddleware,
   getProfile
 );
 
+// =========================================================
+// UPDATE PROFILE
+// PUT /api/auth/profile
+// =========================================================
 
-// Update profile
 router.put(
   "/profile",
   authMiddleware,
   updateProfile
 );
 
+// =========================================================
+// CHANGE PASSWORD
+// PUT /api/auth/change-password
+// =========================================================
 
-// Change password
 router.put(
   "/change-password",
   authMiddleware,
   changePassword
 );
 
+// =========================================================
+// LOGOUT
+// POST /api/auth/logout
+// =========================================================
 
-// Logout
 router.post(
   "/logout",
   authMiddleware,
   logoutUser
 );
-
 
 // =========================================================
 // EXPORT
