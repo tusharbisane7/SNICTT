@@ -1,0 +1,1289 @@
+/* =========================================================
+   COMMITTEES PAGE
+========================================================= */
+
+.committees-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 10% 15%,
+      rgba(34, 211, 238, 0.06),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 30%,
+      rgba(59, 130, 246, 0.05),
+      transparent 30%
+    ),
+    #f7fafc;
+
+  color: #102033;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.committees-hero {
+  position: relative;
+  overflow: hidden;
+
+  padding: 115px 24px 105px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #061a2b 0%,
+      #092c45 45%,
+      #0b4560 100%
+    );
+
+  color: #ffffff;
+
+  text-align: center;
+}
+
+
+.committees-hero::before {
+  content: "";
+
+  position: absolute;
+
+  width: 420px;
+  height: 420px;
+
+  top: -220px;
+  left: -100px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(34, 211, 238, 0.18),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+
+.committees-hero::after {
+  content: "";
+
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  right: -170px;
+  bottom: -280px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(59, 130, 246, 0.16),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+
+.committees-hero-content {
+  position: relative;
+  z-index: 2;
+
+  max-width: 850px;
+
+  margin: 0 auto;
+}
+
+
+.committees-hero-label {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 7px 14px;
+
+  margin-bottom: 18px;
+
+  border: 1px solid rgba(103, 232, 249, 0.3);
+
+  border-radius: 999px;
+
+  background:
+    rgba(34, 211, 238, 0.08);
+
+  color: #67e8f9;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+
+.committees-hero h1 {
+  margin: 0;
+
+  font-size: clamp(42px, 6vw, 72px);
+
+  line-height: 1.05;
+
+  font-weight: 700;
+
+  letter-spacing: -2px;
+}
+
+
+.committees-hero p {
+  max-width: 680px;
+
+  margin: 24px auto 0;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 17px;
+
+  line-height: 1.8;
+}
+
+
+/* =========================================================
+   FILTER SECTION
+========================================================= */
+
+.committees-filter-section {
+  position: relative;
+
+  z-index: 5;
+
+  margin-top: -38px;
+
+  padding: 0 24px;
+}
+
+
+.committees-filter-container {
+  max-width: 1180px;
+
+  min-height: 90px;
+
+  margin: 0 auto;
+
+  padding: 18px 22px;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    minmax(280px, 360px)
+    auto;
+
+  align-items: center;
+
+  gap: 25px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border: 1px solid #e5edf3;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 20px 50px rgba(8, 32, 52, 0.10);
+
+  backdrop-filter: blur(15px);
+}
+
+
+/* FILTER INFO */
+
+.committees-filter-info {
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+}
+
+
+.committees-filter-icon {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #e0faff,
+      #e9f4ff
+    );
+
+  color: #087b9d;
+}
+
+
+.committees-filter-info span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #7790a1;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+}
+
+
+.committees-filter-info strong {
+  display: block;
+
+  color: #14283b;
+
+  font-size: 14px;
+
+  font-weight: 650;
+}
+
+
+/* FILTER CONTROL */
+
+.committees-filter-control {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+
+.committees-filter-control label {
+  color: #607789;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
+.committee-select-wrapper {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+}
+
+
+.committee-select-icon {
+  position: absolute;
+
+  left: 13px;
+
+  color: #1687a6;
+
+  pointer-events: none;
+
+  z-index: 2;
+}
+
+
+.committee-filter-select {
+  width: 100%;
+
+  height: 45px;
+
+  padding:
+    0 42px
+    0 42px;
+
+  appearance: none;
+
+  border: 1px solid #d8e5ed;
+
+  border-radius: 11px;
+
+  outline: none;
+
+  background: #f9fcfe;
+
+  color: #1a3043;
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.committee-filter-select:hover {
+  background: #ffffff;
+
+  border-color: #a9cedb;
+}
+
+
+.committee-filter-select:focus {
+  background: #ffffff;
+
+  border-color: #1498b8;
+
+  box-shadow:
+    0 0 0 4px rgba(20, 152, 184, 0.10);
+}
+
+
+.committee-select-chevron {
+  position: absolute;
+
+  right: 14px;
+
+  color: #678292;
+
+  pointer-events: none;
+}
+
+
+/* MEMBER COUNT */
+
+.committees-filter-count {
+  min-width: 85px;
+
+  padding-left: 22px;
+
+  border-left: 1px solid #e4edf2;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+}
+
+
+.committees-filter-count strong {
+  color: #087c9e;
+
+  font-size: 23px;
+
+  line-height: 1.1;
+}
+
+
+.committees-filter-count span {
+  margin-top: 4px;
+
+  color: #8295a3;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.committees-container {
+  width: min(
+    calc(100% - 48px),
+    1180px
+  );
+
+  margin: 65px auto 100px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 30px;
+}
+
+
+/* =========================================================
+   COMMITTEE CARD
+========================================================= */
+
+.committee-public-card {
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #e4edf2;
+
+  border-radius: 22px;
+
+  box-shadow:
+    0 12px 40px rgba(8, 32, 52, 0.06);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+
+.committee-public-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #c9e2eb;
+
+  box-shadow:
+    0 22px 55px rgba(8, 32, 52, 0.10);
+}
+
+
+/* =========================================================
+   COMMITTEE HEADER
+========================================================= */
+
+.committee-public-header {
+  min-height: 100px;
+
+  padding: 22px 28px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f8fdff,
+      #f1f9fc
+    );
+
+  border-bottom: 1px solid #e4eef3;
+}
+
+
+.committee-public-icon {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #dff9ff,
+      #e5f3ff
+    );
+
+  color: #087b9e;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(8, 123, 158, 0.08);
+}
+
+
+.committee-public-heading {
+  flex: 1;
+
+  min-width: 0;
+}
+
+
+.committee-public-heading > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #7b919e;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+}
+
+
+.committee-public-heading h2 {
+  margin: 0;
+
+  color: #11283b;
+
+  font-size: 21px;
+
+  line-height: 1.3;
+
+  font-weight: 700;
+}
+
+
+.committee-member-count {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+
+  justify-content: center;
+
+  min-width: 75px;
+
+  color: #087c9e;
+
+  font-size: 19px;
+
+  font-weight: 700;
+}
+
+
+.committee-member-count span {
+  margin-top: 2px;
+
+  color: #8295a3;
+
+  font-size: 10px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   MEMBERS GRID
+========================================================= */
+
+.committee-public-members {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(300px, 1fr)
+    );
+
+  gap: 0;
+
+  padding: 10px 18px 18px;
+}
+
+
+/* =========================================================
+   MEMBER
+========================================================= */
+
+.public-member {
+  min-width: 0;
+
+  padding: 20px 12px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 17px;
+
+  border-bottom: 1px solid #edf2f5;
+
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+
+.public-member:hover {
+  background:
+    linear-gradient(
+      90deg,
+      #f7fcfe,
+      #ffffff
+    );
+
+  border-radius: 13px;
+
+  transform: translateX(3px);
+}
+
+
+/* =========================================================
+   MEMBER PHOTO
+========================================================= */
+
+.public-member-photo {
+  width: 78px;
+  height: 78px;
+
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #e9faff,
+      #e9f2f8
+    );
+
+  border: 1px solid #dbeaf0;
+
+  box-shadow:
+    0 6px 18px rgba(
+      12,
+      70,
+      92,
+      0.09
+    );
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #1486a4;
+}
+
+
+.public-member-photo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  object-position: center;
+
+  transition:
+    transform 0.4s ease;
+}
+
+
+.public-member:hover
+.public-member-photo img {
+  transform: scale(1.06);
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.public-member-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(34, 211, 238, 0.18),
+      transparent 55%
+    );
+}
+
+
+/* =========================================================
+   MEMBER DETAILS
+========================================================= */
+
+.public-member-details {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+}
+
+
+.public-member-details h3 {
+  margin: 0;
+
+  color: #142b3e;
+
+  font-size: 16px;
+
+  line-height: 1.35;
+
+  font-weight: 700;
+
+  word-break: break-word;
+}
+
+
+.public-member-designation {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #087e9f;
+
+  font-size: 12px;
+
+  line-height: 1.4;
+
+  font-weight: 650;
+}
+
+
+.public-member-qualification {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #8294a0;
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+.committees-state {
+  min-height: 350px;
+
+  width: min(
+    calc(100% - 48px),
+    700px
+  );
+
+  margin: 70px auto 100px;
+
+  padding: 50px 30px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+}
+
+
+.committees-spinner {
+  width: 42px;
+  height: 42px;
+
+  margin-bottom: 22px;
+
+  border-radius: 50%;
+
+  border: 3px solid #dcecf2;
+
+  border-top-color: #1095b5;
+
+  animation:
+    committees-spin
+    0.8s linear infinite;
+}
+
+
+@keyframes committees-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.committees-state h3 {
+  margin: 0;
+
+  color: #183247;
+
+  font-size: 20px;
+}
+
+
+.committees-state p {
+  max-width: 500px;
+
+  margin: 10px auto 0;
+
+  color: #758b99;
+
+  font-size: 14px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   STATE ICON
+========================================================= */
+
+.committees-state-icon {
+  width: 58px;
+  height: 58px;
+
+  margin-bottom: 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 17px;
+
+  background: #eaf8fb;
+
+  color: #0983a5;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.committees-error-state {
+  color: #9b2635;
+}
+
+
+.committees-error-state
+.committees-state-icon {
+  background: #fff0f2;
+
+  color: #c33a4d;
+}
+
+
+.committees-retry-button {
+  margin-top: 22px;
+
+  padding: 11px 19px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087c9e,
+      #0c9ab7
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  font-weight: 650;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 18px
+    rgba(8, 124, 158, 0.20);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.committees-retry-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 24px
+    rgba(8, 124, 158, 0.27);
+}
+
+
+.committees-retry-button:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .committees-hero {
+    padding:
+      95px
+      22px
+      90px;
+  }
+
+
+  .committees-filter-container {
+    grid-template-columns:
+      1fr
+      minmax(240px, 320px)
+      auto;
+
+    gap: 18px;
+  }
+
+
+  .committees-filter-count {
+    padding-left: 18px;
+  }
+
+
+  .committee-public-members {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .committees-hero {
+    padding:
+      85px
+      20px
+      78px;
+  }
+
+
+  .committees-hero h1 {
+    font-size: 42px;
+
+    letter-spacing: -1.5px;
+  }
+
+
+  .committees-hero p {
+    margin-top: 18px;
+
+    font-size: 14px;
+
+    line-height: 1.7;
+  }
+
+
+  .committees-filter-section {
+    margin-top: -30px;
+
+    padding:
+      0
+      16px;
+  }
+
+
+  .committees-filter-container {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 18px;
+
+    padding: 18px;
+  }
+
+
+  .committees-filter-info {
+    width: 100%;
+  }
+
+
+  .committees-filter-control {
+    width: 100%;
+  }
+
+
+  .committees-filter-count {
+    min-height: 45px;
+
+    padding:
+      10px
+      0
+      0;
+
+    border-left: 0;
+
+    border-top: 1px solid #e6eef2;
+
+    flex-direction: row;
+
+    align-items: center;
+
+    gap: 7px;
+  }
+
+
+  .committees-filter-count strong {
+    font-size: 20px;
+  }
+
+
+  .committees-container {
+    width: calc(100% - 28px);
+
+    margin-top: 45px;
+
+    gap: 22px;
+  }
+
+
+  .committee-public-header {
+    padding:
+      19px
+      17px;
+
+    gap: 12px;
+  }
+
+
+  .committee-public-icon {
+    width: 43px;
+    height: 43px;
+
+    border-radius: 12px;
+  }
+
+
+  .committee-public-heading h2 {
+    font-size: 17px;
+  }
+
+
+  .committee-public-heading > span {
+    font-size: 9px;
+  }
+
+
+  .committee-member-count {
+    min-width: 52px;
+
+    font-size: 17px;
+  }
+
+
+  .committee-member-count span {
+    font-size: 9px;
+  }
+
+
+  .committee-public-members {
+    display: flex;
+
+    flex-direction: column;
+
+    padding:
+      8px
+      12px
+      14px;
+  }
+
+
+  .public-member {
+    padding:
+      15px
+      8px;
+
+    gap: 14px;
+  }
+
+
+  .public-member-photo {
+    width: 66px;
+    height: 66px;
+
+    border-radius: 15px;
+  }
+
+
+  .public-member-details h3 {
+    font-size: 15px;
+  }
+
+
+  .public-member-designation {
+    font-size: 11px;
+  }
+
+
+  .public-member-qualification {
+    font-size: 10px;
+  }
+
+
+  .committees-state {
+    width: calc(100% - 32px);
+
+    min-height: 300px;
+
+    margin-top: 45px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 430px) {
+
+  .committees-hero {
+    padding:
+      75px
+      16px
+      70px;
+  }
+
+
+  .committees-hero-label {
+    font-size: 9px;
+
+    letter-spacing: 2px;
+  }
+
+
+  .committees-hero h1 {
+    font-size: 36px;
+  }
+
+
+  .committees-filter-container {
+    padding: 15px;
+  }
+
+
+  .committees-filter-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+
+  .committees-filter-info strong {
+    font-size: 13px;
+  }
+
+
+  .committee-public-header {
+    min-height: 85px;
+  }
+
+
+  .committee-public-heading h2 {
+    font-size: 15px;
+  }
+
+
+  .committee-public-members {
+    padding:
+      5px
+      10px
+      10px;
+  }
+
+
+  .public-member-photo {
+    width: 60px;
+    height: 60px;
+  }
+
+
+  .public-member-details h3 {
+    font-size: 14px;
+  }
+
+
+  .public-member-designation {
+    font-size: 10.5px;
+  }
+
+
+  .public-member-qualification {
+    font-size: 9.5px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.committee-filter-select:focus-visible,
+.committees-retry-button:focus-visible {
+  outline: 3px solid
+    rgba(20, 152, 184, 0.25);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .committee-public-card,
+  .public-member,
+  .public-member-photo img,
+  .committees-retry-button {
+    transition: none;
+  }
+
+
+  .committees-spinner {
+    animation: none;
+  }
+
+}

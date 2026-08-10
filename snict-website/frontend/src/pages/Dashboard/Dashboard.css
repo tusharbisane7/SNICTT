@@ -1,0 +1,1920 @@
+/* =========================================================
+   SNICT MEMBER DASHBOARD
+   Premium / Medical / Futuristic
+========================================================= */
+
+:root {
+  --dash-primary: #087f8c;
+  --dash-primary-dark: #056873;
+  --dash-primary-light: #eaf8fa;
+
+  --dash-text: #102a2f;
+  --dash-muted: #6d7e82;
+  --dash-light: #94a3a6;
+
+  --dash-bg: #f6fafb;
+  --dash-white: #ffffff;
+
+  --dash-border: #dfeaec;
+
+  --dash-success: #16845b;
+  --dash-success-bg: #eaf8f1;
+
+  --dash-warning: #c78312;
+  --dash-warning-bg: #fff7e7;
+
+  --dash-danger: #c94b4b;
+  --dash-danger-bg: #fff0f0;
+
+  --dash-info: #087ea4;
+  --dash-info-bg: #eaf8fc;
+
+  --dash-purple: #7252b8;
+  --dash-purple-bg: #f4efff;
+
+  --dash-shadow:
+    0 15px 45px rgba(16, 42, 47, 0.06);
+
+  --dash-shadow-hover:
+    0 22px 55px rgba(16, 42, 47, 0.11);
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+.member-dashboard-page,
+.member-dashboard-page * {
+  box-sizing: border-box;
+}
+
+.member-dashboard-page {
+  width: 100%;
+  min-height: 100vh;
+
+  padding: 45px 24px 80px;
+
+  background:
+    radial-gradient(
+      circle at 5% 5%,
+      rgba(8, 127, 140, 0.06),
+      transparent 25%
+    ),
+    linear-gradient(
+      180deg,
+      #f7fbfc 0%,
+      #f4f8f9 100%
+    );
+
+  color: var(--dash-text);
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.member-dashboard-container {
+  width: min(1180px, 100%);
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.dashboard-loading {
+  min-height: 60vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 15px;
+
+  color: var(--dash-muted);
+}
+
+.dashboard-loading-spinner {
+  width: 40px;
+  height: 40px;
+
+  border: 3px solid #dcebed;
+
+  border-top-color:
+    var(--dash-primary);
+
+  border-radius: 50%;
+
+  animation:
+    dashboardSpin 0.8s linear infinite;
+}
+
+.dashboard-loading p {
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@keyframes dashboardSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   WELCOME SECTION
+========================================================= */
+
+.dashboard-welcome {
+  position: relative;
+
+  min-height: 205px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  padding: 35px 40px;
+
+  overflow: hidden;
+
+  border:
+    1px solid rgba(8, 127, 140, 0.12);
+
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      circle at 90% 30%,
+      rgba(42, 174, 176, 0.15),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f1fafb 100%
+    );
+
+  box-shadow:
+    var(--dash-shadow);
+
+  animation:
+    dashboardFadeUp 0.6s ease both;
+}
+
+.dashboard-welcome::before {
+  content: "";
+
+  position: absolute;
+
+  width: 300px;
+  height: 300px;
+
+  right: -130px;
+  bottom: -180px;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.08);
+
+  border-radius: 50%;
+}
+
+.dashboard-welcome::after {
+  content: "";
+
+  position: absolute;
+
+  width: 210px;
+  height: 210px;
+
+  right: -85px;
+  bottom: -130px;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.08);
+
+  border-radius: 50%;
+}
+
+
+/* =========================================================
+   WELCOME CONTENT
+========================================================= */
+
+.dashboard-welcome-content {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 0;
+
+  flex: 1;
+}
+
+.dashboard-eyebrow,
+.dashboard-section-label {
+  display: block;
+
+  color: var(--dash-primary);
+
+  font-size: 8px;
+  font-weight: 850;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.dashboard-welcome h1 {
+  margin: 9px 0 10px;
+
+  color: var(--dash-text);
+
+  font-size:
+    clamp(30px, 4vw, 45px);
+
+  font-weight: 850;
+
+  line-height: 1.05;
+
+  letter-spacing: -0.045em;
+
+  overflow-wrap: anywhere;
+}
+
+.dashboard-welcome h1 span {
+  color: var(--dash-primary);
+
+  background:
+    linear-gradient(
+      120deg,
+      #087f8c,
+      #2aaeb0
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+}
+
+.dashboard-welcome-content p {
+  max-width: 560px;
+
+  margin: 0;
+
+  color: var(--dash-muted);
+
+  font-size: 11px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   MEMBER CARD
+========================================================= */
+
+.dashboard-member-card {
+  position: relative;
+
+  z-index: 3;
+
+  min-width: 275px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 16px 18px;
+
+  border:
+    1px solid rgba(8, 127, 140, 0.12);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.82);
+
+  box-shadow:
+    0 12px 30px
+    rgba(16, 42, 47, 0.06);
+
+  backdrop-filter: blur(12px);
+}
+
+.dashboard-member-avatar {
+  width: 50px;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087f8c,
+      #056873
+    );
+
+  font-size: 19px;
+  font-weight: 850;
+
+  box-shadow:
+    0 8px 20px
+    rgba(8, 127, 140, 0.18);
+}
+
+.dashboard-member-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.dashboard-member-info strong {
+  color: var(--dash-text);
+
+  font-size: 12px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.dashboard-member-info span {
+  color: var(--dash-muted);
+
+  font-size: 9px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.dashboard-member-info small {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  margin-top: 3px;
+
+  color: var(--dash-success);
+
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.dashboard-member-info small svg {
+  stroke-width: 2.5;
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+.dashboard-stats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 15px;
+
+  margin-top: 20px;
+}
+
+.dashboard-stat-card {
+  position: relative;
+
+  min-height: 105px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 18px;
+
+  overflow: hidden;
+
+  border:
+    1px solid var(--dash-border);
+
+  border-radius: 14px;
+
+  background:
+    var(--dash-white);
+
+  box-shadow:
+    0 8px 28px
+    rgba(16, 42, 47, 0.045);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-5px);
+
+  border-color:
+    #c7e3e6;
+
+  box-shadow:
+    var(--dash-shadow-hover);
+}
+
+.dashboard-stat-icon {
+  width: 45px;
+  height: 45px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--dash-primary);
+
+  border-radius: 12px;
+
+  background:
+    var(--dash-primary-light);
+}
+
+.dashboard-stat-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.dashboard-stat-content span {
+  color: var(--dash-muted);
+
+  font-size: 8px;
+  font-weight: 650;
+
+  white-space: nowrap;
+}
+
+.dashboard-stat-content strong {
+  color: var(--dash-text);
+
+  font-size: 25px;
+  font-weight: 850;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   PAYMENT STAT CARD VARIANTS
+========================================================= */
+
+.dashboard-stat-verification {
+  border-color: #cce8ef;
+}
+
+.dashboard-stat-verification .dashboard-stat-icon {
+  color: var(--dash-info);
+
+  background:
+    var(--dash-info-bg);
+}
+
+.dashboard-stat-pending .dashboard-stat-icon {
+  color: var(--dash-warning);
+
+  background:
+    var(--dash-warning-bg);
+}
+
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.dashboard-main-grid {
+  display: grid;
+
+  grid-template-columns:
+    1.15fr 0.85fr;
+
+  gap: 18px;
+
+  margin-top: 20px;
+}
+
+
+/* =========================================================
+   COMMON CARD
+========================================================= */
+
+.dashboard-card {
+  border:
+    1px solid var(--dash-border);
+
+  border-radius: 17px;
+
+  background:
+    var(--dash-white);
+
+  box-shadow:
+    var(--dash-shadow);
+}
+
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.dashboard-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 22px 24px 18px;
+
+  border-bottom:
+    1px solid #edf2f3;
+}
+
+.dashboard-card-header-left h2 {
+  margin: 5px 0 0;
+
+  color: var(--dash-text);
+
+  font-size: 18px;
+  font-weight: 800;
+
+  letter-spacing: -0.025em;
+}
+
+.dashboard-card-header-icon {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: var(--dash-primary);
+
+  border-radius: 11px;
+
+  background:
+    var(--dash-primary-light);
+}
+
+
+/* =========================================================
+   UPCOMING EVENT
+========================================================= */
+
+.dashboard-upcoming-event {
+  display: flex;
+
+  gap: 18px;
+
+  padding: 25px;
+}
+
+.dashboard-event-date {
+  width: 70px;
+  height: 82px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  color: var(--dash-primary);
+
+  background:
+    var(--dash-primary-light);
+
+  border:
+    1px solid #d8eef0;
+}
+
+.dashboard-event-date span {
+  font-size: 7px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.08em;
+}
+
+.dashboard-event-date strong {
+  margin: 2px 0;
+
+  color: var(--dash-text);
+
+  font-size: 27px;
+
+  line-height: 1;
+}
+
+.dashboard-event-date small {
+  font-size: 8px;
+  font-weight: 750;
+
+  text-transform: uppercase;
+}
+
+.dashboard-upcoming-details {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dashboard-event-type {
+  color: var(--dash-primary);
+
+  font-size: 7px;
+  font-weight: 850;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.dashboard-upcoming-details h3 {
+  margin: 5px 0;
+
+  color: var(--dash-text);
+
+  font-size: 17px;
+  font-weight: 800;
+
+  line-height: 1.25;
+
+  overflow-wrap: anywhere;
+}
+
+.dashboard-upcoming-details > p {
+  margin: 0 0 9px;
+
+  color: var(--dash-muted);
+
+  font-size: 9px;
+}
+
+.dashboard-event-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 9px;
+
+  margin-top: 2px;
+}
+
+.dashboard-event-meta span {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: var(--dash-muted);
+
+  font-size: 8px;
+}
+
+.dashboard-event-meta svg {
+  color: var(--dash-primary);
+}
+
+
+/* =========================================================
+   EVENT BUTTON
+========================================================= */
+
+.dashboard-event-button {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-top: 14px;
+
+  padding:
+    8px 12px;
+
+  color: #ffffff;
+
+  border: 0;
+
+  border-radius: 7px;
+
+  background:
+    var(--dash-primary);
+
+  font-size: 8px;
+  font-weight: 750;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.dashboard-event-button:hover {
+  transform: translateY(-2px);
+
+  background:
+    var(--dash-primary-dark);
+}
+
+.dashboard-event-button svg {
+  transition:
+    transform 0.2s ease;
+}
+
+.dashboard-event-button:hover svg {
+  transform:
+    translateX(3px);
+}
+
+
+/* =========================================================
+   NO UPCOMING EVENT
+========================================================= */
+
+.dashboard-no-event {
+  min-height: 225px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 25px;
+
+  text-align: center;
+}
+
+.dashboard-no-event-icon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--dash-primary);
+
+  border-radius: 50%;
+
+  background:
+    var(--dash-primary-light);
+}
+
+.dashboard-no-event h3 {
+  margin: 12px 0 5px;
+
+  color: var(--dash-text);
+
+  font-size: 14px;
+}
+
+.dashboard-no-event p {
+  max-width: 260px;
+
+  margin: 0;
+
+  color: var(--dash-muted);
+
+  font-size: 9px;
+
+  line-height: 1.6;
+}
+
+.dashboard-explore-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 14px;
+
+  color: var(--dash-primary);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.dashboard-explore-link svg {
+  transition:
+    transform 0.2s ease;
+}
+
+.dashboard-explore-link:hover svg {
+  transform:
+    translateX(4px);
+}
+
+
+/* =========================================================
+   QUICK ACTIONS
+========================================================= */
+
+.dashboard-services-list {
+  display: flex;
+  flex-direction: column;
+
+  padding: 7px 12px 12px;
+}
+
+.dashboard-service-link {
+  min-height: 67px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px;
+
+  border-bottom:
+    1px solid #edf2f3;
+
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dashboard-service-link:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-service-link:hover {
+  border-radius: 9px;
+
+  background:
+    #f6fbfc;
+
+  transform:
+    translateX(3px);
+}
+
+.dashboard-service-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--dash-primary);
+
+  border-radius: 10px;
+
+  background:
+    var(--dash-primary-light);
+}
+
+.dashboard-service-content {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.dashboard-service-content strong {
+  color: var(--dash-text);
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.dashboard-service-content span {
+  color: var(--dash-muted);
+
+  font-size: 8px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.dashboard-service-arrow {
+  flex-shrink: 0;
+
+  color: #aab7b9;
+
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.dashboard-service-link:hover
+.dashboard-service-arrow {
+  color: var(--dash-primary);
+
+  transform:
+    translateX(3px);
+}
+
+
+/* =========================================================
+   RECENT BOOKINGS
+========================================================= */
+
+.dashboard-recent-card {
+  margin-top: 20px;
+
+  overflow: hidden;
+}
+
+.dashboard-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 23px 25px 18px;
+
+  border-bottom:
+    1px solid #edf2f3;
+}
+
+.dashboard-recent-header h2 {
+  margin: 5px 0 0;
+
+  color: var(--dash-text);
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.dashboard-view-all {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: var(--dash-primary);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+}
+
+.dashboard-view-all svg {
+  transition:
+    transform 0.2s ease;
+}
+
+.dashboard-view-all:hover svg {
+  transform:
+    translateX(3px);
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.dashboard-error {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin: 15px 20px;
+
+  padding: 11px 13px;
+
+  color: var(--dash-danger);
+
+  border:
+    1px solid #f2cccc;
+
+  border-radius: 8px;
+
+  background:
+    var(--dash-danger-bg);
+
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   RECENT LIST
+========================================================= */
+
+.dashboard-recent-list {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* =========================================================
+   BOOKING ITEM
+========================================================= */
+
+.dashboard-booking-item {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(240px, 1fr)
+    150px
+    175px
+    35px;
+
+  align-items: center;
+
+  gap: 15px;
+
+  min-height: 75px;
+
+  padding:
+    12px 20px;
+
+  border-bottom:
+    1px solid #edf2f3;
+
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboard-booking-item:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-booking-item:hover {
+  background:
+    #fbfdfd;
+}
+
+
+/* =========================================================
+   BOOKING LEFT
+========================================================= */
+
+.dashboard-booking-left {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+}
+
+.dashboard-booking-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--dash-primary);
+
+  border-radius: 9px;
+
+  background:
+    var(--dash-primary-light);
+}
+
+.dashboard-booking-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.dashboard-booking-info strong {
+  color: var(--dash-text);
+
+  font-size: 10px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.dashboard-booking-info span {
+  color: var(--dash-light);
+
+  font-size: 8px;
+}
+
+
+/* =========================================================
+   BOOKING MIDDLE
+========================================================= */
+
+.dashboard-booking-middle {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.dashboard-booking-middle span {
+  color: var(--dash-muted);
+
+  font-size: 8px;
+}
+
+.dashboard-booking-middle strong {
+  color: var(--dash-text);
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   BOOKING RIGHT
+========================================================= */
+
+.dashboard-booking-right {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 6px;
+}
+
+
+/* =========================================================
+   BOOKING STATUS BADGE
+========================================================= */
+
+.dashboard-booking-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  min-height: 23px;
+
+  padding:
+    0 9px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 20px;
+
+  font-size: 7px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  text-transform: capitalize;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   BOOKING CONFIRMED
+========================================================= */
+
+.dashboard-booking-status.confirmed {
+  color: var(--dash-success);
+
+  background:
+    var(--dash-success-bg);
+
+  border-color:
+    #b7e3cd;
+}
+
+
+/* =========================================================
+   BOOKING PAYMENT PENDING
+========================================================= */
+
+.dashboard-booking-status.payment_pending,
+.dashboard-booking-status.pending {
+  color: var(--dash-warning);
+
+  background:
+    var(--dash-warning-bg);
+
+  border-color:
+    #f0d18b;
+}
+
+
+/* =========================================================
+   BOOKING COMPLETED
+========================================================= */
+
+.dashboard-booking-status.completed {
+  color: #087f8c;
+
+  background:
+    #eaf8fa;
+
+  border-color:
+    #bce3e6;
+}
+
+
+/* =========================================================
+   BOOKING CANCELLED
+========================================================= */
+
+.dashboard-booking-status.cancelled {
+  color: var(--dash-danger);
+
+  background:
+    var(--dash-danger-bg);
+
+  border-color:
+    #efc1c1;
+}
+
+
+/* =========================================================
+   BOOKING REJECTED
+========================================================= */
+
+.dashboard-booking-status.rejected {
+  color: #a23b3b;
+
+  background:
+    #ffecec;
+
+  border-color:
+    #efc1c1;
+}
+
+
+/* =========================================================
+   PAYMENT STATUS
+========================================================= */
+
+.dashboard-payment-status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  width: fit-content;
+
+  min-height: 22px;
+
+  padding:
+    0 8px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 20px;
+
+  font-size: 7px;
+
+  font-weight: 750;
+
+  line-height: 1;
+
+  text-transform: capitalize;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   PAYMENT PENDING
+   Yellow
+========================================================= */
+
+.dashboard-payment-status.pending {
+  color: var(--dash-warning);
+
+  background:
+    var(--dash-warning-bg);
+
+  border-color:
+    #f0d18b;
+}
+
+
+/* =========================================================
+   WAITING FOR VERIFICATION
+   Blue
+========================================================= */
+
+.dashboard-payment-status.submitted {
+  color: var(--dash-info);
+
+  background:
+    var(--dash-info-bg);
+
+  border-color:
+    #b7dfe9;
+
+  box-shadow:
+    0 3px 12px
+    rgba(8, 126, 164, 0.08);
+
+  animation:
+    paymentVerificationGlow
+    2.2s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   PAYMENT VERIFIED
+   Green
+========================================================= */
+
+.dashboard-payment-status.verified {
+  color: var(--dash-success);
+
+  background:
+    var(--dash-success-bg);
+
+  border-color:
+    #b7e3cd;
+}
+
+
+/* =========================================================
+   PAYMENT REJECTED
+========================================================= */
+
+.dashboard-payment-status.rejected {
+  color: var(--dash-danger);
+
+  background:
+    var(--dash-danger-bg);
+
+  border-color:
+    #efc1c1;
+}
+
+
+/* =========================================================
+   PAYMENT REFUNDED
+========================================================= */
+
+.dashboard-payment-status.refunded {
+  color: var(--dash-purple);
+
+  background:
+    var(--dash-purple-bg);
+
+  border-color:
+    #d7c8f2;
+}
+
+
+/* =========================================================
+   PAYMENT VERIFICATION ANIMATION
+========================================================= */
+
+@keyframes paymentVerificationGlow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 3px 12px
+      rgba(8, 126, 164, 0.06);
+  }
+
+  50% {
+    box-shadow:
+      0 5px 18px
+      rgba(8, 126, 164, 0.18);
+  }
+}
+
+
+/* =========================================================
+   VIEW BOOKING
+========================================================= */
+
+.dashboard-booking-view {
+  width: 31px;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--dash-muted);
+
+  border:
+    1px solid var(--dash-border);
+
+  border-radius: 8px;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dashboard-booking-view:hover {
+  color: #ffffff;
+
+  border-color:
+    var(--dash-primary);
+
+  background:
+    var(--dash-primary);
+
+  transform:
+    translateX(2px);
+}
+
+
+/* =========================================================
+   EMPTY BOOKINGS
+========================================================= */
+
+.dashboard-empty-bookings {
+  min-height: 240px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+
+  text-align: center;
+
+  color: var(--dash-primary);
+}
+
+.dashboard-empty-bookings h3 {
+  margin: 12px 0 5px;
+
+  color: var(--dash-text);
+
+  font-size: 14px;
+}
+
+.dashboard-empty-bookings p {
+  max-width: 300px;
+
+  margin: 0;
+
+  color: var(--dash-muted);
+
+  font-size: 9px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   ENTRY ANIMATION
+========================================================= */
+
+@keyframes dashboardFadeUp {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+.dashboard-stat-card,
+.dashboard-card {
+  animation:
+    dashboardFadeUp 0.55s ease both;
+}
+
+.dashboard-stat-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.dashboard-stat-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.dashboard-stat-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.dashboard-stat-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+
+/* =========================================================
+   LARGE TABLET
+========================================================= */
+
+@media (max-width: 1050px) {
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-booking-item {
+    grid-template-columns:
+      minmax(220px, 1fr)
+      130px
+      160px
+      35px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 800px) {
+
+  .member-dashboard-page {
+    padding:
+      30px 18px 60px;
+  }
+
+  .dashboard-welcome {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    padding: 30px;
+
+    min-height: auto;
+  }
+
+  .dashboard-member-card {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .dashboard-stats {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .dashboard-booking-item {
+    grid-template-columns:
+      1fr auto;
+
+    gap: 12px;
+  }
+
+  .dashboard-booking-middle {
+    display: none;
+  }
+
+  .dashboard-booking-right {
+    justify-self: end;
+
+    align-items: flex-end;
+  }
+
+  .dashboard-booking-view {
+    display: none;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .member-dashboard-page {
+    padding:
+      22px 13px 50px;
+  }
+
+  .dashboard-welcome {
+    padding: 24px 20px;
+
+    border-radius: 16px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size:
+      clamp(28px, 9vw, 38px);
+
+    line-height: 1.08;
+  }
+
+  .dashboard-welcome-content p {
+    font-size: 10px;
+  }
+
+  .dashboard-member-card {
+    padding: 13px;
+  }
+
+  .dashboard-member-avatar {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 11px;
+
+    font-size: 16px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns:
+      repeat(2, 1fr);
+
+    gap: 10px;
+
+    margin-top: 13px;
+  }
+
+  .dashboard-stat-card {
+    min-height: 90px;
+
+    padding: 13px;
+
+    gap: 10px;
+  }
+
+  .dashboard-stat-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .dashboard-stat-content strong {
+    font-size: 21px;
+  }
+
+  .dashboard-stat-content span {
+    font-size: 7px;
+  }
+
+  .dashboard-card-header,
+  .dashboard-recent-header {
+    padding:
+      18px 17px 15px;
+  }
+
+  .dashboard-card-header-left h2,
+  .dashboard-recent-header h2 {
+    font-size: 16px;
+  }
+
+  .dashboard-upcoming-event {
+    padding: 18px;
+
+    gap: 12px;
+  }
+
+  .dashboard-event-date {
+    width: 58px;
+    height: 74px;
+  }
+
+  .dashboard-event-date strong {
+    font-size: 23px;
+  }
+
+  .dashboard-upcoming-details h3 {
+    font-size: 14px;
+  }
+
+  .dashboard-event-meta {
+    gap: 6px;
+  }
+
+  .dashboard-services-list {
+    padding:
+      5px 8px 9px;
+  }
+
+  .dashboard-service-link {
+    min-height: 61px;
+
+    padding: 8px;
+  }
+
+  .dashboard-service-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .dashboard-service-content strong {
+    font-size: 9px;
+  }
+
+  .dashboard-service-content span {
+    font-size: 7px;
+  }
+
+  .dashboard-booking-item {
+    padding:
+      12px 15px;
+  }
+
+  .dashboard-booking-right {
+    gap: 5px;
+  }
+
+  .dashboard-booking-status,
+  .dashboard-payment-status {
+    font-size: 6.5px;
+
+    min-height: 21px;
+
+    padding:
+      0 7px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  .dashboard-welcome {
+    padding:
+      21px 16px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 27px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .dashboard-stat-card {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    min-height: 105px;
+  }
+
+  .dashboard-stat-content strong {
+    font-size: 23px;
+  }
+
+  .dashboard-upcoming-event {
+    align-items: flex-start;
+  }
+
+  .dashboard-event-date {
+    width: 53px;
+  }
+
+  .dashboard-event-meta {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .dashboard-booking-item {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+  }
+
+  .dashboard-booking-info strong {
+    max-width: 155px;
+  }
+
+  .dashboard-booking-right {
+    align-items: flex-end;
+  }
+
+  .dashboard-payment-status,
+  .dashboard-booking-status {
+    max-width: 135px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .member-dashboard-page *,
+  .member-dashboard-page *::before,
+  .member-dashboard-page *::after {
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+  }
+
+}

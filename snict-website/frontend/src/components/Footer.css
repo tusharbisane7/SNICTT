@@ -1,0 +1,970 @@
+/* =========================================================
+   SNICT FOOTER
+   Premium Medical / Professional UI
+========================================================= */
+
+
+/* =========================================================
+   FOOTER ROOT
+========================================================= */
+
+.snict-footer {
+  position: relative;
+
+  width: 100%;
+
+  color: var(--snict-text);
+
+  background:
+    linear-gradient(
+      180deg,
+      #f8fbfc 0%,
+      #f2f9fa 100%
+    );
+
+  border-top: 1px solid var(--snict-border);
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   TOP DECORATIVE GLOW
+========================================================= */
+
+.snict-footer::before {
+  content: "";
+
+  position: absolute;
+
+  top: -140px;
+  left: 50%;
+
+  width: 500px;
+  height: 260px;
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(8, 127, 140, 0.08) 0%,
+      rgba(8, 127, 140, 0) 70%
+    );
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.snict-footer-container {
+  position: relative;
+
+  width: min(
+    1440px,
+    calc(100% - 48px)
+  );
+
+  margin: 0 auto;
+
+  padding: 65px 0 24px;
+}
+
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.snict-footer-grid {
+  display: grid;
+
+  grid-template-columns:
+    1.7fr
+    1fr
+    1fr
+    1.25fr;
+
+  gap: 55px;
+
+  padding-bottom: 50px;
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.snict-footer-brand {
+  max-width: 390px;
+}
+
+
+/* =========================================================
+   BRAND LOGO
+========================================================= */
+
+.snict-footer-logo {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  color: var(--snict-text);
+
+  text-decoration: none;
+
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+
+.snict-footer-logo:hover {
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   LOGO ICON
+========================================================= */
+
+.snict-footer-logo-mark {
+  position: relative;
+
+  width: 43px;
+  height: 43px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: var(--snict-primary);
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #eaf9fa,
+      #f7fcfc
+    );
+
+  border: 1px solid #d7edef;
+
+  box-shadow:
+    0 5px 16px rgba(
+      8,
+      127,
+      140,
+      0.08
+    );
+}
+
+
+/* =========================================================
+   LOGO PULSE
+========================================================= */
+
+.snict-footer-logo-pulse {
+  position: absolute;
+
+  width: 7px;
+  height: 7px;
+
+  right: 6px;
+  top: 6px;
+
+  border-radius: 50%;
+
+  background: #1bb9a7;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(
+      27,
+      185,
+      167,
+      0.12
+    );
+
+  animation:
+    footerBrandPulse 2s infinite;
+}
+
+
+@keyframes footerBrandPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.35);
+    opacity: 0.65;
+  }
+
+}
+
+
+/* =========================================================
+   BRAND CONTENT
+========================================================= */
+
+.snict-footer-brand-content {
+  display: flex;
+
+  flex-direction: column;
+}
+
+
+.snict-footer-brand-name {
+  color: var(--snict-text);
+
+  font-size: 18px;
+
+  font-weight: 850;
+
+  line-height: 1;
+
+  letter-spacing: 0.08em;
+}
+
+
+.snict-footer-brand-description {
+  margin-top: 5px;
+
+  color: #71858a;
+
+  font-size: 7.5px;
+
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  letter-spacing: 0.04em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.snict-footer-description {
+  max-width: 370px;
+
+  margin: 22px 0 0;
+
+  color: var(--snict-muted);
+
+  font-size: 13px;
+
+  line-height: 1.8;
+}
+
+
+/* =========================================================
+   SOCIAL ICONS
+========================================================= */
+
+.snict-footer-social {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 22px;
+}
+
+
+.snict-footer-social a {
+  width: 37px;
+  height: 37px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #60777c;
+
+  background: #ffffff;
+
+  border: 1px solid var(--snict-border);
+
+  border-radius: 10px;
+
+  text-decoration: none;
+
+  box-shadow:
+    0 5px 16px
+    rgba(
+      16,
+      42,
+      47,
+      0.04
+    );
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.snict-footer-social a:hover {
+  color: var(--snict-primary);
+
+  background: var(--snict-primary-light);
+
+  border-color: #b9dfe3;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px
+    rgba(
+      8,
+      127,
+      140,
+      0.10
+    );
+}
+
+
+/* =========================================================
+   FOOTER COLUMN
+========================================================= */
+
+.snict-footer-column {
+  min-width: 0;
+}
+
+
+.snict-footer-column h3 {
+  margin: 4px 0 20px;
+
+  color: var(--snict-text);
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+.snict-footer-links {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 11px;
+}
+
+
+.snict-footer-links a {
+  position: relative;
+
+  width: fit-content;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  color: #62777c;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.snict-footer-links a:hover {
+  color: var(--snict-primary);
+
+  transform: translateX(3px);
+}
+
+
+/* =========================================================
+   LINK ARROW
+========================================================= */
+
+.snict-footer-links a svg {
+  opacity: 0;
+
+  transform: translateX(-4px);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.snict-footer-links a:hover svg {
+  opacity: 1;
+
+  transform: translateX(0);
+}
+
+
+/* =========================================================
+   CONTACT
+========================================================= */
+
+.snict-footer-contact {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+
+.snict-footer-contact-item {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  color: #62777c;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+
+.snict-footer-contact-icon {
+  width: 31px;
+  height: 31px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: var(--snict-primary);
+
+  background: var(--snict-primary-light);
+
+  border: 1px solid #d7edef;
+
+  border-radius: 9px;
+}
+
+
+.snict-footer-contact-item a {
+  color: #62777c;
+
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+
+.snict-footer-contact-item a:hover {
+  color: var(--snict-primary);
+}
+
+
+/* =========================================================
+   CTA SECTION
+========================================================= */
+
+.snict-footer-cta {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 25px;
+
+  padding: 25px 27px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #edf8f9,
+      #f7fcfc
+    );
+
+  border: 1px solid #d7edef;
+
+  border-radius: var(--snict-radius);
+
+  box-shadow:
+    0 10px 35px
+    rgba(
+      16,
+      42,
+      47,
+      0.05
+    );
+}
+
+
+/* =========================================================
+   CTA TEXT
+========================================================= */
+
+.snict-footer-cta-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--snict-primary);
+
+  font-size: 8px;
+
+  font-weight: 850;
+
+  letter-spacing: 0.14em;
+}
+
+
+.snict-footer-cta h3 {
+  margin: 0 0 5px;
+
+  color: var(--snict-text);
+
+  font-size: 17px;
+
+  font-weight: 800;
+}
+
+
+.snict-footer-cta p {
+  margin: 0;
+
+  color: var(--snict-muted);
+
+  font-size: 11px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   CTA BUTTON
+========================================================= */
+
+.snict-footer-cta-button {
+  flex-shrink: 0;
+
+  min-height: 40px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 14px;
+
+  color: #ffffff;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087f8c,
+      #056d78
+    );
+
+  font-size: 11px;
+
+  font-weight: 750;
+
+  text-decoration: none;
+
+  box-shadow:
+    0 7px 18px
+    rgba(
+      8,
+      127,
+      140,
+      0.18
+    );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.snict-footer-cta-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 24px
+    rgba(
+      8,
+      127,
+      140,
+      0.25
+    );
+}
+
+
+/* =========================================================
+   BOTTOM FOOTER
+========================================================= */
+
+.snict-footer-bottom {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding-top: 20px;
+
+  border-top: 1px solid var(--snict-border);
+}
+
+
+.snict-footer-bottom p {
+  margin: 0;
+
+  color: #829398;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+}
+
+
+.snict-footer-bottom-links {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+
+.snict-footer-bottom-links a {
+  color: #829398;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+
+.snict-footer-bottom-links a:hover {
+  color: var(--snict-primary);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .snict-footer-grid {
+    grid-template-columns:
+      1.5fr
+      1fr
+      1fr;
+
+    gap: 40px;
+  }
+
+
+  .snict-footer-brand {
+    grid-column: span 3;
+
+    max-width: 600px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 800px) {
+
+  .snict-footer-container {
+    width: calc(100% - 32px);
+
+    padding-top: 50px;
+  }
+
+
+  .snict-footer-grid {
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 35px 25px;
+  }
+
+
+  .snict-footer-brand {
+    grid-column: span 2;
+  }
+
+
+  .snict-footer-cta {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+
+  .snict-footer-cta-button {
+    width: 100%;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .snict-footer-container {
+    width: calc(100% - 24px);
+
+    padding: 42px 0 18px;
+  }
+
+
+  .snict-footer-grid {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 30px;
+
+    padding-bottom: 35px;
+  }
+
+
+  .snict-footer-brand {
+    max-width: 100%;
+  }
+
+
+  .snict-footer-logo-mark {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+  }
+
+
+  .snict-footer-brand-name {
+    font-size: 17px;
+  }
+
+
+  .snict-footer-description {
+    font-size: 12px;
+
+    line-height: 1.7;
+  }
+
+
+  .snict-footer-column h3 {
+    margin-bottom: 14px;
+
+    font-size: 12px;
+  }
+
+
+  .snict-footer-links {
+    gap: 10px;
+  }
+
+
+  .snict-footer-links a {
+    font-size: 11px;
+  }
+
+
+  .snict-footer-contact-item {
+    font-size: 11px;
+  }
+
+
+  .snict-footer-cta {
+    padding: 21px;
+
+    border-radius: 13px;
+  }
+
+
+  .snict-footer-cta h3 {
+    font-size: 16px;
+  }
+
+
+  .snict-footer-cta p {
+    font-size: 10px;
+  }
+
+
+  .snict-footer-bottom {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+
+  .snict-footer-bottom-links {
+    flex-wrap: wrap;
+
+    gap: 10px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 380px) {
+
+  .snict-footer-container {
+    width: calc(100% - 20px);
+  }
+
+
+  .snict-footer-social a {
+    width: 35px;
+    height: 35px;
+  }
+
+
+  .snict-footer-cta {
+    padding: 18px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.snict-footer a:focus-visible {
+  outline: 2px solid #55aeb6;
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .snict-footer *,
+  .snict-footer *::before,
+  .snict-footer *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+
+}
+
+
+/* =========================================================
+   LOGO IMAGE SUPPORT
+   Use with:
+   <img className="snict-footer-logo-image" src={snictLogo} alt="SNICT Logo" />
+========================================================= */
+
+.snict-footer-logo-mark {
+  position: relative;
+  overflow: hidden;
+}
+
+.snict-footer-logo-image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+
+  padding: 4px;
+
+  border-radius: inherit;
+}
+
+/* Hide the old icon only when the real logo image is present */
+.snict-footer-logo-mark:has(.snict-footer-logo-image) > svg {
+  display: none;
+}
+
+.snict-footer-logo-mark:has(.snict-footer-logo-image) .snict-footer-logo-pulse {
+  display: none;
+}
+
+
+/* =========================================================
+   LOGO IMAGE - MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .snict-footer-logo-image {
+    padding: 3px;
+  }
+}

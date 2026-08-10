@@ -1,0 +1,1157 @@
+/* =========================================================
+   SNICT SIGNUP
+   Premium Medical / Professional / Futuristic
+========================================================= */
+
+:root {
+  --signup-primary: #087f8c;
+  --signup-primary-dark: #056873;
+  --signup-primary-light: #eaf8fa;
+
+  --signup-text: #102a2f;
+  --signup-muted: #6d7e82;
+  --signup-light: #94a3a6;
+
+  --signup-bg: #f5fafb;
+  --signup-white: #ffffff;
+
+  --signup-border: #dfeaec;
+
+  --signup-success: #16845b;
+  --signup-success-bg: #eaf8f1;
+
+  --signup-warning: #c78312;
+  --signup-warning-bg: #fff7e7;
+
+  --signup-danger: #c94b4b;
+  --signup-danger-bg: #fff0f0;
+
+  --signup-shadow:
+    0 20px 60px rgba(16, 42, 47, 0.08);
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+.auth-page,
+.auth-page * {
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.auth-page {
+  position: relative;
+
+  width: 100%;
+  min-height: calc(100vh - 80px);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: 55px 20px 80px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 10% 5%,
+      rgba(8, 127, 140, 0.07),
+      transparent 27%
+    ),
+    radial-gradient(
+      circle at 90% 85%,
+      rgba(42, 174, 176, 0.06),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      #f8fcfd 0%,
+      #f3f8f9 100%
+    );
+
+  color: var(--signup-text);
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* =========================================================
+   BACKGROUND GLOW
+========================================================= */
+
+.auth-background {
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  top: -260px;
+  right: -220px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.08);
+
+  box-shadow:
+    0 0 0 70px
+      rgba(8, 127, 140, 0.025),
+    0 0 0 140px
+      rgba(8, 127, 140, 0.018);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   SIGNUP CARD
+========================================================= */
+
+.signup-card {
+  position: relative;
+
+  z-index: 2;
+
+  width: min(780px, 100%);
+
+  padding: 38px 42px 32px;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.12);
+
+  border-radius: 22px;
+
+  background:
+    rgba(255, 255, 255, 0.94);
+
+  box-shadow:
+    var(--signup-shadow);
+
+  backdrop-filter: blur(18px);
+
+  animation:
+    signupFadeUp 0.55s ease both;
+}
+
+
+/* =========================================================
+   TOP ACCENT
+========================================================= */
+
+.signup-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 12%;
+
+  width: 76%;
+  height: 2px;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #087f8c,
+      #2aaeb0,
+      transparent
+    );
+}
+
+
+/* =========================================================
+   AUTH HEADER
+========================================================= */
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 13px;
+
+  margin-bottom: 28px;
+
+  text-align: left;
+}
+
+
+/* =========================================================
+   LOGO LINK
+========================================================= */
+
+.auth-logo-link {
+  display: block;
+
+  flex-shrink: 0;
+
+  text-decoration: none;
+}
+
+
+/* =========================================================
+   LOGO BOX
+========================================================= */
+
+.auth-logo {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 7px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.14);
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #edf9fa 100%
+    );
+
+  box-shadow:
+    0 10px 28px
+    rgba(8, 127, 140, 0.10);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.auth-logo-link:hover .auth-logo {
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 15px 34px
+    rgba(8, 127, 140, 0.16);
+}
+
+
+/* =========================================================
+   LOGO IMAGE
+========================================================= */
+
+.auth-logo-image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+
+  border-radius: 10px;
+}
+
+
+/* =========================================================
+   BRAND BLOCK
+========================================================= */
+
+.auth-brand-block {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.auth-brand {
+  display: block;
+
+  color:
+    var(--signup-primary);
+
+  font-size: 21px;
+  font-weight: 900;
+
+  line-height: 1;
+
+  letter-spacing:
+    0.12em;
+}
+
+
+/* =========================================================
+   BRAND DESCRIPTION
+========================================================= */
+
+.auth-brand-subtitle {
+  display: block;
+
+  max-width: 235px;
+
+  color:
+    var(--signup-light);
+
+  font-size: 7px;
+  font-weight: 650;
+
+  line-height: 1.45;
+
+  letter-spacing:
+    0.045em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.auth-title {
+  text-align: center;
+
+  margin-bottom: 27px;
+}
+
+.auth-title > span {
+  display: block;
+
+  color:
+    var(--signup-primary);
+
+  font-size: 8px;
+  font-weight: 850;
+
+  letter-spacing:
+    0.18em;
+
+  text-transform: uppercase;
+}
+
+.auth-title h1 {
+  margin: 8px 0 7px;
+
+  color:
+    var(--signup-text);
+
+  font-size: 31px;
+  font-weight: 850;
+
+  line-height: 1.1;
+
+  letter-spacing:
+    -0.04em;
+}
+
+.auth-title p {
+  margin: 0;
+
+  color:
+    var(--signup-muted);
+
+  font-size: 10px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.auth-error,
+.auth-success {
+  display: flex;
+  align-items: center;
+
+  min-height: 42px;
+
+  margin-bottom: 18px;
+
+  padding: 10px 13px;
+
+  border-radius: 9px;
+
+  font-size: 9px;
+  font-weight: 650;
+
+  line-height: 1.5;
+
+  animation:
+    signupAlert 0.25s ease both;
+}
+
+.auth-error {
+  color:
+    var(--signup-danger);
+
+  border:
+    1px solid #f0cccc;
+
+  background:
+    var(--signup-danger-bg);
+}
+
+.auth-success {
+  color:
+    var(--signup-success);
+
+  border:
+    1px solid #cce9dc;
+
+  background:
+    var(--signup-success-bg);
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.signup-form {
+  width: 100%;
+}
+
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.form-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 17px 15px;
+}
+
+
+/* =========================================================
+   FULL WIDTH
+========================================================= */
+
+.form-field.full {
+  grid-column:
+    1 / -1;
+}
+
+
+/* =========================================================
+   FORM FIELD
+========================================================= */
+
+.form-field {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.form-field > label {
+  color:
+    var(--signup-text);
+
+  font-size: 9px;
+  font-weight: 750;
+
+  letter-spacing:
+    0.01em;
+}
+
+
+/* =========================================================
+   INPUTS / SELECT / TEXTAREA
+========================================================= */
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+
+  border:
+    1px solid
+    var(--signup-border);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  color:
+    var(--signup-text);
+
+  background:
+    #fbfdfd;
+
+  font-family: inherit;
+
+  font-size: 10px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.form-field input,
+.form-field select {
+  height: 43px;
+
+  padding:
+    0 12px;
+}
+
+.form-field textarea {
+  min-height: 82px;
+
+  padding:
+    11px 12px;
+
+  resize: vertical;
+
+  line-height: 1.55;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color:
+    #a7b3b5;
+}
+
+
+/* =========================================================
+   FOCUS
+========================================================= */
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color:
+    var(--signup-primary);
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(8, 127, 140, 0.08);
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.form-field select {
+  cursor: pointer;
+
+  appearance: auto;
+}
+
+
+/* =========================================================
+   USERNAME WRAPPER
+========================================================= */
+
+.username-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.username-wrapper input {
+  padding-right: 42px;
+}
+
+
+/* =========================================================
+   USERNAME STATUS
+========================================================= */
+
+.username-status {
+  position: absolute;
+
+  top: 50%;
+  right: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform:
+    translateY(-50%);
+
+  pointer-events: none;
+}
+
+.username-available {
+  color:
+    var(--signup-success);
+}
+
+.username-taken {
+  color:
+    var(--signup-danger);
+}
+
+.username-spinner {
+  color:
+    var(--signup-primary);
+
+  animation:
+    signupSpin 0.8s linear infinite;
+}
+
+
+/* =========================================================
+   USERNAME MESSAGE
+========================================================= */
+
+.username-message {
+  font-size: 8px;
+
+  line-height: 1.4;
+}
+
+.username-message.available {
+  color:
+    var(--signup-success);
+}
+
+.username-message.taken,
+.username-message.invalid,
+.username-message.error {
+  color:
+    var(--signup-danger);
+}
+
+.username-message.checking {
+  color:
+    var(--signup-warning);
+}
+
+
+/* =========================================================
+   USERNAME SUGGESTIONS
+========================================================= */
+
+.username-suggestions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin-top: 1px;
+}
+
+.username-suggestions > span {
+  color:
+    var(--signup-muted);
+
+  font-size: 8px;
+}
+
+.username-suggestions > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 5px;
+}
+
+.username-suggestions button {
+  min-height: 25px;
+
+  padding:
+    0 8px;
+
+  border:
+    1px solid
+    #d5e8ea;
+
+  border-radius: 6px;
+
+  color:
+    var(--signup-primary);
+
+  background:
+    var(--signup-primary-light);
+
+  font-family: inherit;
+
+  font-size: 8px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.username-suggestions button:hover {
+  border-color:
+    #a9d4d8;
+
+  background:
+    #ddf3f5;
+
+  transform:
+    translateY(-1px);
+}
+
+
+/* =========================================================
+   PASSWORD WRAPPER
+========================================================= */
+
+.password-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.password-wrapper input {
+  padding-right: 43px;
+}
+
+.password-wrapper button {
+  position: absolute;
+
+  top: 50%;
+  right: 4px;
+
+  width: 35px;
+  height: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform:
+    translateY(-50%);
+
+  color:
+    var(--signup-muted);
+
+  border: 0;
+
+  border-radius: 7px;
+
+  background:
+    transparent;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.password-wrapper button:hover {
+  color:
+    var(--signup-primary);
+
+  background:
+    var(--signup-primary-light);
+}
+
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
+
+.auth-submit {
+  width: 100%;
+
+  min-height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-top: 23px;
+
+  padding:
+    0 18px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  color:
+    #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087f8c,
+      #056873
+    );
+
+  box-shadow:
+    0 10px 24px
+    rgba(8, 127, 140, 0.17);
+
+  font-family: inherit;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 14px 30px
+    rgba(8, 127, 140, 0.23);
+}
+
+.auth-submit:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+.auth-submit:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  box-shadow: none;
+}
+
+.auth-submit svg {
+  transition:
+    transform 0.2s ease;
+}
+
+.auth-submit:hover:not(:disabled) svg {
+  transform:
+    translateX(3px);
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  margin-top: 22px;
+  padding-top: 20px;
+
+  border-top:
+    1px solid #edf2f3;
+
+  color:
+    var(--signup-muted);
+
+  font-size: 9px;
+}
+
+.auth-footer a {
+  color:
+    var(--signup-primary);
+
+  font-weight: 800;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease;
+}
+
+.auth-footer a:hover {
+  color:
+    var(--signup-primary-dark);
+
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes signupFadeUp {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes signupAlert {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes signupSpin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .auth-page {
+    padding:
+      35px 16px 60px;
+  }
+
+  .signup-card {
+    width: min(600px, 100%);
+
+    padding:
+      31px 28px 27px;
+
+    border-radius: 19px;
+  }
+
+  .form-grid {
+    grid-template-columns:
+      1fr;
+
+    gap: 15px;
+  }
+
+  .form-field.full {
+    grid-column:
+      auto;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 520px) {
+
+  .auth-page {
+    min-height: calc(100vh - 65px);
+
+    padding:
+      25px 12px 45px;
+  }
+
+  .signup-card {
+    padding:
+      27px 19px 23px;
+
+    border-radius: 17px;
+  }
+
+  .auth-header {
+    gap: 10px;
+
+    margin-bottom: 23px;
+  }
+
+  .auth-logo {
+    width: 58px;
+    height: 58px;
+
+    padding: 6px;
+
+    border-radius: 14px;
+  }
+
+  .auth-logo-image {
+    border-radius: 9px;
+  }
+
+  .auth-brand {
+    font-size: 18px;
+  }
+
+  .auth-brand-subtitle {
+    max-width: 190px;
+
+    font-size: 6px;
+  }
+
+  .auth-title {
+    margin-bottom: 23px;
+  }
+
+  .auth-title h1 {
+    font-size: 27px;
+  }
+
+  .auth-title p {
+    font-size: 9px;
+  }
+
+  .form-field input,
+  .form-field select {
+    height: 45px;
+  }
+
+  .form-field textarea {
+    min-height: 90px;
+  }
+
+  .auth-submit {
+    min-height: 47px;
+
+    margin-top: 20px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 380px) {
+
+  .auth-page {
+    padding:
+      20px 9px 35px;
+  }
+
+  .signup-card {
+    padding:
+      24px 15px 20px;
+
+    border-radius: 15px;
+  }
+
+  .auth-logo {
+    width: 52px;
+    height: 52px;
+
+    border-radius: 12px;
+  }
+
+  .auth-brand {
+    font-size: 16px;
+  }
+
+  .auth-brand-subtitle {
+    max-width: 175px;
+
+    font-size: 5.5px;
+  }
+
+  .auth-title h1 {
+    font-size: 25px;
+  }
+
+  .form-field > label {
+    font-size: 8px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 9px;
+  }
+
+  .auth-footer {
+    flex-direction: column;
+
+    gap: 3px;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .auth-page *,
+  .auth-page *::before,
+  .auth-page *::after {
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+  }
+
+}

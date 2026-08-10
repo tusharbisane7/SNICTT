@@ -1,0 +1,1591 @@
+/* =========================================================
+   SNICT NAVBAR
+   Premium Medical / Professional UI
+   Updated for actual SNICT logo image
+========================================================= */
+
+:root {
+  --snict-primary: #087f8c;
+  --snict-primary-dark: #056873;
+  --snict-primary-light: #e9f8fa;
+
+  --snict-text: #102a2f;
+  --snict-muted: #667b80;
+  --snict-border: #dfeaec;
+
+  --snict-white: #ffffff;
+  --snict-bg: #f8fbfc;
+
+  --snict-shadow: 0 10px 35px rgba(16, 42, 47, 0.08);
+
+  --snict-radius: 14px;
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+
+.snict-navbar,
+.snict-navbar * {
+  box-sizing: border-box;
+}
+
+.snict-navbar button,
+.snict-navbar input {
+  font: inherit;
+}
+
+.snict-navbar a {
+  text-decoration: none;
+}
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.snict-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 82px;
+
+  z-index: 1000;
+
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(223, 234, 236, 0.85);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  transition:
+    height 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.snict-navbar.navbar-scrolled {
+  height: 72px;
+
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom-color: #d8e6e8;
+
+  box-shadow: 0 8px 30px rgba(16, 42, 47, 0.08);
+}
+
+.snict-navbar.navbar-admin-page {
+  background: rgba(248, 251, 252, 0.97);
+}
+
+/* =========================================================
+   INNER
+========================================================= */
+
+.navbar-inner {
+  width: min(1440px, calc(100% - 48px));
+  height: 100%;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 28px;
+}
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.snict-brand {
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-width: 250px;
+
+  color: var(--snict-text);
+
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.snict-brand:hover {
+  transform: translateY(-1px);
+}
+
+/* Actual SNICT logo */
+.brand-logo {
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+  border: 1px solid #d7edef;
+
+  box-shadow:
+    0 5px 16px rgba(8, 127, 140, 0.08);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.snict-brand:hover .brand-logo {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 20px rgba(8, 127, 140, 0.14);
+}
+
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+}
+
+/* Prevent old HeartPulse/pulse styles from affecting logo */
+.brand-pulse {
+  display: none !important;
+}
+
+.brand-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brand-name {
+  display: block;
+
+  color: var(--snict-text);
+
+  font-size: 18px;
+  font-weight: 850;
+
+  line-height: 1;
+
+  letter-spacing: 0.08em;
+}
+
+.brand-description {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #71858a;
+
+  font-size: 7.5px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  letter-spacing: 0.04em;
+
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   DESKTOP NAVIGATION
+========================================================= */
+
+.desktop-navigation {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+.desktop-link {
+  position: relative;
+
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 10px;
+
+  color: #53696e;
+  background: transparent;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.desktop-link:hover {
+  color: var(--snict-primary);
+  background: #f0f9fa;
+}
+
+.desktop-link.active {
+  color: var(--snict-primary);
+  background: #edf8f9;
+}
+
+.desktop-link.active::after {
+  content: "";
+
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+
+  width: 16px;
+  height: 2px;
+
+  transform: translateX(-50%);
+
+  border-radius: 10px;
+
+  background: var(--snict-primary);
+}
+
+/* =========================================================
+   DESKTOP DROPDOWN
+========================================================= */
+
+.desktop-dropdown {
+  position: relative;
+}
+
+.dropdown-button {
+  appearance: none;
+}
+
+.dropdown-button svg {
+  transition: transform 0.2s ease;
+}
+
+.desktop-dropdown:hover .dropdown-button svg {
+  transform: rotate(180deg);
+}
+
+.dropdown-panel {
+  position: absolute;
+
+  top: calc(100% + 10px);
+  left: 50%;
+
+  width: 220px;
+
+  transform:
+    translateX(-50%)
+    translateY(8px);
+
+  padding: 9px;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  border: 1px solid var(--snict-border);
+  border-radius: 14px;
+
+  box-shadow:
+    0 20px 50px rgba(16, 42, 47, 0.14);
+
+  backdrop-filter: blur(18px);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s ease;
+}
+
+.desktop-dropdown:hover .dropdown-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  transform:
+    translateX(-50%)
+    translateY(0);
+}
+
+.dropdown-panel::before {
+  content: "";
+
+  position: absolute;
+
+  top: -6px;
+  left: 50%;
+
+  width: 11px;
+  height: 11px;
+
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+
+  background: #ffffff;
+
+  border-left: 1px solid var(--snict-border);
+  border-top: 1px solid var(--snict-border);
+}
+
+.dropdown-heading {
+  padding: 9px 11px 7px;
+
+  color: #8a9da1;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.dropdown-panel a {
+  position: relative;
+  z-index: 1;
+
+  min-height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 11px;
+
+  color: #435c61;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    padding 0.2s ease;
+}
+
+.dropdown-panel a:hover {
+  padding-left: 14px;
+
+  color: var(--snict-primary);
+  background: #edf8f9;
+}
+
+/* =========================================================
+   NAVBAR ACTIONS
+========================================================= */
+
+.navbar-actions {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  min-width: 0;
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+.navbar-login {
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 12px;
+
+  color: #53696e;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.navbar-login:hover {
+  color: var(--snict-primary);
+  background: #edf8f9;
+}
+
+/* =========================================================
+   JOIN
+========================================================= */
+
+.navbar-join {
+  height: 41px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 15px;
+
+  color: #ffffff;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087f8c,
+      #056d78
+    );
+
+  font-size: 12px;
+  font-weight: 750;
+
+  white-space: nowrap;
+
+  box-shadow:
+    0 7px 18px rgba(8, 127, 140, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.navbar-join:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 24px rgba(8, 127, 140, 0.25);
+}
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
+
+.navbar-admin-login {
+  height: 37px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 0 10px;
+
+  color: #60757a;
+
+  border: 1px solid #dce7e9;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.navbar-admin-login:hover {
+  color: var(--snict-primary);
+
+  border-color: #a9dce1;
+
+  background: #f2fafb;
+}
+
+/* =========================================================
+   USER / ADMIN BUTTON
+========================================================= */
+
+.navbar-user-wrapper,
+.navbar-admin-wrapper {
+  position: relative;
+}
+
+.navbar-user-button,
+.navbar-admin-button {
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 4px 9px 4px 5px;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.navbar-user-button:hover,
+.navbar-user-button.active,
+.navbar-admin-button:hover,
+.navbar-admin-button.active {
+  background: #f1f9fa;
+  border-color: #dcecef;
+}
+
+/* =========================================================
+   AVATARS
+========================================================= */
+
+.navbar-user-avatar,
+.navbar-admin-avatar {
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087f8c,
+      #1ca5ad
+    );
+
+  font-size: 13px;
+  font-weight: 800;
+
+  box-shadow:
+    0 4px 12px rgba(8, 127, 140, 0.16);
+}
+
+.navbar-admin-avatar {
+  background:
+    linear-gradient(
+      135deg,
+      #193d44,
+      #087f8c
+    );
+}
+
+/* =========================================================
+   USER INFO
+========================================================= */
+
+.navbar-user-info,
+.navbar-admin-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  text-align: left;
+}
+
+.navbar-user-name,
+.navbar-admin-name {
+  max-width: 115px;
+
+  overflow: hidden;
+
+  color: var(--snict-text);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  line-height: 1.25;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-user-username {
+  max-width: 115px;
+
+  overflow: hidden;
+
+  color: #829398;
+
+  font-size: 9px;
+
+  line-height: 1.3;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-admin-role {
+  color: var(--snict-primary);
+
+  font-size: 8px;
+  font-weight: 850;
+
+  letter-spacing: 0.12em;
+}
+
+.user-chevron-open {
+  transform: rotate(180deg);
+}
+
+.navbar-user-button svg,
+.navbar-admin-button svg {
+  color: #7b8e93;
+
+  transition:
+    transform 0.2s ease;
+}
+
+/* =========================================================
+   USER / ADMIN DROPDOWN
+========================================================= */
+
+.navbar-user-dropdown,
+.navbar-admin-dropdown {
+  position: absolute;
+
+  top: calc(100% + 10px);
+  right: 0;
+
+  width: 245px;
+
+  padding: 9px;
+
+  background: rgba(255, 255, 255, 0.99);
+
+  border: 1px solid var(--snict-border);
+  border-radius: 15px;
+
+  box-shadow:
+    0 20px 55px rgba(16, 42, 47, 0.15);
+
+  animation:
+    navbarDropdownIn 0.2s ease;
+
+  z-index: 1200;
+}
+
+@keyframes navbarDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   DROPDOWN HEADER
+========================================================= */
+
+.user-dropdown-header,
+.admin-dropdown-header {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 9px;
+}
+
+.user-dropdown-avatar,
+.admin-dropdown-avatar {
+  width: 39px;
+  height: 39px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #087f8c,
+      #1ca5ad
+    );
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-dropdown-avatar {
+  background:
+    linear-gradient(
+      135deg,
+      #193d44,
+      #087f8c
+    );
+}
+
+.user-dropdown-header > div:last-child,
+.admin-dropdown-header > div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.user-dropdown-header strong,
+.admin-dropdown-header strong {
+  overflow: hidden;
+
+  color: var(--snict-text);
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dropdown-header span,
+.admin-dropdown-header span {
+  margin-top: 3px;
+
+  overflow: hidden;
+
+  color: #829398;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.user-dropdown-divider {
+  height: 1px;
+
+  margin: 6px 3px;
+
+  background: #e8eff0;
+}
+
+/* =========================================================
+   DROPDOWN LINKS
+========================================================= */
+
+.navbar-user-dropdown > a,
+.navbar-admin-dropdown > a {
+  min-height: 41px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 10px;
+
+  color: #4e676c;
+
+  border-radius: 9px;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.navbar-user-dropdown > a svg,
+.navbar-admin-dropdown > a svg {
+  flex-shrink: 0;
+  color: #789096;
+}
+
+.navbar-user-dropdown > a:hover,
+.navbar-admin-dropdown > a:hover {
+  color: var(--snict-primary);
+
+  background: #edf8f9;
+
+  transform: translateX(2px);
+}
+
+.navbar-user-dropdown > a:hover svg,
+.navbar-admin-dropdown > a:hover svg {
+  color: var(--snict-primary);
+}
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+.navbar-logout-button,
+.navbar-admin-logout {
+  width: 100%;
+  min-height: 41px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 9px;
+
+  color: #b34848;
+  background: transparent;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+  text-align: left;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.navbar-logout-button:hover,
+.navbar-admin-logout:hover {
+  color: #c03939;
+  background: #fff2f2;
+}
+
+.navbar-logout-button:disabled,
+.navbar-admin-logout:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   MOBILE MENU BUTTON
+========================================================= */
+
+.mobile-menu-button {
+  display: none;
+
+  width: 43px;
+  height: 43px;
+
+  margin-left: auto;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  color: var(--snict-text);
+
+  border: 1px solid var(--snict-border);
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.mobile-menu-button:hover,
+.mobile-menu-button.open {
+  color: var(--snict-primary);
+
+  background: #edf8f9;
+  border-color: #b9dfe3;
+}
+
+/* =========================================================
+   MOBILE NAVIGATION
+========================================================= */
+
+.mobile-navigation {
+  display: none;
+}
+
+/* =========================================================
+   SPACER
+========================================================= */
+
+.navbar-page-spacer {
+  width: 100%;
+  height: 82px;
+}
+
+/* =========================================================
+   TABLET / SMALL DESKTOP
+========================================================= */
+
+@media (max-width: 1150px) {
+  .navbar-inner {
+    width: min(1100px, calc(100% - 32px));
+    gap: 16px;
+  }
+
+  .snict-brand {
+    min-width: 215px;
+  }
+
+  .desktop-navigation {
+    gap: 0;
+  }
+
+  .desktop-link {
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .navbar-admin-login {
+    display: none;
+  }
+
+  .navbar-join {
+    padding: 0 11px;
+  }
+}
+
+/* =========================================================
+   MOBILE BREAKPOINT
+========================================================= */
+
+@media (max-width: 950px) {
+  .snict-navbar {
+    height: 72px;
+  }
+
+  .navbar-inner {
+    width: calc(100% - 28px);
+  }
+
+  .desktop-navigation,
+  .navbar-actions {
+    display: none;
+  }
+
+  .mobile-menu-button {
+    display: flex;
+  }
+
+  .navbar-page-spacer {
+    height: 72px;
+  }
+
+  .snict-brand {
+    min-width: 0;
+  }
+
+  /* Mobile logo */
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 11px;
+  }
+
+  .brand-name {
+    font-size: 18px;
+  }
+
+  .brand-description {
+    font-size: 6.5px;
+  }
+}
+
+/* =========================================================
+   MOBILE NAV OPEN
+========================================================= */
+
+@media (max-width: 950px) {
+  .mobile-navigation {
+    position: fixed;
+
+    top: 72px;
+    left: 0;
+
+    width: 100%;
+    height: calc(100vh - 72px);
+
+    display: block;
+
+    padding: 15px;
+
+    overflow-y: auto;
+
+    background:
+      rgba(248, 251, 252, 0.98);
+
+    border-top: 1px solid #e4edef;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform: translateY(-8px);
+
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease,
+      visibility 0.25s ease;
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .mobile-navigation-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform: translateY(0);
+  }
+
+  .mobile-navigation-inner {
+    width: min(100%, 620px);
+
+    margin: 0 auto;
+
+    padding-bottom: 35px;
+  }
+
+  /* =====================================================
+     MOBILE LINK
+  ===================================================== */
+
+  .mobile-link,
+  .mobile-dropdown-button {
+    width: 100%;
+    min-height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 16px;
+
+    color: #425d62;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    background: transparent;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+      color 0.2s ease,
+      background 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .mobile-link:hover,
+  .mobile-link.active,
+  .mobile-dropdown-button:hover {
+    color: var(--snict-primary);
+
+    background: #edf8f9;
+    border-color: #d9edef;
+  }
+
+  /* =====================================================
+     MOBILE DROPDOWN
+  ===================================================== */
+
+  .mobile-dropdown {
+    margin: 2px 0;
+  }
+
+  .mobile-dropdown-button svg {
+    transition:
+      transform 0.25s ease;
+  }
+
+  .mobile-dropdown-button .chevron-open {
+    transform: rotate(180deg);
+  }
+
+  .mobile-submenu {
+    max-height: 0;
+
+    overflow: hidden;
+
+    padding-left: 15px;
+
+    opacity: 0;
+
+    transition:
+      max-height 0.3s ease,
+      opacity 0.25s ease;
+  }
+
+  .mobile-submenu-open {
+    max-height: 150px;
+    opacity: 1;
+  }
+
+  .mobile-submenu a {
+    min-height: 45px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 18px;
+
+    color: #708287;
+
+    border-left: 2px solid #d9e9eb;
+
+    font-size: 12px;
+    font-weight: 650;
+
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .mobile-submenu a:hover {
+    color: var(--snict-primary);
+    border-left-color: var(--snict-primary);
+  }
+
+  /* =====================================================
+     ACCOUNT SECTION
+  ===================================================== */
+
+  .mobile-user-section {
+    margin-top: 18px;
+
+    padding-top: 16px;
+
+    border-top: 1px solid #dfeaec;
+  }
+
+  .mobile-user-button,
+  .mobile-admin-button {
+    width: 100%;
+    min-height: 66px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    padding: 8px 11px;
+
+    border: 1px solid #dce9eb;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .mobile-user-button.active,
+  .mobile-user-button:hover,
+  .mobile-admin-button.active,
+  .mobile-admin-button:hover {
+    border-color: #b9dfe3;
+    background: #f1fafb;
+  }
+
+  .mobile-user-avatar,
+  .mobile-admin-avatar {
+    width: 43px;
+    height: 43px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+
+    border-radius: 12px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #087f8c,
+        #1ca5ad
+      );
+
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .mobile-admin-avatar {
+    background:
+      linear-gradient(
+        135deg,
+        #193d44,
+        #087f8c
+      );
+  }
+
+  .mobile-user-info,
+  .mobile-admin-info {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-user-name,
+  .mobile-admin-info span {
+    overflow: hidden;
+
+    color: var(--snict-text);
+
+    font-size: 13px;
+    font-weight: 800;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-user-username,
+  .mobile-admin-info small {
+    margin-top: 3px;
+
+    overflow: hidden;
+
+    color: #829398;
+
+    font-size: 9px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-admin-info small {
+    color: var(--snict-primary);
+
+    font-weight: 850;
+
+    letter-spacing: 0.1em;
+  }
+
+  /* =====================================================
+     MOBILE USER MENU
+  ===================================================== */
+
+  .mobile-user-menu,
+  .mobile-admin-menu {
+    margin-top: 8px;
+
+    padding: 7px;
+
+    border: 1px solid #dfeaec;
+    border-radius: 13px;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 12px 30px rgba(16, 42, 47, 0.07);
+
+    animation:
+      mobileMenuIn 0.2s ease;
+  }
+
+  @keyframes mobileMenuIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .mobile-user-action {
+    width: 100%;
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 11px;
+
+    color: #526b70;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: transparent;
+
+    font-size: 12px;
+    font-weight: 650;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+      color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .mobile-user-action:hover {
+    color: var(--snict-primary);
+    background: #edf8f9;
+  }
+
+  .mobile-user-action-left {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+  }
+
+  .mobile-user-action-left span {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-user-action.logout {
+    color: #b34848;
+  }
+
+  .mobile-user-action.logout:hover {
+    color: #c03939;
+    background: #fff2f2;
+  }
+
+  /* =====================================================
+     MOBILE VISITOR ACTIONS
+  ===================================================== */
+
+  .mobile-actions {
+    display: flex;
+    flex-direction: column;
+
+    gap: 9px;
+  }
+
+  .mobile-login,
+  .mobile-join,
+  .mobile-admin-login {
+    min-height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    border-radius: 11px;
+
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  .mobile-login {
+    color: #4f686d;
+
+    border: 1px solid #dce8ea;
+
+    background: #ffffff;
+  }
+
+  .mobile-join {
+    color: #ffffff;
+
+    background:
+      linear-gradient(
+        135deg,
+        #087f8c,
+        #056d78
+      );
+
+    box-shadow:
+      0 7px 18px rgba(8, 127, 140, 0.16);
+  }
+
+  .mobile-admin-login {
+    color: #60757a;
+
+    border: 1px solid #dce8ea;
+
+    background: #ffffff;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+  .snict-navbar {
+    height: 68px;
+  }
+
+  .navbar-inner {
+    width: calc(100% - 20px);
+  }
+
+  .navbar-page-spacer {
+    height: 68px;
+  }
+
+  .mobile-navigation {
+    top: 68px;
+
+    height: calc(100vh - 68px);
+  }
+
+  .brand-logo {
+    width: 39px;
+    height: 39px;
+
+    border-radius: 10px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  .brand-description {
+    display: none;
+  }
+
+  .mobile-menu-button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 360px) {
+  .navbar-inner {
+    width: calc(100% - 16px);
+  }
+
+  .snict-brand {
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 37px;
+    height: 37px;
+  }
+
+  .brand-name {
+    font-size: 15px;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.snict-navbar a:focus-visible,
+.snict-navbar button:focus-visible {
+  outline: 2px solid #55aeb6;
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .snict-navbar *,
+  .snict-navbar *::before,
+  .snict-navbar *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

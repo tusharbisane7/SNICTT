@@ -1,0 +1,795 @@
+/* =========================================================
+   ADMIN PROFILE
+========================================================= */
+
+.admin-profile-page {
+  min-height: 100vh;
+
+  padding: 36px 28px 60px;
+
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(37, 99, 235, 0.055),
+      transparent 28%
+    ),
+    #f6f8fb;
+
+  color: #172033;
+}
+
+.admin-profile-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.admin-profile-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 25px;
+}
+
+.admin-profile-eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #2563eb;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.admin-profile-header h1 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 34px;
+  font-weight: 800;
+
+  letter-spacing: -0.035em;
+}
+
+.admin-profile-header p {
+  margin: 9px 0 0;
+
+  color: #667085;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-profile-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  min-height: 40px;
+
+  padding: 0 13px;
+
+  border: 1px solid #dbe3ef;
+  border-radius: 9px;
+
+  background: #fff;
+
+  color: #344054;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition: 0.2s ease;
+}
+
+.admin-profile-back:hover {
+  border-color: #bfdbfe;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+}
+
+
+/* =========================================================
+   ALERT
+========================================================= */
+
+.admin-profile-alert {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-bottom: 18px;
+
+  padding: 12px 15px;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-profile-alert.error {
+  border: 1px solid #fecaca;
+
+  background: #fff7f7;
+
+  color: #b42318;
+}
+
+.admin-profile-alert.success {
+  border: 1px solid #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.admin-profile-hero {
+  display: flex;
+  align-items: center;
+
+  gap: 17px;
+
+  margin-bottom: 18px;
+
+  padding: 22px;
+
+  border: 1px solid #e1e7ef;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 22px rgba(15, 23, 42, 0.04);
+}
+
+.admin-profile-avatar {
+  width: 62px;
+  height: 62px;
+
+  flex: 0 0 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #1d4ed8
+    );
+
+  color: #ffffff;
+
+  font-size: 23px;
+  font-weight: 800;
+
+  box-shadow:
+    0 8px 22px rgba(37, 99, 235, 0.2);
+}
+
+.admin-profile-hero-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-profile-hero-content > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #2563eb;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.admin-profile-hero-content h2 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.admin-profile-hero-content p {
+  margin: 4px 0 0;
+
+  color: #98a2b3;
+
+  font-size: 12px;
+}
+
+.admin-profile-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 8px 11px;
+
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+
+  background: #eff6ff;
+
+  color: #1d4ed8;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.admin-profile-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  gap: 18px;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.admin-profile-card {
+  padding: 22px;
+
+  border: 1px solid #e1e7ef;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 22px rgba(15, 23, 42, 0.035);
+}
+
+.admin-profile-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding-bottom: 17px;
+
+  border-bottom: 1px solid #edf0f4;
+}
+
+.admin-profile-card-header span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #2563eb;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.admin-profile-card-header h2 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.admin-profile-card-icon {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+}
+
+.admin-profile-card-icon.security {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.admin-profile-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 17px;
+
+  padding-top: 19px;
+}
+
+.admin-profile-field label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #344054;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-profile-input {
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 0 12px;
+
+  border: 1px solid #d8e0eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #98a2b3;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-profile-input:focus-within {
+  border-color: #8fb3f5;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.admin-profile-input input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #172033;
+
+  font-family: inherit;
+
+  font-size: 12px;
+}
+
+.admin-profile-input input::placeholder {
+  color: #a3acba;
+}
+
+
+/* =========================================================
+   PASSWORD
+========================================================= */
+
+.admin-profile-password {
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid #d8e0eb;
+  border-radius: 9px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-profile-password:focus-within {
+  border-color: #8fb3f5;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.admin-profile-password input {
+  flex: 1;
+
+  height: 100%;
+
+  min-width: 0;
+
+  padding: 0 12px;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #172033;
+
+  font-family: inherit;
+
+  font-size: 12px;
+}
+
+.admin-profile-password input::placeholder {
+  color: #a3acba;
+}
+
+.admin-profile-password button {
+  width: 42px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  color: #667085;
+
+  cursor: pointer;
+}
+
+.admin-profile-password button:hover {
+  color: #2563eb;
+}
+
+
+/* =========================================================
+   PASSWORD NOTE
+========================================================= */
+
+.admin-password-note {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px 11px;
+
+  border: 1px solid #e0e7ff;
+  border-radius: 8px;
+
+  background: #f8faff;
+
+  color: #667085;
+
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.admin-password-note svg {
+  flex: 0 0 auto;
+
+  color: #2563eb;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.admin-profile-save,
+.admin-password-save {
+  min-height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-top: 2px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-profile-save {
+  border: 1px solid #2563eb;
+
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+.admin-profile-save:hover {
+  background: #1d4ed8;
+
+  box-shadow:
+    0 8px 18px rgba(37, 99, 235, 0.18);
+
+  transform: translateY(-1px);
+}
+
+.admin-password-save {
+  border: 1px solid #172033;
+
+  background: #172033;
+
+  color: #ffffff;
+}
+
+.admin-password-save:hover {
+  background: #111827;
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.15);
+
+  transform: translateY(-1px);
+}
+
+.admin-profile-save:disabled,
+.admin-password-save:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   ACCOUNT STATUS
+========================================================= */
+
+.admin-account-status {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  margin-top: 18px;
+
+  padding: 17px 19px;
+
+  border: 1px solid #d9f2e2;
+  border-radius: 13px;
+
+  background: #f7fffa;
+}
+
+.admin-account-status-icon {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #dcfce7;
+
+  color: #15803d;
+}
+
+.admin-account-status > div:nth-child(2) {
+  flex: 1;
+}
+
+.admin-account-status span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #15803d;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.1em;
+}
+
+.admin-account-status h3 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.admin-account-status p {
+  margin: 3px 0 0;
+
+  color: #667085;
+
+  font-size: 10px;
+}
+
+.admin-account-status > strong {
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  background: #dcfce7;
+
+  color: #15803d;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.admin-profile-loading {
+  min-height: 65vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  color: #667085;
+}
+
+.admin-profile-loading p {
+  margin: 0;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-profile-spin {
+  animation:
+    adminProfileSpin 0.9s linear infinite;
+}
+
+@keyframes adminProfileSpin {
+
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .admin-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 650px) {
+
+  .admin-profile-page {
+    padding: 24px 14px 45px;
+  }
+
+  .admin-profile-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-profile-header h1 {
+    font-size: 28px;
+  }
+
+  .admin-profile-back {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-profile-hero {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .admin-profile-role {
+    margin-left: 79px;
+  }
+
+}
+
+
+@media (max-width: 430px) {
+
+  .admin-profile-card {
+    padding: 17px;
+  }
+
+  .admin-profile-hero {
+    padding: 17px;
+  }
+
+  .admin-profile-avatar {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .admin-profile-hero-content h2 {
+    font-size: 17px;
+  }
+
+  .admin-profile-role {
+    width: 100%;
+    margin-left: 0;
+
+    justify-content: center;
+  }
+
+  .admin-account-status {
+    align-items: flex-start;
+  }
+
+  .admin-account-status > strong {
+    display: none;
+  }
+
+}
