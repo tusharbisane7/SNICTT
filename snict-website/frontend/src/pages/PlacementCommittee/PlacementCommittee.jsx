@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import {
   Users,
   BriefcaseBusiness,
-  GraduationCap,
   ShieldCheck,
   AlertCircle,
   RefreshCw,
   UserCircle,
+  GraduationCap,
+  FileText,
 } from "lucide-react";
 
 import api from "../../services/api";
@@ -17,18 +18,15 @@ import "./PlacementCommittee.css";
 
 function PlacementCommittee() {
 
-  const [members, setMembers] =
-    useState([]);
+  const [members, setMembers] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
 
   // =========================================================
-  // FETCH MEMBERS
+  // FETCH PLACEMENT COMMITTEE MEMBERS
   // =========================================================
 
   const fetchMembers = async () => {
@@ -36,24 +34,32 @@ function PlacementCommittee() {
     try {
 
       setLoading(true);
+
       setError("");
 
-      const response =
-        await api.get(
-          "/committees/placement"
-        );
+      const response = await api.get(
+        "/committees/placement"
+      );
 
-      if (
-        response.data?.success
-      ) {
+
+      if (response.data?.success) {
 
         setMembers(
-          response.data.members || []
+          Array.isArray(
+            response.data.members
+          )
+            ? response.data.members
+            : []
         );
 
       } else {
 
         setMembers([]);
+
+        setError(
+          response.data?.message ||
+          "Unable to load Placement Committee members."
+        );
 
       }
 
@@ -63,6 +69,8 @@ function PlacementCommittee() {
         "Placement committee error:",
         error
       );
+
+      setMembers([]);
 
       setError(
         error.response?.data?.message ||
@@ -74,8 +82,13 @@ function PlacementCommittee() {
       setLoading(false);
 
     }
+
   };
 
+
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
 
   useEffect(() => {
 
@@ -92,13 +105,26 @@ function PlacementCommittee() {
 
     <main className="placement-page">
 
-      {/* BACKGROUND */}
+
+      {/* =====================================================
+          BACKGROUND
+      ===================================================== */}
 
       <div className="placement-grid" />
 
-      <div className="placement-glow placement-glow-one" />
+      <div
+        className="
+          placement-glow
+          placement-glow-one
+        "
+      />
 
-      <div className="placement-glow placement-glow-two" />
+      <div
+        className="
+          placement-glow
+          placement-glow-two
+        "
+      />
 
 
       {/* =====================================================
@@ -111,69 +137,145 @@ function PlacementCommittee() {
 
           <div className="placement-hero-content">
 
+
+            {/* ICON */}
+
             <div className="placement-icon">
-              <BriefcaseBusiness size={36} />
+
+              <BriefcaseBusiness
+                size={38}
+                strokeWidth={1.7}
+              />
+
             </div>
 
+
+            {/* LABEL */}
+
             <span className="placement-label">
+
               SNICT COMMITTEE
+
             </span>
 
+
+            {/* TITLE */}
+
             <h1>
+
               Placement
-              <span> Committee</span>
+
+              <span>
+                {" "}Committee
+              </span>
+
             </h1>
 
+
+            {/* DESCRIPTION */}
+
             <p>
+
               Supporting SNICT members with
               professional opportunities,
               career development and industry
               connections.
+
             </p>
+
+
+            {/* =================================================
+                STATS
+            ================================================= */}
 
             <div className="placement-stats">
 
-              <div>
-                <Users size={18} />
 
-                <span>
-                  {members.length}
-                </span>
+              {/* MEMBERS */}
 
-                <small>
-                  Members
-                </small>
+              <div className="placement-stat">
+
+                <div className="placement-stat-icon">
+
+                  <Users
+                    size={20}
+                  />
+
+                </div>
+
+                <div>
+
+                  <span>
+                    {members.length}
+                  </span>
+
+                  <small>
+                    Members
+                  </small>
+
+                </div>
+
               </div>
 
 
-              <div>
-                <ShieldCheck size={18} />
+              {/* STATUS */}
 
-                <span>
-                  Active
-                </span>
+              <div className="placement-stat">
 
-                <small>
-                  Committee
-                </small>
+                <div className="placement-stat-icon">
+
+                  <ShieldCheck
+                    size={20}
+                  />
+
+                </div>
+
+                <div>
+
+                  <span>
+                    Active
+                  </span>
+
+                  <small>
+                    Committee
+                  </small>
+
+                </div>
+
               </div>
+
 
             </div>
 
           </div>
 
 
+          {/* =================================================
+              HERO VISUAL
+          ================================================= */}
+
           <div className="placement-hero-visual">
 
-            <div className="placement-orbit placement-orbit-one" />
+            <div
+              className="
+                placement-orbit
+                placement-orbit-one
+              "
+            />
 
-            <div className="placement-orbit placement-orbit-two" />
+            <div
+              className="
+                placement-orbit
+                placement-orbit-two
+              "
+            />
+
 
             <div className="placement-core">
 
               <BriefcaseBusiness
-                size={65}
-                strokeWidth={1.2}
+                size={68}
+                strokeWidth={1.15}
               />
 
               <strong>
@@ -194,12 +296,17 @@ function PlacementCommittee() {
 
 
       {/* =====================================================
-          MEMBERS
+          MEMBERS SECTION
       ===================================================== */}
 
       <section className="placement-members">
 
         <div className="placement-container">
+
+
+          {/* =================================================
+              SECTION HEADER
+          ================================================= */}
 
           <div className="placement-section-header">
 
@@ -208,22 +315,30 @@ function PlacementCommittee() {
             </span>
 
             <h2>
+
               Meet the{" "}
+
               <strong>
                 Placement Committee
               </strong>
+
             </h2>
 
             <p>
-              Our committee members working
-              towards professional growth and
-              career opportunities.
+
+              Meet the professionals working
+              together to support career
+              development and industry
+              opportunities for SNICT members.
+
             </p>
 
           </div>
 
 
-          {/* LOADING */}
+          {/* =================================================
+              LOADING
+          ================================================= */}
 
           {loading && (
 
@@ -245,15 +360,25 @@ function PlacementCommittee() {
           )}
 
 
-          {/* ERROR */}
+          {/* =================================================
+              ERROR
+          ================================================= */}
 
           {!loading && error && (
 
             <div className="placement-error">
 
-              <AlertCircle size={28} />
 
-              <div>
+              <div className="placement-error-icon">
+
+                <AlertCircle
+                  size={28}
+                />
+
+              </div>
+
+
+              <div className="placement-error-content">
 
                 <h3>
                   Unable to load members
@@ -265,11 +390,19 @@ function PlacementCommittee() {
 
               </div>
 
+
               <button
+                type="button"
                 onClick={fetchMembers}
+                className="placement-retry-button"
               >
-                <RefreshCw size={16} />
+
+                <RefreshCw
+                  size={17}
+                />
+
                 Try Again
+
               </button>
 
             </div>
@@ -277,7 +410,9 @@ function PlacementCommittee() {
           )}
 
 
-          {/* EMPTY */}
+          {/* =================================================
+              EMPTY
+          ================================================= */}
 
           {!loading &&
             !error &&
@@ -285,16 +420,24 @@ function PlacementCommittee() {
 
               <div className="placement-empty">
 
-                <Users size={45} />
+                <div className="placement-empty-icon">
+
+                  <Users
+                    size={45}
+                  />
+
+                </div>
 
                 <h3>
                   No committee members
                 </h3>
 
                 <p>
+
                   Members will appear here
-                  after the administrator adds
-                  them.
+                  after the administrator
+                  adds them.
+
                 </p>
 
               </div>
@@ -302,7 +445,9 @@ function PlacementCommittee() {
             )}
 
 
-          {/* MEMBERS GRID */}
+          {/* =================================================
+              MEMBERS GRID
+          ================================================= */}
 
           {!loading &&
             !error &&
@@ -314,7 +459,28 @@ function PlacementCommittee() {
                   (member, index) => {
 
                     const photo =
-                      member.photo_url;
+                      member.photoUrl ||
+                      member.photo_url ||
+                      null;
+
+                    const name =
+                      member.memberName ||
+                      member.member_name ||
+                      "Committee Member";
+
+                    const designation =
+                      member.designation ||
+                      "Committee Member";
+
+                    const qualification =
+                      member.qualification ||
+                      "";
+
+                    const bio =
+                      member.bio ||
+                      member.memberBio ||
+                      "";
+
 
                     return (
 
@@ -323,58 +489,135 @@ function PlacementCommittee() {
                         key={member.id}
                       >
 
+
+                        {/* =================================================
+                            PHOTO
+                        ================================================= */}
+
                         <div className="placement-member-photo">
+
 
                           {photo ? (
 
                             <img
                               src={photo}
-                              alt={
-                                member.member_name
-                              }
+                              alt={`${name} - ${designation}`}
                               loading="lazy"
                             />
 
                           ) : (
 
-                            <UserCircle
-                              size={80}
-                              strokeWidth={1}
-                            />
+                            <div className="placement-photo-placeholder">
+
+                              <UserCircle
+                                size={85}
+                                strokeWidth={1}
+                              />
+
+                            </div>
 
                           )}
 
-                          <span>
+
+                          {/* NUMBER */}
+
+                          <span className="placement-member-number">
+
                             {String(
                               index + 1
                             ).padStart(2, "0")}
+
                           </span>
+
+
+                          {/* PHOTO OVERLAY */}
+
+                          <div className="placement-photo-overlay" />
 
                         </div>
 
+
+                        {/* =================================================
+                            MEMBER INFORMATION
+                        ================================================= */}
 
                         <div className="placement-member-info">
 
-                          <small>
+
+                          {/* TAG */}
+
+                          <small className="placement-member-tag">
+
                             COMMITTEE MEMBER
+
                           </small>
 
+
+                          {/* NAME */}
+
                           <h3>
-                            {member.member_name}
+                            {name}
                           </h3>
 
-                          <strong>
-                            {member.designation ||
-                              "Committee Member"}
-                          </strong>
 
-                          {member.qualification && (
-                            <p>
-                              {member.qualification}
-                            </p>
+                          {/* DESIGNATION */}
+
+                          <div className="placement-designation">
+
+                            <BriefcaseBusiness
+                              size={15}
+                            />
+
+                            <strong>
+                              {designation}
+                            </strong>
+
+                          </div>
+
+
+                          {/* QUALIFICATION */}
+
+                          {qualification && (
+
+                            <div className="placement-qualification">
+
+                              <GraduationCap
+                                size={15}
+                              />
+
+                              <span>
+                                {qualification}
+                              </span>
+
+                            </div>
+
+                          )}
+
+
+                          {/* BIO */}
+
+                          {bio && (
+
+                            <div className="placement-member-bio">
+
+                              <div className="placement-bio-icon">
+
+                                <FileText
+                                  size={15}
+                                />
+
+                              </div>
+
+                              <p>
+                                {bio}
+                              </p>
+
+                            </div>
+
                           )}
 
                         </div>
+
 
                       </article>
 
@@ -391,8 +634,60 @@ function PlacementCommittee() {
 
       </section>
 
+
+      {/* =====================================================
+          BOTTOM CTA
+      ===================================================== */}
+
+      {!loading &&
+        !error &&
+        members.length > 0 && (
+
+          <section className="placement-bottom">
+
+            <div className="placement-container">
+
+              <div className="placement-bottom-card">
+
+                <div>
+
+                  <span>
+                    SNICT PLACEMENT
+                  </span>
+
+                  <h2>
+                    Building careers.
+                    <strong>
+                      Creating opportunities.
+                    </strong>
+                  </h2>
+
+                  <p>
+                    Our Placement Committee
+                    works towards connecting
+                    members with meaningful
+                    professional opportunities.
+                  </p>
+
+                </div>
+
+                <BriefcaseBusiness
+                  size={55}
+                  strokeWidth={1.1}
+                />
+
+              </div>
+
+            </div>
+
+          </section>
+
+        )}
+
     </main>
+
   );
+
 }
 
 

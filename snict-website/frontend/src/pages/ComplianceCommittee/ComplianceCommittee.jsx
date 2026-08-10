@@ -12,36 +12,28 @@ import api from "../../services/api";
 
 import "./ComplianceCommittee.css";
 
-
 function ComplianceCommittee() {
-
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-
   const fetchMembers = async () => {
-
     try {
-
       setLoading(true);
       setError("");
 
-      const response =
-        await api.get(
-          "/committees/compliance"
-        );
+      const response = await api.get(
+        "/committees/compliance"
+      );
 
       if (response.data?.success) {
-
         setMembers(
           response.data.members || []
         );
-
+      } else {
+        setMembers([]);
       }
-
     } catch (error) {
-
       console.error(
         "Compliance committee error:",
         error
@@ -49,33 +41,24 @@ function ComplianceCommittee() {
 
       setError(
         error.response?.data?.message ||
-        "Unable to load Compliance Committee."
+          "Unable to load Compliance Committee."
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
-
   useEffect(() => {
-
     fetchMembers();
-
   }, []);
 
-
   return (
-
     <main className="compliance-page">
 
       <div className="compliance-grid" />
 
       <div className="compliance-glow compliance-glow-one" />
       <div className="compliance-glow compliance-glow-two" />
-
 
       {/* HERO */}
 
@@ -120,7 +103,6 @@ function ComplianceCommittee() {
 
           </div>
 
-
           <div className="compliance-visual">
 
             <div className="compliance-ring compliance-ring-one" />
@@ -150,7 +132,6 @@ function ComplianceCommittee() {
 
       </section>
 
-
       {/* MEMBERS */}
 
       <section className="compliance-members">
@@ -176,31 +157,41 @@ function ComplianceCommittee() {
 
           </header>
 
+          {/* LOADING */}
 
           {loading && (
-
             <div className="compliance-loading">
 
               <div className="compliance-spinner" />
 
-              <p>
+              <h3>
                 Loading members...
+              </h3>
+
+              <p>
+                Fetching Compliance Committee
+                information.
               </p>
 
             </div>
-
           )}
 
+          {/* ERROR */}
 
           {!loading && error && (
-
             <div className="compliance-error">
 
               <AlertCircle size={27} />
 
-              <span>
-                {error}
-              </span>
+              <div>
+                <h3>
+                  Unable to load members
+                </h3>
+
+                <p>
+                  {error}
+                </p>
+              </div>
 
               <button
                 onClick={fetchMembers}
@@ -210,14 +201,13 @@ function ComplianceCommittee() {
               </button>
 
             </div>
-
           )}
 
+          {/* EMPTY */}
 
           {!loading &&
             !error &&
             members.length === 0 && (
-
               <div className="compliance-empty">
 
                 <ShieldCheck size={48} />
@@ -232,85 +222,98 @@ function ComplianceCommittee() {
                 </p>
 
               </div>
-
             )}
 
+          {/* MEMBERS */}
 
           {!loading &&
             !error &&
             members.length > 0 && (
-
               <div className="compliance-members-grid">
 
                 {members.map(
-                  (member, index) => (
+                  (member, index) => {
 
-                    <article
-                      className="compliance-member-card"
-                      key={member.id}
-                    >
+                    const name =
+                      member.memberName ||
+                      "Committee Member";
 
-                      <div className="compliance-photo">
+                    const designation =
+                      member.designation ||
+                      "Committee Member";
 
-                        {member.photo_url ? (
+                    const bio =
+                      member.bio || "";
 
-                          <img
-                            src={
-                              member.photo_url
-                            }
-                            alt={
-                              member.member_name
-                            }
-                          />
+                    const photo =
+                      member.photoUrl || null;
 
-                        ) : (
+                    const qualification =
+                      member.qualification || "";
 
-                          <UserCircle
-                            size={76}
-                            strokeWidth={1}
-                          />
+                    return (
+                      <article
+                        className="compliance-member-card"
+                        key={member.id}
+                      >
 
-                        )}
+                        <div className="compliance-photo">
 
-                        <span>
-                          {String(
-                            index + 1
-                          ).padStart(2, "0")}
-                        </span>
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <UserCircle
+                              size={90}
+                              strokeWidth={1}
+                            />
+                          )}
 
-                      </div>
+                          <span>
+                            {String(
+                              index + 1
+                            ).padStart(2, "0")}
+                          </span>
 
+                        </div>
 
-                      <div className="compliance-member-content">
+                        <div className="compliance-member-content">
 
-                        <small>
-                          COMPLIANCE COMMITTEE
-                        </small>
+                          <small>
+                            COMPLIANCE COMMITTEE
+                          </small>
 
-                        <h3>
-                          {member.member_name}
-                        </h3>
+                          <h3>
+                            {name}
+                          </h3>
 
-                        <strong>
-                          {member.designation ||
-                            "Committee Member"}
-                        </strong>
+                          <strong>
+                            {designation}
+                          </strong>
 
-                        {member.qualification && (
-                          <p>
-                            {member.qualification}
-                          </p>
-                        )}
+                          {bio && (
+                            <p className="compliance-member-bio">
+                              {bio}
+                            </p>
+                          )}
 
-                      </div>
+                          {qualification && (
+                            <span className="compliance-member-qualification">
+                              {qualification}
+                            </span>
+                          )}
 
-                    </article>
+                        </div>
 
-                  )
+                      </article>
+                    );
+                  }
                 )}
 
               </div>
-
             )}
 
         </div>
@@ -320,6 +323,5 @@ function ComplianceCommittee() {
     </main>
   );
 }
-
 
 export default ComplianceCommittee;

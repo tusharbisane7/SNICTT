@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   Users,
   GraduationCap,
-  ShieldCheck,
   AlertCircle,
   RefreshCw,
   UserCircle,
@@ -13,36 +12,28 @@ import api from "../../services/api";
 
 import "./AcademicCommittee.css";
 
-
 function AcademicCommittee() {
-
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-
   const fetchMembers = async () => {
-
     try {
-
       setLoading(true);
       setError("");
 
-      const response =
-        await api.get(
-          "/committees/academic"
-        );
+      const response = await api.get(
+        "/committees/academic"
+      );
 
       if (response.data?.success) {
-
         setMembers(
           response.data.members || []
         );
-
+      } else {
+        setMembers([]);
       }
-
     } catch (error) {
-
       console.error(
         "Academic committee error:",
         error
@@ -50,33 +41,24 @@ function AcademicCommittee() {
 
       setError(
         error.response?.data?.message ||
-        "Unable to load Academic Committee."
+          "Unable to load Academic Committee."
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
-
   useEffect(() => {
-
     fetchMembers();
-
   }, []);
 
-
   return (
-
     <main className="academic-page">
 
       <div className="academic-grid" />
 
       <div className="academic-glow academic-glow-one" />
       <div className="academic-glow academic-glow-two" />
-
 
       {/* HERO */}
 
@@ -87,7 +69,7 @@ function AcademicCommittee() {
           <div className="academic-hero-content">
 
             <div className="academic-icon">
-              <GraduationCap size={36} />
+              <GraduationCap size={37} />
             </div>
 
             <span>
@@ -100,10 +82,9 @@ function AcademicCommittee() {
             </h1>
 
             <p>
-              Driving academic excellence,
-              professional education and
-              continuous learning for SNICT
-              members.
+              Supporting academic development,
+              learning initiatives, professional
+              knowledge and educational growth.
             </p>
 
             <div className="academic-stat">
@@ -122,10 +103,11 @@ function AcademicCommittee() {
 
           </div>
 
-
           <div className="academic-visual">
 
-            <div className="academic-orbit" />
+            <div className="academic-orbit academic-orbit-one" />
+
+            <div className="academic-orbit academic-orbit-two" />
 
             <div className="academic-core">
 
@@ -150,7 +132,6 @@ function AcademicCommittee() {
 
       </section>
 
-
       {/* MEMBERS */}
 
       <section className="academic-members">
@@ -164,42 +145,52 @@ function AcademicCommittee() {
             </span>
 
             <h2>
-              Our Academic
+              Academic
               <strong> Committee</strong>
             </h2>
 
             <p>
-              Meet the professionals contributing
-              to SNICT's academic initiatives.
+              Meet the professionals supporting
+              academic and educational development.
             </p>
 
           </header>
 
+          {/* LOADING */}
 
           {loading && (
-
             <div className="academic-loading">
 
               <div className="academic-spinner" />
 
-              <p>
+              <h3>
                 Loading members...
+              </h3>
+
+              <p>
+                Fetching Academic Committee
+                information.
               </p>
 
             </div>
-
           )}
 
+          {/* ERROR */}
 
           {!loading && error && (
-
             <div className="academic-error">
 
-              <AlertCircle size={26} />
+              <AlertCircle size={27} />
 
-              <span>
-                {error}
-              </span>
+              <div>
+                <h3>
+                  Unable to load members
+                </h3>
+
+                <p>
+                  {error}
+                </p>
+              </div>
 
               <button
                 onClick={fetchMembers}
@@ -209,17 +200,16 @@ function AcademicCommittee() {
               </button>
 
             </div>
-
           )}
 
+          {/* EMPTY */}
 
           {!loading &&
             !error &&
             members.length === 0 && (
-
               <div className="academic-empty">
 
-                <GraduationCap size={45} />
+                <GraduationCap size={48} />
 
                 <h3>
                   No members available
@@ -231,85 +221,98 @@ function AcademicCommittee() {
                 </p>
 
               </div>
-
             )}
 
+          {/* MEMBERS */}
 
           {!loading &&
             !error &&
             members.length > 0 && (
-
-              <div className="academic-grid-members">
+              <div className="academic-members-grid">
 
                 {members.map(
-                  (member, index) => (
+                  (member, index) => {
 
-                    <article
-                      className="academic-member-card"
-                      key={member.id}
-                    >
+                    const name =
+                      member.memberName ||
+                      "Committee Member";
 
-                      <div className="academic-photo">
+                    const designation =
+                      member.designation ||
+                      "Committee Member";
 
-                        {member.photo_url ? (
+                    const bio =
+                      member.bio || "";
 
-                          <img
-                            src={
-                              member.photo_url
-                            }
-                            alt={
-                              member.member_name
-                            }
-                          />
+                    const photo =
+                      member.photoUrl || null;
 
-                        ) : (
+                    const qualification =
+                      member.qualification || "";
 
-                          <UserCircle
-                            size={75}
-                            strokeWidth={1}
-                          />
+                    return (
+                      <article
+                        className="academic-member-card"
+                        key={member.id}
+                      >
 
-                        )}
+                        <div className="academic-photo">
 
-                        <span>
-                          {String(
-                            index + 1
-                          ).padStart(2, "0")}
-                        </span>
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <UserCircle
+                              size={90}
+                              strokeWidth={1}
+                            />
+                          )}
 
-                      </div>
+                          <span>
+                            {String(
+                              index + 1
+                            ).padStart(2, "0")}
+                          </span>
 
+                        </div>
 
-                      <div className="academic-member-content">
+                        <div className="academic-member-content">
 
-                        <small>
-                          ACADEMIC COMMITTEE
-                        </small>
+                          <small>
+                            ACADEMIC COMMITTEE
+                          </small>
 
-                        <h3>
-                          {member.member_name}
-                        </h3>
+                          <h3>
+                            {name}
+                          </h3>
 
-                        <strong>
-                          {member.designation ||
-                            "Committee Member"}
-                        </strong>
+                          <strong>
+                            {designation}
+                          </strong>
 
-                        {member.qualification && (
-                          <p>
-                            {member.qualification}
-                          </p>
-                        )}
+                          {bio && (
+                            <p className="academic-member-bio">
+                              {bio}
+                            </p>
+                          )}
 
-                      </div>
+                          {qualification && (
+                            <span className="academic-member-qualification">
+                              {qualification}
+                            </span>
+                          )}
 
-                    </article>
+                        </div>
 
-                  )
+                      </article>
+                    );
+                  }
                 )}
 
               </div>
-
             )}
 
         </div>
@@ -319,6 +322,5 @@ function AcademicCommittee() {
     </main>
   );
 }
-
 
 export default AcademicCommittee;

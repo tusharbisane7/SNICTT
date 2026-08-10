@@ -12,36 +12,28 @@ import api from "../../services/api";
 
 import "./WorkingCommittee.css";
 
-
 function WorkingCommittee() {
-
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-
   const fetchMembers = async () => {
-
     try {
-
       setLoading(true);
       setError("");
 
-      const response =
-        await api.get(
-          "/committees/working"
-        );
+      const response = await api.get(
+        "/committees/working"
+      );
 
       if (response.data?.success) {
-
         setMembers(
           response.data.members || []
         );
-
+      } else {
+        setMembers([]);
       }
-
     } catch (error) {
-
       console.error(
         "Working committee error:",
         error
@@ -49,33 +41,24 @@ function WorkingCommittee() {
 
       setError(
         error.response?.data?.message ||
-        "Unable to load Working Committee."
+          "Unable to load Working Committee."
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
-
   useEffect(() => {
-
     fetchMembers();
-
   }, []);
 
-
   return (
-
     <main className="working-page">
 
       <div className="working-grid" />
 
       <div className="working-glow working-glow-one" />
       <div className="working-glow working-glow-two" />
-
 
       {/* HERO */}
 
@@ -120,7 +103,6 @@ function WorkingCommittee() {
 
           </div>
 
-
           <div className="working-visual">
 
             <div className="working-orbit working-orbit-one" />
@@ -150,7 +132,6 @@ function WorkingCommittee() {
 
       </section>
 
-
       {/* MEMBERS */}
 
       <section className="working-members">
@@ -175,31 +156,41 @@ function WorkingCommittee() {
 
           </header>
 
+          {/* LOADING */}
 
           {loading && (
-
             <div className="working-loading">
 
               <div className="working-spinner" />
 
-              <p>
+              <h3>
                 Loading members...
+              </h3>
+
+              <p>
+                Fetching Working Committee
+                information.
               </p>
 
             </div>
-
           )}
 
+          {/* ERROR */}
 
           {!loading && error && (
-
             <div className="working-error">
 
               <AlertCircle size={27} />
 
-              <span>
-                {error}
-              </span>
+              <div>
+                <h3>
+                  Unable to load members
+                </h3>
+
+                <p>
+                  {error}
+                </p>
+              </div>
 
               <button
                 onClick={fetchMembers}
@@ -209,14 +200,13 @@ function WorkingCommittee() {
               </button>
 
             </div>
-
           )}
 
+          {/* EMPTY */}
 
           {!loading &&
             !error &&
             members.length === 0 && (
-
               <div className="working-empty">
 
                 <ClipboardCheck size={48} />
@@ -231,85 +221,110 @@ function WorkingCommittee() {
                 </p>
 
               </div>
-
             )}
 
+          {/* MEMBERS */}
 
           {!loading &&
             !error &&
             members.length > 0 && (
-
               <div className="working-members-grid">
 
                 {members.map(
-                  (member, index) => (
+                  (member, index) => {
 
-                    <article
-                      className="working-member-card"
-                      key={member.id}
-                    >
+                    const name =
+                      member.memberName ||
+                      "Committee Member";
 
-                      <div className="working-photo">
+                    const designation =
+                      member.designation ||
+                      "Committee Member";
 
-                        {member.photo_url ? (
+                    const bio =
+                      member.bio || "";
 
-                          <img
-                            src={
-                              member.photo_url
-                            }
-                            alt={
-                              member.member_name
-                            }
-                          />
+                    const photo =
+                      member.photoUrl || null;
 
-                        ) : (
+                    const qualification =
+                      member.qualification || "";
 
-                          <UserCircle
-                            size={76}
-                            strokeWidth={1}
-                          />
+                    return (
+                      <article
+                        className="working-member-card"
+                        key={member.id}
+                      >
 
-                        )}
+                        {/* PROFILE IMAGE */}
 
-                        <span>
-                          {String(
-                            index + 1
-                          ).padStart(2, "0")}
-                        </span>
+                        <div className="working-photo">
 
-                      </div>
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <UserCircle
+                              size={90}
+                              strokeWidth={1}
+                            />
+                          )}
 
+                          <span>
+                            {String(
+                              index + 1
+                            ).padStart(2, "0")}
+                          </span>
 
-                      <div className="working-member-content">
+                        </div>
 
-                        <small>
-                          WORKING COMMITTEE
-                        </small>
+                        {/* MEMBER INFORMATION */}
 
-                        <h3>
-                          {member.member_name}
-                        </h3>
+                        <div className="working-member-content">
 
-                        <strong>
-                          {member.designation ||
-                            "Committee Member"}
-                        </strong>
+                          <small>
+                            WORKING COMMITTEE
+                          </small>
 
-                        {member.qualification && (
-                          <p>
-                            {member.qualification}
-                          </p>
-                        )}
+                          {/* NAME */}
 
-                      </div>
+                          <h3>
+                            {name}
+                          </h3>
 
-                    </article>
+                          {/* DESIGNATION */}
 
-                  )
+                          <strong>
+                            {designation}
+                          </strong>
+
+                          {/* BIO */}
+
+                          {bio && (
+                            <p className="working-member-bio">
+                              {bio}
+                            </p>
+                          )}
+
+                          {/* QUALIFICATION */}
+
+                          {qualification && (
+                            <span className="working-member-qualification">
+                              {qualification}
+                            </span>
+                          )}
+
+                        </div>
+
+                      </article>
+                    );
+                  }
                 )}
 
               </div>
-
             )}
 
         </div>
@@ -319,6 +334,5 @@ function WorkingCommittee() {
     </main>
   );
 }
-
 
 export default WorkingCommittee;

@@ -1,6 +1,5 @@
 const express = require("express");
 
-
 // =========================================================
 // CONTROLLERS
 // =========================================================
@@ -19,7 +18,6 @@ const {
   logoutUser,
 } = require("../controllers/authController");
 
-
 // =========================================================
 // MIDDLEWARE
 // =========================================================
@@ -30,19 +28,15 @@ const authMiddleware =
 const uploadProfile =
   require("../middleware/uploadProfile");
 
-
 // =========================================================
 // ROUTER
 // =========================================================
 
-const router =
-  express.Router();
-
+const router = express.Router();
 
 // =========================================================
 // PUBLIC ROUTES
 // =========================================================
-
 
 // =========================================================
 // CHECK USERNAME
@@ -54,12 +48,11 @@ router.get(
   checkUsername
 );
 
-
 // =========================================================
-// GET ALL MEMBERS
+// GET ALL REGISTERED MEMBERS
 // GET /api/auth/members
 //
-// PUBLIC ROUTE
+// PUBLIC
 //
 // Returns:
 // - id
@@ -69,8 +62,6 @@ router.get(
 // - designation
 // - bio
 // - created date
-//
-// Used by the public Members page.
 // =========================================================
 
 router.get(
@@ -78,9 +69,8 @@ router.get(
   getMembers
 );
 
-
 // =========================================================
-// REGISTER / SIGNUP
+// REGISTER USER
 // POST /api/auth/register
 //
 // Content-Type:
@@ -96,12 +86,9 @@ router.post(
   registerUser
 );
 
-
 // =========================================================
 // OLD SIGNUP ROUTE
 // POST /api/auth/signup
-//
-// Kept for backward compatibility.
 // =========================================================
 
 router.post(
@@ -109,7 +96,6 @@ router.post(
   uploadProfile.single("profileImage"),
   registerUser
 );
-
 
 // =========================================================
 // LOGIN
@@ -121,7 +107,6 @@ router.post(
   loginUser
 );
 
-
 // =========================================================
 // FORGOT PASSWORD
 // POST /api/auth/forgot-password
@@ -131,7 +116,6 @@ router.post(
   "/forgot-password",
   forgotPassword
 );
-
 
 // =========================================================
 // RESET PASSWORD
@@ -143,11 +127,9 @@ router.post(
   resetPassword
 );
 
-
 // =========================================================
 // PROTECTED USER ROUTES
 // =========================================================
-
 
 // =========================================================
 // GET PROFILE
@@ -160,7 +142,6 @@ router.get(
   getProfile
 );
 
-
 // =========================================================
 // UPDATE PROFILE
 // PUT /api/auth/profile
@@ -171,7 +152,7 @@ router.get(
 // Profile image field:
 // profileImage
 //
-// Allows updating:
+// Supports:
 // - Full name
 // - Username
 // - Email
@@ -192,7 +173,6 @@ router.put(
   updateProfile
 );
 
-
 // =========================================================
 // DELETE PROFILE PHOTO
 // DELETE /api/auth/profile/photo
@@ -203,7 +183,6 @@ router.delete(
   authMiddleware,
   deleteProfilePhoto
 );
-
 
 // =========================================================
 // CHANGE PASSWORD
@@ -216,7 +195,6 @@ router.put(
   changePassword
 );
 
-
 // =========================================================
 // LOGOUT
 // POST /api/auth/logout
@@ -227,7 +205,6 @@ router.post(
   authMiddleware,
   logoutUser
 );
-
 
 // =========================================================
 // EXPORT

@@ -11,7 +11,6 @@ const VALID_COMMITTEES = [
   "Working Committee",
 ];
 
-
 // =========================================================
 // COMMITTEE SLUG MAP
 // =========================================================
@@ -23,10 +22,9 @@ const COMMITTEE_MAP = {
   working: "Working Committee",
 };
 
-
 // =========================================================
 // CLEAN MEMBER
-// Convert database field names to frontend-friendly names
+// Database field -> Frontend field
 // =========================================================
 
 const cleanMember = (member) => {
@@ -36,15 +34,23 @@ const cleanMember = (member) => {
     committeeName:
       member.committee_name,
 
+    // MEMBER NAME
     memberName:
-      member.member_name,
+      member.member_name || "",
 
+    // DESIGNATION
     designation:
       member.designation || "",
 
+    // BIO
+    bio:
+      member.bio || "",
+
+    // QUALIFICATION
     qualification:
       member.qualification || "",
 
+    // PROFILE PICTURE
     photoUrl:
       member.photo_url || null,
 
@@ -62,12 +68,13 @@ const cleanMember = (member) => {
   };
 };
 
-
 // =========================================================
 // VALIDATE COMMITTEE
 // =========================================================
 
-const validateCommittee = (committeeName) => {
+const validateCommittee = (
+  committeeName
+) => {
   if (!committeeName) {
     return false;
   }
@@ -76,7 +83,6 @@ const validateCommittee = (committeeName) => {
     String(committeeName).trim()
   );
 };
-
 
 // =========================================================
 // GET ALL ACTIVE COMMITTEE MEMBERS
@@ -97,6 +103,7 @@ const getCommitteeMembers = async (
         committee_name,
         member_name,
         designation,
+        bio,
         qualification,
         photo_url,
         display_order,
@@ -136,7 +143,9 @@ const getCommitteeMembers = async (
       success: true,
 
       members:
-        result.rows.map(cleanMember),
+        result.rows.map(
+          cleanMember
+        ),
     });
 
   } catch (error) {
@@ -153,7 +162,6 @@ const getCommitteeMembers = async (
     });
   }
 };
-
 
 // =========================================================
 // GET MEMBERS BY COMMITTEE
@@ -194,7 +202,9 @@ const getCommitteeByName = async (
           "Invalid committee name",
 
         allowedCommittees:
-          Object.keys(COMMITTEE_MAP),
+          Object.keys(
+            COMMITTEE_MAP
+          ),
       });
     }
 
@@ -205,6 +215,7 @@ const getCommitteeByName = async (
         committee_name,
         member_name,
         designation,
+        bio,
         qualification,
         photo_url,
         display_order,
@@ -254,7 +265,6 @@ const getCommitteeByName = async (
   }
 };
 
-
 // =========================================================
 // GET ALL MEMBERS INCLUDING INACTIVE
 // ADMIN
@@ -276,6 +286,7 @@ const getAllCommitteeMembers =
             committee_name,
             member_name,
             designation,
+            bio,
             qualification,
             photo_url,
             display_order,
@@ -333,7 +344,6 @@ const getAllCommitteeMembers =
     }
   };
 
-
 // =========================================================
 // GET SINGLE MEMBER
 // ADMIN
@@ -359,6 +369,7 @@ const getCommitteeMemberById =
             committee_name,
             member_name,
             designation,
+            bio,
             qualification,
             photo_url,
             display_order,
@@ -410,12 +421,21 @@ const getCommitteeMemberById =
     }
   };
 
-
 // =========================================================
 // ADD COMMITTEE MEMBER
 // ADMIN
 //
 // POST /api/committees/admin
+//
+// Fields:
+// committeeName
+// memberName
+// designation
+// bio
+// qualification
+// photoUrl
+// displayOrder
+// isActive
 // =========================================================
 
 const addCommitteeMember =
@@ -428,15 +448,15 @@ const addCommitteeMember =
         committeeName,
         memberName,
         designation,
+        bio,
         qualification,
         photoUrl,
         displayOrder,
         isActive,
       } = req.body;
 
-
       // =====================================================
-      // REQUIRED FIELDS
+      // REQUIRED
       // =====================================================
 
       if (
@@ -450,7 +470,6 @@ const addCommitteeMember =
             "Committee name and member name are required",
         });
       }
-
 
       // =====================================================
       // COMMITTEE
@@ -477,7 +496,6 @@ const addCommitteeMember =
         });
       }
 
-
       // =====================================================
       // MEMBER NAME
       // =====================================================
@@ -497,7 +515,8 @@ const addCommitteeMember =
       }
 
       if (
-        cleanMemberName.length > 150
+        cleanMemberName.length >
+        150
       ) {
         return res.status(400).json({
           success: false,
@@ -506,7 +525,6 @@ const addCommitteeMember =
             "Member name cannot exceed 150 characters",
         });
       }
-
 
       // =====================================================
       // DESIGNATION
@@ -521,7 +539,8 @@ const addCommitteeMember =
 
       if (
         cleanDesignation &&
-        cleanDesignation.length > 150
+        cleanDesignation.length >
+          150
       ) {
         return res.status(400).json({
           success: false,
@@ -531,6 +550,28 @@ const addCommitteeMember =
         });
       }
 
+      // =====================================================
+      // BIO
+      // =====================================================
+
+      const cleanBio =
+        bio
+          ? String(
+              bio
+            ).trim()
+          : null;
+
+      if (
+        cleanBio &&
+        cleanBio.length > 2000
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Bio cannot exceed 2000 characters",
+        });
+      }
 
       // =====================================================
       // QUALIFICATION
@@ -545,7 +586,8 @@ const addCommitteeMember =
 
       if (
         cleanQualification &&
-        cleanQualification.length > 250
+        cleanQualification.length >
+          250
       ) {
         return res.status(400).json({
           success: false,
@@ -555,9 +597,8 @@ const addCommitteeMember =
         });
       }
 
-
       // =====================================================
-      // PHOTO URL
+      // PROFILE PHOTO
       // =====================================================
 
       const cleanPhotoUrl =
@@ -566,7 +607,6 @@ const addCommitteeMember =
               photoUrl
             ).trim()
           : null;
-
 
       // =====================================================
       // DISPLAY ORDER
@@ -585,14 +625,12 @@ const addCommitteeMember =
           ? numericOrder
           : 0;
 
-
       // =====================================================
-      // ACTIVE STATUS
+      // ACTIVE
       // =====================================================
 
       const finalIsActive =
         isActive !== false;
-
 
       // =====================================================
       // INSERT
@@ -606,6 +644,7 @@ const addCommitteeMember =
             committee_name,
             member_name,
             designation,
+            bio,
             qualification,
             photo_url,
             display_order,
@@ -623,6 +662,7 @@ const addCommitteeMember =
             $5,
             $6,
             $7,
+            $8,
             CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP
           )
@@ -636,6 +676,8 @@ const addCommitteeMember =
 
             cleanDesignation,
 
+            cleanBio,
+
             cleanQualification,
 
             cleanPhotoUrl,
@@ -645,7 +687,6 @@ const addCommitteeMember =
             finalIsActive,
           ]
         );
-
 
       return res.status(201).json({
         success: true,
@@ -680,7 +721,6 @@ const addCommitteeMember =
     }
   };
 
-
 // =========================================================
 // UPDATE COMMITTEE MEMBER
 // ADMIN
@@ -702,12 +742,12 @@ const updateCommitteeMember =
         committeeName,
         memberName,
         designation,
+        bio,
         qualification,
         photoUrl,
         displayOrder,
         isActive,
       } = req.body;
-
 
       // =====================================================
       // REQUIRED
@@ -724,7 +764,6 @@ const updateCommitteeMember =
             "Committee name and member name are required",
         });
       }
-
 
       // =====================================================
       // COMMITTEE
@@ -751,7 +790,6 @@ const updateCommitteeMember =
         });
       }
 
-
       // =====================================================
       // MEMBER NAME
       // =====================================================
@@ -761,9 +799,7 @@ const updateCommitteeMember =
           memberName
         ).trim();
 
-      if (
-        !cleanMemberName
-      ) {
+      if (!cleanMemberName) {
         return res.status(400).json({
           success: false,
 
@@ -773,7 +809,8 @@ const updateCommitteeMember =
       }
 
       if (
-        cleanMemberName.length > 150
+        cleanMemberName.length >
+        150
       ) {
         return res.status(400).json({
           success: false,
@@ -782,7 +819,6 @@ const updateCommitteeMember =
             "Member name cannot exceed 150 characters",
         });
       }
-
 
       // =====================================================
       // DESIGNATION
@@ -797,7 +833,8 @@ const updateCommitteeMember =
 
       if (
         cleanDesignation &&
-        cleanDesignation.length > 150
+        cleanDesignation.length >
+          150
       ) {
         return res.status(400).json({
           success: false,
@@ -807,6 +844,28 @@ const updateCommitteeMember =
         });
       }
 
+      // =====================================================
+      // BIO
+      // =====================================================
+
+      const cleanBio =
+        bio
+          ? String(
+              bio
+            ).trim()
+          : null;
+
+      if (
+        cleanBio &&
+        cleanBio.length > 2000
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Bio cannot exceed 2000 characters",
+        });
+      }
 
       // =====================================================
       // QUALIFICATION
@@ -821,7 +880,8 @@ const updateCommitteeMember =
 
       if (
         cleanQualification &&
-        cleanQualification.length > 250
+        cleanQualification.length >
+          250
       ) {
         return res.status(400).json({
           success: false,
@@ -831,9 +891,8 @@ const updateCommitteeMember =
         });
       }
 
-
       // =====================================================
-      // PHOTO
+      // PROFILE PHOTO
       // =====================================================
 
       const cleanPhotoUrl =
@@ -842,7 +901,6 @@ const updateCommitteeMember =
               photoUrl
             ).trim()
           : null;
-
 
       // =====================================================
       // DISPLAY ORDER
@@ -861,14 +919,12 @@ const updateCommitteeMember =
           ? numericOrder
           : 0;
 
-
       // =====================================================
       // ACTIVE
       // =====================================================
 
       const finalIsActive =
         isActive !== false;
-
 
       // =====================================================
       // UPDATE
@@ -883,13 +939,14 @@ const updateCommitteeMember =
             committee_name = $1,
             member_name = $2,
             designation = $3,
-            qualification = $4,
-            photo_url = $5,
-            display_order = $6,
-            is_active = $7,
+            bio = $4,
+            qualification = $5,
+            photo_url = $6,
+            display_order = $7,
+            is_active = $8,
             updated_at = CURRENT_TIMESTAMP
 
-          WHERE id = $8
+          WHERE id = $9
 
           RETURNING *
           `,
@@ -899,6 +956,8 @@ const updateCommitteeMember =
             cleanMemberName,
 
             cleanDesignation,
+
+            cleanBio,
 
             cleanQualification,
 
@@ -912,7 +971,6 @@ const updateCommitteeMember =
           ]
         );
 
-
       if (
         result.rows.length === 0
       ) {
@@ -923,7 +981,6 @@ const updateCommitteeMember =
             "Committee member not found",
         });
       }
-
 
       return res.json({
         success: true,
@@ -958,7 +1015,6 @@ const updateCommitteeMember =
     }
   };
 
-
 // =========================================================
 // DELETE COMMITTEE MEMBER
 // ADMIN
@@ -988,7 +1044,6 @@ const deleteCommitteeMember =
           [id]
         );
 
-
       if (
         result.rows.length === 0
       ) {
@@ -999,7 +1054,6 @@ const deleteCommitteeMember =
             "Committee member not found",
         });
       }
-
 
       return res.json({
         success: true,
@@ -1022,7 +1076,6 @@ const deleteCommitteeMember =
       });
     }
   };
-
 
 // =========================================================
 // EXPORT

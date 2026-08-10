@@ -1,284 +1,196 @@
 /* =========================================================
-   SNICT — WORKING COMMITTEE
+   WORKING COMMITTEE
 ========================================================= */
-
-.working-page,
-.working-page * {
-  box-sizing: border-box;
-}
 
 .working-page {
   position: relative;
   min-height: 100vh;
-
   overflow: hidden;
 
-  color: #102a2f;
-
-  background:
-    linear-gradient(
-      180deg,
-      #f4fbfc,
-      #ffffff 48%,
-      #f7fbfc
-    );
-
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  background: #f7fbff;
+  color: #071a34;
+  font-family: inherit;
 }
-
-.working-container {
-  width: min(1200px, calc(100% - 48px));
-  margin: auto;
-
-  position: relative;
-  z-index: 2;
-}
-
-
-/* =========================================================
-   BACKGROUND
-========================================================= */
 
 .working-grid {
   position: absolute;
   inset: 0;
 
-  opacity: 0.42;
-
   background-image:
     linear-gradient(
-      rgba(8, 127, 140, 0.045) 1px,
+      rgba(21, 155, 197, 0.035) 1px,
       transparent 1px
     ),
     linear-gradient(
       90deg,
-      rgba(8, 127, 140, 0.045) 1px,
+      rgba(21, 155, 197, 0.035) 1px,
       transparent 1px
     );
 
-  background-size: 50px 50px;
+  background-size: 45px 45px;
+
+  pointer-events: none;
 }
 
 .working-glow {
   position: absolute;
 
+  width: 500px;
+  height: 500px;
+
   border-radius: 50%;
+
+  filter: blur(100px);
 
   pointer-events: none;
 }
 
 .working-glow-one {
-  width: 560px;
-  height: 560px;
+  top: -250px;
+  right: -180px;
 
-  top: -300px;
-  left: -230px;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(8, 127, 140, 0.15),
-      transparent 68%
-    );
-
-  animation:
-    workingGlowOne 10s ease-in-out infinite;
+  background: rgba(21, 155, 197, 0.11);
 }
 
 .working-glow-two {
-  width: 600px;
-  height: 600px;
+  top: 550px;
+  left: -250px;
 
-  right: -300px;
-  bottom: -300px;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(42, 174, 176, 0.13),
-      transparent 68%
-    );
-
-  animation:
-    workingGlowTwo 12s ease-in-out infinite;
+  background: rgba(125, 164, 255, 0.09);
 }
 
-@keyframes workingGlowOne {
-  50% {
-    transform: translate(30px, 25px);
-  }
-}
+.working-container {
+  position: relative;
+  z-index: 2;
 
-@keyframes workingGlowTwo {
-  50% {
-    transform: translate(-30px, -30px);
-  }
+  width: min(1200px, calc(100% - 40px));
+  margin: auto;
 }
-
 
 /* =========================================================
    HERO
 ========================================================= */
 
 .working-hero {
-  min-height: 550px;
+  min-height: 620px;
 
   display: flex;
   align-items: center;
 
-  padding: 85px 0 75px;
+  padding: 100px 0 80px;
 }
 
 .working-hero .working-container {
   display: grid;
 
   grid-template-columns:
-    1.05fr 0.75fr;
+    1.05fr 0.95fr;
 
   align-items: center;
 
-  gap: 80px;
+  gap: 70px;
 }
 
 .working-hero-content {
-  animation:
-    workingHeroIn 0.8s ease both;
-}
-
-@keyframes workingHeroIn {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  max-width: 650px;
 }
 
 .working-icon {
-  width: 68px;
-  height: 68px;
+  width: 72px;
+  height: 72px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin-bottom: 22px;
+  margin-bottom: 25px;
 
-  color: #087f8c;
+  border: 1px solid #cdebf5;
+  border-radius: 20px;
 
-  border: 1px solid #cbe7e9;
-  border-radius: 18px;
-
-  background: #eefafb;
+  color: #159bc5;
+  background: white;
 
   box-shadow:
-    0 15px 35px
-    rgba(8, 127, 140, 0.11);
+    0 20px 50px rgba(9, 48, 78, 0.08);
 }
 
-.working-hero-content > span,
-.working-heading > span {
-  color: #087f8c;
+.working-hero-content > span {
+  color: #159bc5;
 
   font-size: 12px;
-  font-weight: 850;
-
-  letter-spacing: 0.18em;
+  font-weight: 900;
+  letter-spacing: 3px;
 }
 
-.working-hero-content h1 {
-  margin: 18px 0;
+.working-hero h1 {
+  margin: 12px 0 0;
 
-  font-size:
-    clamp(48px, 6vw, 78px);
+  font-size: clamp(44px, 6vw, 76px);
+  line-height: 1.02;
 
-  line-height: 0.98;
-
-  letter-spacing: -0.055em;
+  letter-spacing: -3px;
 }
 
-.working-hero-content h1 strong {
+.working-hero h1 strong {
   display: block;
 
-  background:
-    linear-gradient(
-      120deg,
-      #087f8c,
-      #2aaeb0
-    );
-
-  -webkit-background-clip: text;
-  background-clip: text;
-
-  -webkit-text-fill-color: transparent;
+  color: #159bc5;
 }
 
 .working-hero-content > p {
-  max-width: 650px;
+  max-width: 600px;
 
-  margin: 0;
+  margin: 25px 0 0;
 
-  color: #64777b;
+  color: #71859a;
 
-  font-size: 17px;
-
+  font-size: 18px;
   line-height: 1.8;
 }
+
+/* STAT */
 
 .working-stat {
   width: fit-content;
 
   display: flex;
   align-items: center;
+  gap: 12px;
 
-  gap: 10px;
+  margin-top: 32px;
+  padding: 13px 18px;
 
-  margin-top: 30px;
+  border: 1px solid #dceaf2;
+  border-radius: 14px;
 
-  padding: 14px 20px;
-
-  border: 1px solid #dcecee;
-  border-radius: 13px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 10px 30px
-    rgba(16, 42, 47, 0.05);
+  background: white;
 }
 
 .working-stat svg {
-  color: #087f8c;
+  color: #159bc5;
 }
 
 .working-stat strong {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .working-stat span {
-  color: #718184;
-
-  font-size: 13px;
+  color: #71859a;
+  font-size: 14px;
 }
 
-
 /* =========================================================
-   VISUAL
+   HERO VISUAL
 ========================================================= */
 
 .working-visual {
   position: relative;
 
-  min-height: 400px;
+  width: 420px;
+  height: 420px;
+
+  margin: auto;
 
   display: flex;
   align-items: center;
@@ -288,37 +200,35 @@
 .working-orbit {
   position: absolute;
 
-  border: 1px solid
-    rgba(8, 127, 140, 0.13);
+  border: 1px solid rgba(21, 155, 197, 0.2);
 
   border-radius: 50%;
-
-  animation:
-    workingOrbit 20s linear infinite;
 }
 
 .working-orbit-one {
-  width: 270px;
-  height: 270px;
+  width: 310px;
+  height: 310px;
+
+  animation:
+    workingRotate 18s linear infinite;
 }
 
 .working-orbit-two {
-  width: 390px;
-  height: 390px;
+  width: 420px;
+  height: 420px;
 
-  animation-direction: reverse;
-  animation-duration: 28s;
-}
+  border-style: dashed;
 
-@keyframes workingOrbit {
-  to {
-    transform: rotate(360deg);
-  }
+  animation:
+    workingRotateReverse 25s linear infinite;
 }
 
 .working-core {
-  width: 190px;
-  height: 190px;
+  position: relative;
+  z-index: 3;
+
+  width: 220px;
+  height: 220px;
 
   display: flex;
   flex-direction: column;
@@ -327,132 +237,132 @@
 
   gap: 7px;
 
-  color: #087f8c;
-
-  border: 1px solid
-    rgba(8, 127, 140, 0.18);
-
   border-radius: 50%;
+
+  color: #159bc5;
 
   background:
     radial-gradient(
       circle,
-      #ffffff,
-      #eaf8f9
+      white,
+      #ebf9ff
     );
 
   box-shadow:
-    0 30px 80px
-    rgba(8, 127, 140, 0.16);
-
-  animation:
-    workingFloat 4s ease-in-out infinite;
+    0 30px 80px rgba(21, 155, 197, 0.14);
 }
 
 .working-core strong {
-  color: #102a2f;
+  color: #071a34;
 
-  font-size: 19px;
-
-  letter-spacing: 0.15em;
+  font-size: 27px;
+  letter-spacing: 3px;
 }
 
 .working-core span {
-  color: #087f8c;
-
-  font-size: 10px;
-  font-weight: 850;
-
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
 }
-
-@keyframes workingFloat {
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
 
 /* =========================================================
    MEMBERS
 ========================================================= */
 
 .working-members {
-  padding: 95px 0 110px;
+  padding: 90px 0 110px;
 
-  background: #ffffff;
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      #edf8fd
+    );
 }
 
 .working-heading {
-  margin-bottom: 45px;
+  max-width: 720px;
+
+  margin: 0 auto 55px;
+
+  text-align: center;
+}
+
+.working-heading > span {
+  color: #159bc5;
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 3px;
 }
 
 .working-heading h2 {
   margin: 12px 0;
 
-  font-size:
-    clamp(35px, 4vw, 52px);
-
-  letter-spacing: -0.045em;
+  font-size: clamp(32px, 4vw, 52px);
 }
 
 .working-heading h2 strong {
-  color: #087f8c;
+  color: #159bc5;
 }
 
 .working-heading p {
   margin: 0;
 
-  color: #718184;
+  color: #71859a;
 
   font-size: 16px;
-
   line-height: 1.7;
 }
 
-
 /* =========================================================
-   MEMBER GRID
+   GRID
 ========================================================= */
 
 .working-members-grid {
   display: grid;
 
   grid-template-columns:
-    repeat(3, 1fr);
+    repeat(3, minmax(0, 1fr));
 
-  gap: 24px;
+  gap: 25px;
 }
+
+/* =========================================================
+   CARD
+========================================================= */
 
 .working-member-card {
   overflow: hidden;
 
-  border: 1px solid #dceaec;
-  border-radius: 20px;
+  border: 1px solid #dceaf2;
+  border-radius: 24px;
 
-  background: #ffffff;
+  background: white;
 
   box-shadow:
-    0 12px 35px
-    rgba(16, 42, 47, 0.055);
+    0 20px 60px rgba(9, 48, 78, 0.07);
 
   transition:
-    transform 0.35s ease,
-    box-shadow 0.35s ease;
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .working-member-card:hover {
-  transform: translateY(-9px);
+  transform: translateY(-8px);
 
   box-shadow:
-    0 25px 60px
-    rgba(8, 127, 140, 0.13);
+    0 30px 70px rgba(9, 48, 78, 0.13);
 }
+
+/* =========================================================
+   PHOTO
+========================================================= */
 
 .working-photo {
   position: relative;
 
-  height: 280px;
+  height: 300px;
 
   display: flex;
   align-items: center;
@@ -460,13 +370,13 @@
 
   overflow: hidden;
 
-  color: #087f8c;
+  color: #159bc5;
 
   background:
     linear-gradient(
       145deg,
-      #eefafa,
-      #e0f4f5
+      #eafaff,
+      #edf2ff
     );
 }
 
@@ -482,105 +392,201 @@
 
 .working-member-card:hover
 .working-photo img {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
-.working-photo span {
+.working-photo > span {
   position: absolute;
 
-  top: 15px;
-  right: 15px;
+  top: 16px;
+  right: 16px;
 
-  padding: 7px 10px;
+  min-width: 38px;
+  height: 38px;
 
-  color: #087f8c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  border-radius: 8px;
+  border-radius: 10px;
 
-  background:
-    rgba(255, 255, 255, 0.9);
+  color: white;
+  background: rgba(7, 26, 52, 0.6);
 
-  font-size: 11px;
-  font-weight: 850;
+  backdrop-filter: blur(10px);
+
+  font-size: 12px;
+  font-weight: 800;
 }
 
+/* =========================================================
+   MEMBER CONTENT
+========================================================= */
+
 .working-member-content {
-  padding: 24px;
+  padding: 25px;
 }
 
 .working-member-content small {
-  color: #087f8c;
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #159bc5;
 
   font-size: 10px;
-  font-weight: 850;
-
-  letter-spacing: 0.12em;
+  font-weight: 900;
+  letter-spacing: 2px;
 }
 
 .working-member-content h3 {
-  margin: 8px 0;
+  margin: 0;
 
   font-size: 23px;
+  line-height: 1.25;
 }
 
-.working-member-content strong {
-  color: #087f8c;
+.working-member-content > strong {
+  display: block;
+
+  margin-top: 7px;
+
+  color: #159bc5;
 
   font-size: 15px;
 }
 
-.working-member-content p {
-  margin: 9px 0 0;
+.working-member-bio {
+  margin: 14px 0 0;
 
-  color: #718184;
+  color: #71859a;
 
-  font-size: 13px;
-
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.7;
 }
 
+.working-member-qualification {
+  display: inline-block;
+
+  margin-top: 15px;
+  padding: 7px 11px;
+
+  border-radius: 8px;
+
+  color: #526b80;
+  background: #f0f7fb;
+
+  font-size: 12px;
+  font-weight: 600;
+}
 
 /* =========================================================
-   STATES
+   LOADING / EMPTY
 ========================================================= */
 
 .working-loading,
 .working-empty {
-  min-height: 280px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  padding: 80px 30px;
 
   text-align: center;
 
-  color: #087f8c;
+  border: 1px solid #dceaf2;
+  border-radius: 22px;
 
-  border: 1px solid #dceaec;
-  border-radius: 20px;
-
-  background: #fbfefe;
-}
-
-.working-loading p,
-.working-empty p {
-  color: #718184;
-
-  font-size: 14px;
+  background: white;
 }
 
 .working-spinner {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
 
-  border: 3px solid #dcecee;
-  border-top-color: #087f8c;
+  margin: 0 auto 18px;
+
+  border: 3px solid #dceaf2;
+  border-top-color: #159bc5;
 
   border-radius: 50%;
 
   animation:
     workingSpin 0.8s linear infinite;
+}
+
+.working-loading h3,
+.working-empty h3 {
+  margin: 0 0 7px;
+
+  font-size: 19px;
+}
+
+.working-loading p,
+.working-empty p {
+  margin: 0;
+
+  color: #71859a;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.working-error {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  padding: 22px;
+
+  border: 1px solid #ffd8d8;
+  border-radius: 16px;
+
+  color: #a52b2b;
+  background: #fff5f5;
+}
+
+.working-error div {
+  flex: 1;
+}
+
+.working-error h3 {
+  margin: 0 0 5px;
+}
+
+.working-error p {
+  margin: 0;
+}
+
+.working-error button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 10px 14px;
+
+  border: 0;
+  border-radius: 9px;
+
+  color: white;
+  background: #c74a4a;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes workingRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes workingRotateReverse {
+  to {
+    transform: rotate(-360deg);
+  }
 }
 
 @keyframes workingSpin {
@@ -589,61 +595,33 @@
   }
 }
 
-.working-error {
-  display: flex;
-  align-items: center;
-
-  gap: 15px;
-
-  padding: 22px;
-
-  color: #9b4a4a;
-
-  border: 1px solid #efd7d7;
-  border-radius: 16px;
-
-  background: #fff8f8;
-}
-
-.working-error button {
-  margin-left: auto;
-
-  display: flex;
-  align-items: center;
-
-  gap: 7px;
-
-  padding: 10px 15px;
-
-  color: #087f8c;
-
-  border: 1px solid #cbe4e6;
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  cursor: pointer;
-
-  font-size: 13px;
-  font-weight: 750;
-}
-
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
 
-@media (max-width: 1000px) {
-
+@media (max-width: 950px) {
   .working-hero .working-container {
     grid-template-columns: 1fr;
     text-align: center;
   }
 
   .working-hero-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    margin: auto;
+  }
+
+  .working-stat {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .working-visual {
+    width: 350px;
+    height: 350px;
+  }
+
+  .working-orbit-two {
+    width: 340px;
+    height: 340px;
   }
 
   .working-members-grid {
@@ -652,25 +630,41 @@
 }
 
 @media (max-width: 650px) {
-
   .working-container {
-    width: calc(100% - 30px);
+    width: min(100% - 28px, 1200px);
   }
 
-  .working-hero {
-    padding: 65px 0;
-  }
-
-  .working-hero-content h1 {
+  .working-hero h1 {
     font-size: 43px;
+    letter-spacing: -1.8px;
   }
 
   .working-hero-content > p {
     font-size: 15px;
   }
 
-  .working-members {
-    padding: 70px 0;
+  .working-visual {
+    width: 290px;
+    height: 290px;
+  }
+
+  .working-orbit-one {
+    width: 220px;
+    height: 220px;
+  }
+
+  .working-orbit-two {
+    width: 285px;
+    height: 285px;
+  }
+
+  .working-core {
+    width: 160px;
+    height: 160px;
+  }
+
+  .working-core strong {
+    font-size: 20px;
   }
 
   .working-members-grid {
@@ -678,7 +672,7 @@
   }
 
   .working-photo {
-    height: 300px;
+    height: 320px;
   }
 
   .working-error {
@@ -686,16 +680,7 @@
   }
 
   .working-error button {
-    margin-left: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-  .working-page *,
-  .working-page *::before,
-  .working-page *::after {
-    animation: none !important;
-    transition: none !important;
+    width: 100%;
+    justify-content: center;
   }
 }
