@@ -23,9 +23,7 @@ import {
 } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
-
 import api from "../services/api";
-
 import snictLogo from "../assets/snict-logo.png";
 
 import "./Navbar.css";
@@ -86,7 +84,7 @@ function Navbar() {
 
 
   // =========================================================
-  // ADMIN SESSION
+  // LOAD ADMIN SESSION
   // =========================================================
 
   useEffect(() => {
@@ -100,7 +98,6 @@ function Navbar() {
             "/admin/profile"
           );
 
-
         if (
           response.data?.success &&
           response.data?.admin
@@ -109,7 +106,6 @@ function Navbar() {
           setAdmin(
             response.data.admin
           );
-
 
           localStorage.setItem(
             "snict_admin",
@@ -127,8 +123,7 @@ function Navbar() {
       } catch (error) {
 
         if (
-          error.response?.status !==
-          401
+          error.response?.status !== 401
         ) {
 
           console.error(
@@ -137,7 +132,6 @@ function Navbar() {
           );
 
         }
-
 
         setAdmin(null);
 
@@ -148,7 +142,6 @@ function Navbar() {
       }
 
     };
-
 
     loadAdmin();
 
@@ -169,15 +162,12 @@ function Navbar() {
 
     };
 
-
     window.addEventListener(
       "scroll",
       handleScroll
     );
 
-
     handleScroll();
-
 
     return () => {
 
@@ -198,17 +188,11 @@ function Navbar() {
   useEffect(() => {
 
     setMenuOpen(false);
-
     setTeamOpen(false);
-
     setEventsOpen(false);
-
     setUserMenuOpen(false);
-
     setMobileUserMenuOpen(false);
-
     setAdminMenuOpen(false);
-
     setMobileAdminMenuOpen(false);
 
   }, [location.pathname]);
@@ -231,7 +215,6 @@ function Navbar() {
         "";
 
     }
-
 
     return () => {
 
@@ -263,7 +246,6 @@ function Navbar() {
 
       }
 
-
       if (
         !event.target.closest(
           ".navbar-admin-wrapper"
@@ -276,12 +258,10 @@ function Navbar() {
 
     };
 
-
     document.addEventListener(
       "mousedown",
       handleOutsideClick
     );
-
 
     return () => {
 
@@ -302,17 +282,11 @@ function Navbar() {
   const closeMenu = () => {
 
     setMenuOpen(false);
-
     setTeamOpen(false);
-
     setEventsOpen(false);
-
     setUserMenuOpen(false);
-
     setMobileUserMenuOpen(false);
-
     setAdminMenuOpen(false);
-
     setMobileAdminMenuOpen(false);
 
   };
@@ -328,19 +302,14 @@ function Navbar() {
       return;
     }
 
-
     try {
 
       setLoggingOut(true);
 
-
       await logout();
 
-
       setUserMenuOpen(false);
-
       setMobileUserMenuOpen(false);
-
 
       navigate(
         "/",
@@ -377,11 +346,9 @@ function Navbar() {
       return;
     }
 
-
     try {
 
       setAdminLoggingOut(true);
-
 
       await api.post(
         "/admin/logout"
@@ -400,13 +367,10 @@ function Navbar() {
         "snict_admin"
       );
 
-
       setAdmin(null);
 
       setAdminMenuOpen(false);
-
       setMobileAdminMenuOpen(false);
-
 
       navigate(
         "/",
@@ -414,7 +378,6 @@ function Navbar() {
           replace: true,
         }
       );
-
 
       setAdminLoggingOut(false);
 
@@ -434,12 +397,10 @@ function Navbar() {
     user?.username ||
     "SNICT Member";
 
-
   const displayUsername =
     user?.username
       ? `@${user.username}`
       : "";
-
 
   const avatarLetter =
     displayName
@@ -449,10 +410,6 @@ function Navbar() {
 
   // =========================================================
   // PROFILE IMAGE
-  // =========================================================
-  // Supports the common names so the navbar continues
-  // working if your backend currently returns one of them.
-  // Recommended backend field: profileImageUrl.
   // =========================================================
 
   const profileImage =
@@ -465,7 +422,7 @@ function Navbar() {
 
 
   // =========================================================
-  // PROFILE IMAGE URL HELPER
+  // PROFILE IMAGE URL
   // =========================================================
 
   const getProfileImageUrl = (
@@ -476,8 +433,6 @@ function Navbar() {
       return null;
     }
 
-
-    // Already a complete URL
     if (
       image.startsWith("http://") ||
       image.startsWith("https://") ||
@@ -488,35 +443,18 @@ function Navbar() {
 
     }
 
-
-    // API base URL
     const apiBaseUrl =
       api.defaults?.baseURL || "";
 
-
-    // Remove trailing slash
     const cleanBase =
       apiBaseUrl.replace(
         /\/$/,
         ""
       );
 
-
-    // If image starts with /
     if (
       image.startsWith("/")
     ) {
-
-      /*
-       * If API baseURL is something like:
-       * https://backend.example.com/api
-       *
-       * profile path is:
-       * /uploads/profile/photo.jpg
-       *
-       * We want:
-       * https://backend.example.com/uploads/profile/photo.jpg
-       */
 
       const baseWithoutApi =
         cleanBase.replace(
@@ -524,11 +462,9 @@ function Navbar() {
           ""
         );
 
-
       return `${baseWithoutApi}${image}`;
 
     }
-
 
     return `${cleanBase}/${image}`;
 
@@ -550,12 +486,10 @@ function Navbar() {
     admin?.username ||
     "Administrator";
 
-
   const adminUsername =
     admin?.username
       ? `@${admin.username}`
       : "";
-
 
   const adminLetter =
     adminName
@@ -590,7 +524,7 @@ function Navbar() {
 
 
   // =========================================================
-  // PROFILE AVATAR COMPONENT
+  // PROFILE AVATAR
   // =========================================================
 
   const ProfileAvatar = ({
@@ -601,7 +535,6 @@ function Navbar() {
 
     const [imageFailed, setImageFailed] =
       useState(false);
-
 
     const imageAvailable =
       Boolean(
@@ -762,13 +695,11 @@ function Navbar() {
 
             </div>
 
-
             <div className="brand-content">
 
               <span className="brand-name">
                 SNICT
               </span>
-
 
               <span className="brand-description">
                 Society of Neo Interventional
@@ -878,7 +809,7 @@ function Navbar() {
                   >
 
                     <span>
-                      Our Team
+                      Members
                     </span>
 
                     <ArrowRight
@@ -890,7 +821,7 @@ function Navbar() {
 
                   {/* MEMBERS */}
 
-                  <Link
+                  {/* <Link
                     to="/members"
                     onClick={closeMenu}
                   >
@@ -903,18 +834,72 @@ function Navbar() {
                       size={14}
                     />
 
-                  </Link>
+                  </Link> */}
 
 
-                  {/* COMMITTEES */}
+                  {/* PLACEMENT COMMITTEE */}
 
                   <Link
-                    to="/committees"
+                    to="/committees/placement"
                     onClick={closeMenu}
                   >
 
                     <span>
-                      Committees
+                      Placement Committee
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
+
+                  {/* WORKING COMMITTEE */}
+
+                  <Link
+                    to="/committees/working"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Working Committee
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
+
+                  {/* ACADEMIC COMMITTEE */}
+
+                  <Link
+                    to="/committees/academic"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Academic Committee
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
+
+                  {/* COMPLIANCE COMMITTEE */}
+
+                  <Link
+                    to="/committees/compliance"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Compliance Committee
                     </span>
 
                     <ArrowRight
@@ -1019,9 +1004,7 @@ function Navbar() {
             </div>
 
 
-            {/* =================================================
-                CONTACT
-            ================================================= */}
+            {/* CONTACT */}
 
             <NavLink
               to="/contact"
@@ -1047,15 +1030,13 @@ function Navbar() {
 
 
             {/* =================================================
-                ADMIN LOGGED IN
+                ADMIN
             ================================================= */}
 
             {admin ? (
 
               <div className="navbar-admin-wrapper">
 
-
-                {/* ADMIN BUTTON */}
 
                 <button
                   type="button"
@@ -1079,7 +1060,6 @@ function Navbar() {
                     {adminLetter}
                   </div>
 
-
                   <div className="navbar-admin-info">
 
                     <span className="navbar-admin-name">
@@ -1091,7 +1071,6 @@ function Navbar() {
                     </span>
 
                   </div>
-
 
                   <ChevronDown
                     size={15}
@@ -1105,21 +1084,18 @@ function Navbar() {
                 </button>
 
 
-                {/* ADMIN DROPDOWN */}
-
                 {adminMenuOpen && (
 
                   <div className="navbar-admin-dropdown">
 
 
-                    {/* PROFILE HEADER */}
+                    {/* ADMIN HEADER */}
 
                     <div className="admin-dropdown-header">
 
                       <div className="admin-dropdown-avatar">
                         {adminLetter}
                       </div>
-
 
                       <div>
 
@@ -1161,7 +1137,7 @@ function Navbar() {
                     </Link>
 
 
-                    {/* PAYMENT MANAGEMENT */}
+                    {/* PAYMENTS */}
 
                     <Link
                       to="/admin/payments"
@@ -1183,7 +1159,7 @@ function Navbar() {
                     </Link>
 
 
-                    {/* BOOKING MANAGEMENT */}
+                    {/* BOOKINGS */}
 
                     <Link
                       to="/admin/bookings"
@@ -1205,7 +1181,7 @@ function Navbar() {
                     </Link>
 
 
-                    {/* COMMITTEES */}
+                    {/* COMMITTEE MANAGEMENT */}
 
                     <Link
                       to="/admin/committees"
@@ -1216,7 +1192,7 @@ function Navbar() {
                       }
                     >
 
-                      <UserCircle
+                      <Users
                         size={16}
                       />
 
@@ -1382,20 +1358,17 @@ function Navbar() {
 
                   <ProfileAvatar />
 
-
                   <div className="navbar-user-info">
 
                     <span className="navbar-user-name">
                       {displayName}
                     </span>
 
-
                     <span className="navbar-user-username">
                       {displayUsername}
                     </span>
 
                   </div>
-
 
                   <ChevronDown
                     size={15}
@@ -1409,9 +1382,7 @@ function Navbar() {
                 </button>
 
 
-                {/* =================================================
-                    USER DROPDOWN
-                ================================================= */}
+                {/* USER DROPDOWN */}
 
                 {userMenuOpen && (
 
@@ -1426,13 +1397,11 @@ function Navbar() {
                         dropdown
                       />
 
-
                       <div>
 
                         <strong>
                           {displayName}
                         </strong>
-
 
                         <span>
                           {user?.email ||
@@ -1701,27 +1670,11 @@ function Navbar() {
                 }`}
               >
 
+
                 {/* OUR TEAM */}
 
                 <Link
                   to="/team"
-                  onClick={closeMenu}
-                >
-                  <span>
-                    Our Team
-                  </span>
-
-                  <ArrowRight
-                    size={15}
-                  />
-
-                </Link>
-
-
-                {/* MEMBERS */}
-
-                <Link
-                  to="/members"
                   onClick={closeMenu}
                 >
 
@@ -1736,15 +1689,87 @@ function Navbar() {
                 </Link>
 
 
-                {/* COMMITTEES */}
+                {/* MEMBERS */}
 
-                <Link
-                  to="/committees"
+                {/* <Link
+                  to="/members"
                   onClick={closeMenu}
                 >
 
                   <span>
-                    Committees
+                    Members
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
+                </Link> */}
+
+
+                {/* PLACEMENT COMMITTEE */}
+
+                <Link
+                  to="/committees/placement"
+                  onClick={closeMenu}
+                >
+
+                  <span>
+                    Placement Committee
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
+                </Link>
+
+
+                {/* WORKING COMMITTEE */}
+
+                <Link
+                  to="/committees/working"
+                  onClick={closeMenu}
+                >
+
+                  <span>
+                    Working Committee
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
+                </Link>
+
+
+                {/* ACADEMIC COMMITTEE */}
+
+                <Link
+                  to="/committees/academic"
+                  onClick={closeMenu}
+                >
+
+                  <span>
+                    Academic Committee
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
+                </Link>
+
+
+                {/* COMPLIANCE COMMITTEE */}
+
+                <Link
+                  to="/committees/compliance"
+                  onClick={closeMenu}
+                >
+
+                  <span>
+                    Compliance Committee
                   </span>
 
                   <ArrowRight
@@ -1901,7 +1926,6 @@ function Navbar() {
                       {adminLetter}
                     </div>
 
-
                     <div className="mobile-admin-info">
 
                       <span>
@@ -1913,7 +1937,6 @@ function Navbar() {
                       </small>
 
                     </div>
-
 
                     <ChevronDown
                       size={17}
@@ -1932,7 +1955,7 @@ function Navbar() {
                     <div className="mobile-admin-menu">
 
 
-                      {/* DASHBOARD */}
+                      {/* ADMIN DASHBOARD */}
 
                       <Link
                         to="/admin/dashboard"
@@ -1951,7 +1974,6 @@ function Navbar() {
                           </span>
 
                         </span>
-
 
                         <ArrowRight
                           size={15}
@@ -1980,7 +2002,6 @@ function Navbar() {
 
                         </span>
 
-
                         <ArrowRight
                           size={15}
                         />
@@ -2008,7 +2029,6 @@ function Navbar() {
 
                         </span>
 
-
                         <ArrowRight
                           size={15}
                         />
@@ -2035,7 +2055,6 @@ function Navbar() {
                           </span>
 
                         </span>
-
 
                         <ArrowRight
                           size={15}
@@ -2067,7 +2086,6 @@ function Navbar() {
 
                         </span>
 
-
                         <ArrowRight
                           size={15}
                         />
@@ -2094,7 +2112,6 @@ function Navbar() {
                           </span>
 
                         </span>
-
 
                         <ArrowRight
                           size={15}
@@ -2129,7 +2146,6 @@ function Navbar() {
                           </span>
 
                         </span>
-
 
                         <ArrowRight
                           size={15}
@@ -2197,6 +2213,7 @@ function Navbar() {
 
                 <>
 
+
                   <button
                     type="button"
                     className={`mobile-user-button ${
@@ -2219,20 +2236,17 @@ function Navbar() {
                       mobile
                     />
 
-
                     <div className="mobile-user-info">
 
                       <span className="mobile-user-name">
                         {displayName}
                       </span>
 
-
                       <span className="mobile-user-username">
                         {displayUsername}
                       </span>
 
                     </div>
-
 
                     <ChevronDown
                       size={17}
@@ -2271,7 +2285,6 @@ function Navbar() {
 
                         </span>
 
-
                         <ArrowRight
                           size={15}
                         />
@@ -2299,7 +2312,6 @@ function Navbar() {
 
                         </span>
 
-
                         <ArrowRight
                           size={15}
                         />
@@ -2326,7 +2338,6 @@ function Navbar() {
                           </span>
 
                         </span>
-
 
                         <ArrowRight
                           size={15}
@@ -2364,7 +2375,6 @@ function Navbar() {
                           </span>
 
                         </span>
-
 
                         <ArrowRight
                           size={15}

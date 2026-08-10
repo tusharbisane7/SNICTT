@@ -1,0 +1,701 @@
+/* =========================================================
+   SNICT — COMPLIANCE COMMITTEE
+========================================================= */
+
+.compliance-page,
+.compliance-page * {
+  box-sizing: border-box;
+}
+
+.compliance-page {
+  position: relative;
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  color: #102a2f;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f4fbfc,
+      #ffffff 48%,
+      #f7fbfc
+    );
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.compliance-container {
+  width: min(1200px, calc(100% - 48px));
+  margin: auto;
+
+  position: relative;
+  z-index: 2;
+}
+
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+.compliance-grid {
+  position: absolute;
+  inset: 0;
+
+  opacity: 0.42;
+
+  background-image:
+    linear-gradient(
+      rgba(8, 127, 140, 0.045) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(8, 127, 140, 0.045) 1px,
+      transparent 1px
+    );
+
+  background-size: 50px 50px;
+}
+
+.compliance-glow {
+  position: absolute;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.compliance-glow-one {
+  width: 560px;
+  height: 560px;
+
+  top: -300px;
+  left: -230px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(8, 127, 140, 0.15),
+      transparent 68%
+    );
+
+  animation:
+    complianceGlowOne 10s ease-in-out infinite;
+}
+
+.compliance-glow-two {
+  width: 600px;
+  height: 600px;
+
+  right: -300px;
+  bottom: -300px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(42, 174, 176, 0.13),
+      transparent 68%
+    );
+
+  animation:
+    complianceGlowTwo 12s ease-in-out infinite;
+}
+
+@keyframes complianceGlowOne {
+  50% {
+    transform: translate(30px, 25px);
+  }
+}
+
+@keyframes complianceGlowTwo {
+  50% {
+    transform: translate(-30px, -30px);
+  }
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.compliance-hero {
+  min-height: 550px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 85px 0 75px;
+}
+
+.compliance-hero .compliance-container {
+  display: grid;
+
+  grid-template-columns:
+    1.05fr 0.75fr;
+
+  align-items: center;
+
+  gap: 80px;
+}
+
+.compliance-hero-content {
+  animation:
+    complianceHeroIn 0.8s ease both;
+}
+
+@keyframes complianceHeroIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.compliance-icon {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 22px;
+
+  color: #087f8c;
+
+  border: 1px solid #cbe7e9;
+  border-radius: 18px;
+
+  background: #eefafb;
+
+  box-shadow:
+    0 15px 35px
+    rgba(8, 127, 140, 0.11);
+}
+
+.compliance-hero-content > span,
+.compliance-heading > span {
+  color: #087f8c;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  letter-spacing: 0.18em;
+}
+
+.compliance-hero-content h1 {
+  margin: 18px 0;
+
+  font-size:
+    clamp(48px, 6vw, 78px);
+
+  line-height: 0.98;
+
+  letter-spacing: -0.055em;
+}
+
+.compliance-hero-content h1 strong {
+  display: block;
+
+  background:
+    linear-gradient(
+      120deg,
+      #087f8c,
+      #2aaeb0
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+}
+
+.compliance-hero-content > p {
+  max-width: 650px;
+
+  margin: 0;
+
+  color: #64777b;
+
+  font-size: 17px;
+
+  line-height: 1.8;
+}
+
+.compliance-stat {
+  width: fit-content;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 30px;
+
+  padding: 14px 20px;
+
+  border: 1px solid #dcecee;
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 30px
+    rgba(16, 42, 47, 0.05);
+}
+
+.compliance-stat svg {
+  color: #087f8c;
+}
+
+.compliance-stat strong {
+  font-size: 20px;
+}
+
+.compliance-stat span {
+  color: #718184;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   VISUAL
+========================================================= */
+
+.compliance-visual {
+  position: relative;
+
+  min-height: 400px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compliance-ring {
+  position: absolute;
+
+  border: 1px solid
+    rgba(8, 127, 140, 0.13);
+
+  border-radius: 50%;
+
+  animation:
+    complianceRing 20s linear infinite;
+}
+
+.compliance-ring-one {
+  width: 270px;
+  height: 270px;
+}
+
+.compliance-ring-two {
+  width: 390px;
+  height: 390px;
+
+  animation-direction: reverse;
+  animation-duration: 28s;
+}
+
+@keyframes complianceRing {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.compliance-core {
+  width: 190px;
+  height: 190px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  color: #087f8c;
+
+  border: 1px solid
+    rgba(8, 127, 140, 0.18);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      #ffffff,
+      #eaf8f9
+    );
+
+  box-shadow:
+    0 30px 80px
+    rgba(8, 127, 140, 0.16);
+
+  animation:
+    complianceFloat 4s ease-in-out infinite;
+}
+
+.compliance-core strong {
+  color: #102a2f;
+
+  font-size: 19px;
+
+  letter-spacing: 0.15em;
+}
+
+.compliance-core span {
+  color: #087f8c;
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0.14em;
+}
+
+@keyframes complianceFloat {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+
+/* =========================================================
+   MEMBERS
+========================================================= */
+
+.compliance-members {
+  padding: 95px 0 110px;
+
+  background: #ffffff;
+}
+
+.compliance-heading {
+  margin-bottom: 45px;
+}
+
+.compliance-heading h2 {
+  margin: 12px 0;
+
+  font-size:
+    clamp(35px, 4vw, 52px);
+
+  letter-spacing: -0.045em;
+}
+
+.compliance-heading h2 strong {
+  color: #087f8c;
+}
+
+.compliance-heading p {
+  margin: 0;
+
+  color: #718184;
+
+  font-size: 16px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.compliance-members-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 24px;
+}
+
+.compliance-member-card {
+  overflow: hidden;
+
+  border: 1px solid #dceaec;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 35px
+    rgba(16, 42, 47, 0.055);
+
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.compliance-member-card:hover {
+  transform: translateY(-9px);
+
+  box-shadow:
+    0 25px 60px
+    rgba(8, 127, 140, 0.13);
+}
+
+.compliance-photo {
+  position: relative;
+
+  height: 280px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #087f8c;
+
+  background:
+    linear-gradient(
+      145deg,
+      #eefafa,
+      #e0f4f5
+    );
+}
+
+.compliance-photo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition:
+    transform 0.5s ease;
+}
+
+.compliance-member-card:hover
+.compliance-photo img {
+  transform: scale(1.06);
+}
+
+.compliance-photo span {
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  padding: 7px 10px;
+
+  color: #087f8c;
+
+  border-radius: 8px;
+
+  background:
+    rgba(255, 255, 255, 0.9);
+
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.compliance-member-content {
+  padding: 24px;
+}
+
+.compliance-member-content small {
+  color: #087f8c;
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0.12em;
+}
+
+.compliance-member-content h3 {
+  margin: 8px 0;
+
+  font-size: 23px;
+}
+
+.compliance-member-content strong {
+  color: #087f8c;
+
+  font-size: 15px;
+}
+
+.compliance-member-content p {
+  margin: 9px 0 0;
+
+  color: #718184;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   STATES
+========================================================= */
+
+.compliance-loading,
+.compliance-empty {
+  min-height: 280px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  color: #087f8c;
+
+  border: 1px solid #dceaec;
+  border-radius: 20px;
+
+  background: #fbfefe;
+}
+
+.compliance-loading p,
+.compliance-empty p {
+  color: #718184;
+
+  font-size: 14px;
+}
+
+.compliance-spinner {
+  width: 42px;
+  height: 42px;
+
+  border: 3px solid #dcecee;
+  border-top-color: #087f8c;
+
+  border-radius: 50%;
+
+  animation:
+    complianceSpin 0.8s linear infinite;
+}
+
+@keyframes complianceSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.compliance-error {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  padding: 22px;
+
+  color: #9b4a4a;
+
+  border: 1px solid #efd7d7;
+  border-radius: 16px;
+
+  background: #fff8f8;
+}
+
+.compliance-error button {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 10px 15px;
+
+  color: #087f8c;
+
+  border: 1px solid #cbe4e6;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+  .compliance-hero .compliance-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .compliance-hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .compliance-members-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+
+  .compliance-container {
+    width: calc(100% - 30px);
+  }
+
+  .compliance-hero {
+    padding: 65px 0;
+  }
+
+  .compliance-hero-content h1 {
+    font-size: 43px;
+  }
+
+  .compliance-hero-content > p {
+    font-size: 15px;
+  }
+
+  .compliance-members {
+    padding: 70px 0;
+  }
+
+  .compliance-members-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compliance-photo {
+    height: 300px;
+  }
+
+  .compliance-error {
+    flex-wrap: wrap;
+  }
+
+  .compliance-error button {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .compliance-page *,
+  .compliance-page *::before,
+  .compliance-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -12,9 +12,23 @@ import {
 
 import { useState } from "react";
 
+import { useAuth } from "../../context/AuthContext";
+
 import "./Contact.css";
 
+
 function Contact() {
+
+  // =========================================================
+  // AUTH
+  // =========================================================
+
+  const { user } = useAuth();
+
+
+  // =========================================================
+  // FORM STATE
+  // =========================================================
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,21 +38,37 @@ function Contact() {
     message: "",
   });
 
-  const [submitted, setSubmitted] = useState(false);
+
+  const [submitted, setSubmitted] =
+    useState(false);
+
+
+  // =========================================================
+  // HANDLE CHANGE
+  // =========================================================
 
   const handleChange = (event) => {
+
     const {
       name,
       value,
     } = event.target;
 
+
     setFormData((previous) => ({
       ...previous,
       [name]: value,
     }));
+
   };
 
+
+  // =========================================================
+  // HANDLE SUBMIT
+  // =========================================================
+
   const handleSubmit = (event) => {
+
     event.preventDefault();
 
     /*
@@ -50,7 +80,9 @@ function Contact() {
       formData
     );
 
+
     setSubmitted(true);
+
 
     setFormData({
       name: "",
@@ -60,13 +92,20 @@ function Contact() {
       message: "",
     });
 
+
     setTimeout(() => {
       setSubmitted(false);
     }, 5000);
+
   };
 
 
+  // =========================================================
+  // UI
+  // =========================================================
+
   return (
+
     <main className="contact-page">
 
 
@@ -78,8 +117,14 @@ function Contact() {
 
         <div className="contact-hero-grid" />
 
-        <div className="contact-glow contact-glow-one" />
-        <div className="contact-glow contact-glow-two" />
+        <div
+          className="contact-glow contact-glow-one"
+        />
+
+        <div
+          className="contact-glow contact-glow-two"
+        />
+
 
         <div className="contact-hero-container">
 
@@ -89,10 +134,12 @@ function Contact() {
               GET IN TOUCH
             </span>
 
+
             <h1>
               Let's connect
               <span> with SNICT.</span>
             </h1>
+
 
             <p>
               Have a question, suggestion or want to know
@@ -100,20 +147,28 @@ function Contact() {
               We would be happy to hear from you.
             </p>
 
+
             <div className="contact-hero-meta">
 
               <div>
+
                 <HeartPulse size={17} />
+
                 <span>
                   Cardiovascular Community
                 </span>
+
               </div>
 
+
               <div>
+
                 <MessageCircle size={17} />
+
                 <span>
                   Professional Support
                 </span>
+
               </div>
 
             </div>
@@ -123,8 +178,14 @@ function Contact() {
 
           <div className="contact-hero-visual">
 
-            <div className="contact-orbit contact-orbit-one" />
-            <div className="contact-orbit contact-orbit-two" />
+            <div
+              className="contact-orbit contact-orbit-one"
+            />
+
+            <div
+              className="contact-orbit contact-orbit-two"
+            />
+
 
             <div className="contact-core">
 
@@ -160,10 +221,12 @@ function Contact() {
               CONTACT INFORMATION
             </span>
 
+
             <h2>
               We're here to
               <span> help.</span>
             </h2>
+
 
             <p>
               Reach out to us through any of the available
@@ -176,7 +239,9 @@ function Contact() {
           <div className="contact-info-grid">
 
 
-            {/* EMAIL */}
+            {/* =================================================
+                EMAIL
+            ================================================= */}
 
             <a
               href="mailto:info@snict.org"
@@ -184,8 +249,11 @@ function Contact() {
             >
 
               <div className="contact-info-icon">
+
                 <Mail size={23} />
+
               </div>
+
 
               <div>
 
@@ -193,9 +261,11 @@ function Contact() {
                   EMAIL
                 </span>
 
+
                 <h3>
                   info@snict.org
                 </h3>
+
 
                 <p>
                   Send us your questions or enquiries.
@@ -203,6 +273,7 @@ function Contact() {
 
               </div>
 
+
               <ArrowRight
                 size={18}
                 className="contact-info-arrow"
@@ -211,7 +282,9 @@ function Contact() {
             </a>
 
 
-            {/* PHONE */}
+            {/* =================================================
+                PHONE
+            ================================================= */}
 
             <a
               href="tel:+919999999999"
@@ -219,8 +292,11 @@ function Contact() {
             >
 
               <div className="contact-info-icon">
+
                 <Phone size={23} />
+
               </div>
+
 
               <div>
 
@@ -228,15 +304,18 @@ function Contact() {
                   PHONE
                 </span>
 
+
                 <h3>
                   +91 XXXXX XXXXX
                 </h3>
+
 
                 <p>
                   Contact us for professional enquiries.
                 </p>
 
               </div>
+
 
               <ArrowRight
                 size={18}
@@ -246,13 +325,18 @@ function Contact() {
             </a>
 
 
-            {/* LOCATION */}
+            {/* =================================================
+                LOCATION
+            ================================================= */}
 
             <div className="contact-info-card">
 
               <div className="contact-info-icon">
+
                 <MapPin size={23} />
+
               </div>
+
 
               <div>
 
@@ -260,15 +344,18 @@ function Contact() {
                   LOCATION
                 </span>
 
+
                 <h3>
                   India
                 </h3>
+
 
                 <p>
                   SNICT professional community.
                 </p>
 
               </div>
+
 
               <MapPin
                 size={18}
@@ -278,13 +365,18 @@ function Contact() {
             </div>
 
 
-            {/* OFFICE HOURS */}
+            {/* =================================================
+                OFFICE HOURS
+            ================================================= */}
 
             <div className="contact-info-card">
 
               <div className="contact-info-icon">
+
                 <Clock3 size={23} />
+
               </div>
+
 
               <div>
 
@@ -292,15 +384,18 @@ function Contact() {
                   AVAILABILITY
                 </span>
 
+
                 <h3>
                   Professional Support
                 </h3>
+
 
                 <p>
                   We'll respond as soon as possible.
                 </p>
 
               </div>
+
 
               <Clock3
                 size={18}
@@ -327,7 +422,9 @@ function Contact() {
           <div className="contact-form-layout">
 
 
-            {/* LEFT */}
+            {/* =================================================
+                LEFT
+            ================================================= */}
 
             <div className="contact-form-intro">
 
@@ -335,10 +432,12 @@ function Contact() {
                 SEND AN ENQUIRY
               </span>
 
+
               <h2>
                 Tell us
                 <span> how we can help.</span>
               </h2>
+
 
               <p>
                 Whether you're interested in membership,
@@ -350,14 +449,20 @@ function Contact() {
               <div className="contact-form-feature">
 
                 <div>
+
                   <Building2 size={21} />
+
                 </div>
 
+
                 <span>
+
                   Professional
+
                   <strong>
                     SNICT Administration
                   </strong>
+
                 </span>
 
               </div>
@@ -366,14 +471,20 @@ function Contact() {
               <div className="contact-form-feature">
 
                 <div>
+
                   <MessageCircle size={21} />
+
                 </div>
 
+
                 <span>
+
                   Communication
+
                   <strong>
                     We're happy to hear from you
                   </strong>
+
                 </span>
 
               </div>
@@ -381,7 +492,9 @@ function Contact() {
             </div>
 
 
-            {/* FORM */}
+            {/* =================================================
+                FORM
+            ================================================= */}
 
             <div className="contact-form-card">
 
@@ -390,8 +503,11 @@ function Contact() {
                 <div className="contact-success">
 
                   <div>
+
                     <Send size={18} />
+
                   </div>
+
 
                   <span>
                     Thank you! Your enquiry has
@@ -409,13 +525,16 @@ function Contact() {
               >
 
 
-                {/* NAME */}
+                {/* =================================================
+                    NAME
+                ================================================= */}
 
                 <div className="contact-field">
 
                   <label htmlFor="name">
                     Full Name
                   </label>
+
 
                   <input
                     id="name"
@@ -430,7 +549,9 @@ function Contact() {
                 </div>
 
 
-                {/* EMAIL */}
+                {/* =================================================
+                    EMAIL + PHONE
+                ================================================= */}
 
                 <div className="contact-form-row">
 
@@ -439,6 +560,7 @@ function Contact() {
                     <label htmlFor="email">
                       Email Address
                     </label>
+
 
                     <input
                       id="email"
@@ -459,6 +581,7 @@ function Contact() {
                       Phone Number
                     </label>
 
+
                     <input
                       id="phone"
                       name="phone"
@@ -473,13 +596,16 @@ function Contact() {
                 </div>
 
 
-                {/* SUBJECT */}
+                {/* =================================================
+                    SUBJECT
+                ================================================= */}
 
                 <div className="contact-field">
 
                   <label htmlFor="subject">
                     Subject
                   </label>
+
 
                   <select
                     id="subject"
@@ -493,17 +619,21 @@ function Contact() {
                       Select an enquiry type
                     </option>
 
+
                     <option value="membership">
                       Membership
                     </option>
+
 
                     <option value="events">
                       Events & CME
                     </option>
 
+
                     <option value="collaboration">
                       Collaboration
                     </option>
+
 
                     <option value="general">
                       General Enquiry
@@ -514,13 +644,16 @@ function Contact() {
                 </div>
 
 
-                {/* MESSAGE */}
+                {/* =================================================
+                    MESSAGE
+                ================================================= */}
 
                 <div className="contact-field">
 
                   <label htmlFor="message">
                     Message
                   </label>
+
 
                   <textarea
                     id="message"
@@ -535,7 +668,9 @@ function Contact() {
                 </div>
 
 
-                {/* SUBMIT */}
+                {/* =================================================
+                    SUBMIT
+                ================================================= */}
 
                 <button
                   type="submit"
@@ -545,6 +680,7 @@ function Contact() {
                   <span>
                     Send Message
                   </span>
+
 
                   <Send size={17} />
 
@@ -577,16 +713,19 @@ function Contact() {
                 FIND US
               </span>
 
+
               <h2>
                 SNICT
                 <span> Community</span>
               </h2>
+
 
               <p>
                 Connect with the SNICT professional community
                 and stay involved with cardiovascular
                 education and collaboration.
               </p>
+
 
               <div className="contact-location-item">
 
@@ -604,6 +743,7 @@ function Contact() {
             <div className="contact-map-placeholder">
 
               <div className="contact-map-grid" />
+
 
               <div className="contact-map-pin">
 
@@ -637,28 +777,60 @@ function Contact() {
             <div>
 
               <span className="contact-section-label">
-                JOIN SNICT
+
+                {user
+                  ? "SNICT MEMBER"
+                  : "JOIN SNICT"}
+
               </span>
 
+
               <h2>
-                Become part of the
-                <span> community.</span>
+
+                {user ? (
+                  <>
+                    Welcome to the
+                    <span> SNICT community.</span>
+                  </>
+                ) : (
+                  <>
+                    Become part of the
+                    <span> community.</span>
+                  </>
+                )}
+
               </h2>
 
+
               <p>
-                Connect, learn and grow with cardiovascular
-                technologists and professionals.
+
+                {user
+                  ? "Thank you for being a member of the SNICT professional community."
+                  : "Connect, learn and grow with cardiovascular technologists and professionals."}
+
               </p>
 
             </div>
 
-            <a
-              href="/signup"
-              className="contact-cta-button"
-            >
-              Join SNICT
-              <ArrowRight size={18} />
-            </a>
+
+            {/* =================================================
+                SHOW ONLY WHEN USER IS NOT LOGGED IN
+            ================================================= */}
+
+            {!user && (
+
+              <a
+                href="/signup"
+                className="contact-cta-button"
+              >
+
+                Join SNICT
+
+                <ArrowRight size={18} />
+
+              </a>
+
+            )}
 
           </div>
 
@@ -669,5 +841,6 @@ function Contact() {
     </main>
   );
 }
+
 
 export default Contact;

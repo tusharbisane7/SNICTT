@@ -884,3 +884,431 @@
     justify-content: center;
   }
 }
+
+/* =========================================================
+   EVENT BOOKING — TYPOGRAPHY UPGRADE
+   Larger, clearer and more readable fonts
+========================================================= */
+
+.event-booking-page {
+  font-size: 16px;
+}
+
+/* Back */
+.booking-back {
+  font-size: 16px;
+}
+
+/* Header */
+.booking-header > span {
+  font-size: 13px;
+}
+
+.booking-header h1 {
+  font-size: clamp(40px, 5.5vw, 60px);
+}
+
+.booking-header p {
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* Error */
+.booking-error {
+  font-size: 16px;
+}
+
+/* Event card */
+.booking-card-label {
+  font-size: 13px;
+}
+
+.booking-event-card h2 {
+  font-size: 32px;
+}
+
+.booking-doctor {
+  font-size: 16px;
+}
+
+.booking-event-details > div {
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* Amount */
+.booking-amount span {
+  font-size: 12px;
+}
+
+.booking-amount strong {
+  font-size: 36px;
+}
+
+.booking-status span {
+  font-size: 15px;
+}
+
+.booking-status strong {
+  font-size: 13px;
+}
+
+/* Payment heading */
+.upi-heading span {
+  font-size: 12px;
+}
+
+.upi-heading h2 {
+  font-size: 25px;
+}
+
+/* QR / UPI */
+.upi-placeholder span {
+  font-size: 15px;
+}
+
+.upi-box strong {
+  font-size: 18px;
+}
+
+.upi-box > span {
+  font-size: 16px;
+}
+
+.upi-box small {
+  font-size: 13px;
+}
+
+.upi-id-box span {
+  font-size: 12px;
+}
+
+.upi-id-box strong {
+  font-size: 16px;
+}
+
+.upi-id-box button {
+  font-size: 14px;
+}
+
+/* Instructions */
+.payment-instruction strong {
+  font-size: 16px;
+}
+
+.payment-instruction ol {
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+/* Payment form */
+.upi-payment-card label {
+  font-size: 15px;
+}
+
+.upi-payment-card input {
+  min-height: 55px;
+  font-size: 16px;
+}
+
+.payment-submit-btn {
+  min-height: 58px;
+  font-size: 16px;
+}
+
+/* Already submitted */
+.payment-already-submitted strong {
+  font-size: 16px;
+}
+
+.payment-already-submitted span {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* Security */
+.booking-security-note {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* Loading */
+.booking-loading {
+  font-size: 16px;
+}
+
+/* Success */
+.booking-success-label {
+  font-size: 13px;
+}
+
+.booking-success h1 {
+  font-size: 38px;
+}
+
+.booking-success p {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.booking-reference span {
+  font-size: 11px;
+}
+
+.booking-reference strong {
+  font-size: 17px;
+}
+
+.booking-primary-btn,
+.booking-secondary-btn {
+  min-height: 52px;
+  font-size: 15px;
+}
+
+/* Error page */
+.booking-error-page h1 {
+  font-size: 34px;
+}
+
+.booking-error-page p {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .booking-header h1 {
+    font-size: clamp(38px, 6vw, 54px);
+  }
+
+  .booking-header p {
+    font-size: 17px;
+  }
+
+  .booking-event-card h2 {
+    font-size: 30px;
+  }
+
+  .booking-event-details > div {
+    font-size: 15px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .booking-back {
+    font-size: 15px;
+  }
+
+  .booking-header > span {
+    font-size: 12px;
+  }
+
+  .booking-header h1 {
+    font-size: 38px;
+    line-height: 1.1;
+  }
+
+  .booking-header p {
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .booking-card-label {
+    font-size: 12px;
+  }
+
+  .booking-event-card h2 {
+    font-size: 27px;
+  }
+
+  .booking-doctor {
+    font-size: 15px;
+  }
+
+  .booking-event-details > div {
+    font-size: 15px;
+  }
+
+  .booking-amount span {
+    font-size: 11px;
+  }
+
+  .booking-amount strong {
+    font-size: 32px;
+  }
+
+  .booking-status span {
+    font-size: 14px;
+  }
+
+  .booking-status strong {
+    font-size: 12px;
+  }
+
+  .upi-heading span {
+    font-size: 11px;
+  }
+
+  .upi-heading h2 {
+    font-size: 23px;
+  }
+
+  .upi-box strong {
+    font-size: 17px;
+  }
+
+  .upi-box > span {
+    font-size: 15px;
+  }
+
+  .upi-box small {
+    font-size: 12px;
+  }
+
+  .upi-id-box span {
+    font-size: 11px;
+  }
+
+  .upi-id-box strong {
+    font-size: 15px;
+  }
+
+  .upi-id-box button {
+    font-size: 14px;
+  }
+
+  .payment-instruction strong {
+    font-size: 15px;
+  }
+
+  .payment-instruction ol {
+    font-size: 14px;
+  }
+
+  .upi-payment-card label {
+    font-size: 14px;
+  }
+
+  .upi-payment-card input {
+    min-height: 53px;
+    font-size: 15px;
+  }
+
+  .payment-submit-btn {
+    min-height: 56px;
+    font-size: 15px;
+  }
+
+  .payment-already-submitted strong {
+    font-size: 15px;
+  }
+
+  .payment-already-submitted span {
+    font-size: 13px;
+  }
+
+  .booking-security-note {
+    font-size: 13px;
+  }
+
+  .booking-success-label {
+    font-size: 12px;
+  }
+
+  .booking-success h1 {
+    font-size: 32px;
+  }
+
+  .booking-success p {
+    font-size: 16px;
+  }
+
+  .booking-reference span {
+    font-size: 10px;
+  }
+
+  .booking-reference strong {
+    font-size: 16px;
+  }
+
+  .booking-primary-btn,
+  .booking-secondary-btn {
+    font-size: 15px;
+  }
+
+  .booking-error-page h1 {
+    font-size: 30px;
+  }
+
+  .booking-error-page p {
+    font-size: 15px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  .booking-header h1 {
+    font-size: 34px;
+  }
+
+  .booking-event-card h2 {
+    font-size: 25px;
+  }
+
+  .booking-event-details > div {
+    font-size: 14px;
+  }
+
+  .booking-amount strong {
+    font-size: 30px;
+  }
+
+  .upi-heading h2 {
+    font-size: 21px;
+  }
+
+  .upi-box strong {
+    font-size: 16px;
+  }
+
+  .upi-box > span {
+    font-size: 14px;
+  }
+
+  .upi-id-box strong {
+    font-size: 14px;
+  }
+
+  .payment-instruction ol {
+    font-size: 13.5px;
+  }
+
+  .upi-payment-card input {
+    font-size: 15px;
+  }
+
+  .payment-submit-btn {
+    font-size: 15px;
+  }
+
+  .booking-success h1 {
+    font-size: 29px;
+  }
+
+  .booking-success p {
+    font-size: 15px;
+  }
+}

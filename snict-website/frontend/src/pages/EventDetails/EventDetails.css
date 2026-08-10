@@ -1160,3 +1160,283 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   EVENT DETAILS — LARGER TYPOGRAPHY
+   Keeps the existing design, colors and layout.
+========================================================= */
+
+/* General */
+.event-details-page {
+  font-size: 16px;
+}
+
+/* Loading */
+.event-details-loading {
+  font-size: 17px;
+}
+
+.event-details-error > span {
+  font-size: 13px;
+}
+
+.event-details-error h1 {
+  font-size: 40px;
+}
+
+.event-details-error p {
+  font-size: 16px;
+}
+
+.event-error-back {
+  font-size: 14px;
+}
+
+/* Hero */
+.event-details-status {
+  padding: 8px 13px;
+  font-size: 13px;
+}
+
+.event-details-type {
+  padding: 8px 13px;
+  font-size: 12px;
+}
+
+.event-details-intro h1 {
+  font-size: clamp(46px, 5.5vw, 74px);
+  line-height: 1.04;
+}
+
+.event-details-doctor strong {
+  font-size: 17px;
+}
+
+.event-details-doctor span {
+  font-size: 14px;
+}
+
+/* Main description */
+.event-section-label {
+  font-size: 13px;
+}
+
+.event-description h2 {
+  font-size: 38px;
+}
+
+.event-description p {
+  font-size: 17px;
+  line-height: 1.9;
+}
+
+/* Information cards */
+.event-info-card span,
+.event-extra-item span,
+.event-capacity-card span {
+  font-size: 11px;
+}
+
+.event-info-card strong,
+.event-extra-item strong {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.event-capacity-card strong {
+  font-size: 16px;
+}
+
+/* Booking card */
+.booking-card-label {
+  font-size: 13px;
+}
+
+.event-booking-price strong {
+  font-size: 40px;
+}
+
+.booking-price-note {
+  font-size: 13px;
+}
+
+.booking-capacity {
+  font-size: 13px;
+}
+
+.event-book-btn {
+  min-height: 56px;
+  font-size: 15px;
+}
+
+.booking-closed-message {
+  min-height: 55px;
+  font-size: 14px;
+}
+
+.booking-login-note {
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.back-events-link {
+  font-size: 13px;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 950px) {
+
+  .event-details-intro h1 {
+    font-size: clamp(44px, 5.5vw, 68px);
+  }
+
+  .event-description h2 {
+    font-size: 35px;
+  }
+
+  .event-description p {
+    font-size: 16px;
+  }
+
+  .event-info-card strong,
+  .event-extra-item strong {
+    font-size: 14px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .event-details-intro h1 {
+    font-size: 45px;
+    line-height: 1.06;
+  }
+
+  .event-details-status {
+    font-size: 12px;
+  }
+
+  .event-details-type {
+    font-size: 11px;
+  }
+
+  .event-details-doctor strong {
+    font-size: 16px;
+  }
+
+  .event-details-doctor span {
+    font-size: 13px;
+  }
+
+  .event-description h2 {
+    font-size: 32px;
+  }
+
+  .event-description p {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .event-info-card span,
+  .event-extra-item span,
+  .event-capacity-card span {
+    font-size: 11px;
+  }
+
+  .event-info-card strong,
+  .event-extra-item strong {
+    font-size: 15px;
+  }
+
+  .event-capacity-card strong {
+    font-size: 16px;
+  }
+
+  .booking-card-label {
+    font-size: 12px;
+  }
+
+  .event-booking-price strong {
+    font-size: 38px;
+  }
+
+  .booking-price-note {
+    font-size: 13px;
+  }
+
+  .booking-capacity {
+    font-size: 13px;
+  }
+
+  .event-book-btn {
+    min-height: 54px;
+    font-size: 15px;
+  }
+
+  .booking-login-note {
+    font-size: 12px;
+  }
+
+  .back-events-link {
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  .event-details-intro h1 {
+    font-size: 39px;
+  }
+
+  .event-details-status {
+    font-size: 11px;
+  }
+
+  .event-details-type {
+    font-size: 10px;
+  }
+
+  .event-details-doctor strong {
+    font-size: 15px;
+  }
+
+  .event-details-doctor span {
+    font-size: 13px;
+  }
+
+  .event-description h2 {
+    font-size: 29px;
+  }
+
+  .event-description p {
+    font-size: 15px;
+  }
+
+  .event-info-card strong,
+  .event-extra-item strong {
+    font-size: 14px;
+  }
+
+  .event-booking-price strong {
+    font-size: 34px;
+  }
+
+  .event-book-btn {
+    min-height: 53px;
+    font-size: 14px;
+  }
+
+  .booking-login-note {
+    font-size: 11.5px;
+  }
+}

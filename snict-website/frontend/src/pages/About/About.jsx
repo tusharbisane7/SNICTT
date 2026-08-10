@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 import "./About.css";
 
 function About() {
+  const { user } = useAuth();
+
   return (
     <main className="about-page">
 
@@ -53,13 +56,15 @@ function About() {
 
             <div className="about-hero-actions">
 
-              <Link
-                to="/membership"
-                className="about-primary-btn"
-              >
-                Become a Member
-                <ArrowRight size={17} />
-              </Link>
+              {!user && (
+                <Link
+                  to="/membership"
+                  className="about-primary-btn"
+                >
+                  Become a Member
+                  <ArrowRight size={17} />
+                </Link>
+              )}
 
               <Link
                 to="/team"
@@ -654,13 +659,15 @@ function About() {
 
             <div className="about-cta-actions">
 
-              <Link
-                to="/signup"
-                className="about-cta-primary"
-              >
-                Create Your Account
-                <ArrowRight size={18} />
-              </Link>
+              {!user && (
+                <Link
+                  to="/signup"
+                  className="about-cta-primary"
+                >
+                  Create Your Account
+                  <ArrowRight size={18} />
+                </Link>
+              )}
 
               <Link
                 to="/contact"
@@ -681,4 +688,4 @@ function About() {
   );
 }
 
-export default About;
+export default About

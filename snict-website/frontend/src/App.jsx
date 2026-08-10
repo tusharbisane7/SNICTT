@@ -21,6 +21,17 @@ import EventDetails from "./pages/EventDetails/EventDetails";
 import Membership from "./pages/Membership/Membership";
 import Contact from "./pages/Contact/Contact";
 import Members from "./pages/Members/Members";
+import PlacementCommittee
+  from "./pages/PlacementCommittee/PlacementCommittee";
+
+import AcademicCommittee
+  from "./pages/AcademicCommittee/AcademicCommittee";
+
+import ComplianceCommittee
+  from "./pages/ComplianceCommittee/ComplianceCommittee";
+
+import WorkingCommittee
+  from "./pages/WorkingCommittee/WorkingCommittee";
 // =====================================================
 // USER AUTHENTICATION
 // =====================================================
@@ -86,6 +97,25 @@ function App() {
         <Route
   path="/members"
   element={<Members />}
+/>
+<Route
+  path="/committees/placement"
+  element={<PlacementCommittee />}
+/>
+
+<Route
+  path="/committees/academic"
+  element={<AcademicCommittee />}
+/>
+
+<Route
+  path="/committees/compliance"
+  element={<ComplianceCommittee />}
+/>
+
+<Route
+  path="/committees/working"
+  element={<WorkingCommittee />}
 />
 
         <Route

@@ -417,14 +417,14 @@ function Team() {
               </a>
 
 
-              <Link
+              {/* <Link
                 to="/membership"
                 className="team-secondary-btn"
               >
 
                 Join SNICT
 
-              </Link>
+              </Link> */}
 
             </div>
 
@@ -1186,58 +1186,10 @@ function Team() {
       )}
 
 
-      {/* =====================================================
-          CTA
-      ===================================================== */}
+   
 
-      <section className="team-cta">
+  
 
-        <div className="team-container">
-
-          <span className="section-label">
-
-            JOIN SNICT
-
-          </span>
-
-
-          <h2>
-
-            Be part of the
-
-            <span>
-              {" "}professional community.
-            </span>
-
-          </h2>
-
-
-          <p>
-
-            Connect with cardiovascular
-            technologists and contribute to
-            knowledge sharing and professional
-            advancement.
-
-          </p>
-
-
-          <Link
-            to="/signup"
-            className="team-cta-button"
-          >
-
-            Become a Member
-
-            <ArrowRight
-              size={18}
-            />
-
-          </Link>
-
-        </div>
-
-      </section>
 
     </main>
 

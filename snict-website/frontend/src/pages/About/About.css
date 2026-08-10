@@ -84,7 +84,7 @@
 
   color: var(--about-primary);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 850;
 
   letter-spacing: 0.16em;
@@ -308,7 +308,7 @@
   background:
     rgba(234, 248, 250, 0.75);
 
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 850;
 
   letter-spacing: 0.12em;
@@ -354,7 +354,7 @@
 
   color: var(--about-muted);
 
-  font-size: 16px;
+  font-size: 18px;
 
   line-height: 1.8;
 }
@@ -389,7 +389,7 @@
 
   border-radius: 11px;
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 750;
 
   transition:
@@ -625,7 +625,7 @@
 
   color: var(--about-text);
 
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 850;
 
   letter-spacing: 0.16em;
@@ -676,7 +676,7 @@
 
   color: var(--about-text);
 
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -687,7 +687,7 @@
 
   color: #8a9b9f;
 
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
 }
 
@@ -721,7 +721,7 @@
 
   color: var(--about-primary);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -793,7 +793,7 @@
 
   color: var(--about-muted);
 
-  font-size: 15px;
+  font-size: 19px;
 
   line-height: 1.85;
 }
@@ -857,7 +857,7 @@
 .about-intro-highlight > span {
   color: #84979b;
 
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 850;
 
   letter-spacing: 0.14em;
@@ -871,7 +871,7 @@
 
   color: var(--about-text);
 
-  font-size: 23px;
+  font-size: 26px;
 
   line-height: 1.35;
 
@@ -998,7 +998,7 @@
 
   color: #819397;
 
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 850;
 
   letter-spacing: 0.15em;
@@ -1015,7 +1015,7 @@
 
   color: var(--about-text);
 
-  font-size: 28px;
+  font-size: 31px;
 
   line-height: 1.25;
 
@@ -1033,7 +1033,7 @@
 
   color: var(--about-muted);
 
-  font-size: 13px;
+  font-size: 15px;
 
   line-height: 1.8;
 }
@@ -1071,7 +1071,7 @@
 
   color: var(--about-muted);
 
-  font-size: 14px;
+  font-size: 16px;
 
   line-height: 1.75;
 }
@@ -1181,7 +1181,7 @@
 .about-focus-top > span {
   color: #b4c3c6;
 
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -1190,7 +1190,7 @@
 
   color: var(--about-text);
 
-  font-size: 19px;
+  font-size: 21px;
 
   line-height: 1.3;
 }
@@ -1200,7 +1200,7 @@
 
   color: var(--about-muted);
 
-  font-size: 12px;
+  font-size: 14px;
 
   line-height: 1.8;
 }
@@ -1367,7 +1367,7 @@
 }
 
 .community-center strong {
-  font-size: 16px;
+  font-size: 18px;
 
   letter-spacing: 0.15em;
 }
@@ -1377,7 +1377,7 @@
 
   color: rgba(255, 255, 255, 0.6);
 
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
 
   text-transform: uppercase;
@@ -1415,7 +1415,7 @@
 
   color: rgba(255, 255, 255, 0.72);
 
-  font-size: 14px;
+  font-size: 16px;
 
   line-height: 1.85;
 }
@@ -1441,7 +1441,7 @@
   background:
     rgba(255, 255, 255, 0.09);
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 750;
 
   transition:
@@ -1532,7 +1532,7 @@
 
   color: var(--about-text);
 
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .about-value p {
@@ -1540,7 +1540,7 @@
 
   color: var(--about-muted);
 
-  font-size: 12px;
+  font-size: 14px;
 
   line-height: 1.75;
 }
@@ -1656,7 +1656,7 @@
 
   border-radius: 11px;
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 750;
 
   transition:
@@ -1855,9 +1855,9 @@
   }
 
   .about-hero-content > p {
-    font-size: 13px;
+    font-size: 15px;
 
-    line-height: 1.7;
+    line-height: 1.75;
   }
 
   .about-hero-actions {
@@ -1925,7 +1925,7 @@
   .about-section-heading h2,
   .about-focus-heading h2,
   .about-values-heading h2 {
-    font-size: 32px;
+    font-size: 35px;
   }
 
   .about-intro-main p {
@@ -1943,7 +1943,7 @@
   }
 
   .about-vm-card h2 {
-    font-size: 23px;
+    font-size: 26px;
   }
 
   .about-focus-grid {
@@ -1986,7 +1986,7 @@
   }
 
   .about-community-content h2 {
-    font-size: 32px;
+    font-size: 35px;
   }
 
   .about-community-content p {
@@ -1994,7 +1994,7 @@
   }
 
   .about-cta-content h2 {
-    font-size: 33px;
+    font-size: 36px;
   }
 
   .about-cta-actions {
@@ -2016,7 +2016,7 @@
 @media (max-width: 360px) {
 
   .about-hero-content h1 {
-    font-size: 34px;
+    font-size: 36px;
   }
 
   .about-hero-visual {
@@ -2026,7 +2026,7 @@
   .about-section-heading h2,
   .about-focus-heading h2,
   .about-values-heading h2 {
-    font-size: 29px;
+    font-size: 31px;
   }
 
 }
@@ -2048,4 +2048,99 @@
     transition-duration: 0.01ms !important;
   }
 
+}
+
+/* =========================================================
+   TYPOGRAPHY UPGRADE
+   Larger, more readable text across the About page
+========================================================= */
+
+.about-page {
+  font-size: 16px;
+}
+
+.about-page p {
+  font-size: 16px;
+}
+
+.about-page .about-section-label,
+.about-page .about-hero-label {
+  font-size: 12px;
+}
+
+.about-page .about-hero-content > p {
+  font-size: 18px;
+}
+
+.about-page .about-intro-main p {
+  font-size: 17px;
+}
+
+.about-page .about-intro-highlight > span,
+.about-page .about-vm-card > span {
+  font-size: 11px;
+}
+
+.about-page .about-vm-card p,
+.about-page .about-focus-heading > p,
+.about-page .about-focus-card p,
+.about-page .about-value p {
+  font-size: 15px;
+}
+
+.about-page .about-focus-card h3 {
+  font-size: 21px;
+}
+
+.about-page .about-value h3 {
+  font-size: 19px;
+}
+
+.about-page .about-community-content p {
+  font-size: 16px;
+}
+
+.about-page .about-community-btn,
+.about-page .about-primary-btn,
+.about-page .about-secondary-btn,
+.about-page .about-cta-primary,
+.about-page .about-cta-secondary {
+  font-size: 14px;
+}
+
+.about-page .about-cta-content p {
+  font-size: 16px;
+}
+
+@media (max-width: 560px) {
+  .about-page .about-hero-content > p {
+    font-size: 15px;
+  }
+
+  .about-page .about-intro-main p,
+  .about-page .about-vm-card p,
+  .about-page .about-focus-card p,
+  .about-page .about-value p,
+  .about-page .about-community-content p,
+  .about-page .about-cta-content p {
+    font-size: 15px;
+  }
+
+  .about-page .about-community-btn,
+  .about-page .about-primary-btn,
+  .about-page .about-secondary-btn,
+  .about-page .about-cta-primary,
+  .about-page .about-cta-secondary {
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-page *,
+  .about-page *::before,
+  .about-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

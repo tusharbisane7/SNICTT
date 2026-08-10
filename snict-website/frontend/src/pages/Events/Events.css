@@ -1309,3 +1309,291 @@
   }
 
 }
+
+/* =========================================================
+   SNICT EVENTS — LARGER TYPOGRAPHY OVERRIDE
+   Added without changing the existing design system.
+========================================================= */
+
+.events-page {
+  font-size: 16px;
+}
+
+/* Hero */
+.events-label {
+  font-size: 13px;
+  padding: 9px 15px;
+}
+
+.events-hero h1 {
+  font-size: clamp(52px, 6.5vw, 82px);
+  line-height: 1.02;
+}
+
+.events-hero-content p {
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* Search and filters */
+.events-search {
+  min-height: 52px;
+  height: 52px;
+}
+
+.events-search input {
+  font-size: 16px;
+}
+
+.events-filter-group button {
+  height: 42px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.events-filter-container select {
+  height: 52px;
+  font-size: 14px;
+}
+
+/* Event cards */
+.event-status {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.event-type {
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.event-card-content h2 {
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.event-doctor {
+  font-size: 14px;
+}
+
+.event-card-content > p {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.event-meta {
+  gap: 11px;
+  padding: 17px 0;
+}
+
+.event-meta span {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.event-price {
+  font-size: 19px;
+}
+
+.event-view-btn {
+  min-height: 46px;
+  padding: 0 17px;
+  font-size: 13px;
+}
+
+/* Loading / empty / error states */
+.events-state p {
+  font-size: 15px;
+}
+
+.events-state h3 {
+  font-size: 23px;
+}
+
+.events-state.error button {
+  height: 46px;
+  font-size: 14px;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 720px) {
+
+  .events-label {
+    font-size: 11px;
+  }
+
+  .events-hero h1 {
+    font-size: clamp(46px, 12vw, 66px);
+  }
+
+  .events-hero-content p {
+    font-size: 16px;
+  }
+
+  .events-search {
+    height: 50px;
+  }
+
+  .events-search input {
+    font-size: 15px;
+  }
+
+  .events-filter-group button {
+    height: 42px;
+    font-size: 13px;
+  }
+
+  .events-filter-container select {
+    height: 50px;
+    font-size: 14px;
+  }
+
+  .event-status {
+    font-size: 11px;
+  }
+
+  .event-card-content h2 {
+    font-size: 24px;
+  }
+
+  .event-doctor {
+    font-size: 14px;
+  }
+
+  .event-card-content > p {
+    font-size: 15px;
+  }
+
+  .event-meta span {
+    font-size: 13px;
+  }
+
+  .event-price {
+    font-size: 18px;
+  }
+
+  .event-view-btn {
+    min-height: 44px;
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .events-label {
+    font-size: 10px;
+    padding: 8px 12px;
+  }
+
+  .events-hero h1 {
+    font-size: 43px;
+    line-height: 1.04;
+  }
+
+  .events-hero-content p {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  .events-search {
+    height: 48px;
+  }
+
+  .events-search input {
+    font-size: 15px;
+  }
+
+  .events-filter-container select {
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .events-filter-group button {
+    height: 42px;
+    font-size: 13px;
+    padding: 0 15px;
+  }
+
+  .event-status {
+    min-height: 30px;
+    font-size: 10px;
+  }
+
+  .event-type {
+    font-size: 10px;
+  }
+
+  .event-card-content {
+    padding: 22px;
+  }
+
+  .event-card-content h2 {
+    font-size: 23px;
+  }
+
+  .event-doctor {
+    font-size: 13px;
+  }
+
+  .event-card-content > p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .event-meta span {
+    font-size: 12.5px;
+  }
+
+  .event-price {
+    font-size: 18px;
+  }
+
+  .event-view-btn {
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL DEVICES
+========================================================= */
+
+@media (max-width: 360px) {
+
+  .events-hero h1 {
+    font-size: 39px;
+  }
+
+  .events-hero-content p {
+    font-size: 14px;
+  }
+
+  .event-card-content h2 {
+    font-size: 21px;
+  }
+
+  .event-card-content > p {
+    font-size: 13px;
+  }
+
+  .event-meta span {
+    font-size: 12px;
+  }
+
+  .event-price {
+    font-size: 17px;
+  }
+
+  .event-view-btn {
+    font-size: 11px;
+  }
+}
