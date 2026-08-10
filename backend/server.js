@@ -1,11 +1,23 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+
 require("dotenv").config();
 
-const authRoutes = require("./routes/authRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const committeeRoutes = require("./routes/committeeRoutes");
+
+// =========================================================
+// ROUTES
+// =========================================================
+
+const authRoutes =
+  require("./routes/authRoutes");
+
+const adminRoutes =
+  require("./routes/adminRoutes");
+
+const committeeRoutes =
+  require("./routes/committeeRoutes");
+
 const eventRoutes =
   require("./routes/eventRoutes");
 
@@ -17,29 +29,99 @@ const paymentRoutes =
 
 const expenseRoutes =
   require("./routes/expenseRoutes");
-  const membershipRoutes =
+
+const membershipRoutes =
   require("./routes/membershipRoutes");
+
+
+// =========================================================
+// APP
+// =========================================================
+
 const app = express();
 
-/* =========================================================
-   CORS
-========================================================= */
+
+// =========================================================
+// CORS
+// =========================================================
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://demositesnict.netlify.app",
+];
 
 app.use(
   cors({
-    origin:
-      process.env.CLIENT_URL ||
-      "http://localhost:5173",
+
+    origin: function (
+      origin,
+      callback
+    ) {
+
+      // Allow requests that do not have
+      // an Origin header
+      if (!origin) {
+        return callback(
+          null,
+          true
+        );
+      }
+
+
+      // Allow localhost and production frontend
+      if (
+        allowedOrigins.includes(
+          origin
+        )
+      ) {
+
+        return callback(
+          null,
+          true
+        );
+
+      }
+
+
+      // Reject unknown origins
+      return callback(
+        new Error(
+          "Not allowed by CORS"
+        )
+      );
+
+    },
+
 
     credentials: true,
+
+
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+
   })
 );
 
-/* =========================================================
-   BODY PARSERS
-========================================================= */
 
-app.use(express.json());
+// =========================================================
+// BODY PARSERS
+// =========================================================
+
+app.use(
+  express.json()
+);
 
 app.use(
   express.urlencoded({
@@ -47,116 +129,183 @@ app.use(
   })
 );
 
-/* =========================================================
-   COOKIE PARSER
-========================================================= */
 
-app.use(cookieParser());
+// =========================================================
+// COOKIE PARSER
+// =========================================================
 
-/* =========================================================
-   HEALTH CHECK
-========================================================= */
+app.use(
+  cookieParser()
+);
 
-app.get("/", (req, res) => {
-  return res.json({
-    success: true,
-    message: "SNICT Backend API is running",
-  });
-});
 
-/* =========================================================
-   AUTH ROUTES
-========================================================= */
+// =========================================================
+// HEALTH CHECK
+// =========================================================
+
+app.get(
+  "/",
+  (req, res) => {
+
+    return res.json({
+
+      success: true,
+
+      message:
+        "SNICT Backend API is running",
+
+    });
+
+  }
+);
+
+
+// =========================================================
+// MEMBERSHIP ROUTES
+// =========================================================
 
 app.use(
   "/api/membership",
   membershipRoutes
 );
 
+
+// =========================================================
+// AUTH ROUTES
+// =========================================================
+
 app.use(
   "/api/auth",
   authRoutes
 );
 
-/* =========================================================
-   ADMIN ROUTES
-========================================================= */
+
+// =========================================================
+// ADMIN ROUTES
+// =========================================================
 
 app.use(
   "/api/admin",
   adminRoutes
 );
 
-/* =========================================================
-   COMMITTEE ROUTES
-========================================================= */
+
+// =========================================================
+// COMMITTEE ROUTES
+// =========================================================
 
 app.use(
   "/api/committees",
   committeeRoutes
 );
 
+
+// =========================================================
+// EVENT ROUTES
+// =========================================================
+
 app.use(
   "/api/events",
   eventRoutes
 );
+
+
+// =========================================================
+// BOOKING ROUTES
+// =========================================================
 
 app.use(
   "/api/bookings",
   bookingRoutes
 );
 
+
+// =========================================================
+// PAYMENT ROUTES
+// =========================================================
+
 app.use(
   "/api/payments",
   paymentRoutes
 );
+
+
+// =========================================================
+// EXPENSE ROUTES
+// =========================================================
 
 app.use(
   "/api/admin/expenses",
   expenseRoutes
 );
 
-/* =========================================================
-   404
-========================================================= */
 
-app.use((req, res) => {
-  return res.status(404).json({
-    success: false,
-    message: "API route not found",
-  });
-});
-
-/* =========================================================
-   GLOBAL ERROR HANDLER
-========================================================= */
+// =========================================================
+// 404 ROUTE
+// =========================================================
 
 app.use(
-  (error, req, res, next) => {
+  (req, res) => {
+
+    return res.status(404).json({
+
+      success: false,
+
+      message:
+        "API route not found",
+
+    });
+
+  }
+);
+
+
+// =========================================================
+// GLOBAL ERROR HANDLER
+// =========================================================
+
+app.use(
+  (
+    error,
+    req,
+    res,
+    next
+  ) => {
+
     console.error(
       "Global server error:",
       error
     );
 
+
     return res.status(500).json({
+
       success: false,
-      message: "Internal server error",
+
+      message:
+        "Internal server error",
+
     });
+
   }
 );
 
-/* =========================================================
-   SERVER
-========================================================= */
+
+// =========================================================
+// SERVER
+// =========================================================
 
 const PORT =
   process.env.PORT || 5000;
 
+
 app.listen(
   PORT,
   () => {
+
     console.log(
-      `🚀 SNICT backend running on http://localhost:${PORT}`
+      `🚀 SNICT backend running on port ${PORT}`
     );
+
   }
 );
