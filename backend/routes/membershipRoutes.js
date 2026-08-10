@@ -15,15 +15,17 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 const router = express.Router();
 
 // =========================================================
-// USER
+// USER MEMBERSHIP
 // =========================================================
 
+// GET /api/membership/me
 router.get(
   "/me",
   authMiddleware,
   getMyMembership
 );
 
+// POST /api/membership/apply
 router.post(
   "/apply",
   authMiddleware,
@@ -31,33 +33,35 @@ router.post(
 );
 
 // =========================================================
-// ADMIN
+// ADMIN MEMBERSHIP
+// IMPORTANT:
+// Admin routes use ONLY adminMiddleware.
 // =========================================================
 
+// GET /api/membership/admin
 router.get(
   "/admin",
-  authMiddleware,
   adminMiddleware,
   getAllMemberships
 );
 
+// GET /api/membership/admin/:id
 router.get(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   getMembershipById
 );
 
+// PUT /api/membership/admin/:id/approve
 router.put(
   "/admin/:id/approve",
-  authMiddleware,
   adminMiddleware,
   approveMembership
 );
 
+// PUT /api/membership/admin/:id/reject
 router.put(
   "/admin/:id/reject",
-  authMiddleware,
   adminMiddleware,
   rejectMembership
 );

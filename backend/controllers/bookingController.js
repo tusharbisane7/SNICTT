@@ -12,7 +12,6 @@ const generateBookingCode = () => {
   return `SNICT-BKG-${random}`;
 };
 
-
 // =========================================================
 // GET UPI CONFIGURATION
 // =========================================================
@@ -20,15 +19,12 @@ const generateBookingCode = () => {
 const getUpiConfig = () => {
   return {
     upiId:
-      process.env.SNICT_UPI_ID ||
-      "",
+      process.env.SNICT_UPI_ID || "",
 
     payeeName:
-      process.env.SNICT_UPI_NAME ||
-      "SNICT",
+      process.env.SNICT_UPI_NAME || "SNICT",
   };
 };
-
 
 // =========================================================
 // CREATE UPI URL
@@ -40,107 +36,63 @@ const createUpiUrl = ({
   amount,
   bookingCode,
 }) => {
-
   if (!upiId) {
     return "";
   }
 
   return (
-    `upi://pay?pa=${encodeURIComponent(
-      upiId
-    )}` +
-
-    `&pn=${encodeURIComponent(
-      payeeName
-    )}` +
-
-    `&am=${Number(amount || 0).toFixed(
-      2
-    )}` +
-
+    `upi://pay?pa=${encodeURIComponent(upiId)}` +
+    `&pn=${encodeURIComponent(payeeName)}` +
+    `&am=${Number(amount || 0).toFixed(2)}` +
     `&cu=INR` +
-
-    `&tn=${encodeURIComponent(
-      bookingCode
-    )}`
+    `&tn=${encodeURIComponent(bookingCode)}`
   );
 };
-
 
 // =========================================================
 // CREATE BOOKING
 // POST /api/bookings/event/:eventId
 // =========================================================
 
-const createBooking = async (
-  req,
-  res
-) => {
-
-  const client =
-    await pool.connect();
+const createBooking = async (req, res) => {
+  const client = await pool.connect();
 
   try {
+    const userId = req.userId;
+    const { eventId } = req.params;
 
-    const userId =
-      req.userId;
-
-    const {
-      eventId,
-    } = req.params;
-
-
-    await client.query(
-      "BEGIN"
-    );
-
+    await client.query("BEGIN");
 
     // =====================================================
     // GET EVENT
     // =====================================================
 
-    const eventResult =
-      await client.query(
-        `
-        SELECT *
-        FROM events
+    const eventResult = await client.query(
+      `
+      SELECT *
+      FROM events
+      WHERE id = $1
+        AND published = TRUE
+        AND booking_enabled = TRUE
+      FOR UPDATE
+      `,
+      [eventId]
+    );
 
-        WHERE id = $1
-
-          AND published = TRUE
-
-          AND booking_enabled = TRUE
-
-        FOR UPDATE
-        `,
-        [eventId]
-      );
-
-
-    if (
-      eventResult.rows.length ===
-      0
-    ) {
-
-      await client.query(
-        "ROLLBACK"
-      );
+    if (eventResult.rows.length === 0) {
+      await client.query("ROLLBACK");
 
       return res.status(404).json({
         success: false,
-
         message:
           "Event not found or booking is closed",
       });
     }
 
-
-    const event =
-      eventResult.rows[0];
-
+    const event = eventResult.rows[0];
 
     // =====================================================
-    // CHECK EVENT DATE / TIME
+    // EVENT DATE/TIME
     // =====================================================
 
     const eventDate =
@@ -148,215 +100,131 @@ const createBooking = async (
         ?.toString()
         .slice(0, 10);
 
-    const startTime =
-      event.start_time
-        ?.toString()
-        .slice(0, 8) ||
-      "00:00:00";
-
     const endTime =
       event.end_time
         ?.toString()
         .slice(0, 8) ||
       "23:59:59";
 
+    const eventEnd = new Date(
+      `${eventDate}T${endTime}+05:30`
+    );
 
-    const eventEnd =
-      new Date(
-        `${eventDate}T${endTime}+05:30`
-      );
-
-
-    const now =
-      new Date();
-
+    const now = new Date();
 
     if (
-      !Number.isNaN(
-        eventEnd.getTime()
-      ) &&
+      !Number.isNaN(eventEnd.getTime()) &&
       now >= eventEnd
     ) {
-
-      await client.query(
-        "ROLLBACK"
-      );
+      await client.query("ROLLBACK");
 
       return res.status(400).json({
         success: false,
-
         message:
           "This event has already ended",
       });
     }
 
-
     // =====================================================
-    // CHECK DUPLICATE BOOKING
+    // DUPLICATE BOOKING
     // =====================================================
 
-    const existing =
-      await client.query(
-        `
-        SELECT
-          id,
-          booking_code,
-          booking_status
+    const existing = await client.query(
+      `
+      SELECT
+        id,
+        booking_code,
+        booking_status
+      FROM event_bookings
+      WHERE event_id = $1
+        AND user_id = $2
+        AND booking_status NOT IN
+          ('cancelled', 'rejected')
+      LIMIT 1
+      `,
+      [eventId, userId]
+    );
 
-        FROM event_bookings
-
-        WHERE event_id = $1
-
-          AND user_id = $2
-
-          AND booking_status NOT IN
-            (
-              'cancelled',
-              'rejected'
-            )
-
-        LIMIT 1
-        `,
-        [
-          eventId,
-          userId,
-        ]
-      );
-
-
-    if (
-      existing.rows.length >
-      0
-    ) {
-
-      await client.query(
-        "ROLLBACK"
-      );
+    if (existing.rows.length > 0) {
+      await client.query("ROLLBACK");
 
       return res.status(409).json({
         success: false,
-
         message:
           "You already have a booking for this event",
-
-        booking:
-          existing.rows[0],
+        booking: existing.rows[0],
       });
     }
-
 
     // =====================================================
     // CHECK AVAILABLE SLOTS
     // =====================================================
 
-    if (
-      event.max_slots !==
-      null
-    ) {
+    if (event.max_slots !== null) {
+      const countResult = await client.query(
+        `
+        SELECT COUNT(*)::INTEGER AS total
+        FROM event_bookings
+        WHERE event_id = $1
+          AND booking_status IN
+            ('confirmed', 'completed')
+        `,
+        [eventId]
+      );
 
-      const countResult =
-        await client.query(
-          `
-          SELECT
-            COUNT(*)::INTEGER AS total
-
-          FROM event_bookings
-
-          WHERE event_id = $1
-
-            AND booking_status IN
-              (
-                'confirmed',
-                'completed'
-              )
-          `,
-          [eventId]
-        );
-
-
-      const booked =
-        Number(
-          countResult.rows[0]
-            ?.total || 0
-        );
-
+      const booked = Number(
+        countResult.rows[0]?.total || 0
+      );
 
       if (
         booked >=
-        Number(
-          event.max_slots
-        )
+        Number(event.max_slots)
       ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
+        await client.query("ROLLBACK");
 
         return res.status(409).json({
           success: false,
-
           message:
             "No booking slots are available",
         });
       }
     }
 
-
     // =====================================================
-    // GENERATE UNIQUE BOOKING CODE
+    // UNIQUE BOOKING CODE
     // =====================================================
 
     let bookingCode =
       generateBookingCode();
 
-    let codeExists =
-      true;
+    let codeExists = true;
 
-
-    while (
-      codeExists
-    ) {
-
+    while (codeExists) {
       const check =
         await client.query(
           `
           SELECT id
-
           FROM event_bookings
-
           WHERE booking_code = $1
-
           LIMIT 1
           `,
           [bookingCode]
         );
 
-
-      if (
-        check.rows.length ===
-        0
-      ) {
-
-        codeExists =
-          false;
-
+      if (check.rows.length === 0) {
+        codeExists = false;
       } else {
-
         bookingCode =
           generateBookingCode();
       }
     }
-
 
     // =====================================================
     // EVENT PRICE
     // =====================================================
 
     const eventAmount =
-      Number(
-        event.price || 0
-      );
-
+      Number(event.price || 0);
 
     // =====================================================
     // CREATE BOOKING
@@ -373,7 +241,6 @@ const createBooking = async (
           amount,
           booking_status
         )
-
         VALUES
         (
           $1,
@@ -382,24 +249,18 @@ const createBooking = async (
           $4,
           'payment_pending'
         )
-
         RETURNING *
         `,
         [
           bookingCode,
-
           eventId,
-
           userId,
-
           eventAmount,
         ]
       );
 
-
     const booking =
       bookingResult.rows[0];
-
 
     // =====================================================
     // CREATE PAYMENT
@@ -415,7 +276,6 @@ const createBooking = async (
           amount,
           payment_status
         )
-
         VALUES
         (
           $1,
@@ -423,52 +283,33 @@ const createBooking = async (
           $2,
           'pending'
         )
-
         RETURNING *
         `,
         [
           booking.id,
-
           eventAmount,
         ]
       );
 
-
-    await client.query(
-      "COMMIT"
-    );
-
+    await client.query("COMMIT");
 
     // =====================================================
-    // UPI INFORMATION
+    // UPI
     // =====================================================
 
     const {
       upiId,
       payeeName,
-    } =
-      getUpiConfig();
+    } = getUpiConfig();
 
-
-    const upiUrl =
-      createUpiUrl({
-        upiId,
-
-        payeeName,
-
-        amount:
-          eventAmount,
-
-        bookingCode,
-      });
-
-
-    // =====================================================
-    // RESPONSE
-    // =====================================================
+    const upiUrl = createUpiUrl({
+      upiId,
+      payeeName,
+      amount: eventAmount,
+      bookingCode,
+    });
 
     return res.status(201).json({
-
       success: true,
 
       message:
@@ -477,8 +318,7 @@ const createBooking = async (
       booking: {
         ...booking,
 
-        title:
-          event.title,
+        title: event.title,
 
         event_id:
           booking.event_id,
@@ -512,28 +352,20 @@ const createBooking = async (
         paymentResult.rows[0],
     });
 
-
   } catch (error) {
-
     try {
-      await client.query(
-        "ROLLBACK"
-      );
-    } catch (
-      rollbackError
-    ) {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
       console.error(
         "Rollback error:",
         rollbackError
       );
     }
 
-
     console.error(
       "Create booking error:",
       error
     );
-
 
     return res.status(500).json({
       success: false,
@@ -548,14 +380,10 @@ const createBooking = async (
           : undefined,
     });
 
-
   } finally {
-
     client.release();
-
   }
 };
-
 
 // =========================================================
 // GET USER BOOKINGS
@@ -566,74 +394,41 @@ const getMyBookings = async (
   req,
   res
 ) => {
-
   try {
-
-    const userId =
-      req.userId;
-
+    const userId = req.userId;
 
     const result =
       await pool.query(
         `
         SELECT
-
           b.id,
-
           b.booking_code,
-
           b.user_id,
-
           b.event_id,
-
           b.amount,
-
           b.booking_status,
-
           b.created_at,
-
           b.updated_at,
 
-          /* EVENT */
-
           e.title,
-
           e.event_type,
-
           e.description,
-
           e.doctor_name,
-
           e.specialization,
-
           e.event_date,
-
           e.start_time,
-
           e.end_time,
-
           e.venue,
-
           e.event_mode,
-
           e.image_url,
-
           e.max_slots,
 
-          /* PAYMENT */
-
           p.id AS payment_id,
-
           p.payment_status,
-
           p.transaction_id,
-
           p.payment_method,
-
           p.payment_proof_url,
-
           p.amount AS payment_amount,
-
           p.created_at AS payment_created_at
 
         FROM event_bookings b
@@ -646,39 +441,29 @@ const getMyBookings = async (
 
         WHERE b.user_id = $1
 
-        ORDER BY
-          b.created_at DESC
+        ORDER BY b.created_at DESC
         `,
         [userId]
       );
 
-
     return res.json({
       success: true,
-
-      bookings:
-        result.rows,
+      bookings: result.rows,
     });
 
-
   } catch (error) {
-
     console.error(
       "Get my bookings error:",
       error
     );
 
-
     return res.status(500).json({
       success: false,
-
       message:
         "Unable to fetch booking history",
     });
-
   }
 };
-
 
 // =========================================================
 // GET SINGLE USER BOOKING
@@ -690,90 +475,43 @@ const getMyBookingById =
     req,
     res
   ) => {
-
     try {
-
-      const userId =
-        req.userId;
-
-      const {
-        id,
-      } = req.params;
-
+      const userId = req.userId;
+      const { id } = req.params;
 
       const result =
         await pool.query(
           `
           SELECT
-
-            /* =========================================
-               BOOKING
-            ========================================= */
-
             b.id,
-
             b.booking_code,
-
             b.user_id,
-
             b.event_id,
-
             b.amount,
-
             b.booking_status,
-
             b.created_at,
-
             b.updated_at,
 
-
-            /* =========================================
-               EVENT
-            ========================================= */
-
             e.title,
-
             e.event_type,
-
             e.description,
-
             e.doctor_name,
-
             e.specialization,
-
             e.event_date,
-
             e.start_time,
-
             e.end_time,
-
             e.venue,
-
             e.event_mode,
-
             e.image_url,
-
             e.max_slots,
 
-
-            /* =========================================
-               PAYMENT
-            ========================================= */
-
             p.id AS payment_id,
-
             p.payment_method,
-
             p.amount AS payment_amount,
-
             p.payment_status,
-
             p.transaction_id,
-
             p.payment_proof_url,
-
-            p.created_at
-              AS payment_created_at
+            p.created_at AS payment_created_at
 
           FROM event_bookings b
 
@@ -784,74 +522,48 @@ const getMyBookingById =
             ON p.booking_id = b.id
 
           WHERE b.id = $1
-
             AND b.user_id = $2
 
           LIMIT 1
           `,
-          [
-            id,
-
-            userId,
-          ]
+          [id, userId]
         );
-
 
       if (
         result.rows.length ===
         0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "Booking not found",
         });
       }
 
-
       const booking =
         result.rows[0];
-
-
-      // ===================================================
-      // UPI
-      // ===================================================
 
       const {
         upiId,
         payeeName,
-      } =
-        getUpiConfig();
-
+      } = getUpiConfig();
 
       const upiUrl =
         createUpiUrl({
           upiId,
-
           payeeName,
-
           amount:
             Number(
               booking.amount || 0
             ),
-
           bookingCode:
             booking.booking_code,
         });
 
-
-      // ===================================================
-      // RESPONSE
-      // ===================================================
-
       return res.json({
-
         success: true,
 
         booking: {
-
           ...booking,
 
           payment_status:
@@ -872,31 +584,19 @@ const getMyBookingById =
         },
       });
 
-
     } catch (error) {
-
       console.error(
         "Get booking error:",
         error
       );
 
-
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to fetch booking",
-
-        debug:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
       });
-
     }
   };
-
 
 // =========================================================
 // ADMIN - GET ALL BOOKINGS
@@ -908,98 +608,54 @@ const getAllBookings =
     req,
     res
   ) => {
-
     try {
-
       const result =
         await pool.query(
           `
           SELECT
-
             b.id,
-
             b.id AS booking_id,
 
             b.booking_code,
-
             b.user_id,
-
             b.event_id,
-
             b.amount,
 
             b.booking_status,
-
             b.booking_status AS status,
 
             b.created_at,
-
-            b.created_at
-              AS booking_created_at,
+            b.created_at AS booking_created_at,
 
             b.updated_at,
-
-            b.updated_at
-              AS booking_updated_at,
-
-
-            /* USER */
+            b.updated_at AS booking_updated_at,
 
             u.full_name,
-
             u.username,
-
             u.username AS user_name,
-
             u.email,
-
             u.mobile,
 
-
-            /* EVENT */
-
             e.title AS event_title,
-
             e.title AS event_name,
-
             e.event_type,
-
-            e.description
-              AS event_description,
-
+            e.description AS event_description,
             e.doctor_name,
-
             e.specialization,
-
             e.event_date,
-
             e.start_time,
-
             e.end_time,
-
             e.venue,
-
             e.event_mode,
-
             e.max_slots,
 
-
-            /* PAYMENT */
-
             p.id AS payment_id,
-
             p.payment_method,
-
             p.amount AS payment_amount,
-
             p.payment_status,
-
             p.transaction_id,
-
             p.payment_proof_url,
-
-            p.created_at
-              AS payment_created_at
+            p.created_at AS payment_created_at
 
           FROM event_bookings b
 
@@ -1012,27 +668,20 @@ const getAllBookings =
           LEFT JOIN event_payments p
             ON p.booking_id = b.id
 
-          ORDER BY
-            b.created_at DESC
+          ORDER BY b.created_at DESC
           `
         );
 
-
       return res.json({
         success: true,
-
-        bookings:
-          result.rows,
+        bookings: result.rows,
       });
 
-
     } catch (error) {
-
       console.error(
         "Admin get bookings error:",
         error
       );
-
 
       return res.status(500).json({
         success: false,
@@ -1046,10 +695,8 @@ const getAllBookings =
             ? error.message
             : undefined,
       });
-
     }
   };
-
 
 // =========================================================
 // ADMIN - GET SINGLE BOOKING
@@ -1061,105 +708,57 @@ const getAdminBookingById =
     req,
     res
   ) => {
-
     try {
-
-      const {
-        id,
-      } = req.params;
-
+      const { id } = req.params;
 
       const result =
         await pool.query(
           `
           SELECT
-
             b.id,
-
             b.id AS booking_id,
 
             b.booking_code,
-
             b.user_id,
-
             b.event_id,
-
             b.amount,
 
             b.booking_status,
-
             b.booking_status AS status,
 
             b.created_at,
-
             b.updated_at,
 
-
-            /* USER */
-
             u.full_name,
-
             u.username,
-
             u.username AS user_name,
-
             u.email,
-
             u.mobile,
-
             u.age,
-
             u.sex,
-
             u.address,
-
             u.blood_group,
 
-
-            /* EVENT */
-
             e.title AS event_title,
-
             e.title AS event_name,
-
             e.event_type,
-
-            e.description
-              AS event_description,
-
+            e.description AS event_description,
             e.doctor_name,
-
             e.specialization,
-
             e.event_date,
-
             e.start_time,
-
             e.end_time,
-
             e.venue,
-
             e.event_mode,
-
             e.max_slots,
 
-
-            /* PAYMENT */
-
             p.id AS payment_id,
-
             p.payment_method,
-
             p.amount AS payment_amount,
-
             p.payment_status,
-
             p.transaction_id,
-
             p.payment_proof_url,
-
-            p.created_at
-              AS payment_created_at
+            p.created_at AS payment_created_at
 
           FROM event_bookings b
 
@@ -1179,47 +778,42 @@ const getAdminBookingById =
           [id]
         );
 
-
       if (
         result.rows.length ===
         0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "Booking not found",
         });
       }
 
-
       return res.json({
         success: true,
-
         booking:
           result.rows[0],
       });
 
-
     } catch (error) {
-
       console.error(
         "Admin booking details error:",
         error
       );
 
-
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to load booking",
-      });
 
+        error:
+          process.env.NODE_ENV ===
+          "development"
+            ? error.message
+            : undefined,
+      });
     }
   };
-
 
 // =========================================================
 // ADMIN - UPDATE BOOKING STATUS
@@ -1235,13 +829,10 @@ const updateBookingStatus =
     const client =
       await pool.connect();
 
-
     try {
 
-      const {
-        id,
-      } = req.params;
-
+      const { id } =
+        req.params;
 
       const {
         status,
@@ -1249,31 +840,46 @@ const updateBookingStatus =
         paymentStatus,
       } = req.body;
 
+      // =====================================================
+      // NORMALIZE STATUS
+      // =====================================================
 
       const finalBookingStatus =
         bookingStatus ||
-        status;
+        status ||
+        null;
 
+      const finalPaymentStatus =
+        paymentStatus ||
+        null;
 
-      const allowedBookingStatuses =
-        [
-          "payment_pending",
-          "confirmed",
-          "completed",
-          "cancelled",
-          "rejected",
-        ];
+      // =====================================================
+      // ALLOWED BOOKING STATUSES
+      // =====================================================
 
+      const allowedBookingStatuses = [
+        "payment_pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "rejected",
+      ];
 
-      const allowedPaymentStatuses =
-        [
-          "pending",
-          "submitted",
-          "verified",
-          "rejected",
-          "refunded",
-        ];
+      // =====================================================
+      // ALLOWED PAYMENT STATUSES
+      // =====================================================
 
+      const allowedPaymentStatuses = [
+        "pending",
+        "submitted",
+        "verified",
+        "rejected",
+        "refunded",
+      ];
+
+      // =====================================================
+      // VALIDATE
+      // =====================================================
 
       if (
         finalBookingStatus &&
@@ -1281,37 +887,32 @@ const updateBookingStatus =
           finalBookingStatus
         )
       ) {
-
         return res.status(400).json({
           success: false,
 
           message:
-            "Invalid booking status",
+            `Invalid booking status: ${finalBookingStatus}`,
         });
       }
-
 
       if (
-        paymentStatus &&
+        finalPaymentStatus &&
         !allowedPaymentStatuses.includes(
-          paymentStatus
+          finalPaymentStatus
         )
       ) {
-
         return res.status(400).json({
           success: false,
 
           message:
-            "Invalid payment status",
+            `Invalid payment status: ${finalPaymentStatus}`,
         });
       }
-
 
       if (
         !finalBookingStatus &&
-        !paymentStatus
+        !finalPaymentStatus
       ) {
-
         return res.status(400).json({
           success: false,
 
@@ -1320,11 +921,15 @@ const updateBookingStatus =
         });
       }
 
+      // =====================================================
+      // START TRANSACTION
+      // =====================================================
 
-      await client.query(
-        "BEGIN"
-      );
+      await client.query("BEGIN");
 
+      // =====================================================
+      // CHECK BOOKING
+      // =====================================================
 
       const bookingCheck =
         await client.query(
@@ -1342,12 +947,10 @@ const updateBookingStatus =
           [id]
         );
 
-
       if (
         bookingCheck.rows.length ===
         0
       ) {
-
         await client.query(
           "ROLLBACK"
         );
@@ -1360,10 +963,9 @@ const updateBookingStatus =
         });
       }
 
-
-      // ===================================================
-      // BOOKING STATUS
-      // ===================================================
+      // =====================================================
+      // UPDATE BOOKING STATUS
+      // =====================================================
 
       if (
         finalBookingStatus
@@ -1374,9 +976,7 @@ const updateBookingStatus =
           UPDATE event_bookings
 
           SET
-
             booking_status = $1,
-
             updated_at =
               CURRENT_TIMESTAMP
 
@@ -1384,19 +984,17 @@ const updateBookingStatus =
           `,
           [
             finalBookingStatus,
-
             id,
           ]
         );
       }
 
-
-      // ===================================================
-      // PAYMENT STATUS
-      // ===================================================
+      // =====================================================
+      // UPDATE PAYMENT STATUS
+      // =====================================================
 
       if (
-        paymentStatus
+        finalPaymentStatus
       ) {
 
         const paymentResult =
@@ -1412,18 +1010,15 @@ const updateBookingStatus =
             RETURNING *
             `,
             [
-              paymentStatus,
-
+              finalPaymentStatus,
               id,
             ]
           );
-
 
         if (
           paymentResult.rows.length ===
           0
         ) {
-
           await client.query(
             "ROLLBACK"
           );
@@ -1437,10 +1032,12 @@ const updateBookingStatus =
         }
       }
 
-
-      // ===================================================
-      // UPDATED BOOKING
-      // ===================================================
+      // =====================================================
+      // GET UPDATED BOOKING
+      // =====================================================
+      // IMPORTANT:
+      // event_bookings has "id", not "booking_id".
+      // =====================================================
 
       const updated =
         await client.query(
@@ -1448,34 +1045,26 @@ const updateBookingStatus =
           SELECT
 
             b.id,
-
-            b.booking_id,
+            b.id AS booking_id,
 
             b.booking_code,
-
             b.user_id,
-
             b.event_id,
-
             b.amount,
 
             b.booking_status,
-
             b.booking_status AS status,
 
             b.created_at,
-
             b.updated_at,
 
             p.id AS payment_id,
-
             p.payment_status,
-
             p.transaction_id,
-
             p.payment_method,
-
-            p.payment_proof_url
+            p.payment_proof_url,
+            p.amount AS payment_amount,
+            p.created_at AS payment_created_at
 
           FROM event_bookings b
 
@@ -1483,15 +1072,17 @@ const updateBookingStatus =
             ON p.booking_id = b.id
 
           WHERE b.id = $1
+
+          LIMIT 1
           `,
           [id]
         );
 
+      // =====================================================
+      // COMMIT
+      // =====================================================
 
-      await client.query(
-        "COMMIT"
-      );
-
+      await client.query("COMMIT");
 
       return res.json({
         success: true,
@@ -1502,7 +1093,6 @@ const updateBookingStatus =
         booking:
           updated.rows[0],
       });
-
 
     } catch (error) {
 
@@ -1519,12 +1109,10 @@ const updateBookingStatus =
         );
       }
 
-
       console.error(
         "Update booking status error:",
         error
       );
-
 
       return res.status(500).json({
         success: false,
@@ -1537,8 +1125,13 @@ const updateBookingStatus =
           "development"
             ? error.message
             : undefined,
-      });
 
+        detail:
+          process.env.NODE_ENV ===
+          "development"
+            ? error.detail
+            : undefined,
+      });
 
     } finally {
 
@@ -1546,7 +1139,6 @@ const updateBookingStatus =
 
     }
   };
-
 
 // =========================================================
 // ADMIN - DELETE BOOKING
@@ -1562,18 +1154,18 @@ const deleteBooking =
     const client =
       await pool.connect();
 
-
     try {
 
-      const {
-        id,
-      } = req.params;
-
+      const { id } =
+        req.params;
 
       await client.query(
         "BEGIN"
       );
 
+      // =====================================================
+      // CHECK BOOKING
+      // =====================================================
 
       const check =
         await client.query(
@@ -1590,7 +1182,6 @@ const deleteBooking =
           `,
           [id]
         );
-
 
       if (
         check.rows.length ===
@@ -1609,10 +1200,9 @@ const deleteBooking =
         });
       }
 
-
-      // ===================================================
+      // =====================================================
       // DELETE PAYMENT
-      // ===================================================
+      // =====================================================
 
       await client.query(
         `
@@ -1623,10 +1213,9 @@ const deleteBooking =
         [id]
       );
 
-
-      // ===================================================
+      // =====================================================
       // DELETE BOOKING
-      // ===================================================
+      // =====================================================
 
       const result =
         await client.query(
@@ -1642,11 +1231,9 @@ const deleteBooking =
           [id]
         );
 
-
       await client.query(
         "COMMIT"
       );
-
 
       return res.json({
         success: true,
@@ -1657,7 +1244,6 @@ const deleteBooking =
         booking:
           result.rows[0],
       });
-
 
     } catch (error) {
 
@@ -1674,12 +1260,10 @@ const deleteBooking =
         );
       }
 
-
       console.error(
         "Delete booking error:",
         error
       );
-
 
       return res.status(500).json({
         success: false,
@@ -1694,14 +1278,12 @@ const deleteBooking =
             : undefined,
       });
 
-
     } finally {
 
       client.release();
 
     }
   };
-
 
 // =========================================================
 // EXPORT
