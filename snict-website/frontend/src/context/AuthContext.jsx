@@ -30,7 +30,6 @@ export function AuthProvider({ children }) {
         setUser(null);
       }
     } catch (error) {
-      // 401 simply means visitor is not logged in.
       if (error.response?.status !== 401) {
         console.error("Load user error:", error);
       }

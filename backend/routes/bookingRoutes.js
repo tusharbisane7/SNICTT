@@ -1,5 +1,10 @@
 const express = require("express");
 
+
+// =========================================================
+// CONTROLLERS
+// =========================================================
+
 const {
   createBooking,
   getMyBookings,
@@ -10,59 +15,80 @@ const {
   deleteBooking,
 } = require("../controllers/bookingController");
 
+
+// =========================================================
+// MIDDLEWARE
+// =========================================================
+
 const authMiddleware =
   require("../middleware/authMiddleware");
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-const router =
-  express.Router();
+
+// =========================================================
+// ROUTER
+// =========================================================
+
+const router = express.Router();
 
 
 // =========================================================
 // ADMIN BOOKINGS
+// IMPORTANT:
+// DO NOT USE authMiddleware HERE.
+//
+// Admin authentication uses:
+// snict_admin_token
+//
+// adminMiddleware should verify the admin token.
 // =========================================================
 
-// Get all bookings
+
+// ---------------------------------------------------------
+// GET ALL BOOKINGS
 // GET /api/bookings/admin
+// ---------------------------------------------------------
 
 router.get(
   "/admin",
-  authMiddleware,
   adminMiddleware,
   getAllBookings
 );
 
 
-// Get single booking
+// ---------------------------------------------------------
+// GET SINGLE BOOKING
 // GET /api/bookings/admin/:id
+// ---------------------------------------------------------
 
 router.get(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   getAdminBookingById
 );
 
 
-// Update booking
+// ---------------------------------------------------------
+// UPDATE BOOKING STATUS
 // PUT /api/bookings/admin/:id/status
+// ---------------------------------------------------------
 
 router.put(
   "/admin/:id/status",
-  authMiddleware,
   adminMiddleware,
   updateBookingStatus
 );
 
 
-// Delete booking
+// ---------------------------------------------------------
+// DELETE BOOKING
 // DELETE /api/bookings/admin/:id
+// ---------------------------------------------------------
 
 router.delete(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   deleteBooking
 );
@@ -72,8 +98,11 @@ router.delete(
 // USER BOOKINGS
 // =========================================================
 
-// Get my bookings
+
+// ---------------------------------------------------------
+// GET MY BOOKINGS
 // GET /api/bookings
+// ---------------------------------------------------------
 
 router.get(
   "/",
@@ -82,8 +111,10 @@ router.get(
 );
 
 
-// Create booking
+// ---------------------------------------------------------
+// CREATE BOOKING
 // POST /api/bookings/event/:eventId
+// ---------------------------------------------------------
 
 router.post(
   "/event/:eventId",
@@ -92,8 +123,10 @@ router.post(
 );
 
 
-// Get single booking
+// ---------------------------------------------------------
+// GET SINGLE USER BOOKING
 // GET /api/bookings/:id
+// ---------------------------------------------------------
 
 router.get(
   "/:id",
@@ -101,5 +134,9 @@ router.get(
   getMyBookingById
 );
 
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 module.exports = router;

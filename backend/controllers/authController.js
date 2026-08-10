@@ -27,6 +27,39 @@ const createExpiry = () => {
 // =========================================================
 // AUTH COOKIE
 // =========================================================
+// IMPORTANT:
+// Frontend: Netlify / another domain
+// Backend : Render
+//
+// Because frontend and backend are cross-site in production,
+// SameSite MUST be "none" and Secure MUST be true.
+//
+// =========================================================
+
+const authCookieOptions = {
+  httpOnly: true,
+
+  secure:
+    process.env.NODE_ENV === "production",
+
+  sameSite:
+    process.env.NODE_ENV === "production"
+      ? "none"
+      : "lax",
+
+  maxAge:
+    7 *
+    24 *
+    60 *
+    60 *
+    1000,
+
+  path: "/",
+};
+
+// =========================================================
+// SET AUTH COOKIE
+// =========================================================
 
 const setAuthCookie = (
   res,
@@ -35,24 +68,7 @@ const setAuthCookie = (
   res.cookie(
     "snict_token",
     token,
-    {
-      httpOnly: true,
-
-      secure:
-        process.env.NODE_ENV ===
-        "production",
-
-      sameSite: "lax",
-
-      maxAge:
-        7 *
-        24 *
-        60 *
-        60 *
-        1000,
-
-      path: "/",
-    }
+    authCookieOptions
   );
 };
 
@@ -137,6 +153,7 @@ const safeHashCompare = (
 
 // =========================================================
 // CHECK USERNAME
+// GET /api/auth/check-username
 // =========================================================
 
 const checkUsername =
@@ -144,7 +161,9 @@ const checkUsername =
     req,
     res
   ) => {
+
     try {
+
       const username =
         String(
           req.query.username ||
@@ -153,8 +172,12 @@ const checkUsername =
           .trim()
           .toLowerCase();
 
-      // Empty username
+      // =====================================================
+      // EMPTY USERNAME
+      // =====================================================
+
       if (!username) {
+
         return res.json({
           success: true,
 
@@ -167,12 +190,16 @@ const checkUsername =
         });
       }
 
-      // Username format
+      // =====================================================
+      // USERNAME FORMAT
+      // =====================================================
+
       if (
         !/^[a-z0-9_]{3,20}$/.test(
           username
         )
       ) {
+
         return res.json({
           success: true,
 
@@ -185,13 +212,19 @@ const checkUsername =
         });
       }
 
-      // Check database
+      // =====================================================
+      // DATABASE CHECK
+      // =====================================================
+
       const result =
         await pool.query(
           `
           SELECT id
+
           FROM users
+
           WHERE username = $1
+
           LIMIT 1
           `,
           [
@@ -199,11 +232,15 @@ const checkUsername =
           ]
         );
 
-      // Available
+      // =====================================================
+      // AVAILABLE
+      // =====================================================
+
       if (
         result.rows.length ===
         0
       ) {
+
         return res.json({
           success: true,
 
@@ -216,7 +253,10 @@ const checkUsername =
         });
       }
 
-      // Suggestions
+      // =====================================================
+      // SUGGESTIONS
+      // =====================================================
+
       const suggestions = [
         `${username}_01`,
         `${username}_2026`,
@@ -236,6 +276,7 @@ const checkUsername =
       });
 
     } catch (error) {
+
       console.error(
         "Check username error:",
         error
@@ -251,7 +292,9 @@ const checkUsername =
   };
 
 // =========================================================
-// SIGNUP
+// REGISTER USER
+// POST /api/auth/register
+// =========================================================
 // EMAIL VERIFICATION REMOVED
 // =========================================================
 
@@ -294,6 +337,7 @@ const registerUser =
         !address ||
         !bloodGroup
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -331,6 +375,7 @@ const registerUser =
           normalizedMobile
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -348,6 +393,7 @@ const registerUser =
           normalizedUsername
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -368,6 +414,7 @@ const registerUser =
           normalizedEmail
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -383,6 +430,7 @@ const registerUser =
       if (
         password.length < 8
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -405,6 +453,7 @@ const registerUser =
         numericAge < 1 ||
         numericAge > 120
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -433,7 +482,9 @@ const registerUser =
             username,
             email,
             mobile
+
           FROM users
+
           WHERE
             email = $1
             OR username = $2
@@ -462,6 +513,7 @@ const registerUser =
           existing.email ===
           normalizedEmail
         ) {
+
           return res.status(409).json({
             success: false,
 
@@ -474,6 +526,7 @@ const registerUser =
           existing.username ===
           normalizedUsername
         ) {
+
           return res.status(409).json({
             success: false,
 
@@ -486,6 +539,7 @@ const registerUser =
           existing.mobile ===
           normalizedMobile
         ) {
+
           return res.status(409).json({
             success: false,
 
@@ -524,6 +578,7 @@ const registerUser =
             address,
             blood_group
           )
+
           VALUES
           (
             $1,
@@ -536,6 +591,7 @@ const registerUser =
             $8,
             $9
           )
+
           RETURNING *
           `,
           [
@@ -576,6 +632,7 @@ const registerUser =
       );
 
       return res.status(201).json({
+
         success: true,
 
         message:
@@ -593,12 +650,15 @@ const registerUser =
     } catch (error) {
 
       try {
+
         await client.query(
           "ROLLBACK"
         );
+
       } catch (
         rollbackError
       ) {
+
         console.error(
           "Rollback error:",
           rollbackError.message
@@ -611,6 +671,7 @@ const registerUser =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -644,6 +705,7 @@ const registerUser =
 
 // =========================================================
 // LOGIN
+// POST /api/auth/login
 // =========================================================
 
 const loginUser =
@@ -659,10 +721,15 @@ const loginUser =
         password,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !identifier ||
         !password
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -676,14 +743,21 @@ const loginUser =
           .trim()
           .toLowerCase();
 
+      // =====================================================
+      // FIND USER
+      // =====================================================
+
       const result =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE
             email = $1
             OR username = $1
+
           LIMIT 1
           `,
           [
@@ -695,6 +769,7 @@ const loginUser =
         result.rows.length ===
         0
       ) {
+
         return res.status(401).json({
           success: false,
 
@@ -719,6 +794,7 @@ const loginUser =
       if (
         !passwordMatch
       ) {
+
         return res.status(401).json({
           success: false,
 
@@ -736,12 +812,21 @@ const loginUser =
           user.id
         );
 
+      // =====================================================
+      // SET COOKIE
+      // =====================================================
+
       setAuthCookie(
         res,
         token
       );
 
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
       return res.json({
+
         success: true,
 
         message:
@@ -769,6 +854,7 @@ const loginUser =
 
 // =========================================================
 // FORGOT PASSWORD
+// POST /api/auth/forgot-password
 // =========================================================
 
 const forgotPassword =
@@ -784,6 +870,7 @@ const forgotPassword =
       } = req.body;
 
       if (!email) {
+
         return res.status(400).json({
           success: false,
 
@@ -801,8 +888,11 @@ const forgotPassword =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE email = $1
+
           LIMIT 1
           `,
           [
@@ -810,11 +900,15 @@ const forgotPassword =
           ]
         );
 
-      // Do not reveal whether account exists
+      // =====================================================
+      // DO NOT REVEAL ACCOUNT EXISTENCE
+      // =====================================================
+
       if (
         result.rows.length ===
         0
       ) {
+
         return res.json({
           success: true,
 
@@ -848,11 +942,13 @@ const forgotPassword =
       await pool.query(
         `
         UPDATE users
+
         SET
           reset_otp_hash = $1,
           reset_otp_expires = $2,
           updated_at =
             CURRENT_TIMESTAMP
+
         WHERE id = $3
         `,
         [
@@ -954,6 +1050,7 @@ const forgotPassword =
 
 // =========================================================
 // RESET PASSWORD
+// POST /api/auth/reset-password
 // =========================================================
 
 const resetPassword =
@@ -970,11 +1067,16 @@ const resetPassword =
         newPassword,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !email ||
         !otp ||
         !newPassword
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -987,6 +1089,7 @@ const resetPassword =
         newPassword.length <
         8
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1000,12 +1103,19 @@ const resetPassword =
           .trim()
           .toLowerCase();
 
+      // =====================================================
+      // FIND USER
+      // =====================================================
+
       const result =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE email = $1
+
           LIMIT 1
           `,
           [
@@ -1017,6 +1127,7 @@ const resetPassword =
         result.rows.length ===
         0
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1028,10 +1139,15 @@ const resetPassword =
       const user =
         result.rows[0];
 
+      // =====================================================
+      // CHECK OTP
+      // =====================================================
+
       if (
         !user.reset_otp_hash ||
         !user.reset_otp_expires
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1046,6 +1162,7 @@ const resetPassword =
           user.reset_otp_expires
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1065,6 +1182,7 @@ const resetPassword =
           user.reset_otp_hash
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1073,21 +1191,31 @@ const resetPassword =
         });
       }
 
+      // =====================================================
+      // HASH PASSWORD
+      // =====================================================
+
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           12
         );
 
+      // =====================================================
+      // UPDATE PASSWORD
+      // =====================================================
+
       await pool.query(
         `
         UPDATE users
+
         SET
           password_hash = $1,
           reset_otp_hash = NULL,
           reset_otp_expires = NULL,
           updated_at =
             CURRENT_TIMESTAMP
+
         WHERE id = $2
         `,
         [
@@ -1096,20 +1224,13 @@ const resetPassword =
         ]
       );
 
-      // Remove login cookie
+      // =====================================================
+      // CLEAR COOKIE
+      // =====================================================
+
       res.clearCookie(
         "snict_token",
-        {
-          httpOnly: true,
-
-          sameSite: "lax",
-
-          secure:
-            process.env.NODE_ENV ===
-            "production",
-
-          path: "/",
-        }
+        authCookieOptions
       );
 
       return res.json({
@@ -1137,6 +1258,7 @@ const resetPassword =
 
 // =========================================================
 // CHANGE PASSWORD
+// PUT /api/auth/change-password
 // =========================================================
 
 const changePassword =
@@ -1152,10 +1274,15 @@ const changePassword =
         newPassword,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !currentPassword ||
         !newPassword
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1168,6 +1295,7 @@ const changePassword =
         newPassword.length <
         8
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1180,6 +1308,7 @@ const changePassword =
         currentPassword ===
         newPassword
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1188,12 +1317,19 @@ const changePassword =
         });
       }
 
+      // =====================================================
+      // GET USER
+      // =====================================================
+
       const result =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE id = $1
+
           LIMIT 1
           `,
           [
@@ -1205,6 +1341,7 @@ const changePassword =
         result.rows.length ===
         0
       ) {
+
         return res.status(404).json({
           success: false,
 
@@ -1216,6 +1353,10 @@ const changePassword =
       const user =
         result.rows[0];
 
+      // =====================================================
+      // VERIFY CURRENT PASSWORD
+      // =====================================================
+
       const valid =
         await bcrypt.compare(
           currentPassword,
@@ -1223,6 +1364,7 @@ const changePassword =
         );
 
       if (!valid) {
+
         return res.status(400).json({
           success: false,
 
@@ -1231,19 +1373,29 @@ const changePassword =
         });
       }
 
+      // =====================================================
+      // HASH NEW PASSWORD
+      // =====================================================
+
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           12
         );
 
+      // =====================================================
+      // UPDATE
+      // =====================================================
+
       await pool.query(
         `
         UPDATE users
+
         SET
           password_hash = $1,
           updated_at =
             CURRENT_TIMESTAMP
+
         WHERE id = $2
         `,
         [
@@ -1277,6 +1429,7 @@ const changePassword =
 
 // =========================================================
 // GET PROFILE
+// GET /api/auth/profile
 // =========================================================
 
 const getProfile =
@@ -1287,12 +1440,29 @@ const getProfile =
 
     try {
 
+      // =====================================================
+      // AUTH MIDDLEWARE MUST SET req.userId
+      // =====================================================
+
+      if (!req.userId) {
+
+        return res.status(401).json({
+          success: false,
+
+          message:
+            "Authentication required",
+        });
+      }
+
       const result =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE id = $1
+
           LIMIT 1
           `,
           [
@@ -1304,6 +1474,7 @@ const getProfile =
         result.rows.length ===
         0
       ) {
+
         return res.status(404).json({
           success: false,
 
@@ -1313,6 +1484,7 @@ const getProfile =
       }
 
       return res.json({
+
         success: true,
 
         user:
@@ -1339,6 +1511,7 @@ const getProfile =
 
 // =========================================================
 // UPDATE PROFILE
+// PUT /api/auth/profile
 // =========================================================
 
 const updateProfile =
@@ -1375,6 +1548,7 @@ const updateProfile =
         !address ||
         !bloodGroup
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1419,7 +1593,7 @@ const updateProfile =
         Number(age);
 
       // =====================================================
-      // AGE
+      // AGE VALIDATION
       // =====================================================
 
       if (
@@ -1429,6 +1603,7 @@ const updateProfile =
         numericAge < 1 ||
         numericAge > 120
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1438,7 +1613,7 @@ const updateProfile =
       }
 
       // =====================================================
-      // USERNAME
+      // USERNAME VALIDATION
       // =====================================================
 
       if (
@@ -1446,6 +1621,7 @@ const updateProfile =
           normalizedUsername
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1455,7 +1631,7 @@ const updateProfile =
       }
 
       // =====================================================
-      // EMAIL
+      // EMAIL VALIDATION
       // =====================================================
 
       const emailRegex =
@@ -1466,6 +1642,7 @@ const updateProfile =
           normalizedEmail
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1475,7 +1652,7 @@ const updateProfile =
       }
 
       // =====================================================
-      // MOBILE
+      // MOBILE VALIDATION
       // =====================================================
 
       if (
@@ -1483,6 +1660,7 @@ const updateProfile =
           cleanMobile
         )
       ) {
+
         return res.status(400).json({
           success: false,
 
@@ -1503,14 +1681,18 @@ const updateProfile =
             username,
             email,
             mobile
+
           FROM users
+
           WHERE
             (
               username = $1
               OR email = $2
               OR mobile = $3
             )
+
             AND id != $4
+
           LIMIT 1
           `,
           [
@@ -1533,6 +1715,7 @@ const updateProfile =
           existing.username ===
           normalizedUsername
         ) {
+
           return res.status(409).json({
             success: false,
 
@@ -1545,6 +1728,7 @@ const updateProfile =
           existing.email ===
           normalizedEmail
         ) {
+
           return res.status(409).json({
             success: false,
 
@@ -1557,6 +1741,7 @@ const updateProfile =
           existing.mobile ===
           cleanMobile
         ) {
+
           return res.status(409).json({
             success: false,
 
@@ -1567,13 +1752,14 @@ const updateProfile =
       }
 
       // =====================================================
-      // UPDATE
+      // UPDATE PROFILE
       // =====================================================
 
       const result =
         await pool.query(
           `
           UPDATE users
+
           SET
             full_name = $1,
             username = $2,
@@ -1585,7 +1771,9 @@ const updateProfile =
             blood_group = $8,
             updated_at =
               CURRENT_TIMESTAMP
+
           WHERE id = $9
+
           RETURNING *
           `,
           [
@@ -1605,6 +1793,7 @@ const updateProfile =
         result.rows.length ===
         0
       ) {
+
         return res.status(404).json({
           success: false,
 
@@ -1614,6 +1803,7 @@ const updateProfile =
       }
 
       return res.json({
+
         success: true,
 
         message:
@@ -1648,6 +1838,7 @@ const updateProfile =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -1673,6 +1864,7 @@ const updateProfile =
 
 // =========================================================
 // LOGOUT
+// POST /api/auth/logout
 // =========================================================
 
 const logoutUser =
@@ -1681,22 +1873,19 @@ const logoutUser =
     res
   ) => {
 
+    // =====================================================
+    // IMPORTANT:
+    // clearCookie options must match the cookie options
+    // used while setting the cookie.
+    // =====================================================
+
     res.clearCookie(
       "snict_token",
-      {
-        httpOnly: true,
-
-        sameSite: "lax",
-
-        secure:
-          process.env.NODE_ENV ===
-          "production",
-
-        path: "/",
-      }
+      authCookieOptions
     );
 
     return res.json({
+
       success: true,
 
       message:
@@ -1709,13 +1898,23 @@ const logoutUser =
 // =========================================================
 
 module.exports = {
+
   registerUser,
+
   checkUsername,
+
   loginUser,
+
   forgotPassword,
+
   resetPassword,
+
   changePassword,
+
   getProfile,
+
   updateProfile,
+
   logoutUser,
+
 };

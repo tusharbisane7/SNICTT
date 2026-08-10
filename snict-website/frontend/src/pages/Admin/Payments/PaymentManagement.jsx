@@ -10,18 +10,13 @@ import {
   XCircle,
   Clock3,
   IndianRupee,
-  Users,
   Search,
   RefreshCw,
   Eye,
   X,
-  Mail,
-  Phone,
   UserRound,
   CalendarDays,
-  MapPin,
   Receipt,
-  ShieldCheck,
   AlertCircle,
 } from "lucide-react";
 
@@ -45,20 +40,15 @@ function PaymentManagement() {
   // STATE
   // =========================================================
 
-  const [payments, setPayments] =
-    useState([]);
+  const [payments, setPayments] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   const [statusFilter, setStatusFilter] =
     useState("all");
@@ -74,9 +64,7 @@ function PaymentManagement() {
   // LOAD PAYMENTS
   // =========================================================
 
-  const loadPayments = async (
-    isRefresh = false
-  ) => {
+  const loadPayments = async (isRefresh = false) => {
 
     try {
 
@@ -88,22 +76,14 @@ function PaymentManagement() {
 
       setError("");
 
-      // IMPORTANT:
-      // Backend route is /api/payments/admin
+      const response = await api.get(
+        "/payments/admin"
+      );
 
-      const response =
-        await api.get(
-          "/payments/admin"
-        );
-
-      if (
-        response.data?.success
-      ) {
+      if (response.data?.success) {
 
         setPayments(
-          Array.isArray(
-            response.data.payments
-          )
+          Array.isArray(response.data.payments)
             ? response.data.payments
             : []
         );
@@ -112,7 +92,7 @@ function PaymentManagement() {
 
         setError(
           response.data?.message ||
-            "Unable to load payments."
+          "Unable to load payments."
         );
 
       }
@@ -126,7 +106,7 @@ function PaymentManagement() {
 
       setError(
         error.response?.data?.message ||
-          "Unable to load payment data."
+        "Unable to load payment data."
       );
 
     } finally {
@@ -150,323 +130,288 @@ function PaymentManagement() {
 
 
   // =========================================================
-  // HELPERS
+  // STATUS HELPER
   // =========================================================
 
-  const getStatus =
-    (payment) => {
+  const getStatus = (payment) => {
 
-      return (
-        payment?.payment_status ||
-        "unknown"
-      ).toLowerCase();
+    return String(
+      payment?.payment_status || "unknown"
+    ).toLowerCase();
 
-    };
+  };
 
 
-  const formatAmount =
-    (amount) => {
+  // =========================================================
+  // FORMAT AMOUNT
+  // =========================================================
 
-      const value =
-        Number(amount || 0);
+  const formatAmount = (amount) => {
 
-      return value.toLocaleString(
-        "en-IN",
-        {
-          style: "currency",
-          currency: "INR",
-          maximumFractionDigits: 2,
-        }
-      );
+    const value = Number(amount || 0);
 
-    };
-
-
-  const formatDate =
-    (value) => {
-
-      if (!value) {
-        return "—";
+    return value.toLocaleString(
+      "en-IN",
+      {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 2,
       }
+    );
 
-      const date =
-        new Date(value);
+  };
 
-      if (
-        Number.isNaN(
-          date.getTime()
-        )
-      ) {
-        return "—";
+
+  // =========================================================
+  // FORMAT DATE
+  // =========================================================
+
+  const formatDate = (value) => {
+
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
       }
+    );
 
-      return date.toLocaleDateString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }
-      );
-
-    };
+  };
 
 
-  const formatDateTime =
-    (value) => {
+  // =========================================================
+  // FORMAT DATE TIME
+  // =========================================================
 
-      if (!value) {
-        return "—";
+  const formatDateTime = (value) => {
+
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       }
+    );
 
-      const date =
-        new Date(value);
-
-      if (
-        Number.isNaN(
-          date.getTime()
-        )
-      ) {
-        return "—";
-      }
-
-      return date.toLocaleString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }
-      );
-
-    };
+  };
 
 
   // =========================================================
   // TODAY CHECK
   // =========================================================
 
-  const isToday =
-    (value) => {
+  const isToday = (value) => {
 
-      if (!value) {
-        return false;
-      }
+    if (!value) {
+      return false;
+    }
 
-      const date =
-        new Date(value);
+    const date = new Date(value);
 
-      const today =
-        new Date();
+    const today = new Date();
 
-      return (
-        date.getDate() ===
-          today.getDate() &&
-        date.getMonth() ===
-          today.getMonth() &&
-        date.getFullYear() ===
-          today.getFullYear()
-      );
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
 
-    };
+  };
 
 
   // =========================================================
   // TODAY PAYMENTS
   // =========================================================
 
-  const todayPayments =
-    useMemo(() => {
+  const todayPayments = useMemo(() => {
 
-      return payments.filter(
-        (payment) =>
-          isToday(
-            payment.payment_created_at ||
-              payment.created_at
-          )
-      );
+    return payments.filter(
+      (payment) =>
+        isToday(
+          payment.payment_created_at ||
+          payment.created_at
+        )
+    );
 
-    }, [payments]);
+  }, [payments]);
 
 
   // =========================================================
-  // TODAY SUCCESS
+  // TODAY SUCCESSFUL
   // =========================================================
 
-  const todaySuccessful =
-    useMemo(() => {
+  const todaySuccessful = useMemo(() => {
 
-      return todayPayments.filter(
-        (payment) =>
-          getStatus(payment) ===
-          "verified"
-      );
+    return todayPayments.filter(
+      (payment) =>
+        getStatus(payment) === "verified"
+    );
 
-    }, [todayPayments]);
+  }, [todayPayments]);
 
 
   // =========================================================
   // TODAY FAILED
   // =========================================================
 
-  const todayFailed =
-    useMemo(() => {
+  const todayFailed = useMemo(() => {
 
-      return todayPayments.filter(
-        (payment) =>
-          getStatus(payment) ===
-          "rejected"
-      );
+    return todayPayments.filter(
+      (payment) =>
+        getStatus(payment) === "rejected"
+    );
 
-    }, [todayPayments]);
+  }, [todayPayments]);
 
 
   // =========================================================
   // TODAY PENDING
   // =========================================================
 
-  const todayPending =
-    useMemo(() => {
+  const todayPending = useMemo(() => {
 
-      return todayPayments.filter(
-        (payment) =>
-          getStatus(payment) ===
-            "submitted" ||
-          getStatus(payment) ===
-            "pending"
-      );
+    return todayPayments.filter(
+      (payment) =>
+        getStatus(payment) === "submitted" ||
+        getStatus(payment) === "pending"
+    );
 
-    }, [todayPayments]);
+  }, [todayPayments]);
 
 
   // =========================================================
-  // TODAY AMOUNT
+  // TODAY SUCCESSFUL AMOUNT
   // =========================================================
 
-  const todayAmount =
-    useMemo(() => {
+  const todayAmount = useMemo(() => {
 
-      return todaySuccessful.reduce(
-        (total, payment) =>
-          total +
-          Number(
-            payment.payment_amount ||
-              payment.amount ||
-              0
-          ),
-        0
-      );
+    return todaySuccessful.reduce(
+      (total, payment) =>
+        total +
+        Number(
+          payment.payment_amount ||
+          payment.amount ||
+          0
+        ),
+      0
+    );
 
-    }, [todaySuccessful]);
+  }, [todaySuccessful]);
 
 
   // =========================================================
   // FILTER PAYMENTS
   // =========================================================
 
-  const filteredPayments =
-    useMemo(() => {
+  const filteredPayments = useMemo(() => {
 
-      const keyword =
-        search
-          .trim()
+    const keyword =
+      search.trim().toLowerCase();
+
+    return payments.filter(
+      (payment) => {
+
+        const status =
+          getStatus(payment);
+
+        if (
+          statusFilter !== "all" &&
+          status !== statusFilter
+        ) {
+          return false;
+        }
+
+        if (!keyword) {
+          return true;
+        }
+
+        const searchable = [
+          payment.full_name,
+          payment.username,
+          payment.email,
+          payment.mobile,
+          payment.transaction_id,
+          payment.booking_code,
+          payment.event_title,
+          payment.payment_method,
+        ]
+          .filter(Boolean)
+          .join(" ")
           .toLowerCase();
 
-      return payments.filter(
-        (payment) => {
+        return searchable.includes(keyword);
 
-          const status =
-            getStatus(payment);
+      }
+    );
 
-          if (
-            statusFilter !==
-              "all" &&
-            status !==
-              statusFilter
-          ) {
-            return false;
-          }
-
-          if (!keyword) {
-            return true;
-          }
-
-          const searchable =
-            [
-              payment.full_name,
-              payment.username,
-              payment.email,
-              payment.mobile,
-              payment.transaction_id,
-              payment.booking_code,
-              payment.event_title,
-              payment.payment_method,
-            ]
-              .filter(Boolean)
-              .join(" ")
-              .toLowerCase();
-
-          return searchable.includes(
-            keyword
-          );
-
-        }
-      );
-
-    }, [
-      payments,
-      search,
-      statusFilter,
-    ]);
+  }, [
+    payments,
+    search,
+    statusFilter,
+  ]);
 
 
   // =========================================================
   // PIE CHART
   // =========================================================
 
-  const chartData =
-    useMemo(() => {
+  const chartData = useMemo(() => {
 
-      return [
-        {
-          name: "Successful",
-          value:
-            payments.filter(
-              (payment) =>
-                getStatus(payment) ===
-                "verified"
-            ).length,
-        },
+    return [
+      {
+        name: "Successful",
+        value: payments.filter(
+          (payment) =>
+            getStatus(payment) === "verified"
+        ).length,
+      },
 
-        {
-          name: "Pending",
-          value:
-            payments.filter(
-              (payment) =>
-                getStatus(payment) ===
-                  "submitted" ||
-                getStatus(payment) ===
-                  "pending"
-            ).length,
-        },
+      {
+        name: "Pending",
+        value: payments.filter(
+          (payment) =>
+            getStatus(payment) === "submitted" ||
+            getStatus(payment) === "pending"
+        ).length,
+      },
 
-        {
-          name: "Rejected",
-          value:
-            payments.filter(
-              (payment) =>
-                getStatus(payment) ===
-                "rejected"
-            ).length,
-        },
-      ].filter(
-        (item) =>
-          item.value > 0
-      );
+      {
+        name: "Rejected",
+        value: payments.filter(
+          (payment) =>
+            getStatus(payment) === "rejected"
+        ).length,
+      },
 
-    }, [payments]);
+    ].filter(
+      (item) => item.value > 0
+    );
+
+  }, [payments]);
 
 
   const chartColors = [
@@ -477,170 +422,204 @@ function PaymentManagement() {
 
 
   // =========================================================
-  // VERIFY / REJECT
+  // VERIFY / REJECT PAYMENT
   // =========================================================
 
-  const handlePaymentAction =
-    async (
-      payment,
-      status
-    ) => {
+  const handlePaymentAction = async (
+    payment,
+    status
+  ) => {
 
-      if (
-        processingId ===
-        payment.id
-      ) {
-        return;
+    // -------------------------------------------------------
+    // PREVENT DOUBLE CLICK
+    // -------------------------------------------------------
+
+    if (
+      processingId === payment.id
+    ) {
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // IMPORTANT
+    // Backend accepts only "submitted"
+    // -------------------------------------------------------
+
+    const currentStatus =
+      getStatus(payment);
+
+
+    if (
+      currentStatus !== "submitted"
+    ) {
+
+      setError(
+        `This payment cannot be processed because its current status is "${currentStatus}". Only submitted payments can be confirmed or rejected.`
+      );
+
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // CONFIRM ACTION
+    // -------------------------------------------------------
+
+    const confirmed =
+      window.confirm(
+        status === "confirmed"
+          ? "Are you sure you want to confirm this payment?"
+          : "Are you sure you want to reject this payment?"
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    try {
+
+      setProcessingId(payment.id);
+
+      setError("");
+
+
+      // -----------------------------------------------------
+      // API REQUEST
+      // -----------------------------------------------------
+
+      const response =
+        await api.put(
+          `/payments/admin/${payment.id}/verify`,
+          {
+            status: status,
+          }
+        );
+
+
+      // -----------------------------------------------------
+      // CHECK RESPONSE
+      // -----------------------------------------------------
+
+      if (!response.data?.success) {
+
+        throw new Error(
+          response.data?.message ||
+          "Unable to process payment."
+        );
+
       }
 
-      const confirmed =
-        window.confirm(
-          status === "confirmed"
-            ? "Confirm this payment?"
-            : "Reject this payment?"
-        );
 
-      if (!confirmed) {
-        return;
-      }
+      // -----------------------------------------------------
+      // CLOSE MODAL
+      // -----------------------------------------------------
 
-      try {
+      setSelectedPayment(null);
 
-        setProcessingId(
-          payment.id
-        );
 
-        setError("");
+      // -----------------------------------------------------
+      // REFRESH PAYMENT LIST
+      // -----------------------------------------------------
 
-        const response =
-          await api.put(
-            `/payments/admin/${payment.id}/verify`,
-            {
-              status,
-            }
-          );
+      await loadPayments(true);
 
-        if (
-          !response.data?.success
-        ) {
 
-          throw new Error(
-            response.data?.message ||
-              "Unable to process payment."
-          );
+    } catch (error) {
 
-        }
+      console.error(
+        "Payment action error:",
+        error
+      );
 
-        setSelectedPayment(
-          null
-        );
 
-        await loadPayments(
-          true
-        );
+      setError(
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to process payment."
+      );
 
-      } catch (error) {
 
-        console.error(
-          "Payment action error:",
-          error
-        );
+    } finally {
 
-        setError(
-          error.response?.data?.message ||
-            error.message ||
-            "Unable to process payment."
-        );
+      setProcessingId(null);
 
-      } finally {
+    }
 
-        setProcessingId(
-          null
-        );
-
-      }
-
-    };
+  };
 
 
   // =========================================================
   // STATUS BADGE
   // =========================================================
 
-  const renderStatus =
-    (status) => {
+  const renderStatus = (status) => {
 
-      const normalized =
-        String(
-          status || ""
-        ).toLowerCase();
+    const normalized =
+      String(status || "").toLowerCase();
 
-      if (
-        normalized ===
-        "verified"
-      ) {
 
-        return (
-          <span className="payment-status payment-status-success">
-
-            <CheckCircle2
-              size={14}
-            />
-
-            Successful
-
-          </span>
-        );
-
-      }
-
-      if (
-        normalized ===
-          "submitted" ||
-        normalized ===
-          "pending"
-      ) {
-
-        return (
-          <span className="payment-status payment-status-pending">
-
-            <Clock3
-              size={14}
-            />
-
-            Pending
-
-          </span>
-        );
-
-      }
-
-      if (
-        normalized ===
-        "rejected"
-      ) {
-
-        return (
-          <span className="payment-status payment-status-failed">
-
-            <XCircle
-              size={14}
-            />
-
-            Failed
-
-          </span>
-        );
-
-      }
+    if (
+      normalized === "verified"
+    ) {
 
       return (
-        <span className="payment-status">
-          {status || "Unknown"}
+        <span className="payment-status payment-status-success">
+
+          <CheckCircle2 size={14} />
+
+          Successful
+
         </span>
       );
 
-    };
+    }
+
+
+    if (
+      normalized === "submitted" ||
+      normalized === "pending"
+    ) {
+
+      return (
+        <span className="payment-status payment-status-pending">
+
+          <Clock3 size={14} />
+
+          Pending
+
+        </span>
+      );
+
+    }
+
+
+    if (
+      normalized === "rejected"
+    ) {
+
+      return (
+        <span className="payment-status payment-status-failed">
+
+          <XCircle size={14} />
+
+          Failed
+
+        </span>
+      );
+
+    }
+
+
+    return (
+      <span className="payment-status">
+        {status || "Unknown"}
+      </span>
+    );
+
+  };
 
 
   // =========================================================
@@ -744,9 +723,7 @@ function PaymentManagement() {
 
           <div className="payment-error">
 
-            <AlertCircle
-              size={18}
-            />
+            <AlertCircle size={18} />
 
             <span>
               {error}
@@ -763,13 +740,12 @@ function PaymentManagement() {
 
         <section className="payment-stat-grid">
 
-
           <div className="payment-stat-card">
 
             <div className="payment-stat-icon total">
-              <CreditCard
-                size={21}
-              />
+
+              <CreditCard size={21} />
+
             </div>
 
             <div>
@@ -790,9 +766,9 @@ function PaymentManagement() {
           <div className="payment-stat-card">
 
             <div className="payment-stat-icon success">
-              <CheckCircle2
-                size={21}
-              />
+
+              <CheckCircle2 size={21} />
+
             </div>
 
             <div>
@@ -813,9 +789,9 @@ function PaymentManagement() {
           <div className="payment-stat-card">
 
             <div className="payment-stat-icon pending">
-              <Clock3
-                size={21}
-              />
+
+              <Clock3 size={21} />
+
             </div>
 
             <div>
@@ -836,9 +812,9 @@ function PaymentManagement() {
           <div className="payment-stat-card">
 
             <div className="payment-stat-icon failed">
-              <XCircle
-                size={21}
-              />
+
+              <XCircle size={21} />
+
             </div>
 
             <div>
@@ -859,9 +835,9 @@ function PaymentManagement() {
           <div className="payment-stat-card payment-stat-card-wide">
 
             <div className="payment-stat-icon amount">
-              <IndianRupee
-                size={21}
-              />
+
+              <IndianRupee size={21} />
+
             </div>
 
             <div>
@@ -871,15 +847,12 @@ function PaymentManagement() {
               </span>
 
               <strong>
-                {formatAmount(
-                  todayAmount
-                )}
+                {formatAmount(todayAmount)}
               </strong>
 
             </div>
 
           </div>
-
 
         </section>
 
@@ -889,7 +862,6 @@ function PaymentManagement() {
         ================================================= */}
 
         <section className="payment-analytics-grid">
-
 
           <div className="payment-chart-card">
 
@@ -908,9 +880,9 @@ function PaymentManagement() {
               </div>
 
               <div className="payment-card-header-icon">
-                <CreditCard
-                  size={18}
-                />
+
+                <CreditCard size={18} />
+
               </div>
 
             </div>
@@ -938,19 +910,14 @@ function PaymentManagement() {
                     >
 
                       {chartData.map(
-                        (
-                          entry,
-                          index
-                        ) => (
+                        (entry, index) => (
 
                           <Cell
-                            key={
-                              entry.name
-                            }
+                            key={entry.name}
                             fill={
                               chartColors[
                                 index %
-                                  chartColors.length
+                                chartColors.length
                               ]
                             }
                           />
@@ -974,9 +941,7 @@ function PaymentManagement() {
 
               <div className="payment-empty-chart">
 
-                <CreditCard
-                  size={40}
-                />
+                <CreditCard size={40} />
 
                 <p>
                   No payment data available.
@@ -1034,15 +999,15 @@ function PaymentManagement() {
                 </span>
 
                 <strong className="text-success">
+
                   {
                     payments.filter(
                       (payment) =>
-                        getStatus(
-                          payment
-                        ) ===
+                        getStatus(payment) ===
                         "verified"
                     ).length
                   }
+
                 </strong>
 
               </div>
@@ -1055,19 +1020,17 @@ function PaymentManagement() {
                 </span>
 
                 <strong className="text-pending">
+
                   {
                     payments.filter(
                       (payment) =>
-                        getStatus(
-                          payment
-                        ) ===
+                        getStatus(payment) ===
                           "submitted" ||
-                        getStatus(
-                          payment
-                        ) ===
+                        getStatus(payment) ===
                           "pending"
                     ).length
                   }
+
                 </strong>
 
               </div>
@@ -1080,15 +1043,15 @@ function PaymentManagement() {
                 </span>
 
                 <strong className="text-danger">
+
                   {
                     payments.filter(
                       (payment) =>
-                        getStatus(
-                          payment
-                        ) ===
+                        getStatus(payment) ===
                         "rejected"
                     ).length
                   }
+
                 </strong>
 
               </div>
@@ -1105,7 +1068,6 @@ function PaymentManagement() {
         ================================================= */}
 
         <section className="payment-table-card">
-
 
           <div className="payment-table-header">
 
@@ -1126,9 +1088,7 @@ function PaymentManagement() {
 
               <div className="payment-search">
 
-                <Search
-                  size={16}
-                />
+                <Search size={16} />
 
                 <input
                   type="text"
@@ -1176,14 +1136,11 @@ function PaymentManagement() {
           </div>
 
 
-          {filteredPayments.length ===
-          0 ? (
+          {filteredPayments.length === 0 ? (
 
             <div className="payment-empty">
 
-              <CreditCard
-                size={40}
-              />
+              <CreditCard size={40} />
 
               <h3>
                 No payments found
@@ -1248,17 +1205,14 @@ function PaymentManagement() {
                   {filteredPayments.map(
                     (payment) => (
 
-                      <tr
-                        key={
-                          payment.id
-                        }
-                      >
+                      <tr key={payment.id}>
 
                         <td>
 
                           <div className="payment-member-cell">
 
                             <div className="payment-avatar">
+
                               {(
                                 payment.full_name ||
                                 payment.username ||
@@ -1266,6 +1220,7 @@ function PaymentManagement() {
                               )
                                 .charAt(0)
                                 .toUpperCase()}
+
                             </div>
 
                             <div>
@@ -1330,9 +1285,11 @@ function PaymentManagement() {
                         <td>
 
                           <strong className="payment-amount">
+
                             {formatAmount(
                               payment.payment_amount
                             )}
+
                           </strong>
 
                         </td>
@@ -1341,10 +1298,12 @@ function PaymentManagement() {
                         <td>
 
                           <span className="payment-transaction">
+
                             {
                               payment.transaction_id ||
                               "—"
                             }
+
                           </span>
 
                         </td>
@@ -1353,10 +1312,12 @@ function PaymentManagement() {
                         <td>
 
                           <span className="payment-date">
+
                             {formatDateTime(
                               payment.payment_created_at ||
-                                payment.created_at
+                              payment.created_at
                             )}
+
                           </span>
 
                         </td>
@@ -1383,9 +1344,7 @@ function PaymentManagement() {
                             }
                           >
 
-                            <Eye
-                              size={15}
-                            />
+                            <Eye size={15} />
 
                             View
 
@@ -1420,9 +1379,7 @@ function PaymentManagement() {
         <div
           className="payment-modal-overlay"
           onMouseDown={() =>
-            setSelectedPayment(
-              null
-            )
+            setSelectedPayment(null)
           }
         >
 
@@ -1450,15 +1407,11 @@ function PaymentManagement() {
               <button
                 type="button"
                 onClick={() =>
-                  setSelectedPayment(
-                    null
-                  )
+                  setSelectedPayment(null)
                 }
               >
 
-                <X
-                  size={19}
-                />
+                <X size={19} />
 
               </button>
 
@@ -1495,9 +1448,7 @@ function PaymentManagement() {
 
                 <div className="payment-detail-title">
 
-                  <UserRound
-                    size={17}
-                  />
+                  <UserRound size={17} />
 
                   <span>
                     MEMBER INFORMATION
@@ -1531,11 +1482,13 @@ function PaymentManagement() {
                     </span>
 
                     <strong>
+
                       {
                         selectedPayment.username
                           ? `@${selectedPayment.username}`
                           : "—"
                       }
+
                     </strong>
 
                   </div>
@@ -1585,9 +1538,7 @@ function PaymentManagement() {
 
                 <div className="payment-detail-title">
 
-                  <Receipt
-                    size={17}
-                  />
+                  <Receipt size={17} />
 
                   <span>
                     PAYMENT INFORMATION
@@ -1637,9 +1588,11 @@ function PaymentManagement() {
                     </span>
 
                     <strong>
+
                       {formatAmount(
                         selectedPayment.payment_amount
                       )}
+
                     </strong>
 
                   </div>
@@ -1652,9 +1605,11 @@ function PaymentManagement() {
                     </span>
 
                     <strong>
+
                       {formatDateTime(
                         selectedPayment.payment_created_at
                       )}
+
                     </strong>
 
                   </div>
@@ -1672,9 +1627,7 @@ function PaymentManagement() {
 
                 <div className="payment-detail-title">
 
-                  <CalendarDays
-                    size={17}
-                  />
+                  <CalendarDays size={17} />
 
                   <span>
                     EVENT INFORMATION
@@ -1708,9 +1661,11 @@ function PaymentManagement() {
                     </span>
 
                     <strong>
+
                       {formatDate(
                         selectedPayment.event_date
                       )}
+
                     </strong>
 
                   </div>
@@ -1783,67 +1738,100 @@ function PaymentManagement() {
                   ACTIONS
               ================================================= */}
 
-              {
-                (
-                  selectedPayment.payment_status ===
-                    "submitted" ||
-                  selectedPayment.payment_status ===
-                    "pending"
-                ) && (
+              {selectedPayment.payment_status ===
+                "submitted" && (
 
-                  <div className="payment-modal-actions">
+                <div className="payment-modal-actions">
 
-                    <button
-                      type="button"
-                      className="payment-confirm-button"
-                      disabled={
-                        processingId ===
-                        selectedPayment.id
-                      }
-                      onClick={() =>
-                        handlePaymentAction(
-                          selectedPayment,
-                          "confirmed"
-                        )
-                      }
-                    >
+                  <button
+                    type="button"
+                    className="payment-confirm-button"
+                    disabled={
+                      processingId ===
+                      selectedPayment.id
+                    }
+                    onClick={() =>
+                      handlePaymentAction(
+                        selectedPayment,
+                        "confirmed"
+                      )
+                    }
+                  >
 
-                      <CheckCircle2
-                        size={17}
-                      />
+                    <CheckCircle2 size={17} />
 
-                      Confirm Payment
+                    {processingId ===
+                    selectedPayment.id
+                      ? "Processing..."
+                      : "Confirm Payment"}
 
-                    </button>
+                  </button>
 
 
-                    <button
-                      type="button"
-                      className="payment-reject-button"
-                      disabled={
-                        processingId ===
-                        selectedPayment.id
-                      }
-                      onClick={() =>
-                        handlePaymentAction(
-                          selectedPayment,
-                          "rejected"
-                        )
-                      }
-                    >
+                  <button
+                    type="button"
+                    className="payment-reject-button"
+                    disabled={
+                      processingId ===
+                      selectedPayment.id
+                    }
+                    onClick={() =>
+                      handlePaymentAction(
+                        selectedPayment,
+                        "rejected"
+                      )
+                    }
+                  >
 
-                      <XCircle
-                        size={17}
-                      />
+                    <XCircle size={17} />
 
-                      Reject Payment
+                    {processingId ===
+                    selectedPayment.id
+                      ? "Processing..."
+                      : "Reject Payment"}
 
-                    </button>
+                  </button>
 
-                  </div>
+                </div>
 
-                )
-              }
+              )}
+
+
+              {/* =================================================
+                  ALREADY PROCESSED MESSAGE
+              ================================================= */}
+
+              {selectedPayment.payment_status ===
+                "verified" && (
+
+                <div className="payment-error">
+
+                  <CheckCircle2 size={18} />
+
+                  <span>
+                    This payment has already been verified.
+                  </span>
+
+                </div>
+
+              )}
+
+
+              {selectedPayment.payment_status ===
+                "rejected" && (
+
+                <div className="payment-error">
+
+                  <XCircle size={18} />
+
+                  <span>
+                    This payment has been rejected.
+                  </span>
+
+                </div>
+
+              )}
+
 
             </div>
 
