@@ -25,6 +25,97 @@ import api from "../../services/api";
 
 import "./Home.css";
 
+// =========================================================
+// LOOPING TYPING TEXT COMPONENT
+// =========================================================
+
+function TypingText({
+  text,
+  speed = 85,
+  deleteSpeed = 45,
+  pause = 1800,
+}) {
+  const [displayText, setDisplayText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timer;
+
+    if (!isDeleting) {
+      // =====================================================
+      // TYPING
+      // =====================================================
+
+      if (displayText.length < text.length) {
+        timer = setTimeout(() => {
+          setDisplayText(
+            text.substring(
+              0,
+              displayText.length + 1
+            )
+          );
+        }, speed);
+      } else {
+        // ===================================================
+        // PAUSE AFTER COMPLETE TEXT
+        // ===================================================
+
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, pause);
+      }
+    } else {
+      // =====================================================
+      // DELETING
+      // =====================================================
+
+      if (displayText.length > 0) {
+        timer = setTimeout(() => {
+          setDisplayText(
+            text.substring(
+              0,
+              displayText.length - 1
+            )
+          );
+        }, deleteSpeed);
+      } else {
+        // ===================================================
+        // START TYPING AGAIN
+        // ===================================================
+
+        timer = setTimeout(() => {
+          setIsDeleting(false);
+        }, 350);
+      }
+    }
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    displayText,
+    isDeleting,
+    text,
+    speed,
+    deleteSpeed,
+    pause,
+  ]);
+
+  return (
+    <span className="typing-wrapper">
+      <span className="typing-text">
+        {displayText}
+      </span>
+
+      <span
+        className="typing-cursor"
+        aria-hidden="true"
+      >
+        |
+      </span>
+    </span>
+  );
+}
 
 // =========================================================
 // DATE HELPERS
@@ -53,7 +144,6 @@ const getDateString = (value) => {
   return valueString.substring(0, 10);
 };
 
-
 // =========================================================
 // TIME HELPERS
 // =========================================================
@@ -76,7 +166,6 @@ const getTimeString = (value) => {
 
   return "";
 };
-
 
 // =========================================================
 // EVENT DATE OBJECT
@@ -117,7 +206,6 @@ const createEventDate = (
   return result;
 };
 
-
 // =========================================================
 // EVENT STATUS
 // =========================================================
@@ -156,7 +244,6 @@ const getEventStatus = (
   return "past";
 };
 
-
 // =========================================================
 // EVENT STATUS LABEL
 // =========================================================
@@ -172,7 +259,6 @@ const getStatusLabel = (status) => {
 
   return "Upcoming";
 };
-
 
 // =========================================================
 // FORMAT DATE
@@ -227,7 +313,6 @@ const formatDate = (value) => {
   )} ${months[month - 1]} ${year}`;
 };
 
-
 // =========================================================
 // FORMAT TIME
 // =========================================================
@@ -267,7 +352,6 @@ const formatTime = (value) => {
   return `${hour}:${minute} ${period}`;
 };
 
-
 // =========================================================
 // GET COMMITTEE IMAGE
 // =========================================================
@@ -281,7 +365,6 @@ const getCommitteeImage = (member) => {
     ""
   );
 };
-
 
 // =========================================================
 // GET EVENT IMAGE
@@ -297,7 +380,6 @@ const getEventImage = (event) => {
   );
 };
 
-
 // =========================================================
 // HOME COMPONENT
 // =========================================================
@@ -312,7 +394,6 @@ function Home() {
 
   const [authLoading, setAuthLoading] =
     useState(true);
-
 
   // =========================================================
   // COMMITTEE
@@ -330,7 +411,6 @@ function Home() {
   const [committeeIndex, setCommitteeIndex] =
     useState(0);
 
-
   // =========================================================
   // EVENTS
   // =========================================================
@@ -344,59 +424,90 @@ function Home() {
   const [eventsError, setEventsError] =
     useState("");
 
-
   // =========================================================
   // CHECK USER LOGIN STATUS
   // =========================================================
 
   useEffect(() => {
+
+    let mounted = true;
+
     const checkUser = async () => {
+
       try {
+
         setAuthLoading(true);
 
         const response =
-          await api.get("/auth/profile");
+          await api.get(
+            "/auth/profile"
+          );
+
+        if (!mounted) {
+          return;
+        }
 
         if (
           response.data?.success &&
           response.data?.user
         ) {
-          setUser(response.data.user);
+
+          setUser(
+            response.data.user
+          );
+
         } else {
+
           setUser(null);
+
         }
 
       } catch (error) {
 
-        // 401 means user is not logged in.
-        // This is normal and should not break Home.
+        // 401 / 403 simply means
+        // visitor is logged out.
 
         if (
           error.response?.status !== 401 &&
           error.response?.status !== 403
         ) {
+
           console.error(
             "Authentication check error:",
             error
           );
+
         }
 
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+        }
 
       } finally {
-        setAuthLoading(false);
+
+        if (mounted) {
+          setAuthLoading(false);
+        }
+
       }
+
     };
 
     checkUser();
-  }, []);
 
+    return () => {
+      mounted = false;
+    };
+
+  }, []);
 
   // =========================================================
   // LOAD COMMITTEE
   // =========================================================
 
   useEffect(() => {
+
+    let mounted = true;
 
     const loadCommittee = async () => {
 
@@ -407,7 +518,13 @@ function Home() {
         setCommitteeError("");
 
         const response =
-          await api.get("/committees");
+          await api.get(
+            "/committees"
+          );
+
+        if (!mounted) {
+          return;
+        }
 
         const data =
           response.data;
@@ -415,22 +532,34 @@ function Home() {
         let members = [];
 
         if (
-          Array.isArray(data?.members)
+          Array.isArray(
+            data?.members
+          )
         ) {
-          members = data.members;
+
+          members =
+            data.members;
 
         } else if (
-          Array.isArray(data?.data)
+          Array.isArray(
+            data?.data
+          )
         ) {
-          members = data.data;
+
+          members =
+            data.data;
 
         } else if (
           Array.isArray(data)
         ) {
+
           members = data;
+
         }
 
-        setCommitteeMembers(members);
+        setCommitteeMembers(
+          members
+        );
 
       } catch (error) {
 
@@ -439,28 +568,40 @@ function Home() {
           error
         );
 
-        setCommitteeError(
-          error.response?.data?.message ||
-            "Unable to load committee members."
-        );
+        if (mounted) {
+
+          setCommitteeError(
+            error.response?.data?.message ||
+              "Unable to load committee members."
+          );
+
+        }
 
       } finally {
 
-        setCommitteeLoading(false);
+        if (mounted) {
+          setCommitteeLoading(false);
+        }
 
       }
+
     };
 
     loadCommittee();
 
-  }, []);
+    return () => {
+      mounted = false;
+    };
 
+  }, []);
 
   // =========================================================
   // LOAD EVENTS
   // =========================================================
 
   useEffect(() => {
+
+    let mounted = true;
 
     const loadEvents = async () => {
 
@@ -471,7 +612,13 @@ function Home() {
         setEventsError("");
 
         const response =
-          await api.get("/events");
+          await api.get(
+            "/events"
+          );
+
+        if (!mounted) {
+          return;
+        }
 
         const data =
           response.data;
@@ -479,33 +626,48 @@ function Home() {
         let eventList = [];
 
         if (
-          Array.isArray(data?.events)
+          Array.isArray(
+            data?.events
+          )
         ) {
-          eventList = data.events;
+
+          eventList =
+            data.events;
 
         } else if (
-          Array.isArray(data?.data)
+          Array.isArray(
+            data?.data
+          )
         ) {
-          eventList = data.data;
+
+          eventList =
+            data.data;
 
         } else if (
           Array.isArray(data)
         ) {
+
           eventList = data;
+
         }
 
         const normalizedEvents =
-          eventList.map((event) => ({
-            ...event,
+          eventList.map(
+            (event) => ({
+              ...event,
 
-            status: getEventStatus(
-              event.event_date,
-              event.start_time,
-              event.end_time
-            ),
-          }));
+              status:
+                getEventStatus(
+                  event.event_date,
+                  event.start_time,
+                  event.end_time
+                ),
+            })
+          );
 
-        setEvents(normalizedEvents);
+        setEvents(
+          normalizedEvents
+        );
 
       } catch (error) {
 
@@ -514,22 +676,32 @@ function Home() {
           error
         );
 
-        setEventsError(
-          error.response?.data?.message ||
-            "Unable to load events."
-        );
+        if (mounted) {
+
+          setEventsError(
+            error.response?.data?.message ||
+              "Unable to load events."
+          );
+
+        }
 
       } finally {
 
-        setEventsLoading(false);
+        if (mounted) {
+          setEventsLoading(false);
+        }
 
       }
+
     };
 
     loadEvents();
 
-  }, []);
+    return () => {
+      mounted = false;
+    };
 
+  }, []);
 
   // =========================================================
   // AUTO COMMITTEE SLIDER
@@ -537,7 +709,9 @@ function Home() {
 
   useEffect(() => {
 
-    if (committeeMembers.length <= 1) {
+    if (
+      committeeMembers.length <= 1
+    ) {
       return undefined;
     }
 
@@ -556,8 +730,9 @@ function Home() {
       clearInterval(interval);
     };
 
-  }, [committeeMembers.length]);
-
+  }, [
+    committeeMembers.length,
+  ]);
 
   // =========================================================
   // COMMITTEE NAVIGATION
@@ -565,7 +740,9 @@ function Home() {
 
   const previousCommittee = () => {
 
-    if (committeeMembers.length === 0) {
+    if (
+      committeeMembers.length === 0
+    ) {
       return;
     }
 
@@ -573,18 +750,24 @@ function Home() {
       (previous) => {
 
         if (previous === 0) {
-          return committeeMembers.length - 1;
+          return (
+            committeeMembers.length -
+            1
+          );
         }
 
         return previous - 1;
+
       }
     );
-  };
 
+  };
 
   const nextCommittee = () => {
 
-    if (committeeMembers.length === 0) {
+    if (
+      committeeMembers.length === 0
+    ) {
       return;
     }
 
@@ -593,8 +776,8 @@ function Home() {
         (previous + 1) %
         committeeMembers.length
     );
-  };
 
+  };
 
   // =========================================================
   // CURRENT COMMITTEE MEMBER
@@ -607,7 +790,6 @@ function Home() {
             committeeMembers.length
         ]
       : null;
-
 
   // =========================================================
   // HOME EVENTS
@@ -653,18 +835,19 @@ function Home() {
         dateA.getTime() -
         dateB.getTime()
       );
+
     });
 
     return upcoming.slice(0, 3);
 
   }, [events]);
 
-
   // =========================================================
   // RENDER
   // =========================================================
 
   return (
+
     <main className="home-page">
 
       {/* =====================================================
@@ -683,7 +866,6 @@ function Home() {
 
         </div>
 
-
         <div className="hero-container">
 
           <div className="hero-content">
@@ -697,7 +879,6 @@ function Home() {
 
             </div>
 
-
             <h1>
 
               Advancing
@@ -710,7 +891,6 @@ function Home() {
 
             </h1>
 
-
             <p className="hero-description">
 
               SNICT is dedicated to learning,
@@ -722,16 +902,23 @@ function Home() {
 
             </p>
 
+            {/* =================================================
+                HERO ACTIONS
+            ================================================= */}
 
             <div className="hero-actions">
 
               {/* =================================================
-                  SHOW ONLY WHEN USER IS LOGGED OUT
+                  BECOME MEMBER
+                  ONLY FOR LOGGED OUT USERS
+
+                  GOES TO SIGNUP
               ================================================= */}
 
               {!authLoading && !user && (
+
                 <Link
-                  to="/membership"
+                  to="/signup"
                   className="hero-primary-btn"
                 >
 
@@ -740,8 +927,8 @@ function Home() {
                   <ArrowRight size={18} />
 
                 </Link>
-              )}
 
+              )}
 
               <Link
                 to="/about"
@@ -753,7 +940,6 @@ function Home() {
               </Link>
 
             </div>
-
 
             <div className="hero-meta">
 
@@ -767,9 +953,7 @@ function Home() {
 
               </div>
 
-
               <div className="meta-divider" />
-
 
               <div className="meta-item">
 
@@ -781,9 +965,7 @@ function Home() {
 
               </div>
 
-
               <div className="meta-divider" />
-
 
               <div className="meta-item">
 
@@ -799,8 +981,9 @@ function Home() {
 
           </div>
 
-
-          {/* HERO VISUAL */}
+          {/* =================================================
+              HERO VISUAL
+          ================================================= */}
 
           <div className="hero-visual">
 
@@ -809,7 +992,6 @@ function Home() {
             <div className="visual-orbit orbit-two" />
 
             <div className="visual-orbit orbit-three" />
-
 
             <div className="medical-core">
 
@@ -827,7 +1009,6 @@ function Home() {
               <div className="core-pulse" />
 
             </div>
-
 
             <div className="medical-card medical-card-one">
 
@@ -851,7 +1032,6 @@ function Home() {
 
             </div>
 
-
             <div className="medical-card medical-card-two">
 
               <div className="medical-card-icon">
@@ -874,7 +1054,6 @@ function Home() {
 
             </div>
 
-
             <div className="medical-card medical-card-three">
 
               <Sparkles size={17} />
@@ -889,8 +1068,9 @@ function Home() {
 
         </div>
 
-
-        {/* ECG */}
+        {/* =====================================================
+            ECG
+        ===================================================== */}
 
         <div className="hero-ecg">
 
@@ -932,7 +1112,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           INTRO
       ===================================================== */}
@@ -968,7 +1147,6 @@ function Home() {
 
           </div>
 
-
           <div className="intro-highlight">
 
             <div className="highlight-line" />
@@ -988,7 +1166,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           FOCUS
       ===================================================== */}
@@ -1005,30 +1182,26 @@ function Home() {
                 OUR FOCUS
               </span>
 
-              <h2>
+              {/* =================================================
+                  LOOPING TYPING ANIMATION
+              ================================================= */}
 
-                Learn. Innovate.
+              <h2 className="typing-heading">
 
-                <span>
-                  {" "}Collaborate.
-                </span>
+                <TypingText
+                  text="Learn. Innovate. Collaborate."
+                  speed={85}
+                  deleteSpeed={45}
+                  pause={1800}
+                />
 
               </h2>
 
             </div>
 
-
-            <p>
-
-              Creating a professional environment
-              for continuous learning, knowledge
-              sharing and advancement in cardiovascular
-              interventions.
-
-            </p>
+           
 
           </div>
-
 
           <div className="focus-grid">
 
@@ -1048,11 +1221,9 @@ function Home() {
 
               </div>
 
-
               <h3>
                 Education
               </h3>
-
 
               <p>
 
@@ -1062,7 +1233,6 @@ function Home() {
                 and developments.
 
               </p>
-
 
               <Link to="/about">
 
@@ -1074,48 +1244,7 @@ function Home() {
 
             </article>
 
-
-            <article className="focus-card focus-card-featured">
-
-              <div className="focus-card-top">
-
-                <div className="focus-icon">
-
-                  <Sparkles size={27} />
-
-                </div>
-
-                <span>
-                  02
-                </span>
-
-              </div>
-
-
-              <h3>
-                Innovation
-              </h3>
-
-
-              <p>
-
-                Staying connected with technological
-                advances and emerging approaches in
-                cardiovascular interventions.
-
-              </p>
-
-
-              <Link to="/events">
-
-                Explore developments
-
-                <ArrowRight size={16} />
-
-              </Link>
-
-            </article>
-
+          
 
             <article className="focus-card">
 
@@ -1128,16 +1257,14 @@ function Home() {
                 </div>
 
                 <span>
-                  03
+                  02
                 </span>
 
               </div>
 
-
               <h3>
                 Collaboration
               </h3>
-
 
               <p>
 
@@ -1146,7 +1273,6 @@ function Home() {
                 experiences while exchanging ideas.
 
               </p>
-
 
               <Link to="/team">
 
@@ -1164,7 +1290,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           VISION
       ===================================================== */}
@@ -1181,7 +1306,6 @@ function Home() {
               OUR VISION
             </span>
 
-
             <h2>
 
               Transforming cardiovascular care
@@ -1194,7 +1318,6 @@ function Home() {
 
             </h2>
 
-
             <p>
 
               Personalized, compassionate and
@@ -1203,7 +1326,6 @@ function Home() {
               collaborative knowledge sharing.
 
             </p>
-
 
             <Link
               to="/about"
@@ -1217,7 +1339,6 @@ function Home() {
             </Link>
 
           </div>
-
 
           <div className="vision-visual">
 
@@ -1241,7 +1362,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           MISSION
       ===================================================== */}
@@ -1256,7 +1376,6 @@ function Home() {
               OUR MISSION
             </span>
 
-
             <h2>
 
               Advancing the field through
@@ -1269,7 +1388,6 @@ function Home() {
 
           </div>
 
-
           <div className="mission-content">
 
             <p>
@@ -1281,7 +1399,6 @@ function Home() {
               and quality of life.
 
             </p>
-
 
             <Link
               to="/about"
@@ -1300,7 +1417,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           EVENTS
       ===================================================== */}
@@ -1317,17 +1433,20 @@ function Home() {
                 EVENTS & CME
               </span>
 
+              {/* =================================================
+                  LOOPING TYPING ANIMATION
+              ================================================= */}
 
-              <h2>
+              <h2 className="typing-heading">
 
-                Upcoming
-
-                <span>
-                  {" "}Events.
-                </span>
+                <TypingText
+                  text="Upcoming Events."
+                  speed={85}
+                  deleteSpeed={45}
+                  pause={1800}
+                />
 
               </h2>
-
 
               <p>
 
@@ -1338,7 +1457,6 @@ function Home() {
               </p>
 
             </div>
-
 
             <Link
               to="/events"
@@ -1353,8 +1471,9 @@ function Home() {
 
           </div>
 
-
-          {/* LOADING */}
+          {/* =================================================
+              LOADING
+          ================================================= */}
 
           {eventsLoading && (
 
@@ -1370,8 +1489,9 @@ function Home() {
 
           )}
 
-
-          {/* ERROR */}
+          {/* =================================================
+              ERROR
+          ================================================= */}
 
           {!eventsLoading &&
             eventsError && (
@@ -1388,8 +1508,9 @@ function Home() {
 
             )}
 
-
-          {/* EMPTY */}
+          {/* =================================================
+              EMPTY
+          ================================================= */}
 
           {!eventsLoading &&
             !eventsError &&
@@ -1403,11 +1524,9 @@ function Home() {
 
                 </div>
 
-
                 <h3>
                   No upcoming events
                 </h3>
-
 
                 <p>
 
@@ -1415,7 +1534,6 @@ function Home() {
                   here when they are published.
 
                 </p>
-
 
                 <Link
                   to="/events"
@@ -1432,8 +1550,9 @@ function Home() {
 
             )}
 
-
-          {/* EVENT CARDS */}
+          {/* =================================================
+              EVENT CARDS
+          ================================================= */}
 
           {!eventsLoading &&
             !eventsError &&
@@ -1481,7 +1600,6 @@ function Home() {
 
                         )}
 
-
                         <span
                           className={`home-event-status ${event.status}`}
                         >
@@ -1496,7 +1614,6 @@ function Home() {
 
                       </div>
 
-
                       {/* CONTENT */}
 
                       <div className="home-event-content">
@@ -1508,14 +1625,12 @@ function Home() {
 
                         </span>
 
-
                         <h3>
 
                           {event.title ||
                             "SNICT Event"}
 
                         </h3>
-
 
                         {event.doctor_name && (
 
@@ -1537,14 +1652,12 @@ function Home() {
 
                         )}
 
-
                         <p>
 
                           {event.description ||
                             "Professional learning opportunity organised by SNICT."}
 
                         </p>
-
 
                         <div className="home-event-meta">
 
@@ -1557,7 +1670,6 @@ function Home() {
                             )}
 
                           </span>
-
 
                           {event.start_time && (
 
@@ -1579,7 +1691,6 @@ function Home() {
 
                           )}
 
-
                           {event.venue && (
 
                             <span>
@@ -1598,7 +1709,6 @@ function Home() {
                           )}
 
                         </div>
-
 
                         <div className="home-event-bottom">
 
@@ -1623,7 +1733,6 @@ function Home() {
 
                           </div>
 
-
                           <Link
                             to={`/events/${event.id}`}
                             className="home-event-link"
@@ -1642,6 +1751,7 @@ function Home() {
                     </article>
 
                   );
+
                 })}
 
               </div>
@@ -1651,7 +1761,6 @@ function Home() {
         </div>
 
       </section>
-
 
       {/* =====================================================
           COMMITTEE
@@ -1669,17 +1778,20 @@ function Home() {
                 OUR PEOPLE
               </span>
 
+              {/* =================================================
+                  LOOPING TYPING ANIMATION
+              ================================================= */}
 
-              <h2>
+              <h2 className="typing-heading">
 
-                Meet Our
-
-                <span>
-                  {" "}Committee.
-                </span>
+                <TypingText
+                  text="Meet Our Committee."
+                  speed={85}
+                  deleteSpeed={45}
+                  pause={1800}
+                />
 
               </h2>
-
 
               <p>
 
@@ -1691,7 +1803,6 @@ function Home() {
               </p>
 
             </div>
-
 
             <Link
               to="/committees"
@@ -1706,8 +1817,9 @@ function Home() {
 
           </div>
 
-
-          {/* LOADING */}
+          {/* =================================================
+              LOADING
+          ================================================= */}
 
           {committeeLoading && (
 
@@ -1723,8 +1835,9 @@ function Home() {
 
           )}
 
-
-          {/* ERROR */}
+          {/* =================================================
+              ERROR
+          ================================================= */}
 
           {!committeeLoading &&
             committeeError && (
@@ -1741,8 +1854,9 @@ function Home() {
 
             )}
 
-
-          {/* EMPTY */}
+          {/* =================================================
+              EMPTY
+          ================================================= */}
 
           {!committeeLoading &&
             !committeeError &&
@@ -1763,15 +1877,15 @@ function Home() {
 
             )}
 
-
-          {/* COMMITTEE SLIDER */}
+          {/* =================================================
+              COMMITTEE SLIDER
+          ================================================= */}
 
           {!committeeLoading &&
             !committeeError &&
             currentCommittee && (
 
               <div className="home-committee-slider">
-
 
                 <button
                   type="button"
@@ -1785,7 +1899,6 @@ function Home() {
                   <ChevronLeft size={20} />
 
                 </button>
-
 
                 <article
                   className="home-committee-slide-card"
@@ -1829,7 +1942,6 @@ function Home() {
 
                   </div>
 
-
                   {/* MEMBER CONTENT */}
 
                   <div className="home-committee-content">
@@ -1843,14 +1955,12 @@ function Home() {
 
                     </span>
 
-
                     <h3>
 
                       {currentCommittee.name ||
                         "Committee Member"}
 
                     </h3>
-
 
                     {currentCommittee.bio && (
 
@@ -1859,7 +1969,6 @@ function Home() {
                       </p>
 
                     )}
-
 
                     <Link
                       to="/committees"
@@ -1875,7 +1984,6 @@ function Home() {
                   </div>
 
                 </article>
-
 
                 <button
                   type="button"
@@ -1894,8 +2002,9 @@ function Home() {
 
             )}
 
-
-          {/* DOTS */}
+          {/* =================================================
+              DOTS
+          ================================================= */}
 
           {!committeeLoading &&
             committeeMembers.length > 1 && (
@@ -1935,6 +2044,9 @@ function Home() {
 
             )}
 
+          {/* =================================================
+              BOTTOM
+          ================================================= */}
 
           {!committeeLoading &&
             committeeMembers.length > 0 && (
@@ -1960,7 +2072,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           EVENTS CTA
       ===================================================== */}
@@ -1974,7 +2085,6 @@ function Home() {
 
         </div>
 
-
         <div className="section-container events-container">
 
           <div>
@@ -1982,7 +2092,6 @@ function Home() {
             <span className="section-label">
               EVENTS & CME
             </span>
-
 
             <h2>
 
@@ -1996,7 +2105,6 @@ function Home() {
 
             </h2>
 
-
             <p>
 
               Participate in meetings and professional
@@ -2007,7 +2115,6 @@ function Home() {
             </p>
 
           </div>
-
 
           <Link
             to="/events"
@@ -2024,7 +2131,6 @@ function Home() {
 
       </section>
 
-
       {/* =====================================================
           MEMBERSHIP CTA
       ===================================================== */}
@@ -2039,7 +2145,6 @@ function Home() {
               JOIN SNICT
             </span>
 
-
             <h2>
 
               Be part of the
@@ -2049,7 +2154,6 @@ function Home() {
               </span>
 
             </h2>
-
 
             <p>
 
@@ -2063,9 +2167,9 @@ function Home() {
 
           </div>
 
-
           {/* =================================================
-              CREATE ACCOUNT ONLY FOR LOGGED OUT USERS
+              CREATE ACCOUNT
+              ONLY FOR LOGGED OUT USERS
           ================================================= */}
 
           {!authLoading && !user && (
@@ -2087,10 +2191,9 @@ function Home() {
 
       </section>
 
-
     </main>
+
   );
 }
-
 
 export default Home;

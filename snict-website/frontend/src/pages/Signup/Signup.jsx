@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Eye,
@@ -7,18 +7,22 @@ import {
   Check,
   X,
   Loader2,
+  Camera,
+  Trash2,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 
 import api from "../../services/api";
 
-import snictLogo from "../../assets/snict-logo.jpeg";
+import snictLogo from "../../assets/snict-logo.png";
 
 import "./Signup.css";
 
 function Signup() {
   const navigate = useNavigate();
+
+  const fileInputRef = useRef(null);
 
   // =========================================================
   // FORM STATE
@@ -35,7 +39,19 @@ function Signup() {
     sex: "",
     address: "",
     bloodGroup: "",
+    designation: "",
+    bio: "",
   });
+
+  // =========================================================
+  // PROFILE IMAGE
+  // =========================================================
+
+  const [profileImage, setProfileImage] =
+    useState(null);
+
+  const [profilePreview, setProfilePreview] =
+    useState("");
 
   // =========================================================
   // UI STATE
@@ -70,6 +86,25 @@ function Signup() {
     useState([]);
 
   // =========================================================
+  // BIO WORD COUNT
+  // =========================================================
+
+  const getWordCount = (text) => {
+    if (!text || !text.trim()) {
+      return 0;
+    }
+
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .length;
+  };
+
+  const bioWordCount =
+    getWordCount(form.bio);
+
+  // =========================================================
   // HANDLE INPUT
   // =========================================================
 
@@ -81,18 +116,43 @@ function Signup() {
 
     let updatedValue = value;
 
-    // Username always lowercase
+    // =====================================================
+    // USERNAME
+    // =====================================================
+
     if (name === "username") {
       updatedValue = value
         .toLowerCase()
         .replace(/[^a-z0-9_]/g, "");
     }
 
-    // Mobile only numbers
+    // =====================================================
+    // MOBILE
+    // =====================================================
+
     if (name === "mobile") {
       updatedValue = value
         .replace(/\D/g, "")
         .slice(0, 10);
+    }
+
+    // =====================================================
+    // BIO
+    // =====================================================
+
+    if (name === "bio") {
+      const words = value
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      if (
+        words.length > 300
+      ) {
+        updatedValue = words
+          .slice(0, 300)
+          .join(" ");
+      }
     }
 
     setForm((previous) => ({
@@ -108,7 +168,10 @@ function Signup() {
       setSuccess("");
     }
 
-    // Reset username status when username changes
+    // =====================================================
+    // RESET USERNAME STATUS
+    // =====================================================
+
     if (name === "username") {
       setUsernameStatus("idle");
       setUsernameMessage("");
@@ -117,12 +180,118 @@ function Signup() {
   };
 
   // =========================================================
+  // PROFILE IMAGE CHANGE
+  // =========================================================
+
+  const handleProfileImageChange = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    // =====================================================
+    // FILE TYPE
+    // =====================================================
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
+      setError(
+        "Please select a JPG, PNG or WEBP image."
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    // =====================================================
+    // FILE SIZE
+    // =====================================================
+
+    const maxSize =
+      5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setError(
+        "Profile image must be less than 5 MB."
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    // =====================================================
+    // CREATE PREVIEW
+    // =====================================================
+
+    const previewUrl =
+      URL.createObjectURL(file);
+
+    setProfileImage(file);
+
+    setProfilePreview(
+      previewUrl
+    );
+  };
+
+  // =========================================================
+  // REMOVE PROFILE IMAGE
+  // =========================================================
+
+  const removeProfileImage = () => {
+    if (profilePreview) {
+      URL.revokeObjectURL(
+        profilePreview
+      );
+    }
+
+    setProfileImage(null);
+    setProfilePreview("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // =========================================================
+  // CLEAN IMAGE PREVIEW
+  // =========================================================
+
+  useEffect(() => {
+    return () => {
+      if (profilePreview) {
+        URL.revokeObjectURL(
+          profilePreview
+        );
+      }
+    };
+  }, [profilePreview]);
+
+  // =========================================================
   // CHECK USERNAME
   // =========================================================
 
   useEffect(() => {
     const username =
-      form.username.trim().toLowerCase();
+      form.username
+        .trim()
+        .toLowerCase();
 
     if (!username) {
       setUsernameStatus("idle");
@@ -143,7 +312,11 @@ function Signup() {
       return;
     }
 
-    if (!/^[a-z0-9_]+$/.test(username)) {
+    if (
+      !/^[a-z0-9_]+$/.test(
+        username
+      )
+    ) {
       setUsernameStatus("invalid");
 
       setUsernameMessage(
@@ -158,7 +331,9 @@ function Signup() {
     const timer = setTimeout(
       async () => {
         try {
-          setUsernameStatus("checking");
+          setUsernameStatus(
+            "checking"
+          );
 
           setUsernameMessage(
             "Checking username..."
@@ -185,7 +360,9 @@ function Signup() {
               "Username available"
             );
 
-            setUsernameSuggestions([]);
+            setUsernameSuggestions(
+              []
+            );
           } else {
             setUsernameStatus(
               "taken"
@@ -215,7 +392,9 @@ function Signup() {
             "Unable to check username"
           );
 
-          setUsernameSuggestions([]);
+          setUsernameSuggestions(
+            []
+          );
         }
       },
       500
@@ -238,7 +417,9 @@ function Signup() {
       username: suggestion,
     }));
 
-    setUsernameStatus("checking");
+    setUsernameStatus(
+      "checking"
+    );
 
     setUsernameMessage(
       "Checking username..."
@@ -266,6 +447,12 @@ function Signup() {
 
     const address =
       form.address.trim();
+
+    const designation =
+      form.designation.trim();
+
+    const bio =
+      form.bio.trim();
 
     const age =
       Number(form.age);
@@ -335,6 +522,20 @@ function Signup() {
     }
 
     if (
+      designation.length >
+      150
+    ) {
+      return "Designation must not exceed 150 characters.";
+    }
+
+    if (
+      getWordCount(bio) >
+      300
+    ) {
+      return "Bio must not exceed 300 words.";
+    }
+
+    if (
       form.password.length < 8
     ) {
       return "Password must be at least 8 characters.";
@@ -380,40 +581,106 @@ function Signup() {
     try {
       setLoading(true);
 
+      // =====================================================
+      // MULTIPART FORM DATA
+      // =====================================================
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "fullName",
+        form.fullName.trim()
+      );
+
+      formData.append(
+        "username",
+        form.username
+          .trim()
+          .toLowerCase()
+      );
+
+      formData.append(
+        "email",
+        form.email
+          .trim()
+          .toLowerCase()
+      );
+
+      formData.append(
+        "mobile",
+        form.mobile.trim()
+      );
+
+      formData.append(
+        "password",
+        form.password
+      );
+
+      formData.append(
+        "age",
+        String(
+          Number(form.age)
+        )
+      );
+
+      formData.append(
+        "sex",
+        form.sex
+      );
+
+      formData.append(
+        "address",
+        form.address.trim()
+      );
+
+      formData.append(
+        "bloodGroup",
+        form.bloodGroup
+      );
+
+      // =====================================================
+      // NEW PROFILE FIELDS
+      // =====================================================
+
+      formData.append(
+        "designation",
+        form.designation.trim()
+      );
+
+      formData.append(
+        "bio",
+        form.bio.trim()
+      );
+
+      // =====================================================
+      // PROFILE IMAGE
+      // IMPORTANT:
+      // This MUST match multer:
+      //
+      // uploadProfile.single("profileImage")
+      // =====================================================
+
+      if (profileImage) {
+        formData.append(
+          "profileImage",
+          profileImage
+        );
+      }
+
+      // =====================================================
+      // SEND REQUEST
+      // =====================================================
+
       const response =
         await api.post(
           "/auth/signup",
+          formData,
           {
-            fullName:
-              form.fullName.trim(),
-
-            username:
-              form.username
-                .trim()
-                .toLowerCase(),
-
-            email:
-              form.email
-                .trim()
-                .toLowerCase(),
-
-            mobile:
-              form.mobile.trim(),
-
-            password:
-              form.password,
-
-            age:
-              Number(form.age),
-
-            sex:
-              form.sex,
-
-            address:
-              form.address.trim(),
-
-            bloodGroup:
-              form.bloodGroup,
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
           }
         );
 
@@ -463,6 +730,13 @@ function Signup() {
       ) {
         setError(
           "Please check your signup information."
+        );
+      } else if (
+        error.response?.status ===
+        413
+      ) {
+        setError(
+          "Profile image is too large."
         );
       } else if (
         error.response?.status ===
@@ -616,6 +890,115 @@ function Signup() {
           noValidate
         >
 
+          {/* =================================================
+              PROFILE PHOTO
+          ================================================= */}
+
+          <div className="profile-photo-section">
+
+            <div className="profile-photo-preview">
+
+              {profilePreview ? (
+
+                <img
+                  src={profilePreview}
+                  alt="Profile preview"
+                />
+
+              ) : (
+
+                <div className="profile-photo-placeholder">
+
+                  <Camera
+                    size={32}
+                  />
+
+                  <span>
+                    Add Photo
+                  </span>
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            <div className="profile-photo-actions">
+
+              <div>
+
+                <h3>
+                  Profile Photo
+                </h3>
+
+                <p>
+                  Add a professional profile
+                  photo for your SNICT profile.
+                </p>
+
+                <small>
+                  JPG, PNG or WEBP • Max 5 MB
+                </small>
+
+              </div>
+
+
+              <div className="profile-photo-buttons">
+
+                <button
+                  type="button"
+                  className="profile-upload-button"
+                  onClick={() =>
+                    fileInputRef.current?.click()
+                  }
+                >
+
+                  <Camera size={16} />
+
+                  {profileImage
+                    ? "Change Photo"
+                    : "Add Photo"}
+
+                </button>
+
+
+                {profileImage && (
+
+                  <button
+                    type="button"
+                    className="profile-remove-button"
+                    onClick={
+                      removeProfileImage
+                    }
+                    aria-label="Remove profile photo"
+                  >
+
+                    <Trash2 size={16} />
+
+                    Remove
+
+                  </button>
+
+                )}
+
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={
+                  handleProfileImageChange
+                }
+                hidden
+              />
+
+            </div>
+
+          </div>
+
+
           <div className="form-grid">
 
             {/* =================================================
@@ -639,6 +1022,41 @@ function Signup() {
                 maxLength={100}
                 required
               />
+
+            </div>
+
+
+            {/* =================================================
+                DESIGNATION
+            ================================================= */}
+
+            <div className="form-field full">
+
+              <label htmlFor="designation">
+
+                Designation
+
+               
+               
+
+              </label>
+
+              <input
+                id="designation"
+                type="text"
+                name="designation"
+                value={form.designation}
+                onChange={handleChange}
+                placeholder="e.g. Cardiovascular Technologist"
+                maxLength={150}
+                autoComplete="organization-title"
+              />
+
+              <small className="field-help">
+
+                Maximum 150 characters.
+
+              </small>
 
             </div>
 
@@ -703,8 +1121,6 @@ function Signup() {
               </div>
 
 
-              {/* USERNAME MESSAGE */}
-
               {usernameMessage && (
                 <small
                   className={`username-message ${usernameStatus}`}
@@ -713,8 +1129,6 @@ function Signup() {
                 </small>
               )}
 
-
-              {/* USERNAME SUGGESTIONS */}
 
               {usernameSuggestions.length >
                 0 && (
@@ -959,6 +1373,52 @@ function Signup() {
 
 
             {/* =================================================
+                BIO
+            ================================================= */}
+
+            <div className="form-field full">
+
+              <label htmlFor="bio">
+
+                Professional Bio
+
+                
+                
+
+              </label>
+
+              <textarea
+                id="bio"
+                name="bio"
+                value={form.bio}
+                onChange={handleChange}
+                placeholder="Tell the SNICT community about your professional background, experience, interests and areas of expertise..."
+                rows="6"
+                maxLength={3000}
+              />
+
+              <div className="bio-counter">
+
+                <span>
+                  Maximum 300 words
+                </span>
+
+                <span
+                  className={
+                    bioWordCount >= 280
+                      ? "bio-counter-warning"
+                      : ""
+                  }
+                >
+                  {bioWordCount} / 300 words
+                </span>
+
+              </div>
+
+            </div>
+
+
+            {/* =================================================
                 PASSWORD
             ================================================= */}
 
@@ -1088,17 +1548,36 @@ function Signup() {
             }
           >
 
-            <span>
-              {loading
-                ? "Creating account..."
-                : "Create SNICT Account"}
-            </span>
+            {loading ? (
 
-            {!loading && (
-              <ArrowRight
-                size={18}
-                aria-hidden="true"
-              />
+              <>
+
+                <Loader2
+                  size={18}
+                  className="username-spinner"
+                />
+
+                <span>
+                  Creating account...
+                </span>
+
+              </>
+
+            ) : (
+
+              <>
+
+                <span>
+                  Create SNICT Account
+                </span>
+
+                <ArrowRight
+                  size={18}
+                  aria-hidden="true"
+                />
+
+              </>
+
             )}
 
           </button>

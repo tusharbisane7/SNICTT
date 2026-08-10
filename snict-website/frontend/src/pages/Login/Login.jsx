@@ -20,7 +20,7 @@ import "./Login.css";
 // SNICT LOGO
 // Change this path only if your logo is stored elsewhere.
 // =========================================================
-import snictLogo from "../../assets/snict-logo.jpeg";
+import snictLogo from "../../assets/snict-logo.png";
 
 
 function Login() {

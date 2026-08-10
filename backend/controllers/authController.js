@@ -33,7 +33,6 @@ const createExpiry = () => {
 //
 // Because frontend and backend are cross-site in production,
 // SameSite MUST be "none" and Secure MUST be true.
-//
 // =========================================================
 
 const authCookieOptions = {
@@ -73,6 +72,22 @@ const setAuthCookie = (
 };
 
 // =========================================================
+// BIO WORD COUNT
+// =========================================================
+
+const getWordCount = (text) => {
+  if (!text) {
+    return 0;
+  }
+
+  return String(text)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
+};
+
+// =========================================================
 // CLEAN USER
 // =========================================================
 
@@ -105,6 +120,19 @@ const cleanUser = (
 
     bloodGroup:
       user.blood_group,
+
+    // =====================================================
+    // NEW PROFILE FIELDS
+    // =====================================================
+
+    profileImageUrl:
+      user.profile_image_url || null,
+
+    designation:
+      user.designation || "",
+
+    bio:
+      user.bio || "",
 
     createdAt:
       user.created_at,
@@ -220,11 +248,8 @@ const checkUsername =
         await pool.query(
           `
           SELECT id
-
           FROM users
-
           WHERE username = $1
-
           LIMIT 1
           `,
           [
@@ -319,6 +344,10 @@ const registerUser =
         sex,
         address,
         bloodGroup,
+
+        // NEW
+        designation,
+        bio,
       } = req.body;
 
       // =====================================================
@@ -365,6 +394,16 @@ const registerUser =
           /\D/g,
           ""
         );
+
+      const cleanDesignation =
+        String(
+          designation || ""
+        ).trim();
+
+      const cleanBio =
+        String(
+          bio || ""
+        ).trim();
 
       // =====================================================
       // MOBILE VALIDATION
@@ -463,6 +502,83 @@ const registerUser =
       }
 
       // =====================================================
+      // BIO VALIDATION
+      // =====================================================
+
+      const bioWordCount =
+        getWordCount(
+          cleanBio
+        );
+
+      if (
+        bioWordCount > 300
+      ) {
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Bio must not exceed 300 words",
+        });
+      }
+
+      // =====================================================
+      // DESIGNATION VALIDATION
+      // =====================================================
+
+      if (
+        cleanDesignation.length >
+        150
+      ) {
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Designation must not exceed 150 characters",
+        });
+      }
+
+      // =====================================================
+      // PROFILE IMAGE
+      // =====================================================
+
+      let profileImageUrl =
+        null;
+
+      if (req.file) {
+
+        // If multer stores the file locally
+        if (req.file.path) {
+
+          profileImageUrl =
+            `/uploads/profile/${req.file.filename}`;
+
+        }
+
+        // If cloud storage provides URL
+        else if (
+          req.file.path
+        ) {
+
+          profileImageUrl =
+            req.file.path;
+
+        }
+
+        // Some cloud storage systems
+        // provide location
+        else if (
+          req.file.location
+        ) {
+
+          profileImageUrl =
+            req.file.location;
+
+        }
+      }
+
+      // =====================================================
       // START TRANSACTION
       // =====================================================
 
@@ -482,9 +598,7 @@ const registerUser =
             username,
             email,
             mobile
-
           FROM users
-
           WHERE
             email = $1
             OR username = $2
@@ -576,9 +690,11 @@ const registerUser =
             age,
             sex,
             address,
-            blood_group
+            blood_group,
+            profile_image_url,
+            designation,
+            bio
           )
-
           VALUES
           (
             $1,
@@ -589,9 +705,11 @@ const registerUser =
             $6,
             $7,
             $8,
-            $9
+            $9,
+            $10,
+            $11,
+            $12
           )
-
           RETURNING *
           `,
           [
@@ -620,6 +738,12 @@ const registerUser =
             String(
               bloodGroup
             ).trim(),
+
+            profileImageUrl,
+
+            cleanDesignation,
+
+            cleanBio,
           ]
         );
 
@@ -751,13 +875,10 @@ const loginUser =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE
             email = $1
             OR username = $1
-
           LIMIT 1
           `,
           [
@@ -888,11 +1009,8 @@ const forgotPassword =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE email = $1
-
           LIMIT 1
           `,
           [
@@ -942,13 +1060,11 @@ const forgotPassword =
       await pool.query(
         `
         UPDATE users
-
         SET
           reset_otp_hash = $1,
           reset_otp_expires = $2,
           updated_at =
             CURRENT_TIMESTAMP
-
         WHERE id = $3
         `,
         [
@@ -1111,11 +1227,8 @@ const resetPassword =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE email = $1
-
           LIMIT 1
           `,
           [
@@ -1208,14 +1321,12 @@ const resetPassword =
       await pool.query(
         `
         UPDATE users
-
         SET
           password_hash = $1,
           reset_otp_hash = NULL,
           reset_otp_expires = NULL,
           updated_at =
             CURRENT_TIMESTAMP
-
         WHERE id = $2
         `,
         [
@@ -1325,11 +1436,8 @@ const changePassword =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE id = $1
-
           LIMIT 1
           `,
           [
@@ -1390,12 +1498,10 @@ const changePassword =
       await pool.query(
         `
         UPDATE users
-
         SET
           password_hash = $1,
           updated_at =
             CURRENT_TIMESTAMP
-
         WHERE id = $2
         `,
         [
@@ -1458,11 +1564,8 @@ const getProfile =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE id = $1
-
           LIMIT 1
           `,
           [
@@ -1531,6 +1634,10 @@ const updateProfile =
         sex,
         address,
         bloodGroup,
+
+        // NEW
+        designation,
+        bio,
       } = req.body;
 
       // =====================================================
@@ -1587,7 +1694,19 @@ const updateProfile =
         String(sex).trim();
 
       const cleanBloodGroup =
-        String(bloodGroup).trim();
+        String(
+          bloodGroup
+        ).trim();
+
+      const cleanDesignation =
+        String(
+          designation || ""
+        ).trim();
+
+      const cleanBio =
+        String(
+          bio || ""
+        ).trim();
 
       const numericAge =
         Number(age);
@@ -1670,6 +1789,44 @@ const updateProfile =
       }
 
       // =====================================================
+      // DESIGNATION VALIDATION
+      // =====================================================
+
+      if (
+        cleanDesignation.length >
+        150
+      ) {
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Designation must not exceed 150 characters",
+        });
+      }
+
+      // =====================================================
+      // BIO VALIDATION
+      // =====================================================
+
+      const bioWordCount =
+        getWordCount(
+          cleanBio
+        );
+
+      if (
+        bioWordCount > 300
+      ) {
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Bio must not exceed 300 words",
+        });
+      }
+
+      // =====================================================
       // CHECK DUPLICATES
       // =====================================================
 
@@ -1681,18 +1838,14 @@ const updateProfile =
             username,
             email,
             mobile
-
           FROM users
-
           WHERE
             (
               username = $1
               OR email = $2
               OR mobile = $3
             )
-
             AND id != $4
-
           LIMIT 1
           `,
           [
@@ -1752,6 +1905,64 @@ const updateProfile =
       }
 
       // =====================================================
+      // GET CURRENT PROFILE IMAGE
+      // =====================================================
+
+      const currentUserResult =
+        await pool.query(
+          `
+          SELECT
+            profile_image_url
+          FROM users
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [
+            req.userId,
+          ]
+        );
+
+      if (
+        currentUserResult.rows.length ===
+        0
+      ) {
+
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "User not found",
+        });
+      }
+
+      let profileImageUrl =
+        currentUserResult.rows[0]
+          .profile_image_url;
+
+      // =====================================================
+      // NEW PROFILE IMAGE
+      // =====================================================
+
+      if (req.file) {
+
+        if (
+          req.file.location
+        ) {
+
+          profileImageUrl =
+            req.file.location;
+
+        } else if (
+          req.file.path
+        ) {
+
+          profileImageUrl =
+            `/uploads/profile/${req.file.filename}`;
+
+        }
+      }
+
+      // =====================================================
       // UPDATE PROFILE
       // =====================================================
 
@@ -1759,7 +1970,6 @@ const updateProfile =
         await pool.query(
           `
           UPDATE users
-
           SET
             full_name = $1,
             username = $2,
@@ -1769,11 +1979,12 @@ const updateProfile =
             sex = $6,
             address = $7,
             blood_group = $8,
+            profile_image_url = $9,
+            designation = $10,
+            bio = $11,
             updated_at =
               CURRENT_TIMESTAMP
-
-          WHERE id = $9
-
+          WHERE id = $12
           RETURNING *
           `,
           [
@@ -1785,6 +1996,9 @@ const updateProfile =
             cleanSex,
             cleanAddress,
             cleanBloodGroup,
+            profileImageUrl,
+            cleanDesignation,
+            cleanBio,
             req.userId,
           ]
         );
@@ -1863,6 +2077,87 @@ const updateProfile =
   };
 
 // =========================================================
+// DELETE PROFILE PHOTO
+// DELETE /api/auth/profile/photo
+// =========================================================
+
+const deleteProfilePhoto =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      if (!req.userId) {
+
+        return res.status(401).json({
+          success: false,
+
+          message:
+            "Authentication required",
+        });
+      }
+
+      const result =
+        await pool.query(
+          `
+          UPDATE users
+          SET
+            profile_image_url = NULL,
+            updated_at =
+              CURRENT_TIMESTAMP
+          WHERE id = $1
+          RETURNING *
+          `,
+          [
+            req.userId,
+          ]
+        );
+
+      if (
+        result.rows.length ===
+        0
+      ) {
+
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "User not found",
+        });
+      }
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Profile photo deleted successfully",
+
+        user:
+          cleanUser(
+            result.rows[0]
+          ),
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Delete profile photo error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+
+        message:
+          "Unable to delete profile photo",
+      });
+    }
+  };
+
+// =========================================================
 // LOGOUT
 // POST /api/auth/logout
 // =========================================================
@@ -1914,6 +2209,8 @@ module.exports = {
   getProfile,
 
   updateProfile,
+
+  deleteProfilePhoto,
 
   logoutUser,
 

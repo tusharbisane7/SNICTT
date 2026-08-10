@@ -25,7 +25,7 @@ import { useAuth } from "../context/AuthContext";
 
 import api from "../services/api";
 
-import snictLogo from "../assets/snict-logo.jpeg";
+import snictLogo from "../assets/snict-logo.png";
 
 import "./Navbar.css";
 
@@ -718,7 +718,7 @@ function Navbar() {
             {/* =================================================
                 MEMBERSHIP
             ================================================= */}
-
+{/* 
             <NavLink
               to="/membership"
               className={({ isActive }) =>
@@ -730,7 +730,7 @@ function Navbar() {
               }
             >
               Membership
-            </NavLink>
+            </NavLink> */}
 
 
             {/* =================================================
@@ -1073,20 +1073,7 @@ function Navbar() {
                 </Link>
 
 
-                <Link
-                  to="/admin/login"
-                  className="navbar-admin-login"
-                >
 
-                  <ShieldCheck
-                    size={15}
-                  />
-
-                  <span>
-                    Admin
-                  </span>
-
-                </Link>
 
               </>
 
@@ -1504,7 +1491,7 @@ function Navbar() {
 
             {/* MEMBERSHIP */}
 
-            <NavLink
+            {/* <NavLink
               to="/membership"
               onClick={closeMenu}
               className={({ isActive }) =>
@@ -1524,7 +1511,7 @@ function Navbar() {
                 size={16}
               />
 
-            </NavLink>
+            </NavLink> */}
 
 
             {/* CONTACT */}
@@ -1878,21 +1865,7 @@ function Navbar() {
                   </Link>
 
 
-                  <Link
-                    to="/admin/login"
-                    className="mobile-admin-login"
-                    onClick={closeMenu}
-                  >
 
-                    <ShieldCheck
-                      size={17}
-                    />
-
-                    <span>
-                      Admin Login
-                    </span>
-
-                  </Link>
 
                 </div>
 

@@ -125,7 +125,7 @@
 .dashboard-loading p {
   margin: 0;
 
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -236,7 +236,7 @@
 
   color: var(--dash-primary);
 
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 850;
 
   letter-spacing: 0.16em;
@@ -284,7 +284,7 @@
 
   color: var(--dash-muted);
 
-  font-size: 11px;
+  font-size: 14px;
 
   line-height: 1.7;
 }
@@ -364,7 +364,7 @@
 .dashboard-member-info strong {
   color: var(--dash-text);
 
-  font-size: 12px;
+  font-size: 15px;
 
   overflow: hidden;
 
@@ -376,7 +376,7 @@
 .dashboard-member-info span {
   color: var(--dash-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 
   overflow: hidden;
 
@@ -395,7 +395,7 @@
 
   color: var(--dash-success);
 
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 750;
 }
 
@@ -491,7 +491,7 @@
 .dashboard-stat-content span {
   color: var(--dash-muted);
 
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 650;
 
   white-space: nowrap;
@@ -646,7 +646,7 @@
 }
 
 .dashboard-event-date span {
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
 
   text-transform: uppercase;
@@ -665,7 +665,7 @@
 }
 
 .dashboard-event-date small {
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 750;
 
   text-transform: uppercase;
@@ -682,7 +682,7 @@
 .dashboard-event-type {
   color: var(--dash-primary);
 
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 850;
 
   letter-spacing: 0.12em;
@@ -708,7 +708,7 @@
 
   color: var(--dash-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .dashboard-event-meta {
@@ -729,7 +729,7 @@
 
   color: var(--dash-muted);
 
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .dashboard-event-meta svg {
@@ -761,7 +761,7 @@
   background:
     var(--dash-primary);
 
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 750;
 
   text-decoration: none;
@@ -839,7 +839,7 @@
 
   color: var(--dash-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 
   line-height: 1.6;
 }
@@ -854,7 +854,7 @@
 
   color: var(--dash-primary);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
   text-decoration: none;
@@ -948,14 +948,14 @@
 .dashboard-service-content strong {
   color: var(--dash-text);
 
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .dashboard-service-content span {
   color: var(--dash-muted);
 
-  font-size: 8px;
+  font-size: 11px;
 
   overflow: hidden;
 
@@ -1023,7 +1023,7 @@
 
   color: var(--dash-primary);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
   text-decoration: none;
@@ -1067,7 +1067,7 @@
   background:
     var(--dash-danger-bg);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 
@@ -1166,7 +1166,7 @@
 .dashboard-booking-info strong {
   color: var(--dash-text);
 
-  font-size: 10px;
+  font-size: 13px;
 
   overflow: hidden;
 
@@ -1178,7 +1178,7 @@
 .dashboard-booking-info span {
   color: var(--dash-light);
 
-  font-size: 8px;
+  font-size: 11px;
 }
 
 
@@ -1196,13 +1196,13 @@
 .dashboard-booking-middle span {
   color: var(--dash-muted);
 
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .dashboard-booking-middle strong {
   color: var(--dash-text);
 
-  font-size: 11px;
+  font-size: 14px;
 }
 
 
@@ -1242,7 +1242,7 @@
 
   border-radius: 20px;
 
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 800;
 
   line-height: 1;
@@ -1353,7 +1353,7 @@
 
   border-radius: 20px;
 
-  font-size: 7px;
+  font-size: 10px;
 
   font-weight: 750;
 
@@ -1548,7 +1548,7 @@
 
   color: var(--dash-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 
   line-height: 1.7;
 }
@@ -1700,7 +1700,7 @@
   }
 
   .dashboard-welcome-content p {
-    font-size: 10px;
+    font-size: 13px;
   }
 
   .dashboard-member-card {
@@ -1743,7 +1743,7 @@
   }
 
   .dashboard-stat-content span {
-    font-size: 7px;
+    font-size: 10px;
   }
 
   .dashboard-card-header,
@@ -1797,11 +1797,11 @@
   }
 
   .dashboard-service-content strong {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .dashboard-service-content span {
-    font-size: 7px;
+    font-size: 10px;
   }
 
   .dashboard-booking-item {
@@ -1815,7 +1815,7 @@
 
   .dashboard-booking-status,
   .dashboard-payment-status {
-    font-size: 6.5px;
+    font-size: 9px;
 
     min-height: 21px;
 
@@ -1917,4 +1917,521 @@
       0.01ms !important;
   }
 
+}
+
+/* =========================================================
+   UPCOMING BOOKED EVENTS — PREMIUM SLIDER
+   Shows confirmed + payment-verified upcoming bookings
+========================================================= */
+
+.dashboard-upcoming-event-slider {
+  position: relative;
+  overflow: hidden;
+  animation: upcomingEventSlideIn 0.45s cubic-bezier(.22,.61,.36,1) both;
+}
+
+.dashboard-upcoming-booked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  margin-top: 11px;
+  padding: 7px 12px;
+  border: 1px solid #b7e3cd;
+  border-radius: 999px;
+  color: var(--dash-success);
+  background: var(--dash-success-bg);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  box-shadow: 0 5px 16px rgba(22,132,91,.08);
+  animation: verifiedBadgeIn .5s ease both;
+}
+
+.dashboard-upcoming-booked-badge svg {
+  flex-shrink: 0;
+}
+
+/* Header counter */
+.dashboard-upcoming-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dashboard-upcoming-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 6px 10px;
+  border: 1px solid #cce8eb;
+  border-radius: 999px;
+  color: var(--dash-primary);
+  background: var(--dash-primary-light);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Slider controls */
+.dashboard-upcoming-slider-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 2px 24px 22px;
+}
+
+.dashboard-upcoming-slider-arrow {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #d5e7e9;
+  border-radius: 50%;
+  color: var(--dash-primary);
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 5px 16px rgba(16,42,47,.06);
+  transition:
+    transform .22s ease,
+    background .22s ease,
+    color .22s ease,
+    box-shadow .22s ease;
+}
+
+.dashboard-upcoming-slider-arrow:hover {
+  color: #fff;
+  background: var(--dash-primary);
+  border-color: var(--dash-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 9px 22px rgba(8,127,140,.18);
+}
+
+.dashboard-upcoming-slider-arrow:active {
+  transform: scale(.94);
+}
+
+.dashboard-slider-arrow-prev {
+  transform: rotate(180deg);
+}
+
+.dashboard-upcoming-slider-arrow:hover.dashboard-slider-arrow-prev {
+  transform: rotate(180deg) translateY(2px);
+}
+
+/* Dots */
+.dashboard-upcoming-slider-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.dashboard-upcoming-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #c7dfe2;
+  cursor: pointer;
+  transition:
+    width .25s ease,
+    background .25s ease,
+    transform .2s ease;
+}
+
+.dashboard-upcoming-dot:hover {
+  transform: scale(1.2);
+}
+
+.dashboard-upcoming-dot.active {
+  width: 25px;
+  background: var(--dash-primary);
+}
+
+/* Slider animation */
+@keyframes upcomingEventSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes verifiedBadgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   LARGER / MORE READABLE DASHBOARD TYPOGRAPHY
+========================================================= */
+
+.dashboard-eyebrow,
+.dashboard-section-label {
+  font-size: 11px;
+}
+
+.dashboard-welcome-content p {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.dashboard-member-info strong {
+  font-size: 15px;
+}
+
+.dashboard-member-info span {
+  font-size: 12px;
+}
+
+.dashboard-member-info small {
+  font-size: 11px;
+}
+
+.dashboard-stat-content span {
+  font-size: 11px;
+}
+
+.dashboard-stat-content strong {
+  font-size: 28px;
+}
+
+.dashboard-card-header-left h2,
+.dashboard-recent-header h2 {
+  font-size: 21px;
+}
+
+.dashboard-event-type {
+  font-size: 11px;
+}
+
+.dashboard-upcoming-details h3 {
+  font-size: 20px;
+}
+
+.dashboard-upcoming-details > p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.dashboard-event-meta span {
+  font-size: 12px;
+}
+
+.dashboard-event-button {
+  font-size: 12px;
+  padding: 10px 15px;
+}
+
+.dashboard-no-event h3 {
+  font-size: 18px;
+}
+
+.dashboard-no-event p {
+  font-size: 12px;
+}
+
+.dashboard-explore-link {
+  font-size: 12px;
+}
+
+.dashboard-service-content strong {
+  font-size: 14px;
+}
+
+.dashboard-service-content span {
+  font-size: 12px;
+}
+
+.dashboard-view-all {
+  font-size: 12px;
+}
+
+.dashboard-booking-info strong {
+  font-size: 13px;
+}
+
+.dashboard-booking-info span {
+  font-size: 11px;
+}
+
+.dashboard-booking-middle span {
+  font-size: 11px;
+}
+
+.dashboard-booking-middle strong {
+  font-size: 14px;
+}
+
+.dashboard-booking-status,
+.dashboard-payment-status {
+  font-size: 10px;
+  min-height: 27px;
+}
+
+.dashboard-error {
+  font-size: 12px;
+}
+
+.dashboard-empty-bookings h3 {
+  font-size: 18px;
+}
+
+.dashboard-empty-bookings p {
+  font-size: 12px;
+}
+
+/* =========================================================
+   UPCOMING EVENT — BETTER SPACING
+========================================================= */
+
+.dashboard-upcoming-event {
+  min-height: 225px;
+  align-items: flex-start;
+  padding: 28px 26px 22px;
+}
+
+.dashboard-upcoming-details {
+  padding-top: 2px;
+}
+
+.dashboard-event-date {
+  width: 78px;
+  height: 90px;
+}
+
+.dashboard-event-date span {
+  font-size: 10px;
+}
+
+.dashboard-event-date strong {
+  font-size: 30px;
+}
+
+.dashboard-event-date small {
+  font-size: 10px;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 800px) {
+  .dashboard-welcome-content p {
+    font-size: 14px;
+  }
+
+  .dashboard-upcoming-event {
+    padding: 24px 20px 18px;
+  }
+
+  .dashboard-upcoming-details h3 {
+    font-size: 19px;
+  }
+
+  .dashboard-event-meta span {
+    font-size: 11px;
+  }
+
+  .dashboard-upcoming-slider-controls {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .dashboard-eyebrow,
+  .dashboard-section-label {
+    font-size: 10px;
+  }
+
+  .dashboard-welcome-content p {
+    font-size: 13px;
+  }
+
+  .dashboard-member-info strong {
+    font-size: 14px;
+  }
+
+  .dashboard-member-info span {
+    font-size: 11px;
+  }
+
+  .dashboard-stat-content span {
+    font-size: 10px;
+  }
+
+  .dashboard-stat-content strong {
+    font-size: 22px;
+  }
+
+  .dashboard-card-header-left h2,
+  .dashboard-recent-header h2 {
+    font-size: 18px;
+  }
+
+  .dashboard-upcoming-event {
+    min-height: 215px;
+    padding: 21px 18px 16px;
+    gap: 14px;
+  }
+
+  .dashboard-event-date {
+    width: 64px;
+    height: 80px;
+  }
+
+  .dashboard-event-date span {
+    font-size: 9px;
+  }
+
+  .dashboard-event-date strong {
+    font-size: 25px;
+  }
+
+  .dashboard-event-date small {
+    font-size: 9px;
+  }
+
+  .dashboard-upcoming-details h3 {
+    font-size: 17px;
+  }
+
+  .dashboard-upcoming-details > p {
+    font-size: 12px;
+  }
+
+  .dashboard-event-meta span {
+    font-size: 10px;
+  }
+
+  .dashboard-event-button {
+    font-size: 11px;
+    padding: 9px 13px;
+  }
+
+  .dashboard-upcoming-booked-badge {
+    font-size: 10px;
+    padding: 6px 10px;
+  }
+
+  .dashboard-upcoming-slider-controls {
+    gap: 11px;
+    padding: 2px 14px 17px;
+  }
+
+  .dashboard-upcoming-slider-arrow {
+    width: 34px;
+    height: 34px;
+  }
+
+  .dashboard-upcoming-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .dashboard-upcoming-dot.active {
+    width: 21px;
+  }
+
+  .dashboard-service-content strong {
+    font-size: 13px;
+  }
+
+  .dashboard-service-content span {
+    font-size: 11px;
+  }
+
+  .dashboard-booking-info strong {
+    font-size: 12px;
+  }
+
+  .dashboard-booking-info span,
+  .dashboard-booking-middle span {
+    font-size: 10px;
+  }
+
+  .dashboard-booking-middle strong {
+    font-size: 12px;
+  }
+
+  .dashboard-booking-status,
+  .dashboard-payment-status {
+    font-size: 9px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+  .dashboard-welcome-content p {
+    font-size: 12px;
+  }
+
+  .dashboard-upcoming-event {
+    min-height: 205px;
+    gap: 10px;
+  }
+
+  .dashboard-event-date {
+    width: 58px;
+    height: 74px;
+  }
+
+  .dashboard-event-date strong {
+    font-size: 23px;
+  }
+
+  .dashboard-upcoming-details h3 {
+    font-size: 16px;
+  }
+
+  .dashboard-upcoming-details > p {
+    font-size: 11px;
+  }
+
+  .dashboard-event-meta span {
+    font-size: 9px;
+  }
+
+  .dashboard-upcoming-booked-badge {
+    font-size: 9px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-upcoming-event-slider,
+  .dashboard-upcoming-booked-badge {
+    animation: none !important;
+  }
+
+  .dashboard-upcoming-slider-arrow,
+  .dashboard-upcoming-dot {
+    transition: none !important;
+  }
 }

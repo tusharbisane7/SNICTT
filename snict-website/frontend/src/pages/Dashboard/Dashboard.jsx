@@ -40,6 +40,9 @@ function Dashboard() {
 
   const [error, setError] = useState("");
 
+  // Upcoming booked-events slider
+  const [upcomingSlide, setUpcomingSlide] = useState(0);
+
 
   // =========================================================
   // LOAD BOOKINGS
@@ -289,82 +292,140 @@ function Dashboard() {
 
 
   // =========================================================
-  // UPCOMING EVENT
+  // UPCOMING BOOKED EVENTS
   // =========================================================
 
-  const upcomingBooking =
+  const upcomingBookings =
     useMemo(() => {
 
       const now =
         new Date();
 
+      return bookings
+        .filter((booking) => {
 
-      const upcoming =
-        bookings
-          .filter((booking) => {
+          if (!booking.event_date) {
+            return false;
+          }
 
-            if (
-              !booking.event_date
-            ) {
-              return false;
-            }
-
-
-            const eventDate =
-              new Date(
-                `${booking.event_date}T${
-                  booking.start_time ||
-                  "00:00:00"
-                }`
-              );
-
-
-            const status =
-              getBookingStatus(
-                booking
-              );
-
-
-            return (
-              eventDate >= now &&
-              status !==
-                "cancelled" &&
-              status !==
-                "rejected"
+          const eventDate =
+            new Date(
+              `${booking.event_date}T${
+                booking.start_time ||
+                "00:00:00"
+              }`
             );
 
-          })
-          .sort((a, b) => {
+          const status =
+            getBookingStatus(booking);
 
-            const first =
-              new Date(
-                `${a.event_date}T${
-                  a.start_time ||
-                  "00:00:00"
-                }`
-              ).getTime();
+          return (
+            !Number.isNaN(eventDate.getTime()) &&
+            eventDate >= now &&
+            status !== "cancelled" &&
+            status !== "rejected"
+          );
 
+        })
+        .sort((a, b) => {
 
-            const second =
-              new Date(
-                `${b.event_date}T${
-                  b.start_time ||
-                  "00:00:00"
-                }`
-              ).getTime();
+          const first =
+            new Date(
+              `${a.event_date}T${
+                a.start_time ||
+                "00:00:00"
+              }`
+            ).getTime();
 
+          const second =
+            new Date(
+              `${b.event_date}T${
+                b.start_time ||
+                "00:00:00"
+              }`
+            ).getTime();
 
-            return first - second;
+          return first - second;
 
-          });
-
-
-      return (
-        upcoming[0] ||
-        null
-      );
+        });
 
     }, [bookings]);
+
+
+  // Keep slider index valid when bookings change.
+  useEffect(() => {
+
+    setUpcomingSlide((current) => {
+
+      if (upcomingBookings.length === 0) {
+        return 0;
+      }
+
+      return Math.min(
+        current,
+        upcomingBookings.length - 1
+      );
+
+    });
+
+  }, [upcomingBookings.length]);
+
+
+  // Auto-slide through all upcoming booked events.
+  useEffect(() => {
+
+    if (upcomingBookings.length <= 1) {
+      return undefined;
+    }
+
+    const timer =
+      setInterval(() => {
+
+        setUpcomingSlide((current) =>
+          (current + 1) %
+          upcomingBookings.length
+        );
+
+      }, 5000);
+
+    return () => clearInterval(timer);
+
+  }, [upcomingBookings.length]);
+
+
+  const upcomingBooking =
+    upcomingBookings[upcomingSlide] ||
+    upcomingBookings[0] ||
+    null;
+
+
+  const goToPreviousUpcoming = () => {
+
+    if (upcomingBookings.length <= 1) {
+      return;
+    }
+
+    setUpcomingSlide((current) =>
+      current === 0
+        ? upcomingBookings.length - 1
+        : current - 1
+    );
+
+  };
+
+
+  const goToNextUpcoming = () => {
+
+    if (upcomingBookings.length <= 1) {
+      return;
+    }
+
+    setUpcomingSlide((current) =>
+      (current + 1) %
+      upcomingBookings.length
+    );
+
+  };
 
 
   // =========================================================
@@ -881,11 +942,21 @@ function Dashboard() {
               </div>
 
 
-              <div className="dashboard-card-header-icon">
+              <div className="dashboard-upcoming-header-actions">
 
-                <CalendarDays
-                  size={21}
-                />
+                {upcomingBookings.length > 0 && (
+                  <span className="dashboard-upcoming-count">
+                    {upcomingSlide + 1} / {upcomingBookings.length}
+                  </span>
+                )}
+
+                <div className="dashboard-card-header-icon">
+
+                  <CalendarDays
+                    size={21}
+                  />
+
+                </div>
 
               </div>
 
@@ -894,7 +965,8 @@ function Dashboard() {
 
             {upcomingBooking ? (
 
-              <div className="dashboard-upcoming-event">
+              <>
+                <div className="dashboard-upcoming-event dashboard-upcoming-event-slider">
 
                 <div className="dashboard-event-date">
 
@@ -1009,6 +1081,70 @@ function Dashboard() {
                 </div>
 
               </div>
+
+              {/* UPCOMING EVENT SLIDER CONTROLS */}
+
+              {upcomingBookings.length > 1 && (
+                <div className="dashboard-upcoming-slider-controls">
+
+                  <button
+                    type="button"
+                    className="dashboard-upcoming-slider-arrow"
+                    onClick={goToPreviousUpcoming}
+                    aria-label="Previous booked event"
+                  >
+                    <ArrowRight
+                      size={17}
+                      className="dashboard-slider-arrow-prev"
+                    />
+                  </button>
+
+                  <div
+                    className="dashboard-upcoming-slider-dots"
+                    aria-label="Upcoming booked event slides"
+                  >
+
+                    {upcomingBookings.map(
+                      (booking, index) => (
+                        <button
+                          type="button"
+                          key={
+                            booking.id ||
+                            `${booking.event_date}-${index}`
+                          }
+                          className={`dashboard-upcoming-dot ${
+                            index === upcomingSlide
+                              ? "active"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setUpcomingSlide(index)
+                          }
+                          aria-label={`Show booked event ${index + 1}`}
+                          aria-current={
+                            index === upcomingSlide
+                              ? "true"
+                              : undefined
+                          }
+                        />
+                      )
+                    )}
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="dashboard-upcoming-slider-arrow"
+                    onClick={goToNextUpcoming}
+                    aria-label="Next booked event"
+                  >
+                    <ArrowRight size={17} />
+                  </button>
+
+                </div>
+              )}
+
+              </>
 
             ) : (
 

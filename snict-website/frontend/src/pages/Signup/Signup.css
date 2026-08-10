@@ -1,6 +1,7 @@
 /* =========================================================
    SNICT SIGNUP
    Premium Medical / Professional / Futuristic
+   Updated Typography + Profile Photo + Bio
 ========================================================= */
 
 :root {
@@ -9,13 +10,13 @@
   --signup-primary-light: #eaf8fa;
 
   --signup-text: #102a2f;
-  --signup-muted: #6d7e82;
-  --signup-light: #94a3a6;
+  --signup-muted: #617579;
+  --signup-light: #829396;
 
   --signup-bg: #f5fafb;
   --signup-white: #ffffff;
 
-  --signup-border: #dfeaec;
+  --signup-border: #d7e6e8;
 
   --signup-success: #16845b;
   --signup-success-bg: #eaf8f1;
@@ -27,7 +28,7 @@
   --signup-danger-bg: #fff0f0;
 
   --signup-shadow:
-    0 20px 60px rgba(16, 42, 47, 0.08);
+    0 25px 70px rgba(16, 42, 47, 0.10);
 }
 
 
@@ -55,25 +56,25 @@
   align-items: flex-start;
   justify-content: center;
 
-  padding: 55px 20px 80px;
+  padding: 55px 20px 90px;
 
   overflow: hidden;
 
   background:
     radial-gradient(
       circle at 10% 5%,
-      rgba(8, 127, 140, 0.07),
+      rgba(8, 127, 140, 0.08),
       transparent 27%
     ),
     radial-gradient(
       circle at 90% 85%,
-      rgba(42, 174, 176, 0.06),
+      rgba(42, 174, 176, 0.07),
       transparent 28%
     ),
     linear-gradient(
       180deg,
       #f8fcfd 0%,
-      #f3f8f9 100%
+      #f1f8f9 100%
     );
 
   color: var(--signup-text);
@@ -95,8 +96,8 @@
 .auth-background {
   position: absolute;
 
-  width: 500px;
-  height: 500px;
+  width: 520px;
+  height: 520px;
 
   top: -260px;
   right: -220px;
@@ -105,7 +106,7 @@
 
   border:
     1px solid
-    rgba(8, 127, 140, 0.08);
+    rgba(8, 127, 140, 0.09);
 
   box-shadow:
     0 0 0 70px
@@ -114,6 +115,9 @@
       rgba(8, 127, 140, 0.018);
 
   pointer-events: none;
+
+  animation:
+    backgroundFloat 8s ease-in-out infinite;
 }
 
 
@@ -126,18 +130,18 @@
 
   z-index: 2;
 
-  width: min(780px, 100%);
+  width: min(900px, 100%);
 
-  padding: 38px 42px 32px;
+  padding: 46px 52px 38px;
 
   border:
     1px solid
-    rgba(8, 127, 140, 0.12);
+    rgba(8, 127, 140, 0.13);
 
-  border-radius: 22px;
+  border-radius: 24px;
 
   background:
-    rgba(255, 255, 255, 0.94);
+    rgba(255, 255, 255, 0.96);
 
   box-shadow:
     var(--signup-shadow);
@@ -159,10 +163,10 @@
   position: absolute;
 
   top: 0;
-  left: 12%;
+  left: 10%;
 
-  width: 76%;
-  height: 2px;
+  width: 80%;
+  height: 3px;
 
   border-radius: 10px;
 
@@ -186,9 +190,9 @@
   align-items: center;
   justify-content: center;
 
-  gap: 13px;
+  gap: 16px;
 
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 
   text-align: left;
 }
@@ -212,22 +216,22 @@
 ========================================================= */
 
 .auth-logo {
-  width: 68px;
-  height: 68px;
+  width: 82px;
+  height: 82px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 7px;
+  padding: 8px;
 
   overflow: hidden;
 
   border:
     1px solid
-    rgba(8, 127, 140, 0.14);
+    rgba(8, 127, 140, 0.15);
 
-  border-radius: 17px;
+  border-radius: 19px;
 
   background:
     linear-gradient(
@@ -237,21 +241,23 @@
     );
 
   box-shadow:
-    0 10px 28px
-    rgba(8, 127, 140, 0.10);
+    0 12px 30px
+    rgba(8, 127, 140, 0.11);
 
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
 }
 
+
 .auth-logo-link:hover .auth-logo {
   transform:
-    translateY(-3px);
+    translateY(-4px)
+    scale(1.03);
 
   box-shadow:
-    0 15px 34px
-    rgba(8, 127, 140, 0.16);
+    0 17px 38px
+    rgba(8, 127, 140, 0.18);
 }
 
 
@@ -267,7 +273,7 @@
 
   object-fit: contain;
 
-  border-radius: 10px;
+  border-radius: 11px;
 }
 
 
@@ -279,7 +285,7 @@
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 6px;
 
   min-width: 0;
 }
@@ -295,7 +301,7 @@
   color:
     var(--signup-primary);
 
-  font-size: 21px;
+  font-size: 28px;
   font-weight: 900;
 
   line-height: 1;
@@ -312,18 +318,18 @@
 .auth-brand-subtitle {
   display: block;
 
-  max-width: 235px;
+  max-width: 310px;
 
   color:
     var(--signup-light);
 
-  font-size: 7px;
-  font-weight: 650;
+  font-size: 10px;
+  font-weight: 700;
 
-  line-height: 1.45;
+  line-height: 1.5;
 
   letter-spacing:
-    0.045em;
+    0.055em;
 
   text-transform: uppercase;
 }
@@ -336,8 +342,9 @@
 .auth-title {
   text-align: center;
 
-  margin-bottom: 27px;
+  margin-bottom: 31px;
 }
+
 
 .auth-title > span {
   display: block;
@@ -345,7 +352,7 @@
   color:
     var(--signup-primary);
 
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 850;
 
   letter-spacing:
@@ -354,13 +361,14 @@
   text-transform: uppercase;
 }
 
+
 .auth-title h1 {
-  margin: 8px 0 7px;
+  margin: 10px 0 8px;
 
   color:
     var(--signup-text);
 
-  font-size: 31px;
+  font-size: 38px;
   font-weight: 850;
 
   line-height: 1.1;
@@ -369,13 +377,14 @@
     -0.04em;
 }
 
+
 .auth-title p {
   margin: 0;
 
   color:
     var(--signup-muted);
 
-  font-size: 10px;
+  font-size: 15px;
 
   line-height: 1.6;
 }
@@ -390,15 +399,15 @@
   display: flex;
   align-items: center;
 
-  min-height: 42px;
+  min-height: 48px;
 
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 
-  padding: 10px 13px;
+  padding: 12px 15px;
 
-  border-radius: 9px;
+  border-radius: 11px;
 
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 650;
 
   line-height: 1.5;
@@ -406,6 +415,7 @@
   animation:
     signupAlert 0.25s ease both;
 }
+
 
 .auth-error {
   color:
@@ -417,6 +427,7 @@
   background:
     var(--signup-danger-bg);
 }
+
 
 .auth-success {
   color:
@@ -440,6 +451,284 @@
 
 
 /* =========================================================
+   PROFILE PHOTO SECTION
+========================================================= */
+
+.profile-photo-section {
+  display: flex;
+  align-items: center;
+
+  gap: 24px;
+
+  margin-bottom: 28px;
+
+  padding: 20px;
+
+  border:
+    1px solid
+    #dcebed;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f9fdfd,
+      #f1f9fa
+    );
+
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+
+.profile-photo-section:hover {
+  border-color:
+    rgba(8, 127, 140, 0.25);
+
+  box-shadow:
+    0 12px 30px
+    rgba(8, 127, 140, 0.07);
+
+  transform:
+    translateY(-2px);
+}
+
+
+/* =========================================================
+   PROFILE PHOTO PREVIEW
+========================================================= */
+
+.profile-photo-preview {
+  position: relative;
+
+  width: 125px;
+  height: 125px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border:
+    3px solid
+    rgba(8, 127, 140, 0.16);
+
+  border-radius: 50%;
+
+  background:
+    #eaf8fa;
+
+  box-shadow:
+    0 12px 30px
+    rgba(8, 127, 140, 0.12);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+
+.profile-photo-section:hover
+.profile-photo-preview {
+  transform:
+    scale(1.04);
+
+  box-shadow:
+    0 16px 36px
+    rgba(8, 127, 140, 0.18);
+}
+
+
+.profile-photo-preview img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+
+/* =========================================================
+   PROFILE PHOTO PLACEHOLDER
+========================================================= */
+
+.profile-photo-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  color:
+    var(--signup-primary);
+
+  font-size: 13px;
+  font-weight: 750;
+
+  text-align: center;
+}
+
+
+.profile-photo-placeholder svg {
+  opacity: 0.75;
+}
+
+
+/* =========================================================
+   PROFILE PHOTO ACTIONS
+========================================================= */
+
+.profile-photo-actions {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+
+.profile-photo-actions h3 {
+  margin: 0 0 6px;
+
+  color:
+    var(--signup-text);
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+
+.profile-photo-actions p {
+  margin: 0 0 6px;
+
+  color:
+    var(--signup-muted);
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+.profile-photo-actions small {
+  color:
+    var(--signup-light);
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   PROFILE PHOTO BUTTONS
+========================================================= */
+
+.profile-photo-buttons {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  flex-shrink: 0;
+}
+
+
+.profile-upload-button,
+.profile-remove-button {
+  min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding:
+    0 14px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.profile-upload-button {
+  border:
+    1px solid
+    var(--signup-primary);
+
+  color:
+    #ffffff;
+
+  background:
+    var(--signup-primary);
+
+  box-shadow:
+    0 7px 18px
+    rgba(8, 127, 140, 0.15);
+}
+
+
+.profile-upload-button:hover {
+  background:
+    var(--signup-primary-dark);
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 10px 24px
+    rgba(8, 127, 140, 0.22);
+}
+
+
+.profile-remove-button {
+  border:
+    1px solid
+    #e9cccc;
+
+  color:
+    var(--signup-danger);
+
+  background:
+    #fff6f6;
+}
+
+
+.profile-remove-button:hover {
+  background:
+    var(--signup-danger-bg);
+
+  transform:
+    translateY(-2px);
+}
+
+
+/* =========================================================
    FORM GRID
 ========================================================= */
 
@@ -449,7 +738,7 @@
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
 
-  gap: 17px 15px;
+  gap: 20px 18px;
 }
 
 
@@ -473,18 +762,51 @@
   display: flex;
   flex-direction: column;
 
-  gap: 7px;
+  gap: 8px;
 }
 
+
 .form-field > label {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
   color:
     var(--signup-text);
 
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 750;
 
   letter-spacing:
     0.01em;
+}
+
+
+/* =========================================================
+   OPTIONAL LABEL
+========================================================= */
+
+.optional-label {
+  padding:
+    3px 7px;
+
+  border-radius: 20px;
+
+  color:
+    var(--signup-primary);
+
+  background:
+    var(--signup-primary-light);
+
+  font-size: 10px;
+  font-weight: 750;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    0.04em;
 }
 
 
@@ -501,7 +823,7 @@
     1px solid
     var(--signup-border);
 
-  border-radius: 9px;
+  border-radius: 10px;
 
   outline: none;
 
@@ -513,31 +835,34 @@
 
   font-family: inherit;
 
-  font-size: 10px;
+  font-size: 15px;
 
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
 }
+
 
 .form-field input,
 .form-field select {
-  height: 43px;
+  height: 50px;
 
   padding:
-    0 12px;
+    0 14px;
 }
 
+
 .form-field textarea {
-  min-height: 82px;
+  min-height: 105px;
 
   padding:
-    11px 12px;
+    13px 14px;
 
   resize: vertical;
 
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 
@@ -548,7 +873,9 @@
 .form-field input::placeholder,
 .form-field textarea::placeholder {
   color:
-    #a7b3b5;
+    #9aaeb1;
+
+  font-size: 14px;
 }
 
 
@@ -566,8 +893,11 @@
     #ffffff;
 
   box-shadow:
-    0 0 0 3px
+    0 0 0 4px
     rgba(8, 127, 140, 0.08);
+
+  transform:
+    translateY(-1px);
 }
 
 
@@ -583,6 +913,54 @@
 
 
 /* =========================================================
+   FIELD HELP
+========================================================= */
+
+.field-help {
+  margin-top: -2px;
+
+  color:
+    var(--signup-light);
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   BIO
+========================================================= */
+
+#bio {
+  min-height: 150px;
+}
+
+
+.bio-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: -2px;
+
+  color:
+    var(--signup-light);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.bio-counter-warning {
+  color:
+    var(--signup-warning);
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
    USERNAME WRAPPER
 ========================================================= */
 
@@ -592,8 +970,9 @@
   width: 100%;
 }
 
+
 .username-wrapper input {
-  padding-right: 42px;
+  padding-right: 48px;
 }
 
 
@@ -605,7 +984,7 @@
   position: absolute;
 
   top: 50%;
-  right: 12px;
+  right: 13px;
 
   display: flex;
   align-items: center;
@@ -617,15 +996,18 @@
   pointer-events: none;
 }
 
+
 .username-available {
   color:
     var(--signup-success);
 }
 
+
 .username-taken {
   color:
     var(--signup-danger);
 }
+
 
 .username-spinner {
   color:
@@ -641,15 +1023,17 @@
 ========================================================= */
 
 .username-message {
-  font-size: 8px;
+  font-size: 12px;
 
   line-height: 1.4;
 }
+
 
 .username-message.available {
   color:
     var(--signup-success);
 }
+
 
 .username-message.taken,
 .username-message.invalid,
@@ -657,6 +1041,7 @@
   color:
     var(--signup-danger);
 }
+
 
 .username-message.checking {
   color:
@@ -673,37 +1058,40 @@
   align-items: center;
   flex-wrap: wrap;
 
-  gap: 6px;
+  gap: 8px;
 
   margin-top: 1px;
 }
+
 
 .username-suggestions > span {
   color:
     var(--signup-muted);
 
-  font-size: 8px;
+  font-size: 12px;
 }
+
 
 .username-suggestions > div {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
 
-  gap: 5px;
+  gap: 6px;
 }
 
+
 .username-suggestions button {
-  min-height: 25px;
+  min-height: 29px;
 
   padding:
-    0 8px;
+    0 10px;
 
   border:
     1px solid
     #d5e8ea;
 
-  border-radius: 6px;
+  border-radius: 7px;
 
   color:
     var(--signup-primary);
@@ -713,7 +1101,7 @@
 
   font-family: inherit;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 750;
 
   cursor: pointer;
@@ -723,6 +1111,7 @@
     border-color 0.2s ease,
     transform 0.2s ease;
 }
+
 
 .username-suggestions button:hover {
   border-color:
@@ -746,18 +1135,20 @@
   width: 100%;
 }
 
+
 .password-wrapper input {
-  padding-right: 43px;
+  padding-right: 50px;
 }
+
 
 .password-wrapper button {
   position: absolute;
 
   top: 50%;
-  right: 4px;
+  right: 5px;
 
-  width: 35px;
-  height: 35px;
+  width: 39px;
+  height: 39px;
 
   display: flex;
   align-items: center;
@@ -771,7 +1162,7 @@
 
   border: 0;
 
-  border-radius: 7px;
+  border-radius: 8px;
 
   background:
     transparent;
@@ -782,6 +1173,7 @@
     color 0.2s ease,
     background 0.2s ease;
 }
+
 
 .password-wrapper button:hover {
   color:
@@ -799,22 +1191,22 @@
 .auth-submit {
   width: 100%;
 
-  min-height: 46px;
+  min-height: 54px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  gap: 8px;
+  gap: 9px;
 
-  margin-top: 23px;
+  margin-top: 27px;
 
   padding:
-    0 18px;
+    0 20px;
 
   border: 0;
 
-  border-radius: 9px;
+  border-radius: 10px;
 
   color:
     #ffffff;
@@ -827,12 +1219,12 @@
     );
 
   box-shadow:
-    0 10px 24px
-    rgba(8, 127, 140, 0.17);
+    0 12px 28px
+    rgba(8, 127, 140, 0.18);
 
   font-family: inherit;
 
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 800;
 
   cursor: pointer;
@@ -843,19 +1235,22 @@
     opacity 0.2s ease;
 }
 
+
 .auth-submit:hover:not(:disabled) {
   transform:
     translateY(-2px);
 
   box-shadow:
-    0 14px 30px
-    rgba(8, 127, 140, 0.23);
+    0 16px 34px
+    rgba(8, 127, 140, 0.25);
 }
+
 
 .auth-submit:active:not(:disabled) {
   transform:
     translateY(0);
 }
+
 
 .auth-submit:disabled {
   opacity: 0.55;
@@ -865,14 +1260,16 @@
   box-shadow: none;
 }
 
+
 .auth-submit svg {
   transition:
     transform 0.2s ease;
 }
 
+
 .auth-submit:hover:not(:disabled) svg {
   transform:
-    translateX(3px);
+    translateX(4px);
 }
 
 
@@ -885,10 +1282,10 @@
   align-items: center;
   justify-content: center;
 
-  gap: 5px;
+  gap: 7px;
 
-  margin-top: 22px;
-  padding-top: 20px;
+  margin-top: 26px;
+  padding-top: 22px;
 
   border-top:
     1px solid #edf2f3;
@@ -896,8 +1293,9 @@
   color:
     var(--signup-muted);
 
-  font-size: 9px;
+  font-size: 14px;
 }
+
 
 .auth-footer a {
   color:
@@ -910,6 +1308,7 @@
   transition:
     color 0.2s ease;
 }
+
 
 .auth-footer a:hover {
   color:
@@ -928,7 +1327,7 @@
     opacity: 0;
 
     transform:
-      translateY(18px);
+      translateY(20px);
   }
 
   to {
@@ -938,13 +1337,14 @@
       translateY(0);
   }
 }
+
 
 @keyframes signupAlert {
   from {
     opacity: 0;
 
     transform:
-      translateY(-5px);
+      translateY(-6px);
   }
 
   to {
@@ -954,6 +1354,7 @@
       translateY(0);
   }
 }
+
 
 @keyframes signupSpin {
   to {
@@ -963,36 +1364,83 @@
 }
 
 
+@keyframes backgroundFloat {
+  0%,
+  100% {
+    transform:
+      translate(0, 0);
+  }
+
+  50% {
+    transform:
+      translate(-15px, 18px);
+  }
+}
+
+
 /* =========================================================
    TABLET
 ========================================================= */
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
 
   .auth-page {
     padding:
-      35px 16px 60px;
+      40px 16px 65px;
   }
+
 
   .signup-card {
-    width: min(600px, 100%);
+    width:
+      min(680px, 100%);
 
     padding:
-      31px 28px 27px;
+      38px 32px 32px;
 
-    border-radius: 19px;
+    border-radius:
+      21px;
   }
+
 
   .form-grid {
     grid-template-columns:
       1fr;
 
-    gap: 15px;
+    gap:
+      18px;
   }
+
 
   .form-field.full {
     grid-column:
       auto;
+  }
+
+
+  .profile-photo-section {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+
+  .profile-photo-actions {
+    width:
+      100%;
+
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+
+  .profile-photo-buttons {
+    width:
+      100%;
   }
 
 }
@@ -1005,73 +1453,191 @@
 @media (max-width: 520px) {
 
   .auth-page {
-    min-height: calc(100vh - 65px);
+    min-height:
+      calc(100vh - 65px);
 
     padding:
-      25px 12px 45px;
+      25px 11px 45px;
   }
+
 
   .signup-card {
     padding:
-      27px 19px 23px;
+      30px 18px 25px;
 
-    border-radius: 17px;
+    border-radius:
+      17px;
   }
+
 
   .auth-header {
-    gap: 10px;
+    gap:
+      12px;
 
-    margin-bottom: 23px;
+    margin-bottom:
+      25px;
   }
+
 
   .auth-logo {
-    width: 58px;
-    height: 58px;
+    width:
+      64px;
 
-    padding: 6px;
+    height:
+      64px;
 
-    border-radius: 14px;
+    padding:
+      6px;
+
+    border-radius:
+      15px;
   }
 
-  .auth-logo-image {
-    border-radius: 9px;
-  }
 
   .auth-brand {
-    font-size: 18px;
+    font-size:
+      23px;
   }
+
 
   .auth-brand-subtitle {
-    max-width: 190px;
+    max-width:
+      205px;
 
-    font-size: 6px;
+    font-size:
+      8px;
   }
+
 
   .auth-title {
-    margin-bottom: 23px;
+    margin-bottom:
+      24px;
   }
+
+
+  .auth-title > span {
+    font-size:
+      10px;
+  }
+
 
   .auth-title h1 {
-    font-size: 27px;
+    font-size:
+      31px;
   }
 
+
   .auth-title p {
-    font-size: 9px;
+    font-size:
+      14px;
   }
+
+
+  .form-field > label {
+    font-size:
+      14px;
+  }
+
 
   .form-field input,
   .form-field select {
-    height: 45px;
+    height:
+      49px;
+
+    font-size:
+      15px;
   }
+
 
   .form-field textarea {
-    min-height: 90px;
+    font-size:
+      15px;
+
+    min-height:
+      105px;
   }
 
-  .auth-submit {
-    min-height: 47px;
 
-    margin-top: 20px;
+  .form-field input::placeholder,
+  .form-field textarea::placeholder {
+    font-size:
+      13px;
+  }
+
+
+  .profile-photo-section {
+    padding:
+      17px;
+
+    gap:
+      18px;
+  }
+
+
+  .profile-photo-preview {
+    width:
+      105px;
+
+    height:
+      105px;
+  }
+
+
+  .profile-photo-actions h3 {
+    font-size:
+      17px;
+  }
+
+
+  .profile-photo-actions p {
+    font-size:
+      13px;
+  }
+
+
+  .profile-photo-actions small {
+    font-size:
+      11px;
+  }
+
+
+  .profile-photo-buttons {
+    flex-wrap:
+      wrap;
+  }
+
+
+  .profile-upload-button,
+  .profile-remove-button {
+    min-height:
+      41px;
+
+    font-size:
+      12px;
+  }
+
+
+  .bio-counter {
+    font-size:
+      11px;
+  }
+
+
+  .auth-submit {
+    min-height:
+      52px;
+
+    margin-top:
+      22px;
+
+    font-size:
+      14px;
+  }
+
+
+  .auth-footer {
+    font-size:
+      13px;
   }
 
 }
@@ -1085,53 +1651,114 @@
 
   .auth-page {
     padding:
-      20px 9px 35px;
+      20px 8px 35px;
   }
+
 
   .signup-card {
     padding:
-      24px 15px 20px;
+      25px 14px 21px;
 
-    border-radius: 15px;
+    border-radius:
+      15px;
   }
+
 
   .auth-logo {
-    width: 52px;
-    height: 52px;
+    width:
+      57px;
 
-    border-radius: 12px;
+    height:
+      57px;
+
+    border-radius:
+      13px;
   }
+
 
   .auth-brand {
-    font-size: 16px;
+    font-size:
+      20px;
   }
+
 
   .auth-brand-subtitle {
-    max-width: 175px;
+    max-width:
+      175px;
 
-    font-size: 5.5px;
+    font-size:
+      7px;
   }
+
 
   .auth-title h1 {
-    font-size: 25px;
+    font-size:
+      28px;
   }
 
-  .form-field > label {
-    font-size: 8px;
+
+  .auth-title p {
+    font-size:
+      13px;
   }
+
+
+  .form-field > label {
+    font-size:
+      13px;
+  }
+
 
   .form-field input,
   .form-field select,
   .form-field textarea {
-    font-size: 9px;
+    font-size:
+      14px;
   }
+
+
+  .profile-photo-preview {
+    width:
+      95px;
+
+    height:
+      95px;
+  }
+
+
+  .profile-photo-actions {
+    gap:
+      14px;
+  }
+
 
   .auth-footer {
-    flex-direction: column;
+    flex-direction:
+      column;
 
-    gap: 3px;
+    gap:
+      4px;
   }
 
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.auth-submit:focus-visible,
+.profile-upload-button:focus-visible,
+.profile-remove-button:focus-visible,
+.password-wrapper button:focus-visible,
+.username-suggestions button:focus-visible,
+.auth-footer a:focus-visible {
+  outline:
+    3px solid
+    rgba(8, 127, 140, 0.28);
+
+  outline-offset:
+    3px;
 }
 
 
@@ -1144,6 +1771,7 @@
   .auth-page *,
   .auth-page *::before,
   .auth-page *::after {
+
     animation-duration:
       0.01ms !important;
 
