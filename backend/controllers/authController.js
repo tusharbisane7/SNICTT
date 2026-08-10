@@ -27,13 +27,6 @@ const createExpiry = () => {
 // =========================================================
 // AUTH COOKIE
 // =========================================================
-// IMPORTANT:
-// Frontend: Netlify / another domain
-// Backend : Render
-//
-// Because frontend and backend are cross-site in production,
-// SameSite MUST be "none" and Secure MUST be true.
-// =========================================================
 
 const authCookieOptions = {
   httpOnly: true,
@@ -91,9 +84,7 @@ const getWordCount = (text) => {
 // CLEAN USER
 // =========================================================
 
-const cleanUser = (
-  user
-) => {
+const cleanUser = (user) => {
   return {
     id: user.id,
 
@@ -120,10 +111,6 @@ const cleanUser = (
 
     bloodGroup:
       user.blood_group,
-
-    // =====================================================
-    // NEW PROFILE FIELDS
-    // =====================================================
 
     profileImageUrl:
       user.profile_image_url || null,
@@ -200,10 +187,6 @@ const checkUsername =
           .trim()
           .toLowerCase();
 
-      // =====================================================
-      // EMPTY USERNAME
-      // =====================================================
-
       if (!username) {
 
         return res.json({
@@ -217,10 +200,6 @@ const checkUsername =
           suggestions: [],
         });
       }
-
-      // =====================================================
-      // USERNAME FORMAT
-      // =====================================================
 
       if (
         !/^[a-z0-9_]{3,20}$/.test(
@@ -240,10 +219,6 @@ const checkUsername =
         });
       }
 
-      // =====================================================
-      // DATABASE CHECK
-      // =====================================================
-
       const result =
         await pool.query(
           `
@@ -256,10 +231,6 @@ const checkUsername =
             username,
           ]
         );
-
-      // =====================================================
-      // AVAILABLE
-      // =====================================================
 
       if (
         result.rows.length ===
@@ -277,10 +248,6 @@ const checkUsername =
           suggestions: [],
         });
       }
-
-      // =====================================================
-      // SUGGESTIONS
-      // =====================================================
 
       const suggestions = [
         `${username}_01`,
@@ -319,8 +286,7 @@ const checkUsername =
 // =========================================================
 // REGISTER USER
 // POST /api/auth/register
-// =========================================================
-// EMAIL VERIFICATION REMOVED
+// POST /api/auth/signup
 // =========================================================
 
 const registerUser =
@@ -344,8 +310,6 @@ const registerUser =
         sex,
         address,
         bloodGroup,
-
-        // NEW
         designation,
         bio,
       } = req.body;
@@ -548,32 +512,26 @@ const registerUser =
 
       if (req.file) {
 
-        // If multer stores the file locally
-        if (req.file.path) {
-
-          profileImageUrl =
-            `/uploads/profile/${req.file.filename}`;
-
-        }
-
-        // If cloud storage provides URL
-        else if (
-          req.file.path
-        ) {
-
-          profileImageUrl =
-            req.file.path;
-
-        }
-
-        // Some cloud storage systems
-        // provide location
-        else if (
+        if (
           req.file.location
         ) {
 
           profileImageUrl =
             req.file.location;
+
+        } else if (
+          req.file.filename
+        ) {
+
+          profileImageUrl =
+            `/uploads/profile/${req.file.filename}`;
+
+        } else if (
+          req.file.path
+        ) {
+
+          profileImageUrl =
+            req.file.path;
 
         }
       }
@@ -845,10 +803,6 @@ const loginUser =
         password,
       } = req.body;
 
-      // =====================================================
-      // VALIDATION
-      // =====================================================
-
       if (
         !identifier ||
         !password
@@ -866,10 +820,6 @@ const loginUser =
         String(identifier)
           .trim()
           .toLowerCase();
-
-      // =====================================================
-      // FIND USER
-      // =====================================================
 
       const result =
         await pool.query(
@@ -902,10 +852,6 @@ const loginUser =
       const user =
         result.rows[0];
 
-      // =====================================================
-      // PASSWORD
-      // =====================================================
-
       const passwordMatch =
         await bcrypt.compare(
           password,
@@ -924,27 +870,15 @@ const loginUser =
         });
       }
 
-      // =====================================================
-      // GENERATE TOKEN
-      // =====================================================
-
       const token =
         generateToken(
           user.id
         );
 
-      // =====================================================
-      // SET COOKIE
-      // =====================================================
-
       setAuthCookie(
         res,
         token
       );
-
-      // =====================================================
-      // RESPONSE
-      // =====================================================
 
       return res.json({
 
@@ -1018,10 +952,6 @@ const forgotPassword =
           ]
         );
 
-      // =====================================================
-      // DO NOT REVEAL ACCOUNT EXISTENCE
-      // =====================================================
-
       if (
         result.rows.length ===
         0
@@ -1038,10 +968,6 @@ const forgotPassword =
       const user =
         result.rows[0];
 
-      // =====================================================
-      // GENERATE OTP
-      // =====================================================
-
       const otp =
         generateOtp();
 
@@ -1052,10 +978,6 @@ const forgotPassword =
 
       const otpExpiry =
         createExpiry();
-
-      // =====================================================
-      // SAVE OTP
-      // =====================================================
 
       await pool.query(
         `
@@ -1073,10 +995,6 @@ const forgotPassword =
           user.id,
         ]
       );
-
-      // =====================================================
-      // SEND EMAIL
-      // =====================================================
 
       await sendEmail(
         user.email,
@@ -1183,10 +1101,6 @@ const resetPassword =
         newPassword,
       } = req.body;
 
-      // =====================================================
-      // VALIDATION
-      // =====================================================
-
       if (
         !email ||
         !otp ||
@@ -1219,10 +1133,6 @@ const resetPassword =
           .trim()
           .toLowerCase();
 
-      // =====================================================
-      // FIND USER
-      // =====================================================
-
       const result =
         await pool.query(
           `
@@ -1251,10 +1161,6 @@ const resetPassword =
 
       const user =
         result.rows[0];
-
-      // =====================================================
-      // CHECK OTP
-      // =====================================================
 
       if (
         !user.reset_otp_hash ||
@@ -1304,19 +1210,11 @@ const resetPassword =
         });
       }
 
-      // =====================================================
-      // HASH PASSWORD
-      // =====================================================
-
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           12
         );
-
-      // =====================================================
-      // UPDATE PASSWORD
-      // =====================================================
 
       await pool.query(
         `
@@ -1334,10 +1232,6 @@ const resetPassword =
           user.id,
         ]
       );
-
-      // =====================================================
-      // CLEAR COOKIE
-      // =====================================================
 
       res.clearCookie(
         "snict_token",
@@ -1385,10 +1279,6 @@ const changePassword =
         newPassword,
       } = req.body;
 
-      // =====================================================
-      // VALIDATION
-      // =====================================================
-
       if (
         !currentPassword ||
         !newPassword
@@ -1428,10 +1318,6 @@ const changePassword =
         });
       }
 
-      // =====================================================
-      // GET USER
-      // =====================================================
-
       const result =
         await pool.query(
           `
@@ -1461,10 +1347,6 @@ const changePassword =
       const user =
         result.rows[0];
 
-      // =====================================================
-      // VERIFY CURRENT PASSWORD
-      // =====================================================
-
       const valid =
         await bcrypt.compare(
           currentPassword,
@@ -1481,19 +1363,11 @@ const changePassword =
         });
       }
 
-      // =====================================================
-      // HASH NEW PASSWORD
-      // =====================================================
-
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           12
         );
-
-      // =====================================================
-      // UPDATE
-      // =====================================================
 
       await pool.query(
         `
@@ -1545,10 +1419,6 @@ const getProfile =
   ) => {
 
     try {
-
-      // =====================================================
-      // AUTH MIDDLEWARE MUST SET req.userId
-      // =====================================================
 
       if (!req.userId) {
 
@@ -1634,8 +1504,6 @@ const updateProfile =
         sex,
         address,
         bloodGroup,
-
-        // NEW
         designation,
         bio,
       } = req.body;
@@ -1953,11 +1821,18 @@ const updateProfile =
             req.file.location;
 
         } else if (
-          req.file.path
+          req.file.filename
         ) {
 
           profileImageUrl =
             `/uploads/profile/${req.file.filename}`;
+
+        } else if (
+          req.file.path
+        ) {
+
+          profileImageUrl =
+            req.file.path;
 
         }
       }
@@ -2077,6 +1952,92 @@ const updateProfile =
   };
 
 // =========================================================
+// GET ALL REGISTERED MEMBERS
+// GET /api/auth/members
+// PUBLIC ROUTE
+// =========================================================
+
+const getMembers =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            id,
+            full_name,
+            username,
+            profile_image_url,
+            designation,
+            bio,
+            created_at
+          FROM users
+          ORDER BY created_at DESC
+          `
+        );
+
+      const members =
+        result.rows.map(
+          (user) => ({
+
+            id:
+              user.id,
+
+            fullName:
+              user.full_name || "",
+
+            username:
+              user.username || "",
+
+            profileImageUrl:
+              user.profile_image_url ||
+              null,
+
+            designation:
+              user.designation ||
+              "Member",
+
+            bio:
+              user.bio || "",
+
+            createdAt:
+              user.created_at,
+          })
+        );
+
+      return res.json({
+
+        success: true,
+
+        count:
+          members.length,
+
+        members,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Get members error:",
+        error
+      );
+
+      return res.status(500).json({
+
+        success: false,
+
+        message:
+          "Unable to fetch members",
+      });
+    }
+  };
+
+// =========================================================
 // DELETE PROFILE PHOTO
 // DELETE /api/auth/profile/photo
 // =========================================================
@@ -2168,12 +2129,6 @@ const logoutUser =
     res
   ) => {
 
-    // =====================================================
-    // IMPORTANT:
-    // clearCookie options must match the cookie options
-    // used while setting the cookie.
-    // =====================================================
-
     res.clearCookie(
       "snict_token",
       authCookieOptions
@@ -2209,6 +2164,8 @@ module.exports = {
   getProfile,
 
   updateProfile,
+
+  getMembers,
 
   deleteProfilePhoto,
 

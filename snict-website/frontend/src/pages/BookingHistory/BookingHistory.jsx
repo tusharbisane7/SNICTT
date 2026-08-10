@@ -14,6 +14,10 @@ import {
   ShieldCheck,
   Hourglass,
   XCircle,
+  Ticket,
+  UserCircle,
+  X,
+  Download,
 } from "lucide-react";
 
 import {
@@ -22,6 +26,7 @@ import {
 } from "react-router-dom";
 
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 import "./BookingHistory.css";
 
@@ -29,6 +34,8 @@ import "./BookingHistory.css";
 function BookingHistory() {
 
   const navigate = useNavigate();
+
+  const { user } = useAuth();
 
 
   // =========================================================
@@ -43,6 +50,9 @@ function BookingHistory() {
 
   const [error, setError] =
     useState("");
+
+  const [selectedPass, setSelectedPass] =
+    useState(null);
 
 
   // =========================================================
@@ -364,9 +374,7 @@ function BookingHistory() {
 
         return "past";
 
-      } catch (
-        error
-      ) {
+      } catch (error) {
 
         console.error(
           "Event status error:",
@@ -402,14 +410,16 @@ function BookingHistory() {
 
 
       // -----------------------------------------------------
-      // VERIFIED
+      // VERIFIED / PAID
       // -----------------------------------------------------
 
       if (
         paymentStatus ===
           "verified" ||
         paymentStatus ===
-          "paid"
+          "paid" ||
+        bookingStatus ===
+          "confirmed"
       ) {
 
         return "verified";
@@ -454,6 +464,113 @@ function BookingHistory() {
       return "pending";
 
     };
+
+
+  // =========================================================
+  // PAYMENT COMPLETED
+  // =========================================================
+
+  const isPaymentCompleted =
+    (booking) => {
+
+      const paymentStatus =
+        String(
+          booking?.payment_status ||
+            ""
+        ).toLowerCase();
+
+
+      const bookingStatus =
+        String(
+          booking?.booking_status ||
+            ""
+        ).toLowerCase();
+
+
+      return (
+        paymentStatus === "paid" ||
+        paymentStatus === "verified" ||
+        bookingStatus === "confirmed"
+      );
+
+    };
+
+
+  // =========================================================
+  // GET PROFILE IMAGE
+  // =========================================================
+
+  const getProfileImage = () => {
+
+    return (
+      user?.profileImageUrl ||
+      user?.profile_image_url ||
+      user?.photoUrl ||
+      user?.photo_url ||
+      user?.avatar ||
+      null
+    );
+
+  };
+
+
+  // =========================================================
+  // PASS VALIDITY
+  // =========================================================
+
+  const getPassValidity =
+    (booking) => {
+
+      if (
+        !booking?.event_date
+      ) {
+
+        return "Valid for registered event";
+
+      }
+
+
+      return `Valid only on ${formatDate(
+        booking.event_date
+      )}`;
+
+    };
+
+
+  // =========================================================
+  // VIEW PASS
+  // =========================================================
+
+  const handleViewPass =
+    (booking) => {
+
+      if (
+        !isPaymentCompleted(
+          booking
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      setSelectedPass(
+        booking
+      );
+
+    };
+
+
+  // =========================================================
+  // CLOSE PASS
+  // =========================================================
+
+  const closePass = () => {
+
+    setSelectedPass(null);
+
+  };
 
 
   // =========================================================
@@ -507,7 +624,7 @@ function BookingHistory() {
 
 
     // =====================================================
-    // WAITING FOR VERIFICATION
+    // WAITING
     // =====================================================
 
     if (
@@ -579,7 +696,7 @@ function BookingHistory() {
 
 
     // =====================================================
-    // PAYMENT PENDING
+    // PENDING
     // =====================================================
 
     return (
@@ -647,7 +764,7 @@ function BookingHistory() {
         "verified"
       ) {
 
-        return "View Booking";
+        return "View Event Pass";
 
       }
 
@@ -804,11 +921,9 @@ function BookingHistory() {
             SNICT MEMBER AREA
           </span>
 
-
           <h1>
             My Bookings
           </h1>
-
 
           <p>
             View your event registrations,
@@ -841,16 +956,13 @@ function BookingHistory() {
                 size={32}
               />
 
-
               <h3>
                 Unable to Load Bookings
               </h3>
 
-
               <p>
                 {error}
               </p>
-
 
               <button
                 type="button"
@@ -890,22 +1002,18 @@ function BookingHistory() {
 
               </div>
 
-
               <span>
                 NO REGISTRATIONS
               </span>
-
 
               <h2>
                 No bookings yet
               </h2>
 
-
               <p>
                 You haven't registered
                 for any SNICT event yet.
               </p>
-
 
               <Link
                 to="/events"
@@ -962,7 +1070,6 @@ function BookingHistory() {
                     CONFIRMED
                   </span>
 
-
                   <strong>
 
                     {
@@ -986,7 +1093,6 @@ function BookingHistory() {
                     WAITING
                   </span>
 
-
                   <strong>
 
                     {
@@ -1009,7 +1115,6 @@ function BookingHistory() {
                   <span>
                     PAYMENT PENDING
                   </span>
-
 
                   <strong>
 
@@ -1116,6 +1221,7 @@ function BookingHistory() {
                         <h2>
 
                           {booking.title ||
+                            booking.event_title ||
                             "SNICT Event"}
 
                         </h2>
@@ -1271,26 +1377,59 @@ function BookingHistory() {
                         />
 
 
-                        {/* ACTION */}
+                        {/* =====================================
+                            ACTION
+                        ===================================== */}
 
-                        <Link
-                          to={`/events/booking/${booking.id}`}
-                          className={
-                            getActionClass(
+                        {isPaymentCompleted(
+                          booking
+                        ) ? (
+
+                          <button
+                            type="button"
+                            className="booking-history-view booking-pass-button"
+                            onClick={() =>
+                              handleViewPass(
+                                booking
+                              )}
+                          >
+
+                            <Ticket
+                              size={16}
+                            />
+
+                            <span>
+                              View Event Pass
+                            </span>
+
+                            <ArrowRight
+                              size={15}
+                            />
+
+                          </button>
+
+                        ) : (
+
+                          <Link
+                            to={`/events/booking/${booking.id}`}
+                            className={
+                              getActionClass(
+                                booking
+                              )
+                            }
+                          >
+
+                            {getActionLabel(
                               booking
-                            )
-                          }
-                        >
+                            )}
 
-                          {getActionLabel(
-                            booking
-                          )}
+                            <ArrowRight
+                              size={15}
+                            />
 
-                          <ArrowRight
-                            size={15}
-                          />
+                          </Link>
 
-                        </Link>
+                        )}
 
                       </div>
 
@@ -1306,6 +1445,347 @@ function BookingHistory() {
           )}
 
       </section>
+
+
+      {/* =====================================================
+          EVENT PASS MODAL
+      ===================================================== */}
+
+      {selectedPass && (
+
+        <div
+          className="booking-pass-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="event-pass-title"
+          onClick={
+            closePass
+          }
+        >
+
+
+          <div
+            className="booking-pass-card"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+
+            {/* ================================================
+                PASS HEADER
+            ================================================ */}
+
+            <div className="booking-pass-header">
+
+              <div className="booking-pass-header-top">
+
+                <div>
+
+                  <span className="booking-pass-eyebrow">
+                    SNICT EVENT PASS
+                  </span>
+
+                  <h2
+                    id="event-pass-title"
+                  >
+
+                    {selectedPass.title ||
+                      selectedPass.event_title ||
+                      "SNICT Event"}
+
+                  </h2>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="booking-pass-close"
+                  onClick={
+                    closePass
+                  }
+                  aria-label="Close event pass"
+                >
+
+                  <X
+                    size={20}
+                  />
+
+                </button>
+
+              </div>
+
+            </div>
+
+
+            {/* ================================================
+                PASS BODY
+            ================================================ */}
+
+            <div className="booking-pass-body">
+
+
+              {/* USER */}
+
+              <div className="booking-pass-user">
+
+
+                {getProfileImage() ? (
+
+                  <img
+                    src={
+                      getProfileImage()
+                    }
+                    alt={
+                      user?.fullName ||
+                      "Member"
+                    }
+                    className="booking-pass-user-image"
+                  />
+
+                ) : (
+
+                  <div className="booking-pass-user-placeholder">
+
+                    <UserCircle
+                      size={42}
+                    />
+
+                  </div>
+
+                )}
+
+
+                <div>
+
+                  <span className="booking-pass-field-label">
+                    MEMBER
+                  </span>
+
+                  <strong className="booking-pass-user-name">
+
+                    {user?.fullName ||
+                      selectedPass.full_name ||
+                      selectedPass.fullName ||
+                      "SNICT Member"}
+
+                  </strong>
+
+
+                  {user?.username && (
+
+                    <span className="booking-pass-username">
+
+                      @{user.username}
+
+                    </span>
+
+                  )}
+
+                </div>
+
+              </div>
+
+
+              {/* EVENT INFORMATION */}
+
+              <div className="booking-pass-grid">
+
+
+                {/* EVENT ID */}
+
+                <div className="booking-pass-field">
+
+                  <span>
+                    EVENT ID
+                  </span>
+
+                  <strong>
+
+                    {selectedPass.event_id ||
+                      selectedPass.eventId ||
+                      "-"}
+
+                  </strong>
+
+                </div>
+
+
+                {/* BOOKING ID */}
+
+                <div className="booking-pass-field">
+
+                  <span>
+                    BOOKING ID
+                  </span>
+
+                  <strong>
+
+                    {selectedPass.booking_code ||
+                      `#${selectedPass.id}`}
+
+                  </strong>
+
+                </div>
+
+
+                {/* DATE */}
+
+                <div className="booking-pass-field">
+
+                  <span>
+                    DATE
+                  </span>
+
+                  <strong>
+
+                    {formatDate(
+                      selectedPass.event_date
+                    )}
+
+                  </strong>
+
+                </div>
+
+
+                {/* TIME */}
+
+                <div className="booking-pass-field">
+
+                  <span>
+                    TIME
+                  </span>
+
+                  <strong>
+
+                    {formatTime(
+                      selectedPass.start_time
+                    )}
+
+                    {selectedPass.end_time &&
+                      ` - ${formatTime(
+                        selectedPass.end_time
+                      )}`}
+
+                  </strong>
+
+                </div>
+
+
+                {/* AMOUNT */}
+
+                <div className="booking-pass-field">
+
+                  <span>
+                    AMOUNT PAID
+                  </span>
+
+                  <strong>
+
+                    ₹
+                    {Number(
+                      selectedPass.amount ||
+                        0
+                    ).toLocaleString(
+                      "en-IN"
+                    )}
+
+                  </strong>
+
+                </div>
+
+
+                {/* VENUE */}
+
+                <div className="booking-pass-field">
+
+                  <span>
+                    VENUE
+                  </span>
+
+                  <strong>
+
+                    {selectedPass.venue ||
+                      "SNICT Event Venue"}
+
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              {/* VALIDITY */}
+
+              <div className="booking-pass-validity">
+
+                <CheckCircle2
+                  size={20}
+                />
+
+                <div>
+
+                  <strong>
+                    PAYMENT VERIFIED
+                  </strong>
+
+                  <span>
+
+                    {getPassValidity(
+                      selectedPass
+                    )}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              {/* PASS FOOTER */}
+
+              <div className="booking-pass-footer">
+
+
+                <div>
+
+                  <span className="booking-pass-field-label">
+                    PASS STATUS
+                  </span>
+
+                  <strong className="booking-pass-valid">
+                    VALID
+                  </strong>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="booking-pass-print"
+                  onClick={() =>
+                    window.print()
+                  }
+                >
+
+                  <Download
+                    size={15}
+                  />
+
+                  Print / Save Pass
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
     </main>
 

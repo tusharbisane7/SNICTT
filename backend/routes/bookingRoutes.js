@@ -1,6 +1,5 @@
 const express = require("express");
 
-
 // =========================================================
 // CONTROLLERS
 // =========================================================
@@ -9,12 +8,12 @@ const {
   createBooking,
   getMyBookings,
   getMyBookingById,
+  getMyPass,
   getAllBookings,
   getAdminBookingById,
   updateBookingStatus,
   deleteBooking,
 } = require("../controllers/bookingController");
-
 
 // =========================================================
 // MIDDLEWARE
@@ -26,13 +25,11 @@ const authMiddleware =
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-
 // =========================================================
 // ROUTER
 // =========================================================
 
 const router = express.Router();
-
 
 // =========================================================
 // ADMIN BOOKINGS
@@ -45,7 +42,6 @@ const router = express.Router();
 // adminMiddleware should verify the admin token.
 // =========================================================
 
-
 // ---------------------------------------------------------
 // GET ALL BOOKINGS
 // GET /api/bookings/admin
@@ -56,7 +52,6 @@ router.get(
   adminMiddleware,
   getAllBookings
 );
-
 
 // ---------------------------------------------------------
 // GET SINGLE BOOKING
@@ -69,7 +64,6 @@ router.get(
   getAdminBookingById
 );
 
-
 // ---------------------------------------------------------
 // UPDATE BOOKING STATUS
 // PUT /api/bookings/admin/:id/status
@@ -80,7 +74,6 @@ router.put(
   adminMiddleware,
   updateBookingStatus
 );
-
 
 // ---------------------------------------------------------
 // DELETE BOOKING
@@ -93,11 +86,9 @@ router.delete(
   deleteBooking
 );
 
-
 // =========================================================
 // USER BOOKINGS
 // =========================================================
-
 
 // ---------------------------------------------------------
 // GET MY BOOKINGS
@@ -110,7 +101,6 @@ router.get(
   getMyBookings
 );
 
-
 // ---------------------------------------------------------
 // CREATE BOOKING
 // POST /api/bookings/event/:eventId
@@ -121,7 +111,6 @@ router.post(
   authMiddleware,
   createBooking
 );
-
 
 // ---------------------------------------------------------
 // GET SINGLE USER BOOKING
@@ -134,6 +123,19 @@ router.get(
   getMyBookingById
 );
 
+// ---------------------------------------------------------
+// GET MY EVENT PASS
+// GET /api/bookings/:id/pass
+//
+// Only the logged-in user who owns the booking
+// can access the pass.
+// ---------------------------------------------------------
+
+router.get(
+  "/:id/pass",
+  authMiddleware,
+  getMyPass
+);
 
 // =========================================================
 // EXPORT

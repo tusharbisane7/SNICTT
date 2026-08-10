@@ -1,5 +1,10 @@
 const express = require("express");
 
+
+// =========================================================
+// CONTROLLERS
+// =========================================================
+
 const {
   registerUser,
   checkUsername,
@@ -9,15 +14,29 @@ const {
   changePassword,
   getProfile,
   updateProfile,
+  getMembers,
   deleteProfilePhoto,
   logoutUser,
 } = require("../controllers/authController");
 
-const authMiddleware = require("../middleware/authMiddleware");
 
-const uploadProfile = require("../middleware/uploadProfile");
+// =========================================================
+// MIDDLEWARE
+// =========================================================
 
-const router = express.Router();
+const authMiddleware =
+  require("../middleware/authMiddleware");
+
+const uploadProfile =
+  require("../middleware/uploadProfile");
+
+
+// =========================================================
+// ROUTER
+// =========================================================
+
+const router =
+  express.Router();
 
 
 // =========================================================
@@ -33,6 +52,30 @@ const router = express.Router();
 router.get(
   "/check-username",
   checkUsername
+);
+
+
+// =========================================================
+// GET ALL MEMBERS
+// GET /api/auth/members
+//
+// PUBLIC ROUTE
+//
+// Returns:
+// - id
+// - full name
+// - username
+// - profile image
+// - designation
+// - bio
+// - created date
+//
+// Used by the public Members page.
+// =========================================================
+
+router.get(
+  "/members",
+  getMembers
 );
 
 

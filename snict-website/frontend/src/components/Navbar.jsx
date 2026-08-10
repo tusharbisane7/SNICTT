@@ -12,6 +12,7 @@ import {
   LogOut,
   ShieldCheck,
   CreditCard,
+  Users,
 } from "lucide-react";
 
 import {
@@ -35,11 +36,14 @@ function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, logout } = useAuth();
+  const {
+    user,
+    logout,
+  } = useAuth();
 
 
   // =========================================================
-  // NORMAL USER STATE
+  // USER STATE
   // =========================================================
 
   const [menuOpen, setMenuOpen] =
@@ -136,7 +140,6 @@ function Navbar() {
 
 
         setAdmin(null);
-
 
         localStorage.removeItem(
           "snict_admin"
@@ -304,7 +307,11 @@ function Navbar() {
 
     setEventsOpen(false);
 
+    setUserMenuOpen(false);
+
     setMobileUserMenuOpen(false);
+
+    setAdminMenuOpen(false);
 
     setMobileAdminMenuOpen(false);
 
@@ -441,6 +448,100 @@ function Navbar() {
 
 
   // =========================================================
+  // PROFILE IMAGE
+  // =========================================================
+  // Supports the common names so the navbar continues
+  // working if your backend currently returns one of them.
+  // Recommended backend field: profileImageUrl.
+  // =========================================================
+
+  const profileImage =
+    user?.profileImageUrl ||
+    user?.profilePic ||
+    user?.profileImage ||
+    user?.photo ||
+    user?.avatar ||
+    null;
+
+
+  // =========================================================
+  // PROFILE IMAGE URL HELPER
+  // =========================================================
+
+  const getProfileImageUrl = (
+    image
+  ) => {
+
+    if (!image) {
+      return null;
+    }
+
+
+    // Already a complete URL
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("data:")
+    ) {
+
+      return image;
+
+    }
+
+
+    // API base URL
+    const apiBaseUrl =
+      api.defaults?.baseURL || "";
+
+
+    // Remove trailing slash
+    const cleanBase =
+      apiBaseUrl.replace(
+        /\/$/,
+        ""
+      );
+
+
+    // If image starts with /
+    if (
+      image.startsWith("/")
+    ) {
+
+      /*
+       * If API baseURL is something like:
+       * https://backend.example.com/api
+       *
+       * profile path is:
+       * /uploads/profile/photo.jpg
+       *
+       * We want:
+       * https://backend.example.com/uploads/profile/photo.jpg
+       */
+
+      const baseWithoutApi =
+        cleanBase.replace(
+          /\/api$/,
+          ""
+        );
+
+
+      return `${baseWithoutApi}${image}`;
+
+    }
+
+
+    return `${cleanBase}/${image}`;
+
+  };
+
+
+  const profileImageUrl =
+    getProfileImageUrl(
+      profileImage
+    );
+
+
+  // =========================================================
   // ADMIN DISPLAY
   // =========================================================
 
@@ -473,11 +574,159 @@ function Navbar() {
 
 
   // =========================================================
+  // TEAM ACTIVE
+  // =========================================================
+
+  const isTeamSection =
+    location.pathname.startsWith(
+      "/team"
+    ) ||
+    location.pathname.startsWith(
+      "/members"
+    ) ||
+    location.pathname.startsWith(
+      "/committees"
+    );
+
+
+  // =========================================================
+  // PROFILE AVATAR COMPONENT
+  // =========================================================
+
+  const ProfileAvatar = ({
+    sizeClass = "",
+    dropdown = false,
+    mobile = false,
+  }) => {
+
+    const [imageFailed, setImageFailed] =
+      useState(false);
+
+
+    const imageAvailable =
+      Boolean(
+        profileImageUrl &&
+        !imageFailed
+      );
+
+
+    if (dropdown) {
+
+      return (
+
+        <div
+          className={`user-dropdown-avatar ${
+            sizeClass
+          }`}
+        >
+
+          {imageAvailable ? (
+
+            <img
+              src={profileImageUrl}
+              alt={`${displayName} profile`}
+              className="user-dropdown-profile-image"
+              onError={() =>
+                setImageFailed(true)
+              }
+            />
+
+          ) : (
+
+            <span className="user-dropdown-avatar-letter">
+              {avatarLetter}
+            </span>
+
+          )}
+
+        </div>
+
+      );
+
+    }
+
+
+    if (mobile) {
+
+      return (
+
+        <div
+          className={`mobile-user-avatar ${
+            sizeClass
+          }`}
+        >
+
+          {imageAvailable ? (
+
+            <img
+              src={profileImageUrl}
+              alt={`${displayName} profile`}
+              className="mobile-profile-image"
+              onError={() =>
+                setImageFailed(true)
+              }
+            />
+
+          ) : (
+
+            <span className="mobile-avatar-letter">
+              {avatarLetter}
+            </span>
+
+          )}
+
+        </div>
+
+      );
+
+    }
+
+
+    return (
+
+      <div
+        className={`navbar-user-avatar ${
+          sizeClass
+        }`}
+      >
+
+        {imageAvailable ? (
+
+          <img
+            src={profileImageUrl}
+            alt={`${displayName} profile`}
+            className="navbar-profile-image"
+            onError={() =>
+              setImageFailed(true)
+            }
+          />
+
+        ) : (
+
+          <span className="navbar-avatar-letter">
+            {avatarLetter}
+          </span>
+
+        )}
+
+      </div>
+
+    );
+
+  };
+
+
+  // =========================================================
   // RENDER
   // =========================================================
 
   return (
+
     <>
+
+      {/* =====================================================
+          DESKTOP / MAIN NAVBAR
+      ===================================================== */}
 
       <header
         className={`snict-navbar ${
@@ -522,11 +771,9 @@ function Navbar() {
 
 
               <span className="brand-description">
-
                 Society of Neo Interventional
                 <br />
                 Cardiovascular Technologists
-
               </span>
 
             </div>
@@ -540,6 +787,8 @@ function Navbar() {
 
           <nav className="desktop-navigation">
 
+
+            {/* HOME */}
 
             <NavLink
               to="/"
@@ -555,6 +804,8 @@ function Navbar() {
               Home
             </NavLink>
 
+
+            {/* ABOUT */}
 
             <NavLink
               to="/about"
@@ -579,15 +830,19 @@ function Navbar() {
               <button
                 type="button"
                 className={`desktop-link dropdown-button ${
-                  location.pathname.startsWith(
-                    "/team"
-                  ) ||
-                  location.pathname.startsWith(
-                    "/committees"
-                  )
+                  isTeamSection
                     ? "active"
                     : ""
                 }`}
+                onClick={() =>
+                  setTeamOpen(
+                    (previous) =>
+                      !previous
+                  )
+                }
+                aria-expanded={
+                  teamOpen
+                }
               >
 
                 <span>
@@ -596,50 +851,81 @@ function Navbar() {
 
                 <ChevronDown
                   size={14}
+                  className={
+                    teamOpen
+                      ? "chevron-open"
+                      : ""
+                  }
                 />
 
               </button>
 
 
-              <div className="dropdown-panel">
+              {teamOpen && (
 
-                <div className="dropdown-heading">
-                  OUR PEOPLE
+                <div className="dropdown-panel">
+
+                  <div className="dropdown-heading">
+                    OUR PEOPLE
+                  </div>
+
+
+                  {/* OUR TEAM */}
+
+                  <Link
+                    to="/team"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Our Team
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
+
+                  {/* MEMBERS */}
+
+                  <Link
+                    to="/members"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Members
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
+
+                  {/* COMMITTEES */}
+
+                  <Link
+                    to="/committees"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Committees
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
                 </div>
 
-
-                <Link
-                  to="/team"
-                  onClick={closeMenu}
-                >
-
-                  <span>
-                    Our Team
-                  </span>
-
-                  <ArrowRight
-                    size={14}
-                  />
-
-                </Link>
-
-
-                <Link
-                  to="/committees"
-                  onClick={closeMenu}
-                >
-
-                  <span>
-                    Committees
-                  </span>
-
-                  <ArrowRight
-                    size={14}
-                  />
-
-                </Link>
-
-              </div>
+              )}
 
             </div>
 
@@ -659,6 +945,15 @@ function Navbar() {
                     ? "active"
                     : ""
                 }`}
+                onClick={() =>
+                  setEventsOpen(
+                    (previous) =>
+                      !previous
+                  )
+                }
+                aria-expanded={
+                  eventsOpen
+                }
               >
 
                 <span>
@@ -667,70 +962,61 @@ function Navbar() {
 
                 <ChevronDown
                   size={14}
+                  className={
+                    eventsOpen
+                      ? "chevron-open"
+                      : ""
+                  }
                 />
 
               </button>
 
 
-              <div className="dropdown-panel">
+              {eventsOpen && (
 
-                <div className="dropdown-heading">
-                  EVENTS & CME
+                <div className="dropdown-panel">
+
+                  <div className="dropdown-heading">
+                    EVENTS & CME
+                  </div>
+
+
+                  <Link
+                    to="/events"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Upcoming Events
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
+
+                  <Link
+                    to="/events"
+                    onClick={closeMenu}
+                  >
+
+                    <span>
+                      Previous Events
+                    </span>
+
+                    <ArrowRight
+                      size={14}
+                    />
+
+                  </Link>
+
                 </div>
 
-
-                <Link
-                  to="/events"
-                  onClick={closeMenu}
-                >
-
-                  <span>
-                    Upcoming Events
-                  </span>
-
-                  <ArrowRight
-                    size={14}
-                  />
-
-                </Link>
-
-
-                <Link
-                  to="/events"
-                  onClick={closeMenu}
-                >
-
-                  <span>
-                    Previous Events
-                  </span>
-
-                  <ArrowRight
-                    size={14}
-                  />
-
-                </Link>
-
-              </div>
+              )}
 
             </div>
-
-
-            {/* =================================================
-                MEMBERSHIP
-            ================================================= */}
-{/* 
-            <NavLink
-              to="/membership"
-              className={({ isActive }) =>
-                `desktop-link ${
-                  isActive
-                    ? "active"
-                    : ""
-                }`
-              }
-            >
-              Membership
-            </NavLink> */}
 
 
             {/* =================================================
@@ -800,7 +1086,6 @@ function Navbar() {
                       {adminName}
                     </span>
 
-
                     <span className="navbar-admin-role">
                       ADMIN
                     </span>
@@ -820,9 +1105,7 @@ function Navbar() {
                 </button>
 
 
-                {/* =================================================
-                    ADMIN DROPDOWN
-                ================================================= */}
+                {/* ADMIN DROPDOWN */}
 
                 {adminMenuOpen && (
 
@@ -843,7 +1126,6 @@ function Navbar() {
                         <strong>
                           {adminName}
                         </strong>
-
 
                         <span>
                           {adminUsername}
@@ -948,9 +1230,7 @@ function Navbar() {
                     <div className="user-dropdown-divider" />
 
 
-                    {/* =================================================
-                        ADMIN PROFILE
-                    ================================================= */}
+                    {/* ADMIN PROFILE */}
 
                     <Link
                       to="/admin/profile"
@@ -972,9 +1252,7 @@ function Navbar() {
                     </Link>
 
 
-                    {/* =================================================
-                        CHANGE PASSWORD
-                    ================================================= */}
+                    {/* CHANGE PASSWORD */}
 
                     <Link
                       to="/admin/profile"
@@ -1017,11 +1295,9 @@ function Navbar() {
                       />
 
                       <span>
-
                         {adminLoggingOut
                           ? "Logging out..."
                           : "Admin Logout"}
-
                       </span>
 
                     </button>
@@ -1072,9 +1348,6 @@ function Navbar() {
 
                 </Link>
 
-
-
-
               </>
 
 
@@ -1086,6 +1359,8 @@ function Navbar() {
 
               <div className="navbar-user-wrapper">
 
+
+                {/* USER BUTTON */}
 
                 <button
                   type="button"
@@ -1105,9 +1380,7 @@ function Navbar() {
                   }
                 >
 
-                  <div className="navbar-user-avatar">
-                    {avatarLetter}
-                  </div>
+                  <ProfileAvatar />
 
 
                   <div className="navbar-user-info">
@@ -1136,16 +1409,22 @@ function Navbar() {
                 </button>
 
 
+                {/* =================================================
+                    USER DROPDOWN
+                ================================================= */}
+
                 {userMenuOpen && (
 
                   <div className="navbar-user-dropdown">
 
 
+                    {/* PROFILE HEADER */}
+
                     <div className="user-dropdown-header">
 
-                      <div className="user-dropdown-avatar">
-                        {avatarLetter}
-                      </div>
+                      <ProfileAvatar
+                        dropdown
+                      />
 
 
                       <div>
@@ -1168,6 +1447,8 @@ function Navbar() {
                     <div className="user-dropdown-divider" />
 
 
+                    {/* DASHBOARD */}
+
                     <Link
                       to="/dashboard"
                       onClick={() =>
@@ -1188,6 +1469,8 @@ function Navbar() {
                     </Link>
 
 
+                    {/* PROFILE */}
+
                     <Link
                       to="/profile"
                       onClick={() =>
@@ -1207,6 +1490,8 @@ function Navbar() {
 
                     </Link>
 
+
+                    {/* CHANGE PASSWORD */}
 
                     <Link
                       to="/change-password"
@@ -1231,6 +1516,8 @@ function Navbar() {
                     <div className="user-dropdown-divider" />
 
 
+                    {/* LOGOUT */}
+
                     <button
                       type="button"
                       className="navbar-logout-button"
@@ -1247,11 +1534,9 @@ function Navbar() {
                       />
 
                       <span>
-
                         {loggingOut
                           ? "Logging out..."
                           : "Logout"}
-
                       </span>
 
                     </button>
@@ -1371,13 +1656,19 @@ function Navbar() {
             </NavLink>
 
 
-            {/* TEAM */}
+            {/* =================================================
+                MOBILE TEAM
+            ================================================= */}
 
             <div className="mobile-dropdown">
 
               <button
                 type="button"
-                className="mobile-dropdown-button"
+                className={`mobile-dropdown-button ${
+                  isTeamSection
+                    ? "active"
+                    : ""
+                }`}
                 onClick={() =>
                   setTeamOpen(
                     (previous) =>
@@ -1410,19 +1701,56 @@ function Navbar() {
                 }`}
               >
 
+                {/* OUR TEAM */}
+
                 <Link
                   to="/team"
                   onClick={closeMenu}
                 >
-                  Our Team
+                  <span>
+                    Our Team
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
                 </Link>
 
+
+                {/* MEMBERS */}
+
+                <Link
+                  to="/members"
+                  onClick={closeMenu}
+                >
+
+                  <span>
+                    Members
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
+                </Link>
+
+
+                {/* COMMITTEES */}
 
                 <Link
                   to="/committees"
                   onClick={closeMenu}
                 >
-                  Committees
+
+                  <span>
+                    Committees
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
                 </Link>
 
               </div>
@@ -1430,13 +1758,21 @@ function Navbar() {
             </div>
 
 
-            {/* EVENTS */}
+            {/* =================================================
+                MOBILE EVENTS
+            ================================================= */}
 
             <div className="mobile-dropdown">
 
               <button
                 type="button"
-                className="mobile-dropdown-button"
+                className={`mobile-dropdown-button ${
+                  location.pathname.startsWith(
+                    "/events"
+                  )
+                    ? "active"
+                    : ""
+                }`}
                 onClick={() =>
                   setEventsOpen(
                     (previous) =>
@@ -1473,7 +1809,15 @@ function Navbar() {
                   to="/events"
                   onClick={closeMenu}
                 >
-                  Upcoming Events
+
+                  <span>
+                    Upcoming Events
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
                 </Link>
 
 
@@ -1481,37 +1825,20 @@ function Navbar() {
                   to="/events"
                   onClick={closeMenu}
                 >
-                  Previous Events
+
+                  <span>
+                    Previous Events
+                  </span>
+
+                  <ArrowRight
+                    size={15}
+                  />
+
                 </Link>
 
               </div>
 
             </div>
-
-
-            {/* MEMBERSHIP */}
-
-            {/* <NavLink
-              to="/membership"
-              onClick={closeMenu}
-              className={({ isActive }) =>
-                `mobile-link ${
-                  isActive
-                    ? "active"
-                    : ""
-                }`
-              }
-            >
-
-              <span>
-                Membership
-              </span>
-
-              <ArrowRight
-                size={16}
-              />
-
-            </NavLink> */}
 
 
             {/* CONTACT */}
@@ -1581,7 +1908,6 @@ function Navbar() {
                         {adminName}
                       </span>
 
-
                       <small>
                         ADMIN
                       </small>
@@ -1634,7 +1960,7 @@ function Navbar() {
                       </Link>
 
 
-                      {/* PAYMENT MANAGEMENT */}
+                      {/* PAYMENTS */}
 
                       <Link
                         to="/admin/payments"
@@ -1700,7 +2026,7 @@ function Navbar() {
 
                         <span className="mobile-user-action-left">
 
-                          <UserCircle
+                          <Users
                             size={17}
                           />
 
@@ -1717,8 +2043,6 @@ function Navbar() {
 
                       </Link>
 
-
-                      {/* DIVIDER */}
 
                       <div className="mobile-admin-divider" />
 
@@ -1799,11 +2123,9 @@ function Navbar() {
                           />
 
                           <span>
-
                             {adminLoggingOut
                               ? "Logging out..."
                               : "Admin Logout"}
-
                           </span>
 
                         </span>
@@ -1864,9 +2186,6 @@ function Navbar() {
 
                   </Link>
 
-
-
-
                 </div>
 
 
@@ -1877,7 +2196,6 @@ function Navbar() {
                 ================================================= */
 
                 <>
-
 
                   <button
                     type="button"
@@ -1897,9 +2215,9 @@ function Navbar() {
                     }
                   >
 
-                    <div className="mobile-user-avatar">
-                      {avatarLetter}
-                    </div>
+                    <ProfileAvatar
+                      mobile
+                    />
 
 
                     <div className="mobile-user-info">
@@ -1933,6 +2251,8 @@ function Navbar() {
                     <div className="mobile-user-menu">
 
 
+                      {/* DASHBOARD */}
+
                       <Link
                         to="/dashboard"
                         className="mobile-user-action"
@@ -1958,6 +2278,8 @@ function Navbar() {
 
                       </Link>
 
+
+                      {/* PROFILE */}
 
                       <Link
                         to="/profile"
@@ -1985,6 +2307,8 @@ function Navbar() {
                       </Link>
 
 
+                      {/* CHANGE PASSWORD */}
+
                       <Link
                         to="/change-password"
                         className="mobile-user-action"
@@ -2011,6 +2335,11 @@ function Navbar() {
                       </Link>
 
 
+                      <div className="user-dropdown-divider" />
+
+
+                      {/* LOGOUT */}
+
                       <button
                         type="button"
                         className="mobile-user-action logout"
@@ -2029,11 +2358,9 @@ function Navbar() {
                           />
 
                           <span>
-
                             {loggingOut
                               ? "Logging out..."
                               : "Logout"}
-
                           </span>
 
                         </span>
@@ -2069,7 +2396,9 @@ function Navbar() {
       <div className="navbar-page-spacer" />
 
     </>
+
   );
+
 }
 
 

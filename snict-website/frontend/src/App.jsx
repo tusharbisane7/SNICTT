@@ -20,7 +20,7 @@ import Events from "./pages/Events/Events";
 import EventDetails from "./pages/EventDetails/EventDetails";
 import Membership from "./pages/Membership/Membership";
 import Contact from "./pages/Contact/Contact";
-
+import Members from "./pages/Members/Members";
 // =====================================================
 // USER AUTHENTICATION
 // =====================================================
@@ -82,6 +82,11 @@ function App() {
           path="/"
           element={<Home />}
         />
+
+        <Route
+  path="/members"
+  element={<Members />}
+/>
 
         <Route
           path="/about"
