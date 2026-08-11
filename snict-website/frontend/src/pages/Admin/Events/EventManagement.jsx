@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Plus,
@@ -10,11 +10,16 @@ import {
   Eye,
   EyeOff,
   TicketCheck,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import api from "../../../services/api";
 
 import "./EventManagement.css";
+
+// =========================================================
+// INITIAL FORM
+// =========================================================
 
 const initialForm = {
   title: "",
@@ -29,10 +34,13 @@ const initialForm = {
   eventMode: "offline",
   price: "",
   maxSlots: "",
-  imageUrl: "",
   bookingEnabled: true,
   published: true,
 };
+
+// =========================================================
+// COMPONENT
+// =========================================================
 
 function EventManagement() {
   const [events, setEvents] = useState([]);
@@ -62,6 +70,18 @@ function EventManagement() {
   const [filter, setFilter] =
     useState("all");
 
+  // =========================================================
+  // IMAGE STATE
+  // =========================================================
+
+  const [imageFile, setImageFile] =
+    useState(null);
+
+  const [imagePreview, setImagePreview] =
+    useState("");
+
+  const imageInputRef =
+    useRef(null);
 
   // =========================================================
   // LOAD EVENTS
@@ -71,6 +91,26 @@ function EventManagement() {
     loadEvents();
   }, []);
 
+  // =========================================================
+  // CLEAN OBJECT URL
+  // =========================================================
+
+  useEffect(() => {
+    return () => {
+      if (
+        imagePreview &&
+        imagePreview.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(
+          imagePreview
+        );
+      }
+    };
+  }, [imagePreview]);
+
+  // =========================================================
+  // LOAD EVENTS
+  // =========================================================
 
   const loadEvents = async () => {
     try {
@@ -78,33 +118,34 @@ function EventManagement() {
       setError("");
 
       const response =
-        await api.get("/events/admin/all");
+        await api.get(
+          "/events/admin/all"
+        );
 
       if (response.data?.success) {
         const backendEvents =
           response.data.events || [];
 
-        /*
-         * Normalize status on frontend.
-         * Backend status is still used as fallback,
-         * but date/time is checked here as well.
-         */
-
         const normalizedEvents =
-          backendEvents.map((event) => ({
-            ...event,
-            status: calculateEventStatus(
-              event.event_date,
-              event.start_time,
-              event.end_time
-            ),
-          }));
+          backendEvents.map(
+            (event) => ({
+              ...event,
 
-        setEvents(normalizedEvents);
+              status:
+                calculateEventStatus(
+                  event.event_date,
+                  event.start_time,
+                  event.end_time
+                ),
+            })
+          );
+
+        setEvents(
+          normalizedEvents
+        );
       } else {
         setEvents([]);
       }
-
     } catch (error) {
       console.error(
         "Admin events error:",
@@ -112,24 +153,25 @@ function EventManagement() {
       );
 
       if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
+        error.response?.status ===
+          401 ||
+        error.response?.status ===
+          403
       ) {
         setError(
           "Admin authentication expired. Please login again."
         );
       } else {
         setError(
-          error.response?.data?.message ||
+          error.response?.data
+            ?.message ||
             "Unable to load events."
         );
       }
-
     } finally {
       setLoading(false);
     }
   };
-
 
   // =========================================================
   // CALCULATE EVENT STATUS
@@ -162,10 +204,6 @@ function EventManagement() {
           ?.toString()
           .slice(0, 8) ||
         "23:59:59";
-
-      /*
-       * +05:30 = India Standard Time
-       */
 
       const start =
         new Date(
@@ -203,7 +241,6 @@ function EventManagement() {
       }
 
       return "past";
-
     } catch (error) {
       console.error(
         "Event status calculation error:",
@@ -214,12 +251,13 @@ function EventManagement() {
     }
   };
 
-
   // =========================================================
   // HANDLE INPUT
   // =========================================================
 
-  const handleChange = (event) => {
+  const handleChange = (
+    event
+  ) => {
     const {
       name,
       value,
@@ -227,16 +265,132 @@ function EventManagement() {
       checked,
     } = event.target;
 
-    setForm((previous) => ({
-      ...previous,
+    setForm(
+      (previous) => ({
+        ...previous,
 
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
-    }));
+        [name]:
+          type === "checkbox"
+            ? checked
+            : value,
+      })
+    );
   };
 
+  // =========================================================
+  // IMAGE SELECT
+  // =========================================================
+
+  const handleImageChange = (
+    event
+  ) => {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    // =======================================================
+    // FILE TYPE
+    // =======================================================
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
+      setError(
+        "Only JPG, JPEG, PNG and WEBP images are allowed."
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+    // =======================================================
+    // FILE SIZE
+    // =======================================================
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+      setError(
+        "Event image must be 5 MB or smaller."
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+    setError("");
+
+    // =======================================================
+    // REVOKE OLD BLOB
+    // =======================================================
+
+    if (
+      imagePreview &&
+      imagePreview.startsWith("blob:")
+    ) {
+      URL.revokeObjectURL(
+        imagePreview
+      );
+    }
+
+    // =======================================================
+    // SET FILE
+    // =======================================================
+
+    setImageFile(file);
+
+    // =======================================================
+    // CREATE PREVIEW
+    // =======================================================
+
+    const previewUrl =
+      URL.createObjectURL(file);
+
+    setImagePreview(
+      previewUrl
+    );
+  };
+
+  // =========================================================
+  // REMOVE SELECTED IMAGE
+  // =========================================================
+
+  const removeSelectedImage = () => {
+    if (
+      imagePreview &&
+      imagePreview.startsWith("blob:")
+    ) {
+      URL.revokeObjectURL(
+        imagePreview
+      );
+    }
+
+    setImageFile(null);
+
+    setImagePreview("");
+
+    if (
+      imageInputRef.current
+    ) {
+      imageInputRef.current.value =
+        "";
+    }
+  };
 
   // =========================================================
   // CREATE EVENT
@@ -249,17 +403,30 @@ function EventManagement() {
       ...initialForm,
     });
 
+    setImageFile(null);
+    setImagePreview("");
+
+    if (
+      imageInputRef.current
+    ) {
+      imageInputRef.current.value =
+        "";
+    }
+
     setShowForm(true);
     setError("");
   };
-
 
   // =========================================================
   // EDIT EVENT
   // =========================================================
 
-  const openEdit = (event) => {
-    setEditingId(event.id);
+  const openEdit = (
+    event
+  ) => {
+    setEditingId(
+      event.id
+    );
 
     setForm({
       title:
@@ -300,8 +467,7 @@ function EventManagement() {
         "",
 
       venue:
-        event.venue ||
-        "",
+        event.venue || "",
 
       eventMode:
         event.event_mode ||
@@ -312,10 +478,6 @@ function EventManagement() {
 
       maxSlots:
         event.max_slots ?? "",
-
-      imageUrl:
-        event.image_url ||
-        "",
 
       bookingEnabled:
         Boolean(
@@ -328,10 +490,26 @@ function EventManagement() {
         ),
     });
 
+    // =======================================================
+    // EXISTING IMAGE
+    // =======================================================
+
+    setImageFile(null);
+
+    setImagePreview(
+      event.image_url || ""
+    );
+
+    if (
+      imageInputRef.current
+    ) {
+      imageInputRef.current.value =
+        "";
+    }
+
     setShowForm(true);
     setError("");
   };
-
 
   // =========================================================
   // CLOSE FORM
@@ -342,14 +520,34 @@ function EventManagement() {
       return;
     }
 
+    if (
+      imagePreview &&
+      imagePreview.startsWith("blob:")
+    ) {
+      URL.revokeObjectURL(
+        imagePreview
+      );
+    }
+
     setShowForm(false);
+
     setEditingId(null);
 
     setForm({
       ...initialForm,
     });
-  };
 
+    setImageFile(null);
+
+    setImagePreview("");
+
+    if (
+      imageInputRef.current
+    ) {
+      imageInputRef.current.value =
+        "";
+    }
+  };
 
   // =========================================================
   // VALIDATE FORM
@@ -446,7 +644,6 @@ function EventManagement() {
     return true;
   };
 
-
   // =========================================================
   // SAVE EVENT
   // =========================================================
@@ -469,56 +666,120 @@ function EventManagement() {
     try {
       setSaving(true);
 
-      const payload = {
-        title:
-          form.title.trim(),
+      // =====================================================
+      // FORMDATA
+      // =====================================================
 
-        eventType:
-          form.eventType,
+      const payload =
+        new FormData();
 
-        description:
-          form.description.trim(),
+      payload.append(
+        "title",
+        form.title.trim()
+      );
 
-        doctorName:
-          form.doctorName.trim(),
+      payload.append(
+        "eventType",
+        form.eventType
+      );
 
-        specialization:
-          form.specialization.trim(),
+      payload.append(
+        "description",
+        form.description.trim()
+      );
 
-        eventDate:
-          form.eventDate,
+      payload.append(
+        "doctorName",
+        form.doctorName.trim()
+      );
 
-        startTime:
-          form.startTime,
+      payload.append(
+        "specialization",
+        form.specialization.trim()
+      );
 
-        endTime:
-          form.endTime,
+      payload.append(
+        "eventDate",
+        form.eventDate
+      );
 
-        venue:
-          form.venue.trim(),
+      payload.append(
+        "startTime",
+        form.startTime
+      );
 
-        eventMode:
-          form.eventMode,
+      payload.append(
+        "endTime",
+        form.endTime
+      );
 
-        price:
-          form.price === ""
-            ? 0
-            : Number(form.price),
+      payload.append(
+        "venue",
+        form.venue.trim()
+      );
 
-        maxSlots:
-          form.maxSlots === ""
-            ? null
-            : Number(form.maxSlots),
+      payload.append(
+        "eventMode",
+        form.eventMode
+      );
 
-        imageUrl:
-          form.imageUrl.trim(),
+      payload.append(
+        "price",
+        form.price === ""
+          ? "0"
+          : String(
+              Number(form.price)
+            )
+      );
 
-        bookingEnabled:
-          form.bookingEnabled,
+      payload.append(
+        "maxSlots",
+        form.maxSlots === ""
+          ? ""
+          : String(
+              Number(
+                form.maxSlots
+              )
+            )
+      );
 
-        published:
-          form.published,
-      };
+      payload.append(
+        "bookingEnabled",
+        String(
+          form.bookingEnabled
+        )
+      );
+
+      payload.append(
+        "published",
+        String(
+          form.published
+        )
+      );
+
+      // =====================================================
+      // IMAGE
+      // =====================================================
+      //
+      // IMPORTANT:
+      // Only append image when a NEW file
+      // has been selected.
+      //
+      // On edit without selecting a new
+      // image, backend keeps old image.
+      //
+      // =====================================================
+
+      if (imageFile) {
+        payload.append(
+          "image",
+          imageFile
+        );
+      }
+
+      // =====================================================
+      // CREATE
+      // =====================================================
 
       if (editingId) {
         await api.put(
@@ -532,10 +793,17 @@ function EventManagement() {
         );
       }
 
+      // =====================================================
+      // CLOSE
+      // =====================================================
+
       closeForm();
 
-      await loadEvents();
+      // =====================================================
+      // RELOAD
+      // =====================================================
 
+      await loadEvents();
     } catch (error) {
       console.error(
         "Save event error:",
@@ -543,24 +811,25 @@ function EventManagement() {
       );
 
       if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
+        error.response?.status ===
+          401 ||
+        error.response?.status ===
+          403
       ) {
         setError(
           "Admin authentication expired. Please login again."
         );
       } else {
         setError(
-          error.response?.data?.message ||
+          error.response?.data
+            ?.message ||
             "Unable to save event."
         );
       }
-
     } finally {
       setSaving(false);
     }
   };
-
 
   // =========================================================
   // DELETE EVENT
@@ -587,7 +856,6 @@ function EventManagement() {
       );
 
       await loadEvents();
-
     } catch (error) {
       console.error(
         "Delete event error:",
@@ -595,63 +863,74 @@ function EventManagement() {
       );
 
       setError(
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
           "Unable to delete event."
       );
-
     } finally {
       setDeletingId(null);
     }
   };
-
 
   // =========================================================
   // FILTER EVENTS
   // =========================================================
 
   const filteredEvents =
-    events.filter((event) => {
+    events.filter(
+      (event) => {
+        if (filter === "all") {
+          return true;
+        }
 
-      if (filter === "all") {
+        if (
+          filter === "upcoming"
+        ) {
+          return (
+            event.status ===
+            "upcoming"
+          );
+        }
+
+        if (
+          filter === "ongoing"
+        ) {
+          return (
+            event.status ===
+            "ongoing"
+          );
+        }
+
+        if (
+          filter === "past"
+        ) {
+          return (
+            event.status ===
+            "past"
+          );
+        }
+
+        if (
+          filter === "published"
+        ) {
+          return (
+            event.published ===
+            true
+          );
+        }
+
+        if (
+          filter === "draft"
+        ) {
+          return (
+            event.published ===
+            false
+          );
+        }
+
         return true;
       }
-
-      if (filter === "upcoming") {
-        return (
-          event.status ===
-          "upcoming"
-        );
-      }
-
-      if (filter === "ongoing") {
-        return (
-          event.status ===
-          "ongoing"
-        );
-      }
-
-      if (filter === "past") {
-        return (
-          event.status ===
-          "past"
-        );
-      }
-
-      if (filter === "published") {
-        return (
-          event.published === true
-        );
-      }
-
-      if (filter === "draft") {
-        return (
-          event.published === false
-        );
-      }
-
-      return true;
-    });
-
+    );
 
   // =========================================================
   // FORMAT DATE
@@ -664,15 +943,6 @@ function EventManagement() {
       return "-";
     }
 
-    /*
-     * Don't use:
-     *
-     * new Date("2026-08-13")
-     *
-     * because date-only strings can
-     * cause timezone shifts.
-     */
-
     const dateString =
       date
         .toString()
@@ -681,7 +951,9 @@ function EventManagement() {
     const parts =
       dateString.split("-");
 
-    if (parts.length !== 3) {
+    if (
+      parts.length !== 3
+    ) {
       return dateString;
     }
 
@@ -719,7 +991,6 @@ function EventManagement() {
     return `${day} ${monthNames[monthIndex]} ${year}`;
   };
 
-
   // =========================================================
   // FORMAT TIME
   // =========================================================
@@ -739,7 +1010,9 @@ function EventManagement() {
     const parts =
       value.split(":");
 
-    if (parts.length < 2) {
+    if (
+      parts.length < 2
+    ) {
       return value;
     }
 
@@ -766,7 +1039,6 @@ function EventManagement() {
     return `${hour}:${minute} ${suffix}`;
   };
 
-
   // =========================================================
   // RENDER
   // =========================================================
@@ -783,7 +1055,6 @@ function EventManagement() {
         <header className="admin-events-header">
 
           <div>
-
             <span className="admin-events-eyebrow">
               ADMINISTRATION
             </span>
@@ -799,9 +1070,7 @@ function EventManagement() {
               professional learning
               programs.
             </p>
-
           </div>
-
 
           <button
             type="button"
@@ -809,12 +1078,10 @@ function EventManagement() {
             onClick={openCreate}
           >
             <Plus size={18} />
-
             Create Event
           </button>
 
         </header>
-
 
         {/* =================================================
             ERROR
@@ -825,7 +1092,6 @@ function EventManagement() {
             {error}
           </div>
         )}
-
 
         {/* =================================================
             FILTER BAR
@@ -845,7 +1111,6 @@ function EventManagement() {
 
           </div>
 
-
           <div className="admin-event-filters">
 
             <button
@@ -860,26 +1125,26 @@ function EventManagement() {
               }
             >
               All
-
               <span>
                 {events.length}
               </span>
             </button>
 
-
             <button
               type="button"
               className={
-                filter === "upcoming"
+                filter ===
+                "upcoming"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setFilter("upcoming")
+                setFilter(
+                  "upcoming"
+                )
               }
             >
               Upcoming
-
               <span>
                 {
                   events.filter(
@@ -891,20 +1156,21 @@ function EventManagement() {
               </span>
             </button>
 
-
             <button
               type="button"
               className={
-                filter === "ongoing"
+                filter ===
+                "ongoing"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setFilter("ongoing")
+                setFilter(
+                  "ongoing"
+                )
               }
             >
               Ongoing
-
               <span>
                 {
                   events.filter(
@@ -915,7 +1181,6 @@ function EventManagement() {
                 }
               </span>
             </button>
-
 
             <button
               type="button"
@@ -929,7 +1194,6 @@ function EventManagement() {
               }
             >
               Past
-
               <span>
                 {
                   events.filter(
@@ -941,21 +1205,22 @@ function EventManagement() {
               </span>
             </button>
 
-
             <button
               type="button"
               className={
-                filter === "published"
+                filter ===
+                "published"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setFilter("published")
+                setFilter(
+                  "published"
+                )
               }
             >
               Published
             </button>
-
 
             <button
               type="button"
@@ -975,7 +1240,6 @@ function EventManagement() {
 
         </section>
 
-
         {/* =================================================
             EVENT FORM
         ================================================= */}
@@ -988,7 +1252,6 @@ function EventManagement() {
               <div className="event-form-header">
 
                 <div>
-
                   <span>
                     {editingId
                       ? "EDIT EVENT"
@@ -1000,9 +1263,7 @@ function EventManagement() {
                       ? "Update Event"
                       : "Create Event"}
                   </h2>
-
                 </div>
-
 
                 <button
                   type="button"
@@ -1015,7 +1276,6 @@ function EventManagement() {
                 </button>
 
               </div>
-
 
               <form
                 onSubmit={
@@ -1045,7 +1305,6 @@ function EventManagement() {
                   />
 
                 </div>
-
 
                 {/* TYPE + MODE */}
 
@@ -1089,11 +1348,9 @@ function EventManagement() {
                       <option value="Other">
                         Other
                       </option>
-
                     </select>
 
                   </div>
-
 
                   <div className="form-field">
 
@@ -1121,13 +1378,11 @@ function EventManagement() {
                       <option value="hybrid">
                         Hybrid
                       </option>
-
                     </select>
 
                   </div>
 
                 </div>
-
 
                 {/* DATE + TIME */}
 
@@ -1153,7 +1408,6 @@ function EventManagement() {
 
                   </div>
 
-
                   <div className="form-field">
 
                     <label>
@@ -1173,7 +1427,6 @@ function EventManagement() {
                     />
 
                   </div>
-
 
                   <div className="form-field">
 
@@ -1196,7 +1449,6 @@ function EventManagement() {
                   </div>
 
                 </div>
-
 
                 {/* DOCTOR */}
 
@@ -1221,7 +1473,6 @@ function EventManagement() {
 
                   </div>
 
-
                   <div className="form-field">
 
                     <label>
@@ -1242,7 +1493,6 @@ function EventManagement() {
                   </div>
 
                 </div>
-
 
                 {/* DESCRIPTION */}
 
@@ -1265,7 +1515,6 @@ function EventManagement() {
                   />
 
                 </div>
-
 
                 {/* PRICE + SLOTS */}
 
@@ -1292,7 +1541,6 @@ function EventManagement() {
 
                   </div>
 
-
                   <div className="form-field">
 
                     <label>
@@ -1316,7 +1564,6 @@ function EventManagement() {
 
                 </div>
 
-
                 {/* VENUE */}
 
                 <div className="form-field">
@@ -1338,28 +1585,115 @@ function EventManagement() {
 
                 </div>
 
-
-                {/* IMAGE */}
+                {/* =================================================
+                    EVENT IMAGE
+                ================================================= */}
 
                 <div className="form-field">
 
                   <label>
-                    Event Image URL
+                    Event Image
                   </label>
 
-                  <input
-                    name="imageUrl"
-                    value={
-                      form.imageUrl
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="https://..."
-                  />
+                  <div className="event-image-upload-box">
+
+                    <input
+                      ref={
+                        imageInputRef
+                      }
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={
+                        handleImageChange
+                      }
+                      className="event-image-file-input"
+                    />
+
+                    <div className="event-upload-icon">
+                      <ImageIcon
+                        size={30}
+                      />
+                    </div>
+
+                    <div className="event-upload-text">
+
+                      <strong>
+                        Choose Event Image
+                      </strong>
+
+                      <span>
+                        JPG, PNG or WEBP •
+                        Maximum 5 MB
+                      </span>
+
+                    </div>
+
+                    <label
+                      htmlFor={
+                        imageInputRef
+                          .current
+                          ?.id
+                      }
+                      className="event-browse-button"
+                      onClick={() => {
+                        imageInputRef.current?.click();
+                      }}
+                    >
+                      Browse
+                    </label>
+
+                  </div>
+
+                  {/* IMAGE PREVIEW */}
+
+                  {imagePreview && (
+                    <div className="event-image-preview">
+
+                      <img
+                        src={
+                          imagePreview
+                        }
+                        alt="Event preview"
+                      />
+
+                      <div className="event-image-preview-info">
+
+                        <strong>
+                          {imageFile
+                            ? imageFile.name
+                            : "Current event image"}
+                        </strong>
+
+                        <span>
+                          {imageFile
+                            ? `${(
+                                imageFile.size /
+                                1024 /
+                                1024
+                              ).toFixed(
+                                2
+                              )} MB`
+                            : "Existing image"}
+                        </span>
+
+                      </div>
+
+                      {imageFile && (
+                        <button
+                          type="button"
+                          className="event-remove-image"
+                          onClick={
+                            removeSelectedImage
+                          }
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+
+                    </div>
+                  )}
 
                 </div>
-
 
                 {/* OPTIONS */}
 
@@ -1384,7 +1718,6 @@ function EventManagement() {
 
                   </label>
 
-
                   <label>
 
                     <input
@@ -1406,7 +1739,6 @@ function EventManagement() {
 
                 </div>
 
-
                 {/* ACTIONS */}
 
                 <div className="event-form-actions">
@@ -1421,7 +1753,6 @@ function EventManagement() {
                   >
                     Cancel
                   </button>
-
 
                   <button
                     type="submit"
@@ -1444,7 +1775,6 @@ function EventManagement() {
           </div>
         )}
 
-
         {/* =================================================
             EVENTS LIST
         ================================================= */}
@@ -1454,12 +1784,11 @@ function EventManagement() {
           {loading ? (
 
             <div className="admin-event-state">
-
               Loading events...
-
             </div>
 
-          ) : filteredEvents.length === 0 ? (
+          ) : filteredEvents.length ===
+            0 ? (
 
             <div className="admin-event-state">
 
@@ -1502,7 +1831,9 @@ function EventManagement() {
                         alt={
                           event.title
                         }
-                        onError={(e) => {
+                        onError={(
+                          e
+                        ) => {
                           e.currentTarget.style.display =
                             "none";
                         }}
@@ -1517,7 +1848,6 @@ function EventManagement() {
                     )}
 
                   </div>
-
 
                   {/* INFO */}
 
@@ -1549,10 +1879,11 @@ function EventManagement() {
                       )}
                     </p>
 
-
                     {event.doctor_name && (
                       <small>
-                        {event.doctor_name}
+                        {
+                          event.doctor_name
+                        }
 
                         {event.specialization &&
                           ` • ${event.specialization}`}
@@ -1560,7 +1891,6 @@ function EventManagement() {
                     )}
 
                   </div>
-
 
                   {/* STATUS */}
 
@@ -1571,7 +1901,6 @@ function EventManagement() {
                     >
                       {event.status}
                     </span>
-
 
                     <span
                       className={`admin-publish-status ${
@@ -1586,7 +1915,6 @@ function EventManagement() {
                           <Eye
                             size={13}
                           />
-
                           Published
                         </>
                       ) : (
@@ -1594,7 +1922,6 @@ function EventManagement() {
                           <EyeOff
                             size={13}
                           />
-
                           Draft
                         </>
                       )}
@@ -1602,7 +1929,6 @@ function EventManagement() {
                     </span>
 
                   </div>
-
 
                   {/* BOOKINGS */}
 
@@ -1635,13 +1961,11 @@ function EventManagement() {
 
                     </div>
 
-
                     <small>
                       Bookings
                     </small>
 
                   </div>
-
 
                   {/* BOOKING STATUS */}
 
@@ -1659,7 +1983,6 @@ function EventManagement() {
 
                   </div>
 
-
                   {/* PRICE */}
 
                   <div className="admin-event-row-price">
@@ -1671,14 +1994,14 @@ function EventManagement() {
                     <strong>
                       ₹
                       {Number(
-                        event.price || 0
+                        event.price ||
+                          0
                       ).toLocaleString(
                         "en-IN"
                       )}
                     </strong>
 
                   </div>
-
 
                   {/* ACTIONS */}
 
@@ -1697,7 +2020,6 @@ function EventManagement() {
                         size={16}
                       />
                     </button>
-
 
                     <button
                       type="button"

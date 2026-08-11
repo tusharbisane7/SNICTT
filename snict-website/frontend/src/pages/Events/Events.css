@@ -1597,3 +1597,92 @@
     font-size: 11px;
   }
 }
+
+
+/* =========================================================
+   EVENT IMAGE — UPLOADED BACKEND IMAGE SUPPORT
+   ========================================================= */
+
+.event-image {
+  position: relative;
+  isolation: isolate;
+}
+
+.event-image img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  background: #eaf7f8;
+  transition:
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.35s ease;
+  will-change: transform;
+}
+
+.event-card:hover .event-image img {
+  transform: scale(1.055);
+}
+
+/* Keep placeholder behind the actual uploaded image */
+.event-image-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Image overlay stays above image but below status badge */
+.event-image::after {
+  z-index: 2;
+  transition: opacity 0.35s ease;
+}
+
+.event-card:hover .event-image::after {
+  opacity: 0.75;
+}
+
+/* Status badge remains above the image */
+.event-status {
+  z-index: 5;
+}
+
+/* Smooth image entrance */
+@keyframes eventImageReveal {
+  from {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.event-image img {
+  animation: eventImageReveal 0.55s ease-out both;
+}
+
+/* Prevent broken-image icon/alt text from ruining the card */
+.event-image img[src=""] {
+  display: none;
+}
+
+/* Better image behavior on smaller screens */
+@media (max-width: 720px) {
+  .event-image img {
+    object-position: center center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-image img,
+  .event-card:hover .event-image img {
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+}

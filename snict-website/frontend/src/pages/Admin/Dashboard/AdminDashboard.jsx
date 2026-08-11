@@ -435,147 +435,34 @@ function AdminDashboard() {
             QUICK STATS
         ================================================= */}
 
-        <div className="admin-stats-grid">
-
+      
 
           {/* COMMITTEES */}
 
-          <div className="admin-stat-card">
-
-            <div className="admin-stat-icon">
-              <Users size={21} />
-            </div>
-
-            <div>
-
-              <span>
-                Management
-              </span>
-
-              <strong>
-                Committees
-              </strong>
-
-            </div>
-
-          </div>
+         
 
 
           {/* EVENTS */}
 
-          <div className="admin-stat-card">
-
-            <div className="admin-stat-icon">
-              <CalendarDays size={21} />
-            </div>
-
-            <div>
-
-              <span>
-                Management
-              </span>
-
-              <strong>
-                Events
-              </strong>
-
-            </div>
-
-          </div>
+         
 
 
           {/* BOOKINGS */}
 
-          <div className="admin-stat-card">
-
-            <div className="admin-stat-icon">
-              <TicketCheck size={21} />
-            </div>
-
-            <div>
-
-              <span>
-                Management
-              </span>
-
-              <strong>
-                Bookings
-              </strong>
-
-            </div>
-
-          </div>
-
+          
 
           {/* PAYMENTS */}
 
-          <div className="admin-stat-card">
-
-            <div className="admin-stat-icon">
-              <CreditCard size={21} />
-            </div>
-
-            <div>
-
-              <span>
-                Management
-              </span>
-
-              <strong>
-                Payments
-              </strong>
-
-            </div>
-
-          </div>
+          
 
 
           {/* MEMBERS */}
 
-          <div className="admin-stat-card">
-
-            <div className="admin-stat-icon">
-              <UserCog size={21} />
-            </div>
-
-            <div>
-
-              <span>
-                Management
-              </span>
-
-              <strong>
-                Members
-              </strong>
-
-            </div>
-
-          </div>
 
 
           {/* SLIDERS */}
 
-          <div className="admin-stat-card">
-
-            <div className="admin-stat-icon">
-              <SlidersHorizontal size={21} />
-            </div>
-
-            <div>
-
-              <span>
-                Website
-              </span>
-
-              <strong>
-                Sliders
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
+        
 
 
         {/* =================================================
@@ -807,7 +694,7 @@ function AdminDashboard() {
             {/* =================================================
                 MEMBERSHIP MANAGEMENT
             ================================================= */}
-
+{/* 
             <Link
               to="/admin/memberships"
               className="admin-management-card"
@@ -841,7 +728,7 @@ function AdminDashboard() {
                 className="admin-card-arrow"
               />
 
-            </Link>
+            </Link> */}
 
 
             {/* =================================================

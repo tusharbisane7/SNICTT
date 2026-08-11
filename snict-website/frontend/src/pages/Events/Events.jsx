@@ -109,6 +109,61 @@ const calculateEventStatus = (
 
 
 // =========================================================
+// IMAGE URL HELPER
+// =========================================================
+// Backend may return:
+// 1. Full URL: https://snict-backend.onrender.com/uploads/events/...
+// 2. Relative URL: /uploads/events/...
+// 3. Legacy relative URL: uploads/events/...
+//
+// Keep full URLs unchanged and attach relative URLs to the
+// backend origin instead of the frontend domain.
+// =========================================================
+
+const getBackendOrigin = () => {
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://snict-backend.onrender.com/api";
+
+  try {
+    return new URL(apiUrl).origin;
+  } catch {
+    return "https://snict-backend.onrender.com";
+  }
+};
+
+const getEventImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return "";
+  }
+
+  const value = String(imageUrl).trim();
+
+  if (!value) {
+    return "";
+  }
+
+  // Full external URL
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("blob:") ||
+    value.startsWith("data:")
+  ) {
+    return value;
+  }
+
+  const backendOrigin = getBackendOrigin();
+
+  // Relative backend upload path
+  if (value.startsWith("/")) {
+    return `${backendOrigin}${value}`;
+  }
+
+  return `${backendOrigin}/${value}`;
+};
+
+// =========================================================
 // COMPONENT
 // =========================================================
 
@@ -723,21 +778,42 @@ function Events() {
 
                   <div className="event-image">
 
-                    {event.image_url ? (
+                    {getEventImageUrl(
+                      event.image_url ||
+                        event.imageUrl ||
+                        event.image ||
+                        event.photo_url ||
+                        event.photoUrl
+                    ) ? (
 
                       <img
-                        src={
-                          event.image_url
-                        }
+                        src={getEventImageUrl(
+                          event.image_url ||
+                            event.imageUrl ||
+                            event.image ||
+                            event.photo_url ||
+                            event.photoUrl
+                        )}
                         alt={
-                          event.title
+                          event.title ||
+                          "SNICT Event"
                         }
-
+                        loading="lazy"
                         onError={(e) => {
-
                           e.currentTarget.style.display =
                             "none";
 
+                          const placeholder =
+                            e.currentTarget
+                              .parentElement
+                              ?.querySelector(
+                                ".event-image-placeholder"
+                              );
+
+                          if (placeholder) {
+                            placeholder.style.display =
+                              "flex";
+                          }
                         }}
                       />
 
@@ -752,6 +828,18 @@ function Events() {
                       </div>
 
                     )}
+
+                    {/* Hidden fallback placeholder for failed image */}
+                    <div
+                      className="event-image-placeholder"
+                      style={{
+                        display: "none",
+                      }}
+                    >
+                      <CalendarDays
+                        size={42}
+                      />
+                    </div>
 
 
                     {/* STATUS */}

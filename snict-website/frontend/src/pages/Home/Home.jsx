@@ -484,16 +484,70 @@ const getCommitteeDesignation = (
 // GET EVENT IMAGE
 // =========================================================
 
-const getEventImage = (
-  event
-) => {
-  return (
+const getEventImage = (event) => {
+  // Backend upload field names.
+  // The frontend now expects an uploaded file path,
+  // not an externally hosted image link.
+  const rawImage =
+    event?.imageUrl ||
     event?.image_url ||
-    event?.image ||
+    event?.imagePath ||
+    event?.image_path ||
+    event?.bannerUrl ||
     event?.banner_url ||
+    event?.bannerPath ||
+    event?.banner_path ||
+    event?.image ||
     event?.banner ||
-    ""
-  );
+    "";
+
+  if (!rawImage) {
+    return "";
+  }
+
+  const image = String(rawImage).trim();
+
+  if (!image) {
+    return "";
+  }
+
+  // If backend/database already contains a complete URL,
+  // use it directly.
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("data:")
+  ) {
+    return image;
+  }
+
+  // VITE_API_URL normally contains:
+  // https://your-backend.onrender.com/api
+  // Uploaded files are served from:
+  // https://your-backend.onrender.com/uploads/...
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://snict-backend.onrender.com/api";
+
+  let backendOrigin = apiUrl.trim();
+
+  // Remove trailing /api so /uploads works correctly.
+  if (backendOrigin.endsWith("/api")) {
+    backendOrigin = backendOrigin.slice(
+      0,
+      backendOrigin.length - 4
+    );
+  }
+
+  backendOrigin =
+    backendOrigin.replace(/\/$/, "");
+
+  // Make sure the uploaded file path starts with /.
+  const cleanPath = image.startsWith("/")
+    ? image
+    : `/${image}`;
+
+  return `${backendOrigin}${cleanPath}`;
 };
 
 
@@ -1076,6 +1130,10 @@ function Home() {
 
   // =========================================================
   // HOME EVENTS
+  // =========================================================
+  // Event images are uploaded by the admin through the backend.
+  // The returned relative path is converted to the backend
+  // /uploads/... URL by getEventImage().
   // =========================================================
 
   const homeEvents =
@@ -2089,9 +2147,27 @@ function Home() {
                                 event.title ||
                                 "SNICT Event"
                               }
+                              loading="lazy"
                               onError={(e) => {
-                                e.currentTarget.style.display =
+                                console.warn(
+                                  "Event image failed to load:",
+                                  image
+                                );
+
+                                const img =
+                                  e.currentTarget;
+
+                                img.style.display =
                                   "none";
+
+                                const parent =
+                                  img.parentElement;
+
+                                if (parent) {
+                                  parent.classList.add(
+                                    "home-event-image-error"
+                                  );
+                                }
                               }}
                             />
 

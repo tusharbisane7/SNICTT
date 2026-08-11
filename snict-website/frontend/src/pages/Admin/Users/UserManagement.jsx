@@ -208,6 +208,69 @@ function UserManagement() {
   };
 
   // =========================================================
+  // PROFILE IMAGE
+  // =========================================================
+  // Images are uploaded from the user's desktop and served
+  // by the backend from /uploads/profile/...
+  // =========================================================
+
+  const getProfileImage = (member) => {
+    const rawImage =
+      member?.profileImage ||
+      member?.profile_image ||
+      member?.profileImageUrl ||
+      member?.profile_image_url ||
+      member?.photoUrl ||
+      member?.photo_url ||
+      member?.image ||
+      member?.image_url ||
+      "";
+
+    if (!rawImage) {
+      return "";
+    }
+
+    const image = String(rawImage).trim();
+
+    if (!image) {
+      return "";
+    }
+
+    // Already a complete URL or data URL.
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("data:")
+    ) {
+      return image;
+    }
+
+    const apiUrl =
+      import.meta.env.VITE_API_URL ||
+      "https://snict-backend.onrender.com/api";
+
+    let backendOrigin = apiUrl.trim();
+
+    // API URL is normally .../api, while uploaded files
+    // are served from .../uploads/...
+    if (backendOrigin.endsWith("/api")) {
+      backendOrigin = backendOrigin.slice(
+        0,
+        backendOrigin.length - 4
+      );
+    }
+
+    backendOrigin =
+      backendOrigin.replace(/\/$/, "");
+
+    const cleanPath = image.startsWith("/")
+      ? image
+      : `/${image}`;
+
+    return `${backendOrigin}${cleanPath}`;
+  };
+
+  // =========================================================
   // DATE FORMAT
   // =========================================================
 
@@ -1046,11 +1109,28 @@ function UserManagement() {
                             <div className="user-member-cell">
 
                               <div className="user-member-avatar">
+                                {getProfileImage(member) ? (
+                                  <img
+                                    src={getProfileImage(member)}
+                                    alt={getName(member)}
+                                    loading="lazy"
+                                    onError={(event) => {
+                                      event.currentTarget.style.display =
+                                        "none";
 
-                                <User
-                                  size={16}
-                                />
+                                      const parent =
+                                        event.currentTarget.parentElement;
 
+                                      if (parent) {
+                                        parent.classList.add(
+                                          "user-avatar-image-error"
+                                        );
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <User size={16} />
+                                )}
                               </div>
 
                               <div>
@@ -1355,9 +1435,27 @@ function UserManagement() {
               <div className="user-profile-summary">
 
                 <div className="user-profile-avatar">
+                  {getProfileImage(selectedMember) ? (
+                    <img
+                      src={getProfileImage(selectedMember)}
+                      alt={getName(selectedMember)}
+                      onError={(event) => {
+                        event.currentTarget.style.display =
+                          "none";
 
-                  <User size={30} />
+                        const parent =
+                          event.currentTarget.parentElement;
 
+                        if (parent) {
+                          parent.classList.add(
+                            "user-avatar-image-error"
+                          );
+                        }
+                      }}
+                    />
+                  ) : (
+                    <User size={30} />
+                  )}
                 </div>
 
                 <div>
