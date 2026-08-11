@@ -425,56 +425,60 @@ function Navbar() {
   // PROFILE IMAGE URL
   // =========================================================
 
-  const getProfileImageUrl = (
-    image
-  ) => {
+  const getProfileImageUrl = (image) => {
 
     if (!image) {
       return null;
     }
 
-    if (
-      image.startsWith("http://") ||
-      image.startsWith("https://") ||
-      image.startsWith("data:")
-    ) {
+    const imageString = String(image).trim();
 
-      return image;
-
+    if (!imageString) {
+      return null;
     }
 
+    // Already a complete URL
+    if (
+      imageString.startsWith("http://") ||
+      imageString.startsWith("https://") ||
+      imageString.startsWith("data:")
+    ) {
+      return imageString;
+    }
+
+    // Use the configured API URL.
+    // Example: https://snict-backend.onrender.com/api
     const apiBaseUrl =
-      api.defaults?.baseURL || "";
+      import.meta.env.VITE_API_URL ||
+      api.defaults?.baseURL ||
+      "https://snict-backend.onrender.com/api";
 
-    const cleanBase =
-      apiBaseUrl.replace(
-        /\/$/,
-        ""
-      );
+    const cleanApiUrl = String(apiBaseUrl)
+      .trim()
+      .replace(/\/+$/, "");
 
-    if (
-      image.startsWith("/")
-    ) {
+    // Convert API origin from:
+    // https://domain.com/api
+    // to:
+    // https://domain.com
+    const backendOrigin = cleanApiUrl.replace(
+      /\/api\/?$/,
+      ""
+    );
 
-      const baseWithoutApi =
-        cleanBase.replace(
-          /\/api$/,
-          ""
-        );
-
-      return `${baseWithoutApi}${image}`;
-
+    // Backend normally stores paths like:
+    // /uploads/profile/profile-123.jpg
+    if (imageString.startsWith("/")) {
+      return `${backendOrigin}${imageString}`;
     }
 
-    return `${cleanBase}/${image}`;
-
+    // Also support paths without the leading slash.
+    return `${backendOrigin}/${imageString}`;
   };
 
 
   const profileImageUrl =
-    getProfileImageUrl(
-      profileImage
-    );
+    getProfileImageUrl(profileImage);
 
 
   // =========================================================
@@ -536,116 +540,102 @@ function Navbar() {
     const [imageFailed, setImageFailed] =
       useState(false);
 
+    // Reset the fallback state whenever the logged-in
+    // user's image changes.
+    useEffect(() => {
+      setImageFailed(false);
+    }, [profileImageUrl]);
+
     const imageAvailable =
       Boolean(
         profileImageUrl &&
         !imageFailed
       );
 
+    const handleImageError = () => {
+      console.error(
+        "SNICT profile image failed to load:",
+        profileImageUrl
+      );
+
+      setImageFailed(true);
+    };
+
+    // -------------------------------------------------------
+    // DROPDOWN AVATAR
+    // -------------------------------------------------------
 
     if (dropdown) {
-
       return (
-
         <div
-          className={`user-dropdown-avatar ${
-            sizeClass
-          }`}
+          className={`user-dropdown-avatar ${sizeClass}`}
         >
-
           {imageAvailable ? (
-
             <img
               src={profileImageUrl}
               alt={`${displayName} profile`}
               className="user-dropdown-profile-image"
-              onError={() =>
-                setImageFailed(true)
-              }
+              loading="lazy"
+              onError={handleImageError}
             />
-
           ) : (
-
             <span className="user-dropdown-avatar-letter">
               {avatarLetter}
             </span>
-
           )}
-
         </div>
-
       );
-
     }
 
+    // -------------------------------------------------------
+    // MOBILE AVATAR
+    // -------------------------------------------------------
 
     if (mobile) {
-
       return (
-
         <div
-          className={`mobile-user-avatar ${
-            sizeClass
-          }`}
+          className={`mobile-user-avatar ${sizeClass}`}
         >
-
           {imageAvailable ? (
-
             <img
               src={profileImageUrl}
               alt={`${displayName} profile`}
               className="mobile-profile-image"
-              onError={() =>
-                setImageFailed(true)
-              }
+              loading="lazy"
+              onError={handleImageError}
             />
-
           ) : (
-
             <span className="mobile-avatar-letter">
               {avatarLetter}
             </span>
-
           )}
-
         </div>
-
       );
-
     }
 
+    // -------------------------------------------------------
+    // DESKTOP NAVBAR AVATAR
+    // -------------------------------------------------------
 
     return (
-
       <div
-        className={`navbar-user-avatar ${
-          sizeClass
-        }`}
+        className={`navbar-user-avatar ${sizeClass}`}
       >
-
         {imageAvailable ? (
-
           <img
             src={profileImageUrl}
             alt={`${displayName} profile`}
             className="navbar-profile-image"
-            onError={() =>
-              setImageFailed(true)
-            }
+            loading="lazy"
+            onError={handleImageError}
           />
-
         ) : (
-
           <span className="navbar-avatar-letter">
             {avatarLetter}
           </span>
-
         )}
-
       </div>
-
     );
-
   };
 
 

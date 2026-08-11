@@ -42,6 +42,7 @@ function Dashboard() {
 
   // Upcoming booked-events slider
   const [upcomingSlide, setUpcomingSlide] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
 
   // =========================================================
@@ -121,6 +122,55 @@ function Dashboard() {
     displayName
       .charAt(0)
       .toUpperCase();
+
+  // =========================================================
+  // USER PROFILE IMAGE
+  // =========================================================
+  // Supports:
+  // - Full http/https image URLs
+  // - /uploads/profile/... paths from backend
+  // - Relative image paths
+  // =========================================================
+
+  const profileImageUrl = useMemo(() => {
+    const image =
+      user?.profileImageUrl ||
+      user?.profile_image_url ||
+      user?.photoUrl ||
+      user?.photo ||
+      "";
+
+    if (!image) {
+      return "";
+    }
+
+    const imageString = String(image).trim();
+
+    if (
+      imageString.startsWith("http://") ||
+      imageString.startsWith("https://") ||
+      imageString.startsWith("data:")
+    ) {
+      return imageString;
+    }
+
+    const apiUrl =
+      import.meta.env.VITE_API_URL ||
+      "https://snict-backend.onrender.com/api";
+
+    const backendOrigin =
+      apiUrl.replace(/\/api\/?$/, "");
+
+    if (imageString.startsWith("/")) {
+      return `${backendOrigin}${imageString}`;
+    }
+
+    return `${backendOrigin}/${imageString}`;
+  }, [user]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [profileImageUrl]);
 
 
   // =========================================================
@@ -726,7 +776,16 @@ function Dashboard() {
           <div className="dashboard-member-card">
 
             <div className="dashboard-member-avatar">
-              {avatarLetter}
+              {profileImageUrl && !imageError ? (
+                <img
+                  src={profileImageUrl}
+                  alt={`${displayName} profile`}
+                  onError={() => setImageError(true)}
+                  loading="eager"
+                />
+              ) : (
+                avatarLetter
+              )}
             </div>
 
 
