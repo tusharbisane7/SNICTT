@@ -11,7 +11,9 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  const [loading, setLoading] =
+    useState(true);
 
   // =========================================================
   // GET CURRENT USER
@@ -19,7 +21,8 @@ export function AuthProvider({ children }) {
 
   const loadUser = async () => {
     try {
-      const response = await api.get("/auth/profile");
+      const response =
+        await api.get("/auth/profile");
 
       if (
         response.data?.success &&
@@ -29,14 +32,25 @@ export function AuthProvider({ children }) {
       } else {
         setUser(null);
       }
+
     } catch (error) {
-      if (error.response?.status !== 401) {
-        console.error("Load user error:", error);
+
+      // 401 simply means user is not logged in.
+      if (
+        error.response?.status !== 401
+      ) {
+        console.error(
+          "Load user error:",
+          error
+        );
       }
 
       setUser(null);
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
@@ -52,20 +66,47 @@ export function AuthProvider({ children }) {
   // LOGIN
   // =========================================================
 
-  const login = async (identifier, password) => {
-    const response = await api.post("/auth/login", {
-      identifier: identifier.trim(),
-      password,
-    });
+  const login = async (
+    identifier,
+    password
+  ) => {
 
-    if (
-      response.data?.success &&
-      response.data?.user
-    ) {
-      setUser(response.data.user);
+    try {
+
+      const response =
+        await api.post(
+          "/auth/login",
+          {
+            identifier:
+              identifier.trim(),
+
+            password,
+          }
+        );
+
+      if (
+        response.data?.success &&
+        response.data?.user
+      ) {
+
+        setUser(
+          response.data.user
+        );
+
+      }
+
+      return response.data;
+
+    } catch (error) {
+
+      console.error(
+        "Login error:",
+        error
+      );
+
+      throw error;
+
     }
-
-    return response.data;
   };
 
   // =========================================================
@@ -73,12 +114,24 @@ export function AuthProvider({ children }) {
   // =========================================================
 
   const logout = async () => {
+
     try {
-      await api.post("/auth/logout");
+
+      await api.post(
+        "/auth/logout"
+      );
+
     } catch (error) {
-      console.error("Logout error:", error);
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
     } finally {
+
       setUser(null);
+
     }
   };
 
@@ -107,12 +160,16 @@ export function AuthProvider({ children }) {
 // =========================================================
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+
+  const context =
+    useContext(AuthContext);
 
   if (context === null) {
+
     throw new Error(
       "useAuth must be used inside AuthProvider"
     );
+
   }
 
   return context;
