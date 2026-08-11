@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 
 require("dotenv").config();
 
@@ -36,14 +35,26 @@ const membershipRoutes =
 const sliderRoutes =
   require("./routes/sliderRoutes");
 
+
 // =========================================================
 // APP
 // =========================================================
 
 const app = express();
 
+
 // =========================================================
 // CORS
+// =========================================================
+//
+// Frontend:
+// https://demositesnict.netlify.app
+//
+// Local development:
+// http://localhost:5173
+//
+// credentials: true is REQUIRED because authentication
+// uses the HTTP-only snict_token cookie.
 // =========================================================
 
 const allowedOrigins = [
@@ -56,17 +67,26 @@ app.use(
     origin: function (origin, callback) {
 
       // Allow requests without Origin
+      // Example: Postman/server-side requests
       if (!origin) {
         return callback(null, true);
       }
 
-      // Allow localhost and production frontend
-      if (allowedOrigins.includes(origin)) {
+      if (
+        allowedOrigins.includes(origin)
+      ) {
         return callback(null, true);
       }
 
+      console.error(
+        "❌ CORS blocked origin:",
+        origin
+      );
+
       return callback(
-        new Error("Not allowed by CORS")
+        new Error(
+          "Not allowed by CORS"
+        )
       );
     },
 
@@ -88,19 +108,24 @@ app.use(
   })
 );
 
+
 // =========================================================
 // BODY PARSERS
 // =========================================================
 
 app.use(
-  express.json()
+  express.json({
+    limit: "10mb",
+  })
 );
 
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "10mb",
   })
 );
+
 
 // =========================================================
 // COOKIE PARSER
@@ -110,28 +135,6 @@ app.use(
   cookieParser()
 );
 
-// =========================================================
-// UPLOADS / STATIC FILES
-// =========================================================
-//
-// Committee images:
-// /uploads/committee/filename.jpg
-//
-// Slider images:
-// /uploads/slider/filename.jpg
-//
-// This makes uploaded files publicly accessible.
-// =========================================================
-
-app.use(
-  "/uploads",
-  express.static(
-    path.join(
-      __dirname,
-      "uploads"
-    )
-  )
-);
 
 // =========================================================
 // HEALTH CHECK
@@ -146,9 +149,14 @@ app.get(
 
       message:
         "SNICT Backend API is running",
+
+      environment:
+        process.env.NODE_ENV ||
+        "development",
     });
   }
 );
+
 
 // =========================================================
 // MEMBERSHIP ROUTES
@@ -159,6 +167,7 @@ app.use(
   membershipRoutes
 );
 
+
 // =========================================================
 // AUTH ROUTES
 // =========================================================
@@ -167,6 +176,7 @@ app.use(
   "/api/auth",
   authRoutes
 );
+
 
 // =========================================================
 // ADMIN ROUTES
@@ -177,6 +187,7 @@ app.use(
   adminRoutes
 );
 
+
 // =========================================================
 // COMMITTEE ROUTES
 // =========================================================
@@ -185,6 +196,7 @@ app.use(
   "/api/committees",
   committeeRoutes
 );
+
 
 // =========================================================
 // EVENT ROUTES
@@ -195,6 +207,7 @@ app.use(
   eventRoutes
 );
 
+
 // =========================================================
 // BOOKING ROUTES
 // =========================================================
@@ -203,6 +216,7 @@ app.use(
   "/api/bookings",
   bookingRoutes
 );
+
 
 // =========================================================
 // PAYMENT ROUTES
@@ -213,6 +227,7 @@ app.use(
   paymentRoutes
 );
 
+
 // =========================================================
 // EXPENSE ROUTES
 // =========================================================
@@ -222,6 +237,7 @@ app.use(
   expenseRoutes
 );
 
+
 // =========================================================
 // SLIDER ROUTES
 // =========================================================
@@ -230,6 +246,7 @@ app.use(
   "/api/sliders",
   sliderRoutes
 );
+
 
 // =========================================================
 // 404 ROUTE
@@ -247,6 +264,7 @@ app.use(
   }
 );
 
+
 // =========================================================
 // GLOBAL ERROR HANDLER
 // =========================================================
@@ -260,18 +278,39 @@ app.use(
   ) => {
 
     console.error(
-      "Global server error:",
+      "❌ Global server error:",
       error
     );
+
+    // CORS error
+    if (
+      error.message ===
+      "Not allowed by CORS"
+    ) {
+
+      return res.status(403).json({
+        success: false,
+
+        message:
+          "CORS origin not allowed",
+      });
+    }
 
     return res.status(500).json({
       success: false,
 
       message:
         "Internal server error",
+
+      debug:
+        process.env.NODE_ENV !==
+        "production"
+          ? error.message
+          : undefined,
     });
   }
 );
+
 
 // =========================================================
 // SERVER
@@ -289,10 +328,14 @@ app.listen(
     );
 
     console.log(
-      `📁 Uploads served from: ${path.join(
-        __dirname,
-        "uploads"
-      )}`
+      `🌐 Environment: ${
+        process.env.NODE_ENV ||
+        "development"
+      }`
+    );
+
+    console.log(
+      `☁️ Cloudinary image storage enabled`
     );
   }
 );

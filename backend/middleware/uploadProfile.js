@@ -1,134 +1,238 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const cloudinary = require("../config/cloudinary");
 
 // =========================================================
-// PROFILE UPLOAD DIRECTORY
+// PROFILE IMAGE UPLOAD
+// =========================================================
+//
+// Flow:
+//
+// React
+//   ↓
+// Multer memoryStorage
+//   ↓
+// Cloudinary
+//   ↓
+// req.file.path = Cloudinary secure URL
+//
+// Frontend field:
+// profileImage
+//
 // =========================================================
 
-const uploadDirectory = path.join(
-  __dirname,
-  "../uploads/profile"
-);
-
-// Create directory if it doesn't exist
-if (!fs.existsSync(uploadDirectory)) {
-  fs.mkdirSync(
-    uploadDirectory,
-    {
-      recursive: true,
-    }
-  );
-}
-
 // =========================================================
-// STORAGE
+// MULTER MEMORY STORAGE
 // =========================================================
 
-const storage = multer.diskStorage({
-
-  destination: (
-    req,
-    file,
-    cb
-  ) => {
-
-    cb(
-      null,
-      uploadDirectory
-    );
-
-  },
-
-  filename: (
-    req,
-    file,
-    cb
-  ) => {
-
-    const extension =
-      path.extname(
-        file.originalname
-      ).toLowerCase();
-
-    const uniqueName =
-      `profile-${Date.now()}-${Math.round(
-        Math.random() * 1e9
-      )}${extension}`;
-
-    cb(
-      null,
-      uniqueName
-    );
-
-  },
-
-});
+const storage = multer.memoryStorage();
 
 // =========================================================
 // FILE FILTER
 // =========================================================
 
-const fileFilter = (
-  req,
-  file,
-  cb
-) => {
-
-  const allowedTypes = [
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
     "image/jpeg",
     "image/jpg",
     "image/png",
     "image/webp",
   ];
 
-  if (
-    allowedTypes.includes(
-      file.mimetype
-    )
-  ) {
-
-    cb(
-      null,
-      true
-    );
-
-  } else {
-
-    cb(
-      new Error(
-        "Only JPG, JPEG, PNG and WEBP images are allowed"
-      ),
-      false
-    );
-
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    return cb(null, true);
   }
 
+  return cb(
+    new Error(
+      "Only JPG, JPEG, PNG and WEBP images are allowed."
+    ),
+    false
+  );
 };
 
 // =========================================================
 // MULTER
 // =========================================================
 
-const uploadProfile = multer({
-
+const upload = multer({
   storage,
 
   fileFilter,
 
   limits: {
-
-    // Maximum 5 MB
-    fileSize:
-      5 * 1024 * 1024,
-
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
   },
-
 });
 
 // =========================================================
-// EXPORT
+// UPLOAD BUFFER TO CLOUDINARY
 // =========================================================
 
+const uploadToCloudinary = (
+  buffer,
+  options = {}
+) => {
+  return new Promise(
+    (resolve, reject) => {
+      const uploadStream =
+        cloudinary.uploader.upload_stream(
+          options,
+          (error, result) => {
+            if (error) {
+              return reject(error);
+            }
+
+            resolve(result);
+          }
+        );
+
+      uploadStream.end(buffer);
+    }
+  );
+};
+
+// =========================================================
+// PROFILE UPLOAD MIDDLEWARE
+// =========================================================
+
+const profileUpload = (
+  req,
+  res,
+  next
+) => {
+  upload.single("profileImage")(
+    req,
+    res,
+    async (error) => {
+
+      // ===================================================
+      // MULTER ERROR
+      // ===================================================
+
+      if (error) {
+        console.error(
+          "Profile image upload error:",
+          error
+        );
+
+        if (
+          error.code ===
+          "LIMIT_FILE_SIZE"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Profile image must be 5 MB or smaller.",
+          });
+        }
+
+        if (
+          error.code ===
+          "LIMIT_FILE_COUNT"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Only one profile image can be uploaded.",
+          });
+        }
+
+        if (
+          error.code ===
+          "LIMIT_UNEXPECTED_FILE"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Unexpected image field. Please use 'profileImage'.",
+          });
+        }
+
+        return res.status(400).json({
+          success: false,
+          message:
+            error.message ||
+            "Unable to upload profile image.",
+        });
+      }
+
+      // ===================================================
+      // NO FILE
+      // ===================================================
+
+      if (!req.file) {
+        return next();
+      }
+
+      try {
+        // =================================================
+        // UPLOAD TO CLOUDINARY
+        // =================================================
+
+        const result =
+          await uploadToCloudinary(
+            req.file.buffer,
+            {
+              folder:
+                "snict/profile",
+
+              resource_type:
+                "image",
+
+              transformation: [
+                {
+                  width: 1200,
+                  height: 1200,
+                  crop: "limit",
+                  quality: "auto",
+                  fetch_format: "auto",
+                },
+              ],
+            }
+          );
+
+        // =================================================
+        // ATTACH CLOUDINARY INFORMATION
+        // =================================================
+
+        req.file.path =
+          result.secure_url;
+
+        req.file.secure_url =
+          result.secure_url;
+
+        req.file.public_id =
+          result.public_id;
+
+        req.file.filename =
+          result.public_id;
+
+        req.file.cloudinary =
+          result;
+
+        // Also make URL easily available
+        req.body.profileImage =
+          result.secure_url;
+
+        next();
+
+      } catch (cloudinaryError) {
+
+        console.error(
+          "Cloudinary profile upload error:",
+          cloudinaryError
+        );
+
+        return res.status(500).json({
+          success: false,
+          message:
+            "Unable to upload profile image to Cloudinary.",
+        });
+      }
+    }
+  );
+};
+
 module.exports =
-  uploadProfile;
+  profileUpload;

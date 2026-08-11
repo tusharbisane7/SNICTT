@@ -172,22 +172,16 @@ function Footer() {
             </Link>
 
 
-            <Link to="/team">
+            <Link to="/members">
               <span>
-                Our Team
+                Members
               </span>
 
               <ArrowRight size={14} />
             </Link>
 
 
-            <Link to="/committees">
-              <span>
-                Committees
-              </span>
-
-              <ArrowRight size={14} />
-            </Link>
+           
 
 
             <Link to="/contact">
@@ -227,7 +221,7 @@ function Footer() {
               </div>
 
               <a href="mailto:info@snict.org">
-                info@snict.org
+                snict2025@gmail.com
               </a>
 
             </div>
@@ -241,8 +235,8 @@ function Footer() {
                 <Phone size={18} />
               </div>
 
-              <a href="tel:+919999999999">
-                +91 99999 99999
+              <a href="tel:+919731464382">
+                +91 9731464382
               </a>
 
             </div>
@@ -257,7 +251,8 @@ function Footer() {
               </div>
 
               <span>
-                Maharashtra, India
+                45/25 Socitey of Neo Interventional Cardiovascular Technologites,
+                1-1/Pelleru, Chrjerla, SPSR, Nellore, Andhra Pradesh - 524309
               </span>
 
             </div>

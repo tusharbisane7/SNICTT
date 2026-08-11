@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const pool = require("../config/db");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
+const cloudinary = require("../config/cloudinary");
 
 const {
   generateOtp,
@@ -27,75 +28,21 @@ const createExpiry = () => {
 
 
 // =========================================================
-// BACKEND ORIGIN
-// =========================================================
-//
-// Converts relative upload paths:
-//
-// /uploads/profile/photo.jpg
-//
-// into:
-//
-// https://snict-backend.onrender.com/uploads/profile/photo.jpg
-//
-// Works on localhost and Render.
-//
-
-const getBackendOrigin = (req) => {
-  // -------------------------------------------------------
-  // OPTIONAL ENV URL
-  // -------------------------------------------------------
-
-  if (process.env.BACKEND_URL) {
-    return String(
-      process.env.BACKEND_URL
-    ).replace(/\/+$/, "");
-  }
-
-  // -------------------------------------------------------
-  // RENDER / PROXY SUPPORT
-  // -------------------------------------------------------
-
-  const forwardedProtocol =
-    req.get("x-forwarded-proto");
-
-  const protocol =
-    forwardedProtocol
-      ? forwardedProtocol
-          .split(",")[0]
-          .trim()
-      : req.protocol;
-
-  const host =
-    req.get("host");
-
-  return `${protocol}://${host}`;
-};
-
-
-// =========================================================
-// IMAGE URL HELPER
+// IMAGE URL / CLOUDINARY HELPERS
 // =========================================================
 
-const getImageUrl = (
-  req,
-  imagePath
-) => {
+const getImageUrl = (req, imagePath) => {
   if (!imagePath) {
     return null;
   }
 
-  const image =
-    String(imagePath).trim();
+  const image = String(imagePath).trim();
 
   if (!image) {
     return null;
   }
 
-  // -------------------------------------------------------
-  // ALREADY FULL URL
-  // -------------------------------------------------------
-
+  // Cloudinary URL
   if (
     image.startsWith("http://") ||
     image.startsWith("https://") ||
@@ -104,19 +51,128 @@ const getImageUrl = (
     return image;
   }
 
-  // -------------------------------------------------------
-  // RELATIVE UPLOAD PATH
-  // -------------------------------------------------------
-
-  const origin =
-    getBackendOrigin(req);
+  // Backward compatibility for old local images
+  const backendUrl = process.env.BACKEND_URL
+    ? String(process.env.BACKEND_URL).replace(
+        /\/+$/,
+        ""
+      )
+    : `${req.protocol}://${req.get("host")}`;
 
   if (image.startsWith("/")) {
-    return `${origin}${image}`;
+    return `${backendUrl}${image}`;
   }
 
-  return `${origin}/${image}`;
+  return `${backendUrl}/${image}`;
 };
+
+
+// =========================================================
+// GET CLOUDINARY PUBLIC ID
+// =========================================================
+
+const getCloudinaryPublicId = (
+  imageUrl
+) => {
+  if (!imageUrl) {
+    return null;
+  }
+
+  const value =
+    String(imageUrl).trim();
+
+  if (
+    !value.includes(
+      "res.cloudinary.com"
+    ) ||
+    !value.includes("/upload/")
+  ) {
+    return null;
+  }
+
+  try {
+    const uploadPart =
+      value.split("/upload/")[1];
+
+    if (!uploadPart) {
+      return null;
+    }
+
+    const parts =
+      uploadPart
+        .split("/")
+        .filter(Boolean);
+
+    // Remove Cloudinary version
+    // Example: v123456789
+    if (
+      parts.length > 0 &&
+      /^v\d+$/.test(parts[0])
+    ) {
+      parts.shift();
+    }
+
+    if (!parts.length) {
+      return null;
+    }
+
+    return parts
+      .join("/")
+      .replace(
+        /\.[^/.]+$/,
+        ""
+      );
+
+  } catch (error) {
+
+    console.error(
+      "Cloudinary public ID extraction error:",
+      error.message
+    );
+
+    return null;
+  }
+};
+
+
+// =========================================================
+// DELETE CLOUDINARY IMAGE
+// =========================================================
+
+const deleteCloudinaryImage =
+  async (
+    imageUrl
+  ) => {
+
+    const publicId =
+      getCloudinaryPublicId(
+        imageUrl
+      );
+
+    if (!publicId) {
+      return;
+    }
+
+    try {
+
+      await cloudinary.uploader.destroy(
+        publicId,
+        {
+          resource_type: "image",
+          invalidate: true,
+        }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Cloudinary image delete error:",
+        error.message
+      );
+
+      // Do not fail the main DB operation
+    }
+  };
 
 
 // =========================================================
@@ -127,10 +183,12 @@ const authCookieOptions = {
   httpOnly: true,
 
   secure:
-    process.env.NODE_ENV === "production",
+    process.env.NODE_ENV ===
+    "production",
 
   sameSite:
-    process.env.NODE_ENV === "production"
+    process.env.NODE_ENV ===
+    "production"
       ? "none"
       : "lax",
 
@@ -153,6 +211,7 @@ const setAuthCookie = (
   res,
   token
 ) => {
+
   res.cookie(
     "snict_token",
     token,
@@ -165,7 +224,10 @@ const setAuthCookie = (
 // BIO WORD COUNT
 // =========================================================
 
-const getWordCount = (text) => {
+const getWordCount = (
+  text
+) => {
+
   if (!text) {
     return 0;
   }
@@ -186,8 +248,11 @@ const cleanUser = (
   user,
   req
 ) => {
+
   return {
-    id: user.id,
+
+    id:
+      user.id,
 
     fullName:
       user.full_name,
@@ -239,6 +304,7 @@ const safeHashCompare = (
   hashA,
   hashB
 ) => {
+
   if (
     !hashA ||
     !hashB
@@ -282,7 +348,9 @@ const checkUsername =
     req,
     res
   ) => {
+
     try {
+
       const username =
         String(
           req.query.username ||
@@ -292,11 +360,16 @@ const checkUsername =
           .toLowerCase();
 
       if (!username) {
+
         return res.json({
           success: true,
-          available: false,
+
+          available:
+            false,
+
           message:
             "Enter a username",
+
           suggestions: [],
         });
       }
@@ -306,11 +379,16 @@ const checkUsername =
           username
         )
       ) {
+
         return res.json({
           success: true,
-          available: false,
+
+          available:
+            false,
+
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
+
           suggestions: [],
         });
       }
@@ -319,21 +397,32 @@ const checkUsername =
         await pool.query(
           `
           SELECT id
+
           FROM users
+
           WHERE username = $1
+
           LIMIT 1
           `,
-          [username]
+          [
+            username,
+          ]
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.json({
           success: true,
-          available: true,
+
+          available:
+            true,
+
           message:
             "Username available",
+
           suggestions: [],
         });
       }
@@ -347,13 +436,18 @@ const checkUsername =
 
       return res.json({
         success: true,
-        available: false,
+
+        available:
+          false,
+
         message:
           "Username already taken",
+
         suggestions,
       });
 
     } catch (error) {
+
       console.error(
         "Check username error:",
         error
@@ -361,6 +455,7 @@ const checkUsername =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to check username",
       });
@@ -379,10 +474,12 @@ const registerUser =
     req,
     res
   ) => {
+
     const client =
       await pool.connect();
 
     try {
+
       const {
         fullName,
         username,
@@ -413,8 +510,10 @@ const registerUser =
         !address ||
         !bloodGroup
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "All fields are required",
         });
@@ -459,8 +558,10 @@ const registerUser =
           normalizedMobile
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid 10-digit mobile number",
         });
@@ -475,8 +576,10 @@ const registerUser =
           normalizedUsername
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
         });
@@ -494,8 +597,10 @@ const registerUser =
           normalizedEmail
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid email",
         });
@@ -508,8 +613,10 @@ const registerUser =
       if (
         password.length < 8
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Password must be at least 8 characters",
         });
@@ -529,29 +636,12 @@ const registerUser =
         numericAge < 1 ||
         numericAge > 120
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid age",
-        });
-      }
-
-      // =====================================================
-      // BIO VALIDATION
-      // =====================================================
-
-      const bioWordCount =
-        getWordCount(
-          cleanBio
-        );
-
-      if (
-        bioWordCount > 300
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Bio must not exceed 300 words",
         });
       }
 
@@ -563,15 +653,35 @@ const registerUser =
         cleanDesignation.length >
         150
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Designation must not exceed 150 characters",
         });
       }
 
       // =====================================================
-      // PROFILE IMAGE
+      // BIO VALIDATION
+      // =====================================================
+
+      if (
+        getWordCount(
+          cleanBio
+        ) > 300
+      ) {
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Bio must not exceed 300 words",
+        });
+      }
+
+      // =====================================================
+      // CLOUDINARY PROFILE IMAGE
       // =====================================================
 
       let profileImageUrl =
@@ -579,16 +689,11 @@ const registerUser =
 
       if (req.file) {
 
-        if (req.file.location) {
-          profileImageUrl =
-            req.file.location;
-
-        } else if (
-          req.file.filename
-        ) {
-          profileImageUrl =
-            `/uploads/profile/${req.file.filename}`;
-        }
+        profileImageUrl =
+          req.file.path ||
+          req.file.secure_url ||
+          req.file.url ||
+          null;
       }
 
       // =====================================================
@@ -611,7 +716,9 @@ const registerUser =
             username,
             email,
             mobile
+
           FROM users
+
           WHERE
             email = $1
             OR username = $2
@@ -628,6 +735,7 @@ const registerUser =
         existingUser.rows.length >
         0
       ) {
+
         await client.query(
           "ROLLBACK"
         );
@@ -639,8 +747,10 @@ const registerUser =
           existing.email ===
           normalizedEmail
         ) {
+
           return res.status(409).json({
             success: false,
+
             message:
               "Email already registered",
           });
@@ -650,8 +760,10 @@ const registerUser =
           existing.username ===
           normalizedUsername
         ) {
+
           return res.status(409).json({
             success: false,
+
             message:
               "Username already taken",
           });
@@ -661,8 +773,10 @@ const registerUser =
           existing.mobile ===
           normalizedMobile
         ) {
+
           return res.status(409).json({
             success: false,
+
             message:
               "Mobile number already registered",
           });
@@ -701,6 +815,7 @@ const registerUser =
             designation,
             bio
           )
+
           VALUES
           (
             $1,
@@ -716,6 +831,7 @@ const registerUser =
             $11,
             $12
           )
+
           RETURNING *
           `,
           [
@@ -724,9 +840,13 @@ const registerUser =
             ).trim(),
 
             normalizedUsername,
+
             normalizedEmail,
+
             normalizedMobile,
+
             passwordHash,
+
             numericAge,
 
             String(
@@ -744,6 +864,7 @@ const registerUser =
             profileImageUrl,
 
             cleanDesignation,
+
             cleanBio,
           ]
         );
@@ -757,6 +878,7 @@ const registerUser =
       );
 
       return res.status(201).json({
+
         success: true,
 
         message:
@@ -775,12 +897,15 @@ const registerUser =
     } catch (error) {
 
       try {
+
         await client.query(
           "ROLLBACK"
         );
+
       } catch (
         rollbackError
       ) {
+
         console.error(
           "Rollback error:",
           rollbackError.message
@@ -793,6 +918,7 @@ const registerUser =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -804,10 +930,13 @@ const registerUser =
             ? {
                 error:
                   error.message,
+
                 code:
                   error.code,
+
                 detail:
                   error.detail,
+
                 constraint:
                   error.constraint,
               }
@@ -815,6 +944,7 @@ const registerUser =
       });
 
     } finally {
+
       client.release();
     }
   };
@@ -830,7 +960,9 @@ const loginUser =
     req,
     res
   ) => {
+
     try {
+
       const {
         identifier,
         password,
@@ -840,8 +972,10 @@ const loginUser =
         !identifier ||
         !password
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Username/email and password are required",
         });
@@ -856,10 +990,13 @@ const loginUser =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE
             email = $1
             OR username = $1
+
           LIMIT 1
           `,
           [
@@ -868,10 +1005,13 @@ const loginUser =
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid username/email or password",
         });
@@ -886,9 +1026,13 @@ const loginUser =
           user.password_hash
         );
 
-      if (!passwordMatch) {
+      if (
+        !passwordMatch
+      ) {
+
         return res.status(401).json({
           success: false,
+
           message:
             "Invalid username/email or password",
         });
@@ -905,6 +1049,7 @@ const loginUser =
       );
 
       return res.json({
+
         success: true,
 
         message:
@@ -918,6 +1063,7 @@ const loginUser =
       });
 
     } catch (error) {
+
       console.error(
         "Login error:",
         error
@@ -925,6 +1071,7 @@ const loginUser =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to login",
       });
@@ -942,14 +1089,18 @@ const forgotPassword =
     req,
     res
   ) => {
+
     try {
+
       const {
         email,
       } = req.body;
 
       if (!email) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Email is required",
         });
@@ -964,8 +1115,11 @@ const forgotPassword =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE email = $1
+
           LIMIT 1
           `,
           [
@@ -973,11 +1127,15 @@ const forgotPassword =
           ]
         );
 
+      // Do not reveal whether account exists
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.json({
           success: true,
+
           message:
             "If an account exists, a reset OTP has been sent.",
         });
@@ -1000,11 +1158,13 @@ const forgotPassword =
       await pool.query(
         `
         UPDATE users
+
         SET
           reset_otp_hash = $1,
           reset_otp_expires = $2,
           updated_at =
             CURRENT_TIMESTAMP
+
         WHERE id = $3
         `,
         [
@@ -1079,11 +1239,13 @@ const forgotPassword =
 
       return res.json({
         success: true,
+
         message:
           "If an account exists, a reset OTP has been sent.",
       });
 
     } catch (error) {
+
       console.error(
         "Forgot password error:",
         error
@@ -1091,6 +1253,7 @@ const forgotPassword =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to process password reset",
       });
@@ -1108,7 +1271,9 @@ const resetPassword =
     req,
     res
   ) => {
+
     try {
+
       const {
         email,
         otp,
@@ -1120,18 +1285,23 @@ const resetPassword =
         !otp ||
         !newPassword
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Email, OTP and new password are required",
         });
       }
 
       if (
-        newPassword.length < 8
+        newPassword.length <
+        8
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Password must be at least 8 characters",
         });
@@ -1146,8 +1316,11 @@ const resetPassword =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE email = $1
+
           LIMIT 1
           `,
           [
@@ -1156,10 +1329,13 @@ const resetPassword =
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Invalid reset request",
         });
@@ -1172,8 +1348,10 @@ const resetPassword =
         !user.reset_otp_hash ||
         !user.reset_otp_expires
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Reset OTP not available",
         });
@@ -1185,8 +1363,10 @@ const resetPassword =
           user.reset_otp_expires
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Reset OTP has expired",
         });
@@ -1203,8 +1383,10 @@ const resetPassword =
           user.reset_otp_hash
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Invalid reset OTP",
         });
@@ -1219,12 +1401,14 @@ const resetPassword =
       await pool.query(
         `
         UPDATE users
+
         SET
           password_hash = $1,
           reset_otp_hash = NULL,
           reset_otp_expires = NULL,
           updated_at =
             CURRENT_TIMESTAMP
+
         WHERE id = $2
         `,
         [
@@ -1240,11 +1424,13 @@ const resetPassword =
 
       return res.json({
         success: true,
+
         message:
           "Password reset successfully. Please login again.",
       });
 
     } catch (error) {
+
       console.error(
         "Reset password error:",
         error
@@ -1252,6 +1438,7 @@ const resetPassword =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to reset password",
       });
@@ -1269,7 +1456,9 @@ const changePassword =
     req,
     res
   ) => {
+
     try {
+
       const {
         currentPassword,
         newPassword,
@@ -1279,18 +1468,23 @@ const changePassword =
         !currentPassword ||
         !newPassword
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Current and new passwords are required",
         });
       }
 
       if (
-        newPassword.length < 8
+        newPassword.length <
+        8
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "New password must be at least 8 characters",
         });
@@ -1300,8 +1494,10 @@ const changePassword =
         currentPassword ===
         newPassword
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "New password must be different from current password",
         });
@@ -1311,8 +1507,11 @@ const changePassword =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE id = $1
+
           LIMIT 1
           `,
           [
@@ -1321,10 +1520,13 @@ const changePassword =
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
@@ -1340,8 +1542,10 @@ const changePassword =
         );
 
       if (!valid) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Current password is incorrect",
         });
@@ -1356,10 +1560,12 @@ const changePassword =
       await pool.query(
         `
         UPDATE users
+
         SET
           password_hash = $1,
           updated_at =
             CURRENT_TIMESTAMP
+
         WHERE id = $2
         `,
         [
@@ -1370,11 +1576,13 @@ const changePassword =
 
       return res.json({
         success: true,
+
         message:
           "Password changed successfully",
       });
 
     } catch (error) {
+
       console.error(
         "Change password error:",
         error
@@ -1382,6 +1590,7 @@ const changePassword =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to change password",
       });
@@ -1399,10 +1608,14 @@ const getProfile =
     req,
     res
   ) => {
+
     try {
+
       if (!req.userId) {
+
         return res.status(401).json({
           success: false,
+
           message:
             "Authentication required",
         });
@@ -1412,8 +1625,11 @@ const getProfile =
         await pool.query(
           `
           SELECT *
+
           FROM users
+
           WHERE id = $1
+
           LIMIT 1
           `,
           [
@@ -1422,16 +1638,20 @@ const getProfile =
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
       }
 
       return res.json({
+
         success: true,
 
         user:
@@ -1442,6 +1662,7 @@ const getProfile =
       });
 
     } catch (error) {
+
       console.error(
         "Profile error:",
         error
@@ -1449,6 +1670,7 @@ const getProfile =
 
       return res.status(500).json({
         success: false,
+
         message:
           "Unable to fetch profile",
       });
@@ -1466,7 +1688,9 @@ const updateProfile =
     req,
     res
   ) => {
+
     try {
+
       const {
         fullName,
         username,
@@ -1495,8 +1719,10 @@ const updateProfile =
         !address ||
         !bloodGroup
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "All profile fields are required",
         });
@@ -1560,8 +1786,10 @@ const updateProfile =
         numericAge < 1 ||
         numericAge > 120
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid age",
         });
@@ -1576,8 +1804,10 @@ const updateProfile =
           normalizedUsername
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
         });
@@ -1595,8 +1825,10 @@ const updateProfile =
           normalizedEmail
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid email",
         });
@@ -1611,8 +1843,10 @@ const updateProfile =
           cleanMobile
         )
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Please enter a valid 10-digit mobile number",
         });
@@ -1626,8 +1860,10 @@ const updateProfile =
         cleanDesignation.length >
         150
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Designation must not exceed 150 characters",
         });
@@ -1637,16 +1873,15 @@ const updateProfile =
       // BIO VALIDATION
       // =====================================================
 
-      const bioWordCount =
+      if (
         getWordCount(
           cleanBio
-        );
-
-      if (
-        bioWordCount > 300
+        ) > 300
       ) {
+
         return res.status(400).json({
           success: false,
+
           message:
             "Bio must not exceed 300 words",
         });
@@ -1664,14 +1899,18 @@ const updateProfile =
             username,
             email,
             mobile
+
           FROM users
+
           WHERE
             (
               username = $1
               OR email = $2
               OR mobile = $3
             )
+
             AND id != $4
+
           LIMIT 1
           `,
           [
@@ -1686,6 +1925,7 @@ const updateProfile =
         existingUser.rows.length >
         0
       ) {
+
         const existing =
           existingUser.rows[0];
 
@@ -1693,8 +1933,10 @@ const updateProfile =
           existing.username ===
           normalizedUsername
         ) {
+
           return res.status(409).json({
             success: false,
+
             message:
               "Username already taken",
           });
@@ -1704,8 +1946,10 @@ const updateProfile =
           existing.email ===
           normalizedEmail
         ) {
+
           return res.status(409).json({
             success: false,
+
             message:
               "Email already registered",
           });
@@ -1715,8 +1959,10 @@ const updateProfile =
           existing.mobile ===
           cleanMobile
         ) {
+
           return res.status(409).json({
             success: false,
+
             message:
               "Mobile number already registered",
           });
@@ -1724,7 +1970,7 @@ const updateProfile =
       }
 
       // =====================================================
-      // GET CURRENT PROFILE IMAGE
+      // GET OLD PROFILE IMAGE
       // =====================================================
 
       const currentUserResult =
@@ -1732,8 +1978,11 @@ const updateProfile =
           `
           SELECT
             profile_image_url
+
           FROM users
+
           WHERE id = $1
+
           LIMIT 1
           `,
           [
@@ -1745,35 +1994,35 @@ const updateProfile =
         currentUserResult.rows.length ===
         0
       ) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
       }
 
-      let profileImageUrl =
-        currentUserResult
-          .rows[0]
+      const oldProfileImageUrl =
+        currentUserResult.rows[0]
           .profile_image_url ||
         null;
 
+      // Keep old image if no new image
+      let profileImageUrl =
+        oldProfileImageUrl;
+
       // =====================================================
-      // NEW PROFILE IMAGE
+      // NEW CLOUDINARY IMAGE
       // =====================================================
 
       if (req.file) {
 
-        if (req.file.location) {
-          profileImageUrl =
-            req.file.location;
-
-        } else if (
-          req.file.filename
-        ) {
-          profileImageUrl =
-            `/uploads/profile/${req.file.filename}`;
-        }
+        profileImageUrl =
+          req.file.path ||
+          req.file.secure_url ||
+          req.file.url ||
+          oldProfileImageUrl;
       }
 
       // =====================================================
@@ -1784,6 +2033,7 @@ const updateProfile =
         await pool.query(
           `
           UPDATE users
+
           SET
             full_name = $1,
             username = $2,
@@ -1798,36 +2048,70 @@ const updateProfile =
             bio = $11,
             updated_at =
               CURRENT_TIMESTAMP
+
           WHERE id = $12
+
           RETURNING *
           `,
           [
             cleanFullName,
+
             normalizedUsername,
+
             normalizedEmail,
+
             cleanMobile,
+
             numericAge,
+
             cleanSex,
+
             cleanAddress,
+
             cleanBloodGroup,
+
             profileImageUrl,
+
             cleanDesignation,
+
             cleanBio,
+
             req.userId,
           ]
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
       }
 
+      // =====================================================
+      // DELETE OLD CLOUDINARY IMAGE
+      // ONLY AFTER DATABASE UPDATE
+      // =====================================================
+
+      if (
+        req.file &&
+        oldProfileImageUrl &&
+        oldProfileImageUrl !==
+          profileImageUrl
+      ) {
+
+        await deleteCloudinaryImage(
+          oldProfileImageUrl
+        );
+      }
+
       return res.json({
+
         success: true,
 
         message:
@@ -1863,6 +2147,7 @@ const updateProfile =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -1874,8 +2159,10 @@ const updateProfile =
             ? {
                 error:
                   error.message,
+
                 code:
                   error.code,
+
                 detail:
                   error.detail,
               }
@@ -1888,7 +2175,6 @@ const updateProfile =
 // =========================================================
 // GET ALL REGISTERED MEMBERS
 // GET /api/auth/members
-// PUBLIC ROUTE
 // =========================================================
 
 const getMembers =
@@ -1896,7 +2182,9 @@ const getMembers =
     req,
     res
   ) => {
+
     try {
+
       const result =
         await pool.query(
           `
@@ -1908,22 +2196,28 @@ const getMembers =
             designation,
             bio,
             created_at
+
           FROM users
-          ORDER BY created_at DESC
+
+          ORDER BY
+            created_at DESC
           `
         );
 
       const members =
         result.rows.map(
           (user) => ({
+
             id:
               user.id,
 
             fullName:
-              user.full_name || "",
+              user.full_name ||
+              "",
 
             username:
-              user.username || "",
+              user.username ||
+              "",
 
             profileImageUrl:
               getImageUrl(
@@ -1936,7 +2230,8 @@ const getMembers =
               "Member",
 
             bio:
-              user.bio || "",
+              user.bio ||
+              "",
 
             createdAt:
               user.created_at,
@@ -1944,6 +2239,7 @@ const getMembers =
         );
 
       return res.json({
+
         success: true,
 
         count:
@@ -1979,25 +2275,74 @@ const deleteProfilePhoto =
     req,
     res
   ) => {
+
     try {
 
       if (!req.userId) {
+
         return res.status(401).json({
           success: false,
+
           message:
             "Authentication required",
         });
       }
 
+      // =====================================================
+      // GET CURRENT IMAGE
+      // =====================================================
+
+      const currentResult =
+        await pool.query(
+          `
+          SELECT
+            profile_image_url
+
+          FROM users
+
+          WHERE id = $1
+
+          LIMIT 1
+          `,
+          [
+            req.userId,
+          ]
+        );
+
+      if (
+        currentResult.rows.length ===
+        0
+      ) {
+
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "User not found",
+        });
+      }
+
+      const oldProfileImageUrl =
+        currentResult.rows[0]
+          .profile_image_url ||
+        null;
+
+      // =====================================================
+      // REMOVE FROM DATABASE
+      // =====================================================
+
       const result =
         await pool.query(
           `
           UPDATE users
+
           SET
             profile_image_url = NULL,
             updated_at =
               CURRENT_TIMESTAMP
+
           WHERE id = $1
+
           RETURNING *
           `,
           [
@@ -2006,16 +2351,33 @@ const deleteProfilePhoto =
         );
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
+
         return res.status(404).json({
           success: false,
+
           message:
             "User not found",
         });
       }
 
+      // =====================================================
+      // DELETE FROM CLOUDINARY
+      // =====================================================
+
+      if (
+        oldProfileImageUrl
+      ) {
+
+        await deleteCloudinaryImage(
+          oldProfileImageUrl
+        );
+      }
+
       return res.json({
+
         success: true,
 
         message:
@@ -2062,6 +2424,7 @@ const logoutUser =
     );
 
     return res.json({
+
       success: true,
 
       message:

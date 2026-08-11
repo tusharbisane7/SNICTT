@@ -1,9 +1,5 @@
 const express = require("express");
 
-// =========================================================
-// CONTROLLERS
-// =========================================================
-
 const {
   registerUser,
   checkUsername,
@@ -18,19 +14,11 @@ const {
   logoutUser,
 } = require("../controllers/authController");
 
-// =========================================================
-// MIDDLEWARE
-// =========================================================
-
 const authMiddleware =
   require("../middleware/authMiddleware");
 
 const uploadProfile =
   require("../middleware/uploadProfile");
-
-// =========================================================
-// ROUTER
-// =========================================================
 
 const router = express.Router();
 
@@ -51,17 +39,6 @@ router.get(
 // =========================================================
 // GET ALL REGISTERED MEMBERS
 // GET /api/auth/members
-//
-// PUBLIC
-//
-// Returns:
-// - id
-// - full name
-// - username
-// - profile image
-// - designation
-// - bio
-// - created date
 // =========================================================
 
 router.get(
@@ -70,30 +47,34 @@ router.get(
 );
 
 // =========================================================
-// REGISTER USER
+// REGISTER
 // POST /api/auth/register
 //
 // Content-Type:
 // multipart/form-data
 //
-// Profile image field:
+// Image field:
 // profileImage
+//
+// IMPORTANT:
+// uploadProfile already contains
+// upload.single("profileImage")
 // =========================================================
 
 router.post(
   "/register",
-  uploadProfile.single("profileImage"),
+  uploadProfile,
   registerUser
 );
 
 // =========================================================
-// OLD SIGNUP ROUTE
+// SIGNUP
 // POST /api/auth/signup
 // =========================================================
 
 router.post(
   "/signup",
-  uploadProfile.single("profileImage"),
+  uploadProfile,
   registerUser
 );
 
@@ -128,7 +109,7 @@ router.post(
 );
 
 // =========================================================
-// PROTECTED USER ROUTES
+// PROTECTED ROUTES
 // =========================================================
 
 // =========================================================
@@ -149,27 +130,14 @@ router.get(
 // Content-Type:
 // multipart/form-data
 //
-// Profile image field:
+// Image field:
 // profileImage
-//
-// Supports:
-// - Full name
-// - Username
-// - Email
-// - Mobile
-// - Age
-// - Sex
-// - Address
-// - Blood group
-// - Designation
-// - Bio
-// - Profile image
 // =========================================================
 
 router.put(
   "/profile",
   authMiddleware,
-  uploadProfile.single("profileImage"),
+  uploadProfile,
   updateProfile
 );
 

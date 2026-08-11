@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const cloudinary = require("../config/cloudinary");
 
 // =========================================================
 // CLEAN SLIDER
@@ -34,32 +35,158 @@ const cleanSlider = (slider) => {
   };
 };
 
-
 // =========================================================
-// HELPER - GET UPLOADED IMAGE URL
+// GET CLOUDINARY IMAGE URL
+// =========================================================
+//
+// With CloudinaryStorage:
+//
+// req.file.path
+//
+// contains the complete Cloudinary URL.
+//
+// Example:
+//
+// https://res.cloudinary.com/zb5dk8tg/image/upload/...
+//
 // =========================================================
 
 const getUploadedImageUrl = (req) => {
-
   if (!req.file) {
     return "";
   }
 
-  /*
-   * Multer gives us the uploaded filename.
-   *
-   * Example:
-   * req.file.filename
-   * = slider-1723456789.jpg
-   */
-
-  const baseUrl =
-    process.env.BACKEND_URL ||
-    `${req.protocol}://${req.get("host")}`;
-
-  return `${baseUrl}/uploads/sliders/${req.file.filename}`;
+  // Cloudinary URL
+  return (
+    req.file.path ||
+    req.file.secure_url ||
+    ""
+  );
 };
 
+// =========================================================
+// GET CLOUDINARY PUBLIC ID FROM URL
+// =========================================================
+//
+// Used when replacing/deleting an old Cloudinary image.
+//
+// Example URL:
+//
+// https://res.cloudinary.com/zb5dk8tg/image/upload/v1234567890/
+// snict/sliders/slider-12345.jpg
+//
+// Returns:
+//
+// snict/sliders/slider-12345
+//
+// =========================================================
+
+const getCloudinaryPublicId = (imageUrl) => {
+  try {
+    if (!imageUrl) {
+      return null;
+    }
+
+    // Only process Cloudinary URLs
+    if (
+      !imageUrl.includes(
+        "res.cloudinary.com"
+      )
+    ) {
+      return null;
+    }
+
+    const uploadMarker =
+      "/upload/";
+
+    const uploadIndex =
+      imageUrl.indexOf(
+        uploadMarker
+      );
+
+    if (uploadIndex === -1) {
+      return null;
+    }
+
+    let publicPath =
+      imageUrl.substring(
+        uploadIndex +
+          uploadMarker.length
+      );
+
+    // Remove transformation/version information
+    const parts =
+      publicPath.split("/");
+
+    // Remove version such as v123456789
+    if (
+      parts[0] &&
+      /^v\d+$/.test(parts[0])
+    ) {
+      parts.shift();
+    }
+
+    publicPath =
+      parts.join("/");
+
+    // Remove extension
+    publicPath =
+      publicPath.replace(
+        /\.(jpg|jpeg|png|webp|gif)$/i,
+        ""
+      );
+
+    return publicPath || null;
+
+  } catch (error) {
+    console.error(
+      "Cloudinary public ID extraction error:",
+      error
+    );
+
+    return null;
+  }
+};
+
+// =========================================================
+// DELETE CLOUDINARY IMAGE
+// =========================================================
+
+const deleteCloudinaryImage = async (
+  imageUrl
+) => {
+  try {
+    const publicId =
+      getCloudinaryPublicId(
+        imageUrl
+      );
+
+    if (!publicId) {
+      return;
+    }
+
+    await cloudinary.uploader.destroy(
+      publicId,
+      {
+        resource_type: "image",
+      }
+    );
+
+    console.log(
+      "Cloudinary image deleted:",
+      publicId
+    );
+
+  } catch (error) {
+    console.error(
+      "Cloudinary image delete error:",
+      error.message
+    );
+
+    // Do not fail the database operation
+    // just because old image deletion failed.
+  }
+};
 
 // =========================================================
 // PUBLIC - GET PUBLISHED SLIDERS
@@ -70,9 +197,7 @@ const getSliders = async (
   req,
   res
 ) => {
-
   try {
-
     const result =
       await pool.query(
         `
@@ -99,36 +224,28 @@ const getSliders = async (
       );
 
     return res.json({
-
       success: true,
 
       sliders:
         result.rows.map(
           cleanSlider
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Get sliders error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
         "Unable to load sliders",
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // ADMIN - GET ALL SLIDERS
@@ -139,9 +256,7 @@ const getAllSliders = async (
   req,
   res
 ) => {
-
   try {
-
     const result =
       await pool.query(
         `
@@ -166,36 +281,28 @@ const getAllSliders = async (
       );
 
     return res.json({
-
       success: true,
 
       sliders:
         result.rows.map(
           cleanSlider
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Get all sliders error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
         "Unable to load slider management data",
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // ADMIN - GET SINGLE SLIDER
@@ -206,9 +313,7 @@ const getSliderById = async (
   req,
   res
 ) => {
-
   try {
-
     const {
       id,
     } = req.params;
@@ -238,60 +343,53 @@ const getSliderById = async (
       );
 
     if (
-      result.rows.length === 0
+      result.rows.length ===
+      0
     ) {
-
       return res.status(404).json({
-
         success: false,
 
         message:
           "Slider not found",
-
       });
-
     }
 
     return res.json({
-
       success: true,
 
       slider:
         cleanSlider(
           result.rows[0]
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Get slider error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
         "Unable to load slider",
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // ADMIN - CREATE SLIDER
 // POST /api/sliders/admin
+// =========================================================
 //
-// IMPORTANT:
-// This route expects:
+// Expected:
 //
-// upload.single("image")
+// Content-Type:
+// multipart/form-data
+//
+// Image field:
+// image
 //
 // =========================================================
 
@@ -299,9 +397,7 @@ const createSlider = async (
   req,
   res
 ) => {
-
   try {
-
     const {
       title,
       description,
@@ -310,24 +406,18 @@ const createSlider = async (
       published,
     } = req.body;
 
-
     // =====================================================
     // IMAGE VALIDATION
     // =====================================================
 
     if (!req.file) {
-
       return res.status(400).json({
-
         success: false,
 
         message:
-          "Please select a slider image from your desktop",
-
+          "Please select a slider image",
       });
-
     }
-
 
     // =====================================================
     // TITLE
@@ -338,20 +428,14 @@ const createSlider = async (
         title || ""
       ).trim();
 
-
     if (!cleanTitle) {
-
       return res.status(400).json({
-
         success: false,
 
         message:
           "Slider title is required",
-
       });
-
     }
-
 
     // =====================================================
     // DESCRIPTION
@@ -362,40 +446,37 @@ const createSlider = async (
         description || ""
       ).trim();
 
-
     // =====================================================
-    // IMAGE URL
+    // CLOUDINARY IMAGE URL
     // =====================================================
 
     const imageUrl =
-      getUploadedImageUrl(req);
-
+      getUploadedImageUrl(
+        req
+      );
 
     if (!imageUrl) {
-
       return res.status(400).json({
-
         success: false,
 
         message:
           "Unable to process uploaded image",
-
       });
-
     }
-
 
     // =====================================================
     // DISPLAY ORDER
     // =====================================================
 
+    const parsedOrder =
+      Number(displayOrder);
+
     const order =
       Number.isInteger(
-        Number(displayOrder)
+        parsedOrder
       )
-        ? Number(displayOrder)
+        ? parsedOrder
         : 0;
-
 
     // =====================================================
     // PUBLISHED
@@ -406,13 +487,10 @@ const createSlider = async (
     if (
       published !== undefined
     ) {
-
       isPublished =
         published === true ||
         published === "true";
-
     }
-
 
     // =====================================================
     // INSERT
@@ -448,7 +526,6 @@ const createSlider = async (
         RETURNING *
         `,
         [
-
           imageUrl,
 
           cleanTitle,
@@ -462,13 +539,10 @@ const createSlider = async (
           order,
 
           isPublished,
-
         ]
       );
 
-
     return res.status(201).json({
-
       success: true,
 
       message:
@@ -478,18 +552,15 @@ const createSlider = async (
         cleanSlider(
           result.rows[0]
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Create slider error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
@@ -500,38 +571,35 @@ const createSlider = async (
         "production"
           ? error.message
           : undefined,
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // ADMIN - UPDATE SLIDER
 // PUT /api/sliders/admin/:id
+// =========================================================
 //
-// IMAGE IS OPTIONAL DURING UPDATE
+// Image is OPTIONAL.
 //
-// If admin selects a new image:
-// new image replaces old image.
+// If new image:
+//   upload to Cloudinary
+//   save new URL
+//   delete old Cloudinary image
 //
-// If no image selected:
-// existing image remains.
+// If no image:
+//   keep existing image
+//
 // =========================================================
 
 const updateSlider = async (
   req,
   res
 ) => {
-
   try {
-
     const {
       id,
     } = req.params;
-
 
     const {
       title,
@@ -540,7 +608,6 @@ const updateSlider = async (
       displayOrder,
       published,
     } = req.body;
-
 
     // =====================================================
     // TITLE
@@ -551,23 +618,17 @@ const updateSlider = async (
         title || ""
       ).trim();
 
-
     if (!cleanTitle) {
-
       return res.status(400).json({
-
         success: false,
 
         message:
           "Slider title is required",
-
       });
-
     }
 
-
     // =====================================================
-    // CHECK EXISTING SLIDER
+    // GET EXISTING SLIDER
     // =====================================================
 
     const existingResult =
@@ -584,26 +645,20 @@ const updateSlider = async (
         [id]
       );
 
-
     if (
-      existingResult.rows.length === 0
+      existingResult.rows.length ===
+      0
     ) {
-
       return res.status(404).json({
-
         success: false,
 
         message:
           "Slider not found",
-
       });
-
     }
-
 
     const existing =
       existingResult.rows[0];
-
 
     // =====================================================
     // IMAGE
@@ -612,32 +667,46 @@ const updateSlider = async (
     let imageUrl =
       existing.image_url || "";
 
+    let oldImageUrl = null;
 
     // =====================================================
-    // IF NEW IMAGE SELECTED
+    // NEW IMAGE SELECTED
     // =====================================================
 
     if (req.file) {
+      const newImageUrl =
+        getUploadedImageUrl(
+          req
+        );
+
+      if (!newImageUrl) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Unable to process uploaded image",
+        });
+      }
+
+      oldImageUrl =
+        existing.image_url;
 
       imageUrl =
-        getUploadedImageUrl(req);
-
+        newImageUrl;
     }
 
+    // =====================================================
+    // IMAGE REQUIRED
+    // =====================================================
 
     if (!imageUrl) {
-
       return res.status(400).json({
-
         success: false,
 
         message:
           "Slider image is required",
-
       });
-
     }
-
 
     // =====================================================
     // DESCRIPTION
@@ -648,18 +717,19 @@ const updateSlider = async (
         description || ""
       ).trim();
 
-
     // =====================================================
     // DISPLAY ORDER
     // =====================================================
 
+    const parsedOrder =
+      Number(displayOrder);
+
     const order =
       Number.isInteger(
-        Number(displayOrder)
+        parsedOrder
       )
-        ? Number(displayOrder)
+        ? parsedOrder
         : 0;
-
 
     // =====================================================
     // PUBLISHED
@@ -670,16 +740,13 @@ const updateSlider = async (
     if (
       published !== undefined
     ) {
-
       isPublished =
         published === true ||
         published === "true";
-
     }
 
-
     // =====================================================
-    // UPDATE
+    // UPDATE DATABASE
     // =====================================================
 
     const result =
@@ -709,7 +776,6 @@ const updateSlider = async (
         RETURNING *
         `,
         [
-
           imageUrl,
 
           cleanTitle,
@@ -725,13 +791,30 @@ const updateSlider = async (
           isPublished,
 
           id,
-
         ]
       );
 
+    // =====================================================
+    // DELETE OLD CLOUDINARY IMAGE
+    // =====================================================
+    //
+    // Only after database update succeeds.
+    //
+    // This prevents losing the old image if the DB update
+    // fails.
+    //
+    // =====================================================
+
+    if (
+      oldImageUrl &&
+      oldImageUrl !== imageUrl
+    ) {
+      await deleteCloudinaryImage(
+        oldImageUrl
+      );
+    }
 
     return res.json({
-
       success: true,
 
       message:
@@ -741,18 +824,15 @@ const updateSlider = async (
         cleanSlider(
           result.rows[0]
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Update slider error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
@@ -763,13 +843,9 @@ const updateSlider = async (
         "production"
           ? error.message
           : undefined,
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // ADMIN - DELETE SLIDER
@@ -780,13 +856,47 @@ const deleteSlider = async (
   req,
   res
 ) => {
-
   try {
-
     const {
       id,
     } = req.params;
 
+    // =====================================================
+    // GET IMAGE FIRST
+    // =====================================================
+
+    const existingResult =
+      await pool.query(
+        `
+        SELECT *
+
+        FROM sliders
+
+        WHERE id = $1
+
+        LIMIT 1
+        `,
+        [id]
+      );
+
+    if (
+      existingResult.rows.length ===
+      0
+    ) {
+      return res.status(404).json({
+        success: false,
+
+        message:
+          "Slider not found",
+      });
+    }
+
+    const existing =
+      existingResult.rows[0];
+
+    // =====================================================
+    // DELETE DATABASE RECORD
+    // =====================================================
 
     const result =
       await pool.query(
@@ -800,25 +910,19 @@ const deleteSlider = async (
         [id]
       );
 
+    // =====================================================
+    // DELETE CLOUDINARY IMAGE
+    // =====================================================
 
     if (
-      result.rows.length === 0
+      existing.image_url
     ) {
-
-      return res.status(404).json({
-
-        success: false,
-
-        message:
-          "Slider not found",
-
-      });
-
+      await deleteCloudinaryImage(
+        existing.image_url
+      );
     }
 
-
     return res.json({
-
       success: true,
 
       message:
@@ -828,18 +932,15 @@ const deleteSlider = async (
         cleanSlider(
           result.rows[0]
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Delete slider error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
@@ -850,13 +951,9 @@ const deleteSlider = async (
         "production"
           ? error.message
           : undefined,
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // ADMIN - TOGGLE PUBLISHED
@@ -867,13 +964,10 @@ const toggleSlider = async (
   req,
   res
 ) => {
-
   try {
-
     const {
       id,
     } = req.params;
-
 
     const result =
       await pool.query(
@@ -895,25 +989,19 @@ const toggleSlider = async (
         [id]
       );
 
-
     if (
-      result.rows.length === 0
+      result.rows.length ===
+      0
     ) {
-
       return res.status(404).json({
-
         success: false,
 
         message:
           "Slider not found",
-
       });
-
     }
 
-
     return res.json({
-
       success: true,
 
       message:
@@ -925,18 +1013,15 @@ const toggleSlider = async (
         cleanSlider(
           result.rows[0]
         ),
-
     });
 
   } catch (error) {
-
     console.error(
       "Toggle slider error:",
       error
     );
 
     return res.status(500).json({
-
       success: false,
 
       message:
@@ -947,20 +1032,15 @@ const toggleSlider = async (
         "production"
           ? error.message
           : undefined,
-
     });
-
   }
-
 };
-
 
 // =========================================================
 // EXPORT
 // =========================================================
 
 module.exports = {
-
   getSliders,
 
   getAllSliders,
@@ -974,5 +1054,4 @@ module.exports = {
   deleteSlider,
 
   toggleSlider,
-
 };

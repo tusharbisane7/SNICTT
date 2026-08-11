@@ -1,11 +1,5 @@
 const express = require("express");
 
-const router = express.Router();
-
-// =========================================================
-// CONTROLLER
-// =========================================================
-
 const {
   getCommitteeMembers,
   getCommitteeByName,
@@ -16,10 +10,6 @@ const {
   deleteCommitteeMember,
 } = require("../controllers/committeeController");
 
-// =========================================================
-// MIDDLEWARE
-// =========================================================
-
 const authMiddleware =
   require("../middleware/authMiddleware");
 
@@ -29,15 +19,13 @@ const adminMiddleware =
 const committeeUpload =
   require("../middleware/committeeUpload");
 
+const router = express.Router();
+
 // =========================================================
 // PUBLIC ROUTES
 // =========================================================
 
-// ---------------------------------------------------------
-// Get all active committee members
 // GET /api/committees
-// ---------------------------------------------------------
-
 router.get(
   "/",
   getCommitteeMembers
@@ -46,14 +34,10 @@ router.get(
 // =========================================================
 // ADMIN ROUTES
 // IMPORTANT:
-// Admin routes MUST come BEFORE /:committeeName
+// These must come before /:committeeName
 // =========================================================
 
-// ---------------------------------------------------------
-// Get all committee members
 // GET /api/committees/admin
-// ---------------------------------------------------------
-
 router.get(
   "/admin",
   authMiddleware,
@@ -61,11 +45,7 @@ router.get(
   getAllCommitteeMembers
 );
 
-// ---------------------------------------------------------
-// Get single committee member
 // GET /api/committees/admin/member/:id
-// ---------------------------------------------------------
-
 router.get(
   "/admin/member/:id",
   authMiddleware,
@@ -73,16 +53,17 @@ router.get(
   getCommitteeMemberById
 );
 
-// ---------------------------------------------------------
-// Add committee member
+// =========================================================
+// ADD COMMITTEE MEMBER
+//
 // POST /api/committees/admin
 //
 // Content-Type:
 // multipart/form-data
 //
-// File field:
+// Image field:
 // photo
-// ---------------------------------------------------------
+// =========================================================
 
 router.post(
   "/admin",
@@ -92,16 +73,16 @@ router.post(
   addCommitteeMember
 );
 
-// ---------------------------------------------------------
-// Update committee member
+// =========================================================
+// UPDATE COMMITTEE MEMBER
+//
 // PUT /api/committees/admin/:id
 //
-// Content-Type:
-// multipart/form-data
-//
-// File field:
+// Image field:
 // photo
-// ---------------------------------------------------------
+//
+// Image optional.
+// =========================================================
 
 router.put(
   "/admin/:id",
@@ -111,10 +92,11 @@ router.put(
   updateCommitteeMember
 );
 
-// ---------------------------------------------------------
-// Delete committee member
+// =========================================================
+// DELETE COMMITTEE MEMBER
+//
 // DELETE /api/committees/admin/:id
-// ---------------------------------------------------------
+// =========================================================
 
 router.delete(
   "/admin/:id",
@@ -124,20 +106,17 @@ router.delete(
 );
 
 // =========================================================
-// PUBLIC COMMITTEE ROUTE
-// =========================================================
-
-// ---------------------------------------------------------
-// Get members by committee
+// PUBLIC COMMITTEE BY NAME
+//
+// Examples:
 //
 // GET /api/committees/placement
 // GET /api/committees/academic
 // GET /api/committees/compliance
 // GET /api/committees/working
 //
-// IMPORTANT:
-// Keep this route AFTER all /admin routes.
-// ---------------------------------------------------------
+// MUST remain after admin routes.
+// =========================================================
 
 router.get(
   "/:committeeName",

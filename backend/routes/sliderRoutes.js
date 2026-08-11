@@ -1,7 +1,4 @@
 const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 
 const {
   getSliders,
@@ -19,157 +16,26 @@ const authMiddleware =
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-const router =
-  express.Router();
+const sliderUpload =
+  require("../middleware/sliderUpload");
 
-
-// =========================================================
-// CREATE UPLOAD DIRECTORY
-// =========================================================
-
-const uploadDirectory =
-  path.join(
-    __dirname,
-    "../uploads/sliders"
-  );
-
-if (
-  !fs.existsSync(uploadDirectory)
-) {
-
-  fs.mkdirSync(
-    uploadDirectory,
-    {
-      recursive: true,
-    }
-  );
-
-}
-
+const router = express.Router();
 
 // =========================================================
-// MULTER STORAGE
+// PUBLIC ROUTES
 // =========================================================
 
-const storage =
-  multer.diskStorage({
-
-    destination:
-      (
-        req,
-        file,
-        cb
-      ) => {
-
-        cb(
-          null,
-          uploadDirectory
-        );
-
-      },
-
-    filename:
-      (
-        req,
-        file,
-        cb
-      ) => {
-
-        const extension =
-          path.extname(
-            file.originalname
-          ).toLowerCase();
-
-        const fileName =
-          `slider-${Date.now()}-${Math.round(
-            Math.random() * 1000000
-          )}${extension}`;
-
-        cb(
-          null,
-          fileName
-        );
-
-      },
-
-  });
-
-
-// =========================================================
-// FILE FILTER
-// =========================================================
-
-const fileFilter =
-  (
-    req,
-    file,
-    cb
-  ) => {
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-    ];
-
-    if (
-      allowedTypes.includes(
-        file.mimetype
-      )
-    ) {
-
-      cb(
-        null,
-        true
-      );
-
-    } else {
-
-      cb(
-        new Error(
-          "Only JPG, JPEG, PNG and WEBP images are allowed"
-        )
-      );
-
-    }
-
-  };
-
-
-// =========================================================
-// UPLOAD
-// =========================================================
-
-const upload =
-  multer({
-
-    storage,
-
-    fileFilter,
-
-    limits: {
-      fileSize:
-        5 * 1024 * 1024,
-    },
-
-  });
-
-
-// =========================================================
-// PUBLIC
-// =========================================================
-
+// GET /api/sliders
 router.get(
   "/",
   getSliders
 );
 
-
 // =========================================================
-// ADMIN
+// ADMIN ROUTES
 // =========================================================
 
+// GET /api/sliders/admin/all
 router.get(
   "/admin/all",
   authMiddleware,
@@ -177,7 +43,7 @@ router.get(
   getAllSliders
 );
 
-
+// GET /api/sliders/admin/:id
 router.get(
   "/admin/:id",
   authMiddleware,
@@ -185,24 +51,44 @@ router.get(
   getSliderById
 );
 
+// =========================================================
+// CREATE SLIDER
+// POST /api/sliders/admin
+//
+// Content-Type:
+// multipart/form-data
+//
+// Image field:
+// image
+// =========================================================
 
 router.post(
   "/admin",
   authMiddleware,
   adminMiddleware,
-  upload.single("image"),
+  sliderUpload,
   createSlider
 );
 
+// =========================================================
+// UPDATE SLIDER
+// PUT /api/sliders/admin/:id
+//
+// Image optional
+// =========================================================
 
 router.put(
   "/admin/:id",
   authMiddleware,
   adminMiddleware,
-  upload.single("image"),
+  sliderUpload,
   updateSlider
 );
 
+// =========================================================
+// DELETE SLIDER
+// DELETE /api/sliders/admin/:id
+// =========================================================
 
 router.delete(
   "/admin/:id",
@@ -211,6 +97,10 @@ router.delete(
   deleteSlider
 );
 
+// =========================================================
+// TOGGLE SLIDER
+// PATCH /api/sliders/admin/:id/toggle
+// =========================================================
 
 router.patch(
   "/admin/:id/toggle",
@@ -219,5 +109,8 @@ router.patch(
   toggleSlider
 );
 
+// =========================================================
+// EXPORT
+// =========================================================
 
 module.exports = router;

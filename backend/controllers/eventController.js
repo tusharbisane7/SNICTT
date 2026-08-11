@@ -9,7 +9,11 @@ const getEventStatus = (
   startTime,
   endTime
 ) => {
-  if (!eventDate || !startTime || !endTime) {
+  if (
+    !eventDate ||
+    !startTime ||
+    !endTime
+  ) {
     return "upcoming";
   }
 
@@ -27,13 +31,15 @@ const getEventStatus = (
     return "upcoming";
   }
 
-  if (now >= start && now <= end) {
+  if (
+    now >= start &&
+    now <= end
+  ) {
     return "ongoing";
   }
 
   return "past";
 };
-
 
 // =========================================================
 // HELPER - FORMAT EVENT
@@ -41,7 +47,9 @@ const getEventStatus = (
 
 const formatEvent = (event) => {
   const bookedSlots =
-    Number(event.booked_slots || 0);
+    Number(
+      event.booked_slots || 0
+    );
 
   const maxSlots =
     event.max_slots === null ||
@@ -58,7 +66,9 @@ const formatEvent = (event) => {
       event.end_time
     ),
 
-    price: Number(event.price || 0),
+    price: Number(
+      event.price || 0
+    ),
 
     max_slots: maxSlots,
 
@@ -69,11 +79,11 @@ const formatEvent = (event) => {
         ? null
         : Math.max(
             0,
-            maxSlots - bookedSlots
+            maxSlots -
+              bookedSlots
           ),
   };
 };
-
 
 // =========================================================
 // GET PUBLIC EVENTS
@@ -123,7 +133,6 @@ const getEvents = async (
       success: true,
       events,
     });
-
   } catch (error) {
     console.error(
       "Get events error:",
@@ -138,789 +147,893 @@ const getEvents = async (
   }
 };
 
-
 // =========================================================
 // GET SINGLE PUBLIC EVENT
 // GET /api/events/:id
 // =========================================================
 
-const getEventById = async (
-  req,
-  res
-) => {
-  try {
-    const { id } =
-      req.params;
+const getEventById =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const {
+        id,
+      } = req.params;
 
-    const result =
-      await pool.query(
-        `
-        SELECT
-          id,
-          title,
-          event_type,
-          description,
-          doctor_name,
-          specialization,
-          event_date,
-          start_time,
-          end_time,
-          venue,
-          event_mode,
-          price,
-          max_slots,
-          image_url,
-          booking_enabled,
-          published,
-          created_at,
-          updated_at
-        FROM events
-        WHERE id = $1
-          AND published = TRUE
-        LIMIT 1
-        `,
-        [id]
+      const result =
+        await pool.query(
+          `
+          SELECT
+            id,
+            title,
+            event_type,
+            description,
+            doctor_name,
+            specialization,
+            event_date,
+            start_time,
+            end_time,
+            venue,
+            event_mode,
+            price,
+            max_slots,
+            image_url,
+            booking_enabled,
+            published,
+            created_at,
+            updated_at
+          FROM events
+          WHERE id = $1
+            AND published = TRUE
+          LIMIT 1
+          `,
+          [id]
+        );
+
+      if (
+        result.rows.length ===
+        0
+      ) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Event not found",
+        });
+      }
+
+      return res.json({
+        success: true,
+
+        event:
+          formatEvent(
+            result.rows[0]
+          ),
+      });
+    } catch (error) {
+      console.error(
+        "Get event by ID error:",
+        error
       );
 
-    if (
-      result.rows.length === 0
-    ) {
-      return res.status(404).json({
+      return res.status(500).json({
         success: false,
         message:
-          "Event not found",
+          "Unable to fetch event",
       });
     }
-
-    return res.json({
-      success: true,
-
-      event: formatEvent(
-        result.rows[0]
-      ),
-    });
-
-  } catch (error) {
-    console.error(
-      "Get event by ID error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to fetch event",
-    });
-  }
-};
-
+  };
 
 // =========================================================
 // ADMIN - GET ALL EVENTS
 // GET /api/events/admin/all
 // =========================================================
 
-const getAllEvents = async (
-  req,
-  res
-) => {
-  try {
-    const result =
-      await pool.query(`
-        SELECT
-          e.*,
+const getAllEvents =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const result =
+        await pool.query(`
+          SELECT
+            e.*,
 
-          COALESCE(
-            (
-              SELECT COUNT(*)
-              FROM event_bookings b
-              WHERE
-                b.event_id = e.id
-                AND b.booking_status IN
-                (
-                  'confirmed',
-                  'completed'
-                )
-            ),
-            0
-          )::INTEGER AS booked_slots
+            COALESCE(
+              (
+                SELECT COUNT(*)
+                FROM event_bookings b
+                WHERE
+                  b.event_id = e.id
+                  AND b.booking_status IN (
+                    'confirmed',
+                    'completed'
+                  )
+              ),
+              0
+            )::INTEGER AS booked_slots
 
-        FROM events e
+          FROM events e
 
-        ORDER BY
-          e.event_date DESC,
-          e.start_time DESC
-      `);
+          ORDER BY
+            e.event_date DESC,
+            e.start_time DESC
+        `);
 
-    const events =
-      result.rows.map(
-        (event) =>
-          formatEvent(event)
+      const events =
+        result.rows.map(
+          (event) =>
+            formatEvent(event)
+        );
+
+      return res.json({
+        success: true,
+        events,
+      });
+    } catch (error) {
+      console.error(
+        "Admin get events error:",
+        error
       );
 
-    return res.json({
-      success: true,
-      events,
-    });
-
-  } catch (error) {
-    console.error(
-      "Admin get events error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to fetch admin events",
-    });
-  }
-};
-
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to fetch admin events",
+      });
+    }
+  };
 
 // =========================================================
 // ADMIN - CREATE EVENT
 // POST /api/events/admin
 // =========================================================
 
-const createEvent = async (
-  req,
-  res
-) => {
-  try {
-    const {
-      title,
-      eventType,
-      description,
-      doctorName,
-      specialization,
-      eventDate,
-      startTime,
-      endTime,
-      venue,
-      eventMode,
-      price,
-      maxSlots,
-      imageUrl,
-      bookingEnabled,
-      published,
-    } = req.body;
+const createEvent =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const {
+        title,
+        eventType,
+        description,
+        doctorName,
+        specialization,
+        eventDate,
+        startTime,
+        endTime,
+        venue,
+        eventMode,
+        price,
+        maxSlots,
+        imageUrl,
+        bookingEnabled,
+        published,
+      } = req.body;
 
+      // =====================================================
+      // CLOUDINARY IMAGE URL
+      // =====================================================
+      //
+      // eventUpload middleware uploads the image
+      // to Cloudinary.
+      //
+      // Cloudinary URL is available at:
+      // req.file.path
+      //
+      // =====================================================
 
-    // =====================================================
-    // VALIDATION
-    // =====================================================
+      const finalImageUrl =
+        req.file?.path ||
+        (imageUrl
+          ? String(imageUrl).trim()
+          : null);
 
-    if (
-      !title ||
-      !eventDate ||
-      !startTime ||
-      !endTime
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Title, date, start time and end time are required",
-      });
-    }
-
-
-    // =====================================================
-    // TIME VALIDATION
-    // =====================================================
-
-    const start =
-      new Date(
-        `${eventDate}T${startTime}`
-      );
-
-    const end =
-      new Date(
-        `${eventDate}T${endTime}`
-      );
-
-    if (
-      Number.isNaN(start.getTime()) ||
-      Number.isNaN(end.getTime())
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid event date or time",
-      });
-    }
-
-    if (end <= start) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "End time must be after start time",
-      });
-    }
-
-
-    // =====================================================
-    // PRICE
-    // =====================================================
-
-    const eventPrice =
-      price === undefined ||
-      price === null ||
-      price === ""
-        ? 0
-        : Number(price);
-
-    if (
-      Number.isNaN(eventPrice) ||
-      eventPrice < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Event price must be a valid positive number",
-      });
-    }
-
-
-    // =====================================================
-    // MAX SLOTS
-    // =====================================================
-
-    let eventMaxSlots = null;
-
-    if (
-      maxSlots !== undefined &&
-      maxSlots !== null &&
-      maxSlots !== ""
-    ) {
-      eventMaxSlots =
-        Number(maxSlots);
+      // =====================================================
+      // VALIDATION
+      // =====================================================
 
       if (
-        Number.isNaN(
-          eventMaxSlots
-        ) ||
-        eventMaxSlots <= 0
+        !title ||
+        !eventDate ||
+        !startTime ||
+        !endTime
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Maximum slots must be greater than zero",
+            "Title, date, start time and end time are required",
         });
       }
-    }
 
+      // =====================================================
+      // TIME VALIDATION
+      // =====================================================
 
-    // =====================================================
-    // INSERT
-    // =====================================================
+      const start =
+        new Date(
+          `${eventDate}T${startTime}`
+        );
 
-    const result =
-      await pool.query(
-        `
-        INSERT INTO events (
-          title,
-          event_type,
-          description,
-          doctor_name,
-          specialization,
-          event_date,
-          start_time,
-          end_time,
-          venue,
-          event_mode,
-          price,
-          max_slots,
-          image_url,
-          booking_enabled,
-          published
+      const end =
+        new Date(
+          `${eventDate}T${endTime}`
+        );
+
+      if (
+        Number.isNaN(
+          start.getTime()
+        ) ||
+        Number.isNaN(
+          end.getTime()
         )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid event date or time",
+        });
+      }
 
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7,
-          $8,
-          $9,
-          $10,
-          $11,
-          $12,
-          $13,
-          $14,
-          $15
-        )
+      if (end <= start) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "End time must be after start time",
+        });
+      }
 
-        RETURNING *
-        `,
-        [
-          title.trim(),
+      // =====================================================
+      // PRICE
+      // =====================================================
 
-          eventType ||
-            "Other",
+      const eventPrice =
+        price === undefined ||
+        price === null ||
+        price === ""
+          ? 0
+          : Number(price);
 
-          description?.trim() ||
-            null,
+      if (
+        Number.isNaN(
+          eventPrice
+        ) ||
+        eventPrice < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Event price must be a valid positive number",
+        });
+      }
 
-          doctorName?.trim() ||
-            null,
+      // =====================================================
+      // MAX SLOTS
+      // =====================================================
 
-          specialization?.trim() ||
-            null,
+      let eventMaxSlots =
+        null;
 
-          eventDate,
+      if (
+        maxSlots !==
+          undefined &&
+        maxSlots !== null &&
+        maxSlots !== ""
+      ) {
+        eventMaxSlots =
+          Number(maxSlots);
 
-          startTime,
+        if (
+          Number.isNaN(
+            eventMaxSlots
+          ) ||
+          eventMaxSlots <= 0
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Maximum slots must be greater than zero",
+          });
+        }
+      }
 
-          endTime,
+      // =====================================================
+      // INSERT EVENT
+      // =====================================================
 
-          venue?.trim() ||
-            null,
+      const result =
+        await pool.query(
+          `
+          INSERT INTO events (
+            title,
+            event_type,
+            description,
+            doctor_name,
+            specialization,
+            event_date,
+            start_time,
+            end_time,
+            venue,
+            event_mode,
+            price,
+            max_slots,
+            image_url,
+            booking_enabled,
+            published
+          )
 
-          eventMode ||
-            "offline",
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            $11,
+            $12,
+            $13,
+            $14,
+            $15
+          )
 
-          eventPrice,
+          RETURNING *
+          `,
+          [
+            String(title).trim(),
 
-          eventMaxSlots,
+            eventType ||
+              "Other",
 
-          imageUrl?.trim() ||
-            null,
+            description
+              ? String(
+                  description
+                ).trim()
+              : null,
 
-          bookingEnabled !== false,
+            doctorName
+              ? String(
+                  doctorName
+                ).trim()
+              : null,
 
-          published !== false,
-        ]
+            specialization
+              ? String(
+                  specialization
+                ).trim()
+              : null,
+
+            eventDate,
+
+            startTime,
+
+            endTime,
+
+            venue
+              ? String(
+                  venue
+                ).trim()
+              : null,
+
+            eventMode ||
+              "offline",
+
+            eventPrice,
+
+            eventMaxSlots,
+
+            finalImageUrl,
+
+            bookingEnabled !==
+              false,
+
+            published !==
+              false,
+          ]
+        );
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
+      return res.status(201).json({
+        success: true,
+
+        message:
+          "Event created successfully",
+
+        event:
+          formatEvent(
+            result.rows[0]
+          ),
+      });
+    } catch (error) {
+      console.error(
+        "Create event error:",
+        error
       );
 
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to create event",
 
-    // =====================================================
-    // RESPONSE
-    // =====================================================
-
-    return res.status(201).json({
-      success: true,
-
-      message:
-        "Event created successfully",
-
-      event: formatEvent(
-        result.rows[0]
-      ),
-    });
-
-  } catch (error) {
-    console.error(
-      "Create event error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to create event",
-    });
-  }
-};
-
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+            ? error.message
+            : undefined,
+      });
+    }
+  };
 
 // =========================================================
 // ADMIN - UPDATE EVENT
 // PUT /api/events/admin/:id
 // =========================================================
 
-const updateEvent = async (
-  req,
-  res
-) => {
-  try {
-    const { id } =
-      req.params;
+const updateEvent =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const {
+        id,
+      } = req.params;
 
-    const {
-      title,
-      eventType,
-      description,
-      doctorName,
-      specialization,
-      eventDate,
-      startTime,
-      endTime,
-      venue,
-      eventMode,
-      price,
-      maxSlots,
-      imageUrl,
-      bookingEnabled,
-      published,
-    } = req.body;
+      const {
+        title,
+        eventType,
+        description,
+        doctorName,
+        specialization,
+        eventDate,
+        startTime,
+        endTime,
+        venue,
+        eventMode,
+        price,
+        maxSlots,
+        imageUrl,
+        bookingEnabled,
+        published,
+      } = req.body;
 
+      // =====================================================
+      // CHECK EVENT
+      // =====================================================
 
-    // =====================================================
-    // CHECK EVENT
-    // =====================================================
+      const existing =
+        await pool.query(
+          `
+          SELECT *
+          FROM events
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [id]
+        );
 
-    const existing =
-      await pool.query(
-        `
-        SELECT *
-        FROM events
-        WHERE id = $1
-        LIMIT 1
-        `,
-        [id]
-      );
+      if (
+        existing.rows.length ===
+        0
+      ) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Event not found",
+        });
+      }
 
-    if (
-      existing.rows.length === 0
-    ) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Event not found",
-      });
-    }
+      const current =
+        existing.rows[0];
 
+      // =====================================================
+      // FINAL BASIC VALUES
+      // =====================================================
 
-    const current =
-      existing.rows[0];
+      const finalTitle =
+        title !== undefined
+          ? String(title).trim()
+          : current.title;
 
+      const finalEventDate =
+        eventDate ||
+        current.event_date;
 
-    // =====================================================
-    // FINAL VALUES
-    // =====================================================
+      const finalStartTime =
+        startTime ||
+        current.start_time;
 
-    const finalTitle =
-      title !== undefined
-        ? title.trim()
-        : current.title;
+      const finalEndTime =
+        endTime ||
+        current.end_time;
 
-    const finalEventDate =
-      eventDate ||
-      current.event_date;
+      if (!finalTitle) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Event title is required",
+        });
+      }
 
-    const finalStartTime =
-      startTime ||
-      current.start_time;
+      // =====================================================
+      // TIME VALIDATION
+      // =====================================================
 
-    const finalEndTime =
-      endTime ||
-      current.end_time;
+      const start =
+        new Date(
+          `${finalEventDate}T${finalStartTime}`
+        );
 
-
-    if (!finalTitle) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Event title is required",
-      });
-    }
-
-
-    // =====================================================
-    // TIME VALIDATION
-    // =====================================================
-
-    const start =
-      new Date(
-        `${finalEventDate}T${finalStartTime}`
-      );
-
-    const end =
-      new Date(
-        `${finalEventDate}T${finalEndTime}`
-      );
-
-    if (
-      Number.isNaN(start.getTime()) ||
-      Number.isNaN(end.getTime())
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid event date or time",
-      });
-    }
-
-    if (end <= start) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "End time must be after start time",
-      });
-    }
-
-
-    // =====================================================
-    // PRICE
-    // =====================================================
-
-    const finalPrice =
-      price !== undefined &&
-      price !== null &&
-      price !== ""
-        ? Number(price)
-        : Number(current.price || 0);
-
-    if (
-      Number.isNaN(finalPrice) ||
-      finalPrice < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid event price",
-      });
-    }
-
-
-    // =====================================================
-    // MAX SLOTS
-    // =====================================================
-
-    let finalMaxSlots = null;
-
-    if (
-      maxSlots !== undefined &&
-      maxSlots !== null &&
-      maxSlots !== ""
-    ) {
-      finalMaxSlots =
-        Number(maxSlots);
+      const end =
+        new Date(
+          `${finalEventDate}T${finalEndTime}`
+        );
 
       if (
         Number.isNaN(
-          finalMaxSlots
+          start.getTime()
         ) ||
-        finalMaxSlots <= 0
+        Number.isNaN(
+          end.getTime()
+        )
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Maximum slots must be greater than zero",
+            "Invalid event date or time",
         });
       }
-    } else if (
-      maxSlots === null ||
-      maxSlots === ""
-    ) {
-      finalMaxSlots = null;
-    } else {
-      finalMaxSlots =
+
+      if (end <= start) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "End time must be after start time",
+        });
+      }
+
+      // =====================================================
+      // PRICE
+      // =====================================================
+
+      const finalPrice =
+        price !== undefined &&
+        price !== null &&
+        price !== ""
+          ? Number(price)
+          : Number(
+              current.price || 0
+            );
+
+      if (
+        Number.isNaN(
+          finalPrice
+        ) ||
+        finalPrice < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid event price",
+        });
+      }
+
+      // =====================================================
+      // MAX SLOTS
+      // =====================================================
+
+      let finalMaxSlots =
         current.max_slots;
-    }
 
+      if (
+        maxSlots !==
+          undefined &&
+        maxSlots !== null &&
+        maxSlots !== ""
+      ) {
+        finalMaxSlots =
+          Number(maxSlots);
 
-    // =====================================================
-    // UPDATE
-    // =====================================================
+        if (
+          Number.isNaN(
+            finalMaxSlots
+          ) ||
+          finalMaxSlots <= 0
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Maximum slots must be greater than zero",
+          });
+        }
+      } else if (
+        maxSlots === null ||
+        maxSlots === ""
+      ) {
+        finalMaxSlots =
+          null;
+      }
 
-    const result =
-      await pool.query(
-        `
-        UPDATE events
+      // =====================================================
+      // CLOUDINARY IMAGE
+      // =====================================================
+      //
+      // If a new image was uploaded:
+      // req.file.path = new Cloudinary URL
+      //
+      // If no new image:
+      // keep existing Cloudinary URL
+      //
+      // =====================================================
 
-        SET
-          title = $1,
-          event_type = $2,
-          description = $3,
-          doctor_name = $4,
-          specialization = $5,
-          event_date = $6,
-          start_time = $7,
-          end_time = $8,
-          venue = $9,
-          event_mode = $10,
-          price = $11,
-          max_slots = $12,
-          image_url = $13,
-          booking_enabled = $14,
-          published = $15,
-          updated_at = CURRENT_TIMESTAMP
+      const finalImageUrl =
+        req.file?.path ||
+        (
+          imageUrl !==
+            undefined &&
+          imageUrl !== null &&
+          String(
+            imageUrl
+          ).trim()
+        )
+          ? String(
+              imageUrl
+            ).trim()
+          : current.image_url;
 
-        WHERE id = $16
+      // =====================================================
+      // FINAL BOOLEAN VALUES
+      // =====================================================
 
-        RETURNING *
-        `,
-        [
-          finalTitle,
+      const finalBookingEnabled =
+        bookingEnabled !==
+        undefined
+          ? String(
+              bookingEnabled
+            ).toLowerCase() ===
+              "true" ||
+            bookingEnabled === true
+          : current.booking_enabled;
 
-          eventType !== undefined
-            ? eventType
-            : current.event_type,
+      const finalPublished =
+        published !==
+        undefined
+          ? String(
+              published
+            ).toLowerCase() ===
+              "true" ||
+            published === true
+          : current.published;
 
-          description !== undefined
-            ? description?.trim() ||
-              null
-            : current.description,
+      // =====================================================
+      // UPDATE EVENT
+      // =====================================================
 
-          doctorName !== undefined
-            ? doctorName?.trim() ||
-              null
-            : current.doctor_name,
+      const result =
+        await pool.query(
+          `
+          UPDATE events
 
-          specialization !== undefined
-            ? specialization?.trim() ||
-              null
-            : current.specialization,
+          SET
+            title = $1,
+            event_type = $2,
+            description = $3,
+            doctor_name = $4,
+            specialization = $5,
+            event_date = $6,
+            start_time = $7,
+            end_time = $8,
+            venue = $9,
+            event_mode = $10,
+            price = $11,
+            max_slots = $12,
+            image_url = $13,
+            booking_enabled = $14,
+            published = $15,
+            updated_at = CURRENT_TIMESTAMP
 
-          finalEventDate,
+          WHERE id = $16
 
-          finalStartTime,
+          RETURNING *
+          `,
+          [
+            finalTitle,
 
-          finalEndTime,
+            eventType !==
+            undefined
+              ? eventType
+              : current.event_type,
 
-          venue !== undefined
-            ? venue?.trim() ||
-              null
-            : current.venue,
+            description !==
+            undefined
+              ? description
+                ? String(
+                    description
+                  ).trim()
+                : null
+              : current.description,
 
-          eventMode !== undefined
-            ? eventMode
-            : current.event_mode,
+            doctorName !==
+            undefined
+              ? doctorName
+                ? String(
+                    doctorName
+                  ).trim()
+                : null
+              : current.doctor_name,
 
-          finalPrice,
+            specialization !==
+            undefined
+              ? specialization
+                ? String(
+                    specialization
+                  ).trim()
+                : null
+              : current.specialization,
 
-          finalMaxSlots,
+            finalEventDate,
 
-          imageUrl !== undefined
-            ? imageUrl?.trim() ||
-              null
-            : current.image_url,
+            finalStartTime,
 
-          bookingEnabled !== undefined
-            ? Boolean(
-                bookingEnabled
-              )
-            : current.booking_enabled,
+            finalEndTime,
 
-          published !== undefined
-            ? Boolean(published)
-            : current.published,
+            venue !==
+            undefined
+              ? venue
+                ? String(
+                    venue
+                  ).trim()
+                : null
+              : current.venue,
 
-          id,
-        ]
+            eventMode !==
+            undefined
+              ? eventMode
+              : current.event_mode,
+
+            finalPrice,
+
+            finalMaxSlots,
+
+            finalImageUrl,
+
+            finalBookingEnabled,
+
+            finalPublished,
+
+            id,
+          ]
+        );
+
+      return res.json({
+        success: true,
+
+        message:
+          "Event updated successfully",
+
+        event:
+          formatEvent(
+            result.rows[0]
+          ),
+      });
+    } catch (error) {
+      console.error(
+        "Update event error:",
+        error
       );
 
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to update event",
 
-    return res.json({
-      success: true,
-
-      message:
-        "Event updated successfully",
-
-      event: formatEvent(
-        result.rows[0]
-      ),
-    });
-
-  } catch (error) {
-    console.error(
-      "Update event error:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to update event",
-    });
-  }
-};
-
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+            ? error.message
+            : undefined,
+      });
+    }
+  };
 
 // =========================================================
 // ADMIN - DELETE EVENT
 // DELETE /api/events/admin/:id
 // =========================================================
 
-const deleteEvent = async (
-  req,
-  res
-) => {
-  try {
-    const { id } =
-      req.params;
+const deleteEvent =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const {
+        id,
+      } = req.params;
 
+      // =====================================================
+      // CHECK EVENT
+      // =====================================================
 
-    // =====================================================
-    // CHECK EVENT
-    // =====================================================
+      const existing =
+        await pool.query(
+          `
+          SELECT id
+          FROM events
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [id]
+        );
 
-    const existing =
+      if (
+        existing.rows.length ===
+        0
+      ) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Event not found",
+        });
+      }
+
+      // =====================================================
+      // DELETE EVENT
+      // =====================================================
+
       await pool.query(
         `
-        SELECT id
-        FROM events
+        DELETE FROM events
         WHERE id = $1
-        LIMIT 1
         `,
         [id]
       );
 
-    if (
-      existing.rows.length === 0
-    ) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Event not found",
-      });
-    }
-
-
-    // =====================================================
-    // DELETE
-    // =====================================================
-
-    await pool.query(
-      `
-      DELETE FROM events
-      WHERE id = $1
-      `,
-      [id]
-    );
-
-
-    return res.json({
-      success: true,
-
-      message:
-        "Event deleted successfully",
-    });
-
-  } catch (error) {
-    console.error(
-      "Delete event error:",
-      error
-    );
-
-
-    // Foreign key / booking dependency
-    if (
-      error.code === "23503"
-    ) {
-      return res.status(409).json({
-        success: false,
+      return res.json({
+        success: true,
 
         message:
-          "This event cannot be deleted because bookings are associated with it. Disable booking or unpublish the event instead.",
+          "Event deleted successfully",
+      });
+    } catch (error) {
+      console.error(
+        "Delete event error:",
+        error
+      );
+
+      // =====================================================
+      // FOREIGN KEY / BOOKINGS
+      // =====================================================
+
+      if (
+        error.code ===
+        "23503"
+      ) {
+        return res.status(409).json({
+          success: false,
+
+          message:
+            "This event cannot be deleted because bookings are associated with it. Disable booking or unpublish the event instead.",
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to delete event",
       });
     }
-
-
-    return res.status(500).json({
-      success: false,
-
-      message:
-        "Unable to delete event",
-    });
-  }
-};
-
+  };
 
 // =========================================================
 // EXPORT
