@@ -1,5 +1,12 @@
 const express = require("express");
 
+const router = express.Router();
+
+
+// =========================================================
+// CONTROLLER
+// =========================================================
+
 const {
   getCommitteeMembers,
   getCommitteeByName,
@@ -10,17 +17,26 @@ const {
   deleteCommitteeMember,
 } = require("../controllers/committeeController");
 
+
+// =========================================================
+// MIDDLEWARE
+// =========================================================
+
+const authMiddleware =
+  require("../middleware/authMiddleware");
+
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-const router = express.Router();
+const committeeUpload =
+  require("../middleware/committeeUpload");
 
 
 // =========================================================
-// PUBLIC
+// PUBLIC ROUTES
 // =========================================================
 
-// GET ALL ACTIVE COMMITTEE MEMBERS
+// Get all active committee members
 // GET /api/committees
 
 router.get(
@@ -29,79 +45,113 @@ router.get(
 );
 
 
-// =========================================================
-// ADMIN
-// =========================================================
-
-// GET ALL MEMBERS INCLUDING INACTIVE
-// GET /api/committees/admin
-
-router.get(
-  "/admin",
-  adminMiddleware,
-  getAllCommitteeMembers
-);
-
-
-// GET SINGLE MEMBER
-// GET /api/committees/admin/member/:id
-
-router.get(
-  "/admin/member/:id",
-  adminMiddleware,
-  getCommitteeMemberById
-);
-
-
-// ADD MEMBER
-// POST /api/committees/admin
-
-router.post(
-  "/admin",
-  adminMiddleware,
-  addCommitteeMember
-);
-
-
-// UPDATE MEMBER
-// PUT /api/committees/admin/:id
-
-router.put(
-  "/admin/:id",
-  adminMiddleware,
-  updateCommitteeMember
-);
-
-
-// DELETE MEMBER
-// DELETE /api/committees/admin/:id
-
-router.delete(
-  "/admin/:id",
-  adminMiddleware,
-  deleteCommitteeMember
-);
-
-
-// =========================================================
-// PUBLIC INDIVIDUAL COMMITTEE
-// =========================================================
-
-// Placement
+// Get members by committee
 // GET /api/committees/placement
-
-// Academic
 // GET /api/committees/academic
-
-// Compliance
 // GET /api/committees/compliance
-
-// Working
 // GET /api/committees/working
 
 router.get(
   "/:committeeName",
   getCommitteeByName
+);
+
+
+// =========================================================
+// ADMIN ROUTES
+// =========================================================
+
+// Get all committee members
+// GET /api/committees/admin
+
+router.get(
+  "/admin",
+  authMiddleware,
+  adminMiddleware,
+  getAllCommitteeMembers
+);
+
+
+// Get single committee member
+// GET /api/committees/admin/member/:id
+
+router.get(
+  "/admin/member/:id",
+  authMiddleware,
+  adminMiddleware,
+  getCommitteeMemberById
+);
+
+
+// =========================================================
+// ADD COMMITTEE MEMBER
+// =========================================================
+//
+// POST /api/committees/admin
+//
+// Content-Type:
+// multipart/form-data
+//
+// File field:
+// photo
+//
+// IMPORTANT:
+// committeeUpload already contains
+// upload.single("photo")
+//
+// =========================================================
+
+router.post(
+  "/admin",
+  authMiddleware,
+  adminMiddleware,
+  committeeUpload,
+  addCommitteeMember
+);
+
+
+// =========================================================
+// UPDATE COMMITTEE MEMBER
+// =========================================================
+//
+// PUT /api/committees/admin/:id
+//
+// Content-Type:
+// multipart/form-data
+//
+// File field:
+// photo
+//
+// New photo selected:
+// old photo will be replaced.
+//
+// No new photo:
+// old photo will remain.
+//
+// =========================================================
+
+router.put(
+  "/admin/:id",
+  authMiddleware,
+  adminMiddleware,
+  committeeUpload,
+  updateCommitteeMember
+);
+
+
+// =========================================================
+// DELETE COMMITTEE MEMBER
+// =========================================================
+//
+// DELETE /api/committees/admin/:id
+//
+// =========================================================
+
+router.delete(
+  "/admin/:id",
+  authMiddleware,
+  adminMiddleware,
+  deleteCommitteeMember
 );
 
 

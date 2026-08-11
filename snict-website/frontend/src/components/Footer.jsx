@@ -203,65 +203,7 @@ function Footer() {
         </div>
 
 
-        {/* =================================================
-            RESOURCES
-        ================================================= */}
-
-        <div className="snict-footer-column">
-
-          <h3>
-            Resources
-          </h3>
-
-          <nav className="snict-footer-links">
-
-            <Link to="/events">
-              <span>
-                Events
-              </span>
-
-              <ArrowRight size={14} />
-            </Link>
-
-
-            <Link to="/membership">
-              <span>
-                Membership
-              </span>
-
-              <ArrowRight size={14} />
-            </Link>
-
-
-            <Link to="/login">
-              <span>
-                Member Login
-              </span>
-
-              <ArrowRight size={14} />
-            </Link>
-
-
-            <Link to="/signup">
-              <span>
-                Join SNICT
-              </span>
-
-              <ArrowRight size={14} />
-            </Link>
-
-
-            <Link to="/contact">
-              <span>
-                Support
-              </span>
-
-              <ArrowRight size={14} />
-            </Link>
-
-          </nav>
-
-        </div>
+   
 
 
         {/* =================================================

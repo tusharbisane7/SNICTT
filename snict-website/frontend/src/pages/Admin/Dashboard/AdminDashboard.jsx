@@ -11,6 +11,7 @@ import {
   TicketCheck,
   BadgeCheck,
   CreditCard,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import {
@@ -22,14 +23,20 @@ import api from "../../../services/api";
 
 import "./AdminDashboard.css";
 
+// =========================================================
+// ADMIN DASHBOARD
+// =========================================================
+
 function AdminDashboard() {
+
   const navigate = useNavigate();
 
   // =========================================================
   // STATE
   // =========================================================
 
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] =
+    useState(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -52,6 +59,7 @@ function AdminDashboard() {
       try {
 
         setLoading(true);
+
         setError("");
 
         const response =
@@ -180,6 +188,7 @@ function AdminDashboard() {
   if (loading) {
 
     return (
+
       <main className="admin-dashboard-page">
 
         <div className="admin-dashboard-loading">
@@ -193,6 +202,7 @@ function AdminDashboard() {
         </div>
 
       </main>
+
     );
 
   }
@@ -205,6 +215,7 @@ function AdminDashboard() {
   if (error && !admin) {
 
     return (
+
       <main className="admin-dashboard-page">
 
         <div className="admin-dashboard-error">
@@ -233,6 +244,7 @@ function AdminDashboard() {
         </div>
 
       </main>
+
     );
 
   }
@@ -262,6 +274,7 @@ function AdminDashboard() {
   // =========================================================
 
   return (
+
     <main className="admin-dashboard-page">
 
       <div className="admin-dashboard-container">
@@ -539,6 +552,29 @@ function AdminDashboard() {
 
           </div>
 
+
+          {/* SLIDERS */}
+
+          <div className="admin-stat-card">
+
+            <div className="admin-stat-icon">
+              <SlidersHorizontal size={21} />
+            </div>
+
+            <div>
+
+              <span>
+                Website
+              </span>
+
+              <strong>
+                Sliders
+              </strong>
+
+            </div>
+
+          </div>
+
         </div>
 
 
@@ -596,6 +632,46 @@ function AdminDashboard() {
                   committee members
                   displayed on the SNICT
                   website.
+                </p>
+
+              </div>
+
+              <ArrowRight
+                size={19}
+                className="admin-card-arrow"
+              />
+
+            </Link>
+
+
+            {/* =================================================
+                SLIDER MANAGEMENT
+            ================================================= */}
+
+            <Link
+              to="/admin/sliders"
+              className="admin-management-card"
+            >
+
+              <div className="admin-management-icon">
+                <SlidersHorizontal size={23} />
+              </div>
+
+              <div className="admin-management-content">
+
+                <span>
+                  WEBSITE CONTENT
+                </span>
+
+                <h3>
+                  Manage Sliders
+                </h3>
+
+                <p>
+                  Add, edit, publish or
+                  hide homepage sliders
+                  with images, titles,
+                  dates and descriptions.
                 </p>
 
               </div>
@@ -895,6 +971,24 @@ function AdminDashboard() {
             </Link>
 
 
+            {/* SLIDERS */}
+
+            <Link
+              to="/admin/sliders"
+              className="admin-quick-card"
+            >
+
+              <SlidersHorizontal size={18} />
+
+              <span>
+                Sliders
+              </span>
+
+              <ArrowRight size={15} />
+
+            </Link>
+
+
             {/* EVENTS */}
 
             <Link
@@ -988,10 +1082,13 @@ function AdminDashboard() {
 
         </section>
 
+
       </div>
 
     </main>
+
   );
+
 }
 
 export default AdminDashboard;

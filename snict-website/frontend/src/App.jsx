@@ -68,6 +68,8 @@ import UserManagement from "./pages/Admin/Users/UserManagement";
 
 import MembershipManagement from "./pages/Admin/Membership/MembershipManagement";
 
+import SliderManagement from "./pages/Admin/Slider/SliderManagement";
+
 // PAYMENT MANAGEMENT
 import PaymentManagement from "./pages/Admin/Payments/PaymentManagement";
 import AdminProfile from "./pages/Admin/Profile/AdminProfile";
@@ -317,6 +319,11 @@ function App() {
           element={<MembershipManagement />}
         />
 
+
+<Route
+  path="/admin/sliders"
+  element={<SliderManagement />}
+/>
 
         {/* =====================================================
             ADMIN PAYMENT MANAGEMENT

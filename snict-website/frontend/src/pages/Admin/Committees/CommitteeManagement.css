@@ -1388,3 +1388,253 @@
   }
 
 }
+
+
+/* =========================================================
+   PHOTO FILE UPLOAD
+   ========================================================= */
+
+.committee-file-upload {
+  width: 100%;
+  position: relative;
+}
+
+.committee-file-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   BROWSE PHOTO BUTTON
+   ========================================================= */
+
+.committee-file-label {
+  width: 100%;
+  min-height: 82px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+
+  padding: 18px 20px;
+
+  border: 1.5px dashed #b9dce8;
+  border-radius: 13px;
+
+  color: #159bc5;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f7fdff,
+      #f1f8ff
+    );
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.committee-file-label:hover {
+  border-color: #4dcee9;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f0fcff,
+      #edf4ff
+    );
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 22px
+    rgba(58, 188, 231, 0.10);
+}
+
+.committee-file-label svg {
+  flex-shrink: 0;
+}
+
+.committee-file-label span {
+  overflow: hidden;
+  max-width: 80%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.committee-file-upload
+  input[type="file"]:focus
+  + .committee-file-label {
+  border-color: #4dcee9;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(67, 205, 240, 0.10);
+}
+
+
+/* =========================================================
+   REMOVE NEW PHOTO BUTTON
+   ========================================================= */
+
+.committee-remove-photo {
+  margin-top: 10px;
+
+  min-height: 32px;
+  padding: 0 11px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: 1px solid #ffd6d6;
+  border-radius: 8px;
+
+  color: #c74b4b;
+  background: #fff5f5;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.committee-remove-photo:hover {
+  background: #ffebeb;
+  border-color: #ffbebe;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   PHOTO PREVIEW INFO
+   ========================================================= */
+
+.committee-preview-info {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.committee-preview-info > span {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #159bc5;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.committee-preview-info > strong {
+  display: block;
+
+  color: #142b43;
+
+  font-size: 16px;
+  line-height: 1.35;
+
+  word-break: break-word;
+}
+
+.committee-preview-info > p {
+  margin: 5px 0 0;
+
+  color: #7b8fa2;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   FILE UPLOAD - MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+  .committee-file-label {
+    min-height: 75px;
+    padding: 15px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .committee-file-label span {
+    max-width: 75%;
+  }
+
+  .committee-photo-preview {
+    gap: 12px;
+  }
+
+  .committee-preview-info > strong {
+    font-size: 14px;
+  }
+
+  .committee-preview-info > p {
+    font-size: 12px;
+  }
+
+}
+
+
+/* =========================================================
+   FILE UPLOAD - SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+  .committee-file-label {
+    min-height: 70px;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding: 14px;
+
+    font-size: 12px;
+  }
+
+  .committee-file-label span {
+    max-width: 100%;
+  }
+
+  .committee-photo-preview {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .committee-preview-image {
+    width: 80px;
+    height: 80px;
+  }
+
+}

@@ -3,10 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowRight,
+  Award,
+  BriefcaseBusiness,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
+  Cpu,
   GraduationCap,
   HeartPulse,
   IndianRupee,
@@ -16,7 +17,6 @@ import {
   UserRound,
   Users,
   Video,
-  BrainCircuit,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -42,10 +42,6 @@ function TypingText({
     let timer;
 
     if (!isDeleting) {
-      // =====================================================
-      // TYPING
-      // =====================================================
-
       if (displayText.length < text.length) {
         timer = setTimeout(() => {
           setDisplayText(
@@ -56,19 +52,11 @@ function TypingText({
           );
         }, speed);
       } else {
-        // ===================================================
-        // PAUSE AFTER COMPLETE TEXT
-        // ===================================================
-
         timer = setTimeout(() => {
           setIsDeleting(true);
         }, pause);
       }
     } else {
-      // =====================================================
-      // DELETING
-      // =====================================================
-
       if (displayText.length > 0) {
         timer = setTimeout(() => {
           setDisplayText(
@@ -79,10 +67,6 @@ function TypingText({
           );
         }, deleteSpeed);
       } else {
-        // ===================================================
-        // START TYPING AGAIN
-        // ===================================================
-
         timer = setTimeout(() => {
           setIsDeleting(false);
         }, 350);
@@ -126,17 +110,14 @@ const getDateString = (value) => {
 
   const valueString = String(value).trim();
 
-  // YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(valueString)) {
     return valueString;
   }
 
-  // ISO date
   if (valueString.includes("T")) {
     return valueString.substring(0, 10);
   }
 
-  // PostgreSQL timestamp with space
   if (valueString.includes(" ")) {
     return valueString.split(" ")[0];
   }
@@ -153,7 +134,6 @@ const getTimeString = (value) => {
 
   const valueString = String(value).trim();
 
-  // HH:MM or HH:MM:SS
   if (/^\d{1,2}:\d{2}/.test(valueString)) {
     return valueString.substring(0, 8);
   }
@@ -161,7 +141,9 @@ const getTimeString = (value) => {
   if (valueString.includes("T")) {
     const time = valueString.split("T")[1];
 
-    return time ? time.substring(0, 8) : "";
+    return time
+      ? time.substring(0, 8)
+      : "";
   }
 
   return "";
@@ -176,30 +158,41 @@ const createEventDate = (
   eventTime,
   defaultTime
 ) => {
-  const date = getDateString(eventDate);
+  const date =
+    getDateString(eventDate);
 
   if (
     !date ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(date)
+    !/^\d{4}-\d{2}-\d{2}$/.test(
+      date
+    )
   ) {
     return null;
   }
 
-  let time = getTimeString(eventTime);
+  let time =
+    getTimeString(eventTime);
 
   if (!time) {
     time = defaultTime;
   }
 
-  if (/^\d{1,2}:\d{2}$/.test(time)) {
+  if (
+    /^\d{1,2}:\d{2}$/.test(time)
+  ) {
     time = `${time}:00`;
   }
 
-  const result = new Date(
-    `${date}T${time}+05:30`
-  );
+  const result =
+    new Date(
+      `${date}T${time}+05:30`
+    );
 
-  if (Number.isNaN(result.getTime())) {
+  if (
+    Number.isNaN(
+      result.getTime()
+    )
+  ) {
     return null;
   }
 
@@ -215,17 +208,19 @@ const getEventStatus = (
   startTime,
   endTime
 ) => {
-  const start = createEventDate(
-    eventDate,
-    startTime,
-    "00:00:00"
-  );
+  const start =
+    createEventDate(
+      eventDate,
+      startTime,
+      "00:00:00"
+    );
 
-  const end = createEventDate(
-    eventDate,
-    endTime,
-    "23:59:59"
-  );
+  const end =
+    createEventDate(
+      eventDate,
+      endTime,
+      "23:59:59"
+    );
 
   if (!start || !end) {
     return "upcoming";
@@ -237,7 +232,10 @@ const getEventStatus = (
     return "upcoming";
   }
 
-  if (now >= start && now <= end) {
+  if (
+    now >= start &&
+    now <= end
+  ) {
     return "ongoing";
   }
 
@@ -248,12 +246,18 @@ const getEventStatus = (
 // EVENT STATUS LABEL
 // =========================================================
 
-const getStatusLabel = (status) => {
-  if (status === "ongoing") {
+const getStatusLabel = (
+  status
+) => {
+  if (
+    status === "ongoing"
+  ) {
     return "Ongoing";
   }
 
-  if (status === "past") {
+  if (
+    status === "past"
+  ) {
     return "Completed";
   }
 
@@ -264,24 +268,33 @@ const getStatusLabel = (status) => {
 // FORMAT DATE
 // =========================================================
 
-const formatDate = (value) => {
-  const date = getDateString(value);
+const formatDate = (
+  value
+) => {
+  const date =
+    getDateString(value);
 
   if (!date) {
     return "Date unavailable";
   }
 
-  const match = date.match(
-    /^(\d{4})-(\d{2})-(\d{2})$/
-  );
+  const match =
+    date.match(
+      /^(\d{4})-(\d{2})-(\d{2})$/
+    );
 
   if (!match) {
     return "Date unavailable";
   }
 
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
+  const year =
+    Number(match[1]);
+
+  const month =
+    Number(match[2]);
+
+  const day =
+    Number(match[3]);
 
   if (
     month < 1 ||
@@ -317,24 +330,30 @@ const formatDate = (value) => {
 // FORMAT TIME
 // =========================================================
 
-const formatTime = (value) => {
-  const time = getTimeString(value);
+const formatTime = (
+  value
+) => {
+  const time =
+    getTimeString(value);
 
   if (!time) {
     return "";
   }
 
-  const match = time.match(
-    /^(\d{1,2}):(\d{2})/
-  );
+  const match =
+    time.match(
+      /^(\d{1,2}):(\d{2})/
+    );
 
   if (!match) {
     return time;
   }
 
-  let hour = Number(match[1]);
+  let hour =
+    Number(match[1]);
 
-  const minute = match[2];
+  const minute =
+    match[2];
 
   if (
     Number.isNaN(hour) ||
@@ -345,9 +364,12 @@ const formatTime = (value) => {
   }
 
   const period =
-    hour >= 12 ? "PM" : "AM";
+    hour >= 12
+      ? "PM"
+      : "AM";
 
-  hour = hour % 12 || 12;
+  hour =
+    hour % 12 || 12;
 
   return `${hour}:${minute} ${period}`;
 };
@@ -355,14 +377,67 @@ const formatTime = (value) => {
 // =========================================================
 // GET COMMITTEE IMAGE
 // =========================================================
+// IMPORTANT:
+// Backend returns photoUrl
+// =========================================================
 
-const getCommitteeImage = (member) => {
+const getCommitteeImage = (
+  member
+) => {
   return (
-    member?.image_url ||
-    member?.image ||
+    member?.photoUrl ||
     member?.photo_url ||
-    member?.photo ||
+    member?.image ||
+    member?.image_url ||
     ""
+  );
+};
+
+// =========================================================
+// GET COMMITTEE NAME
+// =========================================================
+// IMPORTANT:
+// Backend returns memberName
+// =========================================================
+
+const getCommitteeName = (
+  member
+) => {
+  return (
+    member?.committeeName ||
+    member?.committee_name ||
+    "SNICT Committee"
+  );
+};
+
+// =========================================================
+// GET MEMBER NAME
+// Backend returns: memberName
+// =========================================================
+
+const getMemberName = (
+  member
+) => {
+  return (
+    member?.memberName ||
+    member?.member_name ||
+    member?.name ||
+    "Committee Member"
+  );
+};
+
+// =========================================================
+// GET COMMITTEE DESIGNATION
+// =========================================================
+
+const getCommitteeDesignation = (
+  member
+) => {
+  return (
+    member?.designation ||
+    member?.position ||
+    member?.role ||
+    "Committee Member"
   );
 };
 
@@ -370,7 +445,9 @@ const getCommitteeImage = (member) => {
 // GET EVENT IMAGE
 // =========================================================
 
-const getEventImage = (event) => {
+const getEventImage = (
+  event
+) => {
   return (
     event?.image_url ||
     event?.image ||
@@ -378,6 +455,64 @@ const getEventImage = (event) => {
     event?.banner ||
     ""
   );
+};
+
+
+// =========================================================
+// GET SLIDER IMAGE
+// =========================================================
+// Supports the upload response field used by the backend.
+// Falls back to older field names so existing slider records
+// continue to work.
+// =========================================================
+
+const getSliderImage = (slider) => {
+  return (
+    slider?.imageUrl ||
+    slider?.image_url ||
+    slider?.image ||
+    slider?.url ||
+    ""
+  );
+};
+
+// =========================================================
+// FORMAT SLIDER DATE
+// =========================================================
+
+const formatSliderDate = (value) => {
+  if (!value) return "";
+
+  const dateString = getDateString(value);
+
+  if (!dateString) return "";
+
+  const match = dateString.match(
+    /^(\d{4})-(\d{2})-(\d{2})$/
+  );
+
+  if (!match) return "";
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return "";
+  }
+
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 // =========================================================
@@ -390,7 +525,8 @@ function Home() {
   // USER AUTHENTICATION
   // =========================================================
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] =
+    useState(null);
 
   const [authLoading, setAuthLoading] =
     useState(true);
@@ -399,30 +535,58 @@ function Home() {
   // COMMITTEE
   // =========================================================
 
-  const [committeeMembers, setCommitteeMembers] =
-    useState([]);
+  const [
+    committeeMembers,
+    setCommitteeMembers,
+  ] = useState([]);
 
-  const [committeeLoading, setCommitteeLoading] =
-    useState(true);
+  const [
+    committeeLoading,
+    setCommitteeLoading,
+  ] = useState(true);
 
-  const [committeeError, setCommitteeError] =
-    useState("");
-
-  const [committeeIndex, setCommitteeIndex] =
-    useState(0);
+  const [
+    committeeError,
+    setCommitteeError,
+  ] = useState("");
 
   // =========================================================
   // EVENTS
   // =========================================================
 
-  const [events, setEvents] =
-    useState([]);
+  const [
+    events,
+    setEvents,
+  ] = useState([]);
 
-  const [eventsLoading, setEventsLoading] =
-    useState(true);
+  const [
+    eventsLoading,
+    setEventsLoading,
+  ] = useState(true);
 
-  const [eventsError, setEventsError] =
-    useState("");
+  const [
+    eventsError,
+    setEventsError,
+  ] = useState("");
+
+  // =========================================================
+  // HOME SLIDER
+  // =========================================================
+
+  const [
+    sliders,
+    setSliders,
+  ] = useState([]);
+
+  const [
+    slidersLoading,
+    setSlidersLoading,
+  ] = useState(true);
+
+  const [
+    slidersError,
+    setSlidersError,
+  ] = useState("");
 
   // =========================================================
   // CHECK USER LOGIN STATUS
@@ -432,66 +596,70 @@ function Home() {
 
     let mounted = true;
 
-    const checkUser = async () => {
+    const checkUser =
+      async () => {
 
-      try {
+        try {
 
-        setAuthLoading(true);
-
-        const response =
-          await api.get(
-            "/auth/profile"
+          setAuthLoading(
+            true
           );
 
-        if (!mounted) {
-          return;
+          const response =
+            await api.get(
+              "/auth/profile"
+            );
+
+          if (!mounted) {
+            return;
+          }
+
+          if (
+            response.data?.success &&
+            response.data?.user
+          ) {
+
+            setUser(
+              response.data.user
+            );
+
+          } else {
+
+            setUser(null);
+
+          }
+
+        } catch (error) {
+
+          if (
+            error.response?.status !==
+              401 &&
+            error.response?.status !==
+              403
+          ) {
+
+            console.error(
+              "Authentication check error:",
+              error
+            );
+
+          }
+
+          if (mounted) {
+            setUser(null);
+          }
+
+        } finally {
+
+          if (mounted) {
+            setAuthLoading(
+              false
+            );
+          }
+
         }
 
-        if (
-          response.data?.success &&
-          response.data?.user
-        ) {
-
-          setUser(
-            response.data.user
-          );
-
-        } else {
-
-          setUser(null);
-
-        }
-
-      } catch (error) {
-
-        // 401 / 403 simply means
-        // visitor is logged out.
-
-        if (
-          error.response?.status !== 401 &&
-          error.response?.status !== 403
-        ) {
-
-          console.error(
-            "Authentication check error:",
-            error
-          );
-
-        }
-
-        if (mounted) {
-          setUser(null);
-        }
-
-      } finally {
-
-        if (mounted) {
-          setAuthLoading(false);
-        }
-
-      }
-
-    };
+      };
 
     checkUser();
 
@@ -509,83 +677,142 @@ function Home() {
 
     let mounted = true;
 
-    const loadCommittee = async () => {
+    const loadCommittee =
+      async () => {
 
-      try {
+        try {
 
-        setCommitteeLoading(true);
-
-        setCommitteeError("");
-
-        const response =
-          await api.get(
-            "/committees"
+          setCommitteeLoading(
+            true
           );
-
-        if (!mounted) {
-          return;
-        }
-
-        const data =
-          response.data;
-
-        let members = [];
-
-        if (
-          Array.isArray(
-            data?.members
-          )
-        ) {
-
-          members =
-            data.members;
-
-        } else if (
-          Array.isArray(
-            data?.data
-          )
-        ) {
-
-          members =
-            data.data;
-
-        } else if (
-          Array.isArray(data)
-        ) {
-
-          members = data;
-
-        }
-
-        setCommitteeMembers(
-          members
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Committee loading error:",
-          error
-        );
-
-        if (mounted) {
 
           setCommitteeError(
-            error.response?.data?.message ||
-              "Unable to load committee members."
+            ""
           );
 
+          const response =
+            await api.get(
+              "/committees"
+            );
+
+          if (!mounted) {
+            return;
+          }
+
+          const data =
+            response.data;
+
+          let members = [];
+
+          if (
+            Array.isArray(
+              data?.members
+            )
+          ) {
+
+            members =
+              data.members;
+
+          } else if (
+            Array.isArray(
+              data?.data
+            )
+          ) {
+
+            members =
+              data.data;
+
+          } else if (
+            Array.isArray(data)
+          ) {
+
+            members =
+              data;
+
+          }
+
+          // =================================================
+          // ONLY ACTIVE MEMBERS ARE EXPECTED FROM API
+          // SORT AGAIN SAFELY ON FRONTEND
+          // =================================================
+
+          const activeMembers =
+            members.filter(
+              (member) =>
+                member?.isActive !== false
+            );
+
+          activeMembers.sort(
+            (a, b) => {
+
+              const orderA =
+                Number(
+                  a?.displayOrder ??
+                    a?.display_order ??
+                    0
+                );
+
+              const orderB =
+                Number(
+                  b?.displayOrder ??
+                    b?.display_order ??
+                    0
+                );
+
+              if (
+                orderA !==
+                orderB
+              ) {
+                return (
+                  orderA -
+                  orderB
+                );
+              }
+
+              return (
+                Number(
+                  a?.id || 0
+                ) -
+                Number(
+                  b?.id || 0
+                )
+              );
+
+            }
+          );
+
+          setCommitteeMembers(
+            activeMembers
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Committee loading error:",
+            error
+          );
+
+          if (mounted) {
+
+            setCommitteeError(
+              error.response?.data
+                ?.message ||
+                "Unable to load committee members."
+            );
+
+          }
+
+        } finally {
+
+          if (mounted) {
+            setCommitteeLoading(
+              false
+            );
+          }
+
         }
 
-      } finally {
-
-        if (mounted) {
-          setCommitteeLoading(false);
-        }
-
-      }
-
-    };
+      };
 
     loadCommittee();
 
@@ -603,97 +830,106 @@ function Home() {
 
     let mounted = true;
 
-    const loadEvents = async () => {
+    const loadEvents =
+      async () => {
 
-      try {
+        try {
 
-        setEventsLoading(true);
-
-        setEventsError("");
-
-        const response =
-          await api.get(
-            "/events"
+          setEventsLoading(
+            true
           );
-
-        if (!mounted) {
-          return;
-        }
-
-        const data =
-          response.data;
-
-        let eventList = [];
-
-        if (
-          Array.isArray(
-            data?.events
-          )
-        ) {
-
-          eventList =
-            data.events;
-
-        } else if (
-          Array.isArray(
-            data?.data
-          )
-        ) {
-
-          eventList =
-            data.data;
-
-        } else if (
-          Array.isArray(data)
-        ) {
-
-          eventList = data;
-
-        }
-
-        const normalizedEvents =
-          eventList.map(
-            (event) => ({
-              ...event,
-
-              status:
-                getEventStatus(
-                  event.event_date,
-                  event.start_time,
-                  event.end_time
-                ),
-            })
-          );
-
-        setEvents(
-          normalizedEvents
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Events loading error:",
-          error
-        );
-
-        if (mounted) {
 
           setEventsError(
-            error.response?.data?.message ||
-              "Unable to load events."
+            ""
           );
 
+          const response =
+            await api.get(
+              "/events"
+            );
+
+          if (!mounted) {
+            return;
+          }
+
+          const data =
+            response.data;
+
+          let eventList = [];
+
+          if (
+            Array.isArray(
+              data?.events
+            )
+          ) {
+
+            eventList =
+              data.events;
+
+          } else if (
+            Array.isArray(
+              data?.data
+            )
+          ) {
+
+            eventList =
+              data.data;
+
+          } else if (
+            Array.isArray(data)
+          ) {
+
+            eventList =
+              data;
+
+          }
+
+          const normalizedEvents =
+            eventList.map(
+              (event) => ({
+                ...event,
+
+                status:
+                  getEventStatus(
+                    event.event_date,
+                    event.start_time,
+                    event.end_time
+                  ),
+              })
+            );
+
+          setEvents(
+            normalizedEvents
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Events loading error:",
+            error
+          );
+
+          if (mounted) {
+
+            setEventsError(
+              error.response?.data
+                ?.message ||
+                "Unable to load events."
+            );
+
+          }
+
+        } finally {
+
+          if (mounted) {
+            setEventsLoading(
+              false
+            );
+          }
+
         }
 
-      } finally {
-
-        if (mounted) {
-          setEventsLoading(false);
-        }
-
-      }
-
-    };
+      };
 
     loadEvents();
 
@@ -704,143 +940,208 @@ function Home() {
   }, []);
 
   // =========================================================
-  // AUTO COMMITTEE SLIDER
+  // LOAD HOME SLIDERS
+  // =========================================================
+  // Public endpoint: GET /sliders
+  // Only published sliders should be returned by the backend.
   // =========================================================
 
   useEffect(() => {
 
-    if (
-      committeeMembers.length <= 1
-    ) {
-      return undefined;
-    }
+    let mounted = true;
 
-    const interval =
-      setInterval(() => {
+    const loadSliders = async () => {
 
-        setCommitteeIndex(
-          (previous) =>
-            (previous + 1) %
-            committeeMembers.length
+      try {
+
+        setSlidersLoading(true);
+        setSlidersError("");
+
+        const response = await api.get("/sliders");
+
+        if (!mounted) {
+          return;
+        }
+
+        const data = response.data;
+
+        let sliderList = [];
+
+        if (Array.isArray(data?.sliders)) {
+          sliderList = data.sliders;
+        } else if (Array.isArray(data?.data)) {
+          sliderList = data.data;
+        } else if (Array.isArray(data)) {
+          sliderList = data;
+        }
+
+        // Keep only published slides on the frontend as a safety check.
+        const publishedSliders = sliderList
+          .filter((slider) => slider?.published !== false)
+          .sort((a, b) => {
+            const orderA = Number(
+              a?.displayOrder ??
+                a?.display_order ??
+                0
+            );
+
+            const orderB = Number(
+              b?.displayOrder ??
+                b?.display_order ??
+                0
+            );
+
+            if (orderA !== orderB) {
+              return orderA - orderB;
+            }
+
+            return (
+              Number(a?.id || 0) -
+              Number(b?.id || 0)
+            );
+          });
+
+        setSliders(publishedSliders);
+
+      } catch (error) {
+
+        console.error(
+          "Slider loading error:",
+          error
         );
 
-      }, 3500);
-
-    return () => {
-      clearInterval(interval);
-    };
-
-  }, [
-    committeeMembers.length,
-  ]);
-
-  // =========================================================
-  // COMMITTEE NAVIGATION
-  // =========================================================
-
-  const previousCommittee = () => {
-
-    if (
-      committeeMembers.length === 0
-    ) {
-      return;
-    }
-
-    setCommitteeIndex(
-      (previous) => {
-
-        if (previous === 0) {
-          return (
-            committeeMembers.length -
-            1
+        if (mounted) {
+          setSlidersError(
+            error.response?.data?.message ||
+            "Unable to load homepage slider."
           );
         }
 
-        return previous - 1;
+      } finally {
+
+        if (mounted) {
+          setSlidersLoading(false);
+        }
 
       }
-    );
 
-  };
+    };
 
-  const nextCommittee = () => {
+    loadSliders();
 
-    if (
-      committeeMembers.length === 0
-    ) {
-      return;
-    }
+    return () => {
+      mounted = false;
+    };
 
-    setCommitteeIndex(
-      (previous) =>
-        (previous + 1) %
-        committeeMembers.length
-    );
-
-  };
-
-  // =========================================================
-  // CURRENT COMMITTEE MEMBER
-  // =========================================================
-
-  const currentCommittee =
-    committeeMembers.length > 0
-      ? committeeMembers[
-          committeeIndex %
-            committeeMembers.length
-        ]
-      : null;
+  }, []);
 
   // =========================================================
   // HOME EVENTS
   // =========================================================
 
-  const homeEvents = useMemo(() => {
+  const homeEvents =
+    useMemo(() => {
 
-    const upcoming =
-      events.filter(
-        (event) =>
-          event.status !== "past"
-      );
-
-    upcoming.sort((a, b) => {
-
-      const dateA =
-        createEventDate(
-          a.event_date,
-          a.start_time,
-          "00:00:00"
+      const upcoming =
+        events.filter(
+          (event) =>
+            event.status !==
+            "past"
         );
 
-      const dateB =
-        createEventDate(
-          b.event_date,
-          b.start_time,
-          "00:00:00"
-        );
+      upcoming.sort(
+        (a, b) => {
 
-      if (!dateA && !dateB) {
-        return 0;
-      }
+          const dateA =
+            createEventDate(
+              a.event_date,
+              a.start_time,
+              "00:00:00"
+            );
 
-      if (!dateA) {
-        return 1;
-      }
+          const dateB =
+            createEventDate(
+              b.event_date,
+              b.start_time,
+              "00:00:00"
+            );
 
-      if (!dateB) {
-        return -1;
-      }
+          if (
+            !dateA &&
+            !dateB
+          ) {
+            return 0;
+          }
 
-      return (
-        dateA.getTime() -
-        dateB.getTime()
+          if (!dateA) {
+            return 1;
+          }
+
+          if (!dateB) {
+            return -1;
+          }
+
+          return (
+            dateA.getTime() -
+            dateB.getTime()
+          );
+
+        }
       );
 
-    });
+      return upcoming.slice(
+        0,
+        3
+      );
 
-    return upcoming.slice(0, 3);
+    }, [events]);
 
-  }, [events]);
+  // =========================================================
+  // HOME SLIDER CAROUSEL DATA
+  // =========================================================
+  // Duplicate the slides for a seamless CSS marquee loop.
+  // =========================================================
+
+  const sliderCarouselItems =
+    useMemo(() => {
+
+      if (sliders.length === 0) {
+        return [];
+      }
+
+      // Two copies are enough for the continuous track.
+      return [
+        ...sliders,
+        ...sliders,
+      ];
+
+    }, [sliders]);
+
+  // =========================================================
+  // COMMITTEE CAROUSEL DATA
+  // =========================================================
+  // Duplicate the members so CSS can create a seamless
+  // infinite scrolling effect.
+  // =========================================================
+
+  const committeeCarouselMembers =
+    useMemo(() => {
+
+      if (
+        committeeMembers.length ===
+        0
+      ) {
+        return [];
+      }
+
+      return [
+        ...committeeMembers,
+        ...committeeMembers,
+      ];
+
+    }, [
+      committeeMembers,
+    ]);
 
   // =========================================================
   // RENDER
@@ -902,33 +1203,25 @@ function Home() {
 
             </p>
 
-            {/* =================================================
-                HERO ACTIONS
-            ================================================= */}
-
             <div className="hero-actions">
 
-              {/* =================================================
-                  BECOME MEMBER
-                  ONLY FOR LOGGED OUT USERS
+              {!authLoading &&
+                !user && (
 
-                  GOES TO SIGNUP
-              ================================================= */}
+                  <Link
+                    to="/signup"
+                    className="hero-primary-btn"
+                  >
 
-              {!authLoading && !user && (
+                    Become a Member
 
-                <Link
-                  to="/signup"
-                  className="hero-primary-btn"
-                >
+                    <ArrowRight
+                      size={18}
+                    />
 
-                  Become a Member
+                  </Link>
 
-                  <ArrowRight size={18} />
-
-                </Link>
-
-              )}
+                )}
 
               <Link
                 to="/about"
@@ -957,7 +1250,9 @@ function Home() {
 
               <div className="meta-item">
 
-                <GraduationCap size={17} />
+                <GraduationCap
+                  size={17}
+                />
 
                 <span>
                   Education
@@ -981,9 +1276,7 @@ function Home() {
 
           </div>
 
-          {/* =================================================
-              HERO VISUAL
-          ================================================= */}
+          {/* HERO VISUAL */}
 
           <div className="hero-visual">
 
@@ -1010,67 +1303,95 @@ function Home() {
 
             </div>
 
-            <div className="medical-card medical-card-one">
+            <div className="medical-orbit">
 
-              <div className="medical-card-icon">
+              <div className="medical-card medical-card-one">
 
-                <HeartPulse size={19} />
+                <div className="medical-card-icon">
+                  <Sparkles size={19} />
+                </div>
 
-              </div>
+                <div>
 
-              <div>
+                  <strong>
+                    New Generation
+                  </strong>
 
-                <strong>
-                  Cardiovascular
-                </strong>
+                  <span>
+                    Healthcare
+                  </span>
 
-                <span>
-                  Technology
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="medical-card medical-card-two">
-
-              <div className="medical-card-icon">
-
-                <BrainCircuit size={19} />
+                </div>
 
               </div>
 
-              <div>
+              <div className="medical-card medical-card-two">
 
-                <strong>
-                  Knowledge
-                </strong>
+                <div className="medical-card-icon">
+                  <Award size={19} />
+                </div>
 
-                <span>
-                  Sharing
-                </span>
+                <div>
+
+                  <strong>
+                    Excellence
+                  </strong>
+
+                  <span>
+                    In Practice
+                  </span>
+
+                </div>
 
               </div>
 
-            </div>
+              <div className="medical-card medical-card-three">
 
-            <div className="medical-card medical-card-three">
+                <div className="medical-card-icon">
+                  <BriefcaseBusiness
+                    size={19}
+                  />
+                </div>
 
-              <Sparkles size={17} />
+                <div>
 
-              <span>
-                Innovation
-              </span>
+                  <strong>
+                    Opportunity
+                  </strong>
+
+                  <span>
+                    To Grow
+                  </span>
+
+                </div>
+
+              </div>
+
+              <div className="medical-card medical-card-four">
+
+                <div className="medical-card-icon">
+                  <Cpu size={19} />
+                </div>
+
+                <div>
+
+                  <strong>
+                    Technology
+                  </strong>
+
+                  <span>
+                    For Tomorrow
+                  </span>
+
+                </div>
+
+              </div>
 
             </div>
 
           </div>
 
         </div>
-
-        {/* =====================================================
-            ECG
-        ===================================================== */}
 
         <div className="hero-ecg">
 
@@ -1182,10 +1503,6 @@ function Home() {
                 OUR FOCUS
               </span>
 
-              {/* =================================================
-                  LOOPING TYPING ANIMATION
-              ================================================= */}
-
               <h2 className="typing-heading">
 
                 <TypingText
@@ -1199,8 +1516,6 @@ function Home() {
 
             </div>
 
-           
-
           </div>
 
           <div className="focus-grid">
@@ -1211,7 +1526,9 @@ function Home() {
 
                 <div className="focus-icon">
 
-                  <GraduationCap size={27} />
+                  <GraduationCap
+                    size={27}
+                  />
 
                 </div>
 
@@ -1243,8 +1560,6 @@ function Home() {
               </Link>
 
             </article>
-
-          
 
             <article className="focus-card">
 
@@ -1294,7 +1609,7 @@ function Home() {
           VISION
       ===================================================== */}
 
-      <section className="vision-section">
+      {/* <section className="vision-section">
 
         <div className="vision-glow" />
 
@@ -1360,7 +1675,177 @@ function Home() {
 
         </div>
 
-      </section>
+      </section> */}
+
+      {/* =====================================================
+          HOME PAGE SLIDER
+          Loaded from backend and continuously auto-scrolling
+          ===================================================== */}
+
+      {!slidersLoading &&
+        !slidersError &&
+        sliders.length > 0 && (
+
+          <section className="home-slider-section">
+
+            <div className="section-container">
+
+              <div className="home-slider-header">
+
+                <div>
+
+                  <span className="section-label">
+                    SNICT UPDATES
+                  </span>
+
+                  <h2>
+                    Latest Updates & Highlights.
+                  </h2>
+
+                  <p>
+                    Stay updated with the latest
+                    announcements, programs and
+                    activities from SNICT.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="home-slider-wrapper">
+
+                <div className="home-slider-track">
+
+                  {sliderCarouselItems.map(
+                    (slider, index) => {
+
+                      const image =
+                        getSliderImage(slider);
+
+                      const date =
+                        formatSliderDate(
+                          slider?.slideDate ||
+                          slider?.slide_date
+                        );
+
+                      return (
+
+                        <article
+                          className="home-slider-card"
+                          key={`${slider.id || "slider"}-${index}`}
+                        >
+
+                          <div className="home-slider-image">
+
+                            {image ? (
+
+                              <img
+                                src={image}
+                                alt={
+                                  slider.title ||
+                                  "SNICT Update"
+                                }
+                                loading={
+                                  index < 2
+                                    ? "eager"
+                                    : "lazy"
+                                }
+                                onError={(event) => {
+                                  event.currentTarget.style.display =
+                                    "none";
+
+                                  const parent =
+                                    event.currentTarget
+                                      .parentElement;
+
+                                  if (parent) {
+                                    parent.classList.add(
+                                      "home-slider-image-error"
+                                    );
+                                  }
+                                }}
+                              />
+
+                            ) : (
+
+                              <div className="home-slider-image-placeholder">
+                                <Activity size={48} />
+                              </div>
+
+                            )}
+
+                          </div>
+
+                          <div className="home-slider-content">
+
+                            {date && (
+
+                              <span className="home-slider-date">
+
+                                <CalendarDays
+                                  size={14}
+                                />
+
+                                {date}
+
+                              </span>
+
+                            )}
+
+                            <h3>
+                              {slider.title ||
+                                "SNICT Update"}
+                            </h3>
+
+                            {slider.description && (
+
+                              <p>
+                                {slider.description}
+                              </p>
+
+                            )}
+
+                          </div>
+
+                        </article>
+
+                      );
+
+                    }
+                  )}
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        )}
+
+      {!slidersLoading &&
+        slidersError && (
+
+          <section className="home-slider-section">
+
+            <div className="section-container">
+
+              <div className="home-slider-message">
+
+                <Activity size={25} />
+
+                <span>
+                  {slidersError}
+                </span>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        )}
 
       {/* =====================================================
           MISSION
@@ -1433,10 +1918,6 @@ function Home() {
                 EVENTS & CME
               </span>
 
-              {/* =================================================
-                  LOOPING TYPING ANIMATION
-              ================================================= */}
-
               <h2 className="typing-heading">
 
                 <TypingText
@@ -1471,10 +1952,6 @@ function Home() {
 
           </div>
 
-          {/* =================================================
-              LOADING
-          ================================================= */}
-
           {eventsLoading && (
 
             <div className="home-events-state">
@@ -1488,10 +1965,6 @@ function Home() {
             </div>
 
           )}
-
-          {/* =================================================
-              ERROR
-          ================================================= */}
 
           {!eventsLoading &&
             eventsError && (
@@ -1507,10 +1980,6 @@ function Home() {
               </div>
 
             )}
-
-          {/* =================================================
-              EMPTY
-          ================================================= */}
 
           {!eventsLoading &&
             !eventsError &&
@@ -1550,209 +2019,223 @@ function Home() {
 
             )}
 
-          {/* =================================================
-              EVENT CARDS
-          ================================================= */}
-
           {!eventsLoading &&
             !eventsError &&
             homeEvents.length > 0 && (
 
               <div className="home-events-grid">
 
-                {homeEvents.map((event) => {
+                {homeEvents.map(
+                  (event) => {
 
-                  const image =
-                    getEventImage(event);
+                    const image =
+                      getEventImage(
+                        event
+                      );
 
-                  return (
+                    return (
 
-                    <article
-                      key={event.id}
-                      className="home-event-card"
-                    >
+                      <article
+                        key={event.id}
+                        className="home-event-card"
+                      >
 
-                      {/* IMAGE */}
+                        <div className="home-event-image">
 
-                      <div className="home-event-image">
+                          {image ? (
 
-                        {image ? (
+                            <img
+                              src={image}
+                              alt={
+                                event.title ||
+                                "SNICT Event"
+                              }
+                              onError={(e) => {
+                                e.currentTarget.style.display =
+                                  "none";
+                              }}
+                            />
 
-                          <img
-                            src={image}
-                            alt={
-                              event.title ||
-                              "SNICT Event"
-                            }
-                            onError={(e) => {
-                              e.currentTarget.style.display =
-                                "none";
-                            }}
-                          />
+                          ) : (
 
-                        ) : (
+                            <div className="home-event-image-placeholder">
 
-                          <div className="home-event-image-placeholder">
+                              <CalendarDays
+                                size={42}
+                              />
 
-                            <CalendarDays size={42} />
+                            </div>
 
-                          </div>
-
-                        )}
-
-                        <span
-                          className={`home-event-status ${event.status}`}
-                        >
-
-                          <span />
-
-                          {getStatusLabel(
-                            event.status
                           )}
 
-                        </span>
+                          <span
+                            className={`home-event-status ${event.status}`}
+                          >
 
-                      </div>
+                            <span />
 
-                      {/* CONTENT */}
-
-                      <div className="home-event-content">
-
-                        <span className="home-event-type">
-
-                          {event.event_type ||
-                            "SNICT EVENT"}
-
-                        </span>
-
-                        <h3>
-
-                          {event.title ||
-                            "SNICT Event"}
-
-                        </h3>
-
-                        {event.doctor_name && (
-
-                          <div className="home-event-doctor">
-
-                            <UserRound size={15} />
-
-                            <span>
-
-                              {event.doctor_name}
-
-                              {event.specialization
-                                ? ` • ${event.specialization}`
-                                : ""}
-
-                            </span>
-
-                          </div>
-
-                        )}
-
-                        <p>
-
-                          {event.description ||
-                            "Professional learning opportunity organised by SNICT."}
-
-                        </p>
-
-                        <div className="home-event-meta">
-
-                          <span>
-
-                            <CalendarDays size={15} />
-
-                            {formatDate(
-                              event.event_date
+                            {getStatusLabel(
+                              event.status
                             )}
 
                           </span>
 
-                          {event.start_time && (
-
-                            <span>
-
-                              <Clock3 size={15} />
-
-                              {formatTime(
-                                event.start_time
-                              )}
-
-                              {event.end_time
-                                ? ` - ${formatTime(
-                                    event.end_time
-                                  )}`
-                                : ""}
-
-                            </span>
-
-                          )}
-
-                          {event.venue && (
-
-                            <span>
-
-                              {event.event_mode ===
-                              "online" ? (
-                                <Video size={15} />
-                              ) : (
-                                <MapPin size={15} />
-                              )}
-
-                              {event.venue}
-
-                            </span>
-
-                          )}
-
                         </div>
 
-                        <div className="home-event-bottom">
+                        <div className="home-event-content">
 
-                          <div className="home-event-price">
+                          <span className="home-event-type">
 
-                            {Number(event.price || 0) >
-                            0 ? (
-                              <>
+                            {event.event_type ||
+                              "SNICT EVENT"}
 
-                                <IndianRupee size={15} />
+                          </span>
 
-                                {Number(
-                                  event.price
-                                ).toLocaleString(
-                                  "en-IN"
+                          <h3>
+
+                            {event.title ||
+                              "SNICT Event"}
+
+                          </h3>
+
+                          {event.doctor_name && (
+
+                            <div className="home-event-doctor">
+
+                              <UserRound
+                                size={15}
+                              />
+
+                              <span>
+
+                                {event.doctor_name}
+
+                                {event.specialization
+                                  ? ` • ${event.specialization}`
+                                  : ""}
+
+                              </span>
+
+                            </div>
+
+                          )}
+
+                          <p>
+
+                            {event.description ||
+                              "Professional learning opportunity organised by SNICT."}
+
+                          </p>
+
+                          <div className="home-event-meta">
+
+                            <span>
+
+                              <CalendarDays
+                                size={15}
+                              />
+
+                              {formatDate(
+                                event.event_date
+                              )}
+
+                            </span>
+
+                            {event.start_time && (
+
+                              <span>
+
+                                <Clock3
+                                  size={15}
+                                />
+
+                                {formatTime(
+                                  event.start_time
                                 )}
 
-                              </>
-                            ) : (
-                              "FREE"
+                                {event.end_time
+                                  ? ` - ${formatTime(
+                                      event.end_time
+                                    )}`
+                                  : ""}
+
+                              </span>
+
+                            )}
+
+                            {event.venue && (
+
+                              <span>
+
+                                {event.event_mode ===
+                                "online" ? (
+                                  <Video
+                                    size={15}
+                                  />
+                                ) : (
+                                  <MapPin
+                                    size={15}
+                                  />
+                                )}
+
+                                {event.venue}
+
+                              </span>
+
                             )}
 
                           </div>
 
-                          <Link
-                            to={`/events/${event.id}`}
-                            className="home-event-link"
-                          >
+                          <div className="home-event-bottom">
 
-                            View Event
+                            <div className="home-event-price">
 
-                            <ArrowRight size={15} />
+                              {Number(
+                                event.price ||
+                                  0
+                              ) > 0 ? (
+                                <>
 
-                          </Link>
+                                  <IndianRupee
+                                    size={15}
+                                  />
+
+                                  {Number(
+                                    event.price
+                                  ).toLocaleString(
+                                    "en-IN"
+                                  )}
+
+                                </>
+                              ) : (
+                                "FREE"
+                              )}
+
+                            </div>
+
+                            <Link
+                              to={`/events/${event.id}`}
+                              className="home-event-link"
+                            >
+
+                              View Event
+
+                              <ArrowRight
+                                size={15}
+                              />
+
+                            </Link>
+
+                          </div>
 
                         </div>
 
-                      </div>
+                      </article>
 
-                    </article>
+                    );
 
-                  );
-
-                })}
+                  }
+                )}
 
               </div>
 
@@ -1778,10 +2261,6 @@ function Home() {
                 OUR PEOPLE
               </span>
 
-              {/* =================================================
-                  LOOPING TYPING ANIMATION
-              ================================================= */}
-
               <h2 className="typing-heading">
 
                 <TypingText
@@ -1804,7 +2283,7 @@ function Home() {
 
             </div>
 
-            <Link
+            {/* <Link
               to="/committees"
               className="home-committee-view-all"
             >
@@ -1813,12 +2292,12 @@ function Home() {
 
               <ArrowRight size={17} />
 
-            </Link>
+            </Link> */}
 
           </div>
 
           {/* =================================================
-              LOADING
+              COMMITTEE LOADING
           ================================================= */}
 
           {committeeLoading && (
@@ -1836,7 +2315,7 @@ function Home() {
           )}
 
           {/* =================================================
-              ERROR
+              COMMITTEE ERROR
           ================================================= */}
 
           {!committeeLoading &&
@@ -1855,7 +2334,7 @@ function Home() {
             )}
 
           {/* =================================================
-              EMPTY
+              COMMITTEE EMPTY
           ================================================= */}
 
           {!committeeLoading &&
@@ -1878,182 +2357,140 @@ function Home() {
             )}
 
           {/* =================================================
-              COMMITTEE SLIDER
+              CONTINUOUS COMMITTEE CAROUSEL
           ================================================= */}
 
           {!committeeLoading &&
             !committeeError &&
-            currentCommittee && (
+            committeeMembers.length > 0 && (
 
-              <div className="home-committee-slider">
+              <div className="committee-carousel-wrapper">
 
-                <button
-                  type="button"
-                  className="home-committee-arrow"
-                  onClick={
-                    previousCommittee
-                  }
-                  aria-label="Previous committee member"
-                >
+                <div className="committee-carousel">
 
-                  <ChevronLeft size={20} />
+                  <div className="committee-track">
 
-                </button>
-
-                <article
-                  className="home-committee-slide-card"
-                  key={
-                    currentCommittee.id ||
-                    committeeIndex
-                  }
-                >
-
-                  {/* IMAGE */}
-
-                  <div className="home-committee-image">
-
-                    {getCommitteeImage(
-                      currentCommittee
-                    ) ? (
-
-                      <img
-                        src={getCommitteeImage(
-                          currentCommittee
-                        )}
-                        alt={
-                          currentCommittee.name ||
-                          "Committee member"
-                        }
-                        onError={(e) => {
-                          e.currentTarget.style.display =
-                            "none";
-                        }}
-                      />
-
-                    ) : (
-
-                      <div className="home-committee-placeholder">
-
-                        <Users size={55} />
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-                  {/* MEMBER CONTENT */}
-
-                  <div className="home-committee-content">
-
-                    <span className="home-committee-position">
-
-                      {currentCommittee.position ||
-                        currentCommittee.designation ||
-                        currentCommittee.role ||
-                        "Committee Member"}
-
-                    </span>
-
-                    <h3>
-
-                      {currentCommittee.name ||
-                        "Committee Member"}
-
-                    </h3>
-
-                    {currentCommittee.bio && (
-
-                      <p>
-                        {currentCommittee.bio}
-                      </p>
-
-                    )}
-
-                    <Link
-                      to="/committees"
-                      className="home-committee-member-link"
-                    >
-
-                      View Committee
-
-                      <ArrowRight size={16} />
-
-                    </Link>
-
-                  </div>
-
-                </article>
-
-                <button
-                  type="button"
-                  className="home-committee-arrow"
-                  onClick={
-                    nextCommittee
-                  }
-                  aria-label="Next committee member"
-                >
-
-                  <ChevronRight size={20} />
-
-                </button>
-
-              </div>
-
-            )}
-
-          {/* =================================================
-              DOTS
-          ================================================= */}
-
-          {!committeeLoading &&
-            committeeMembers.length > 1 && (
-
-              <div className="home-committee-dots">
-
-                {committeeMembers.map(
-                  (member, index) => (
-
-                    <button
-                      key={
-                        member.id ||
+                    {committeeCarouselMembers.map(
+                      (
+                        member,
                         index
-                      }
-                      type="button"
-                      className={
-                        index ===
-                        committeeIndex %
-                          committeeMembers.length
-                          ? "active"
-                          : ""
-                      }
-                      onClick={() =>
-                        setCommitteeIndex(
-                          index
-                        )
-                      }
-                      aria-label={`Committee member ${
-                        index + 1
-                      }`}
-                    />
+                      ) => {
 
-                  )
-                )}
+                        const image =
+                          getCommitteeImage(
+                            member
+                          );
+
+                        const committeeName =
+                          getCommitteeName(
+                            member
+                          );
+
+                        const memberName =
+                          getMemberName(
+                            member
+                          );
+
+                        const designation =
+                          getCommitteeDesignation(
+                            member
+                          );
+
+                        return (
+
+                          <article
+                            className="committee-member-card"
+                            key={`${member.id || "member"}-${index}`}
+                          >
+
+                            {/* PROFILE IMAGE */}
+
+                            <div className="committee-member-image">
+
+                              {image ? (
+
+                                <img
+                                  src={image}
+                                  alt={memberName}
+                                  loading="lazy"
+                                  onError={(
+                                    e
+                                  ) => {
+                                    e.currentTarget.style.display =
+                                      "none";
+                                  }}
+                                />
+
+                              ) : (
+
+                                <div className="committee-member-image-placeholder">
+
+                                  <Users
+                                    size={55}
+                                  />
+
+                                </div>
+
+                              )}
+
+                            </div>
+
+                            {/* MEMBER INFORMATION */}
+
+                            <div className="committee-member-info">
+
+                              {/* COMMITTEE NAME */}
+
+                              <span className="committee-member-committee">
+
+                                {committeeName}
+
+                              </span>
+
+                              {/* DESIGNATION */}
+
+                              <span className="committee-member-designation">
+
+                                {designation}
+
+                              </span>
+
+                              {/* MEMBER NAME */}
+
+                              <h3>
+
+                                {memberName}
+
+                              </h3>
+
+                            </div>
+
+                          </article>
+
+                        );
+
+                      }
+                    )}
+
+                  </div>
+
+                </div>
 
               </div>
 
             )}
 
           {/* =================================================
-              BOTTOM
+              COMMITTEE BOTTOM
           ================================================= */}
 
           {!committeeLoading &&
+            !committeeError &&
             committeeMembers.length > 0 && (
 
               <div className="home-committee-bottom">
 
-                <Link
+                {/* <Link
                   to="/committees"
                   className="home-committee-button"
                 >
@@ -2062,7 +2499,7 @@ function Home() {
 
                   <ArrowRight size={17} />
 
-                </Link>
+                </Link> */}
 
               </div>
 
@@ -2167,25 +2604,23 @@ function Home() {
 
           </div>
 
-          {/* =================================================
-              CREATE ACCOUNT
-              ONLY FOR LOGGED OUT USERS
-          ================================================= */}
+          {!authLoading &&
+            !user && (
 
-          {!authLoading && !user && (
+              <Link
+                to="/signup"
+                className="membership-btn"
+              >
 
-            <Link
-              to="/signup"
-              className="membership-btn"
-            >
+                Create Your Account
 
-              Create Your Account
+                <ArrowRight
+                  size={18}
+                />
 
-              <ArrowRight size={18} />
+              </Link>
 
-            </Link>
-
-          )}
+            )}
 
         </div>
 

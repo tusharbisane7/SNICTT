@@ -10,11 +10,13 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import api from "../../../services/api";
 
 import "./CommitteeManagement.css";
+
 
 // =========================================================
 // VALID COMMITTEES
@@ -27,6 +29,7 @@ const COMMITTEES = [
   "Working Committee",
 ];
 
+
 // =========================================================
 // EMPTY FORM
 // =========================================================
@@ -37,48 +40,74 @@ const EMPTY_FORM = {
   designation: "",
   bio: "",
   qualification: "",
-  photoUrl: "",
   displayOrder: 0,
   isActive: true,
+  photo: null,
 };
+
 
 // =========================================================
 // COMPONENT
 // =========================================================
 
 function CommitteeManagement() {
+
+  // =======================================================
+  // STATES
+  // =======================================================
+
   const [members, setMembers] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] =
+    useState(false);
 
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingId, setDeletingId] =
+    useState(null);
 
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
 
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] =
+    useState("");
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] =
+    useState(false);
 
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] =
+    useState(null);
 
-  const [form, setForm] = useState({
-    ...EMPTY_FORM,
-  });
+  const [form, setForm] =
+    useState({
+      ...EMPTY_FORM,
+    });
 
-  // =========================================================
+  // Existing image while editing
+  const [existingPhoto, setExistingPhoto] =
+    useState("");
+
+  // Local preview
+  const [photoPreview, setPhotoPreview] =
+    useState("");
+
+
+  // =======================================================
   // LOAD MEMBERS
-  // =========================================================
+  // =======================================================
 
   const loadMembers = async () => {
+
     try {
+
       setLoading(true);
       setError("");
 
-      const response = await api.get(
-        "/committees/admin"
-      );
+      const response =
+        await api.get(
+          "/committees/admin"
+        );
 
       const data =
         response.data?.members || [];
@@ -88,7 +117,9 @@ function CommitteeManagement() {
           ? data
           : []
       );
+
     } catch (error) {
+
       console.error(
         "Load committee members error:",
         error
@@ -96,35 +127,46 @@ function CommitteeManagement() {
 
       setError(
         error.response?.data?.message ||
-          "Unable to load committee members."
+        "Unable to load committee members."
       );
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
-  // =========================================================
+
+  // =======================================================
   // INITIAL LOAD
-  // =========================================================
+  // =======================================================
 
   useEffect(() => {
+
     loadMembers();
+
   }, []);
 
-  // =========================================================
+
+  // =======================================================
   // CLEAR MESSAGES
-  // =========================================================
+  // =======================================================
 
   const clearMessages = () => {
+
     setError("");
     setSuccess("");
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // FORM CHANGE
-  // =========================================================
+  // =======================================================
 
   const handleChange = (event) => {
+
     const {
       name,
       value,
@@ -140,29 +182,142 @@ function CommitteeManagement() {
           ? checked
           : value,
     }));
+
   };
 
-  // =========================================================
+
+  // =======================================================
+  // PHOTO CHANGE
+  // =======================================================
+
+  const handlePhotoChange = (event) => {
+
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+
+    // -----------------------------------------------
+    // VALIDATE FILE TYPE
+    // -----------------------------------------------
+
+    if (!file.type.startsWith("image/")) {
+
+      setError(
+        "Please select a valid image file."
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+
+    // -----------------------------------------------
+    // VALIDATE SIZE
+    // -----------------------------------------------
+
+    const maxSize =
+      5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+
+      setError(
+        "Image size must be less than 5 MB."
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+
+    clearMessages();
+
+
+    // -----------------------------------------------
+    // SAVE FILE
+    // -----------------------------------------------
+
+    setForm((previous) => ({
+      ...previous,
+      photo: file,
+    }));
+
+
+    // -----------------------------------------------
+    // CREATE PREVIEW
+    // -----------------------------------------------
+
+    const previewUrl =
+      URL.createObjectURL(file);
+
+    setPhotoPreview(
+      previewUrl
+    );
+
+  };
+
+
+  // =======================================================
+  // REMOVE SELECTED PHOTO
+  // =======================================================
+
+  const removeSelectedPhoto = () => {
+
+    setForm((previous) => ({
+      ...previous,
+      photo: null,
+    }));
+
+    setPhotoPreview("");
+
+  };
+
+
+  // =======================================================
   // RESET FORM
-  // =========================================================
+  // =======================================================
 
   const resetForm = () => {
+
+    if (photoPreview) {
+      URL.revokeObjectURL(
+        photoPreview
+      );
+    }
+
     setForm({
       ...EMPTY_FORM,
     });
 
+    setExistingPhoto("");
+
+    setPhotoPreview("");
+
     setEditingId(null);
+
     setShowForm(false);
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // OPEN ADD FORM
-  // =========================================================
+  // =======================================================
 
   const openAddForm = () => {
+
     clearMessages();
 
     setEditingId(null);
+
+    setExistingPhoto("");
+
+    setPhotoPreview("");
 
     setForm({
       ...EMPTY_FORM,
@@ -174,16 +329,21 @@ function CommitteeManagement() {
       top: 0,
       behavior: "smooth",
     });
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // EDIT MEMBER
-  // =========================================================
+  // =======================================================
 
   const handleEdit = (member) => {
+
     clearMessages();
 
-    setEditingId(member.id);
+    setEditingId(
+      member.id
+    );
 
     setForm({
       committeeName:
@@ -201,15 +361,26 @@ function CommitteeManagement() {
       qualification:
         member.qualification || "",
 
-      photoUrl:
-        member.photoUrl || "",
-
       displayOrder:
         member.displayOrder ?? 0,
 
       isActive:
         member.isActive ?? true,
+
+      photo: null,
     });
+
+
+    // Existing backend image
+    setExistingPhoto(
+      member.photoUrl ||
+      member.photo ||
+      member.imageUrl ||
+      member.image ||
+      ""
+    );
+
+    setPhotoPreview("");
 
     setShowForm(true);
 
@@ -217,13 +388,16 @@ function CommitteeManagement() {
       top: 0,
       behavior: "smooth",
     });
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // VALIDATE FORM
-  // =========================================================
+  // =======================================================
 
   const validateForm = () => {
+
     const committeeName =
       String(
         form.committeeName || ""
@@ -249,16 +423,13 @@ function CommitteeManagement() {
         form.qualification || ""
       ).trim();
 
-    const photoUrl =
-      String(
-        form.photoUrl || ""
-      ).trim();
 
-    // -------------------------------------------------------
+    // -----------------------------------------------
     // COMMITTEE
-    // -------------------------------------------------------
+    // -----------------------------------------------
 
     if (!committeeName) {
+
       setError(
         "Please select a committee."
       );
@@ -266,11 +437,13 @@ function CommitteeManagement() {
       return false;
     }
 
+
     if (
       !COMMITTEES.includes(
         committeeName
       )
     ) {
+
       setError(
         "Please select a valid committee."
       );
@@ -278,11 +451,13 @@ function CommitteeManagement() {
       return false;
     }
 
-    // -------------------------------------------------------
-    // MEMBER NAME
-    // -------------------------------------------------------
+
+    // -----------------------------------------------
+    // NAME
+    // -----------------------------------------------
 
     if (!memberName) {
+
       setError(
         "Member name is required."
       );
@@ -290,9 +465,11 @@ function CommitteeManagement() {
       return false;
     }
 
+
     if (
       memberName.length > 150
     ) {
+
       setError(
         "Member name cannot exceed 150 characters."
       );
@@ -300,13 +477,15 @@ function CommitteeManagement() {
       return false;
     }
 
-    // -------------------------------------------------------
+
+    // -----------------------------------------------
     // DESIGNATION
-    // -------------------------------------------------------
+    // -----------------------------------------------
 
     if (
       designation.length > 150
     ) {
+
       setError(
         "Designation cannot exceed 150 characters."
       );
@@ -314,13 +493,15 @@ function CommitteeManagement() {
       return false;
     }
 
-    // -------------------------------------------------------
+
+    // -----------------------------------------------
     // BIO
-    // -------------------------------------------------------
+    // -----------------------------------------------
 
     if (
       bio.length > 2000
     ) {
+
       setError(
         "Bio cannot exceed 2000 characters."
       );
@@ -328,13 +509,15 @@ function CommitteeManagement() {
       return false;
     }
 
-    // -------------------------------------------------------
+
+    // -----------------------------------------------
     // QUALIFICATION
-    // -------------------------------------------------------
+    // -----------------------------------------------
 
     if (
       qualification.length > 250
     ) {
+
       setError(
         "Qualification cannot exceed 250 characters."
       );
@@ -342,25 +525,10 @@ function CommitteeManagement() {
       return false;
     }
 
-    // -------------------------------------------------------
-    // PHOTO URL
-    // -------------------------------------------------------
 
-    if (photoUrl) {
-      try {
-        new URL(photoUrl);
-      } catch {
-        setError(
-          "Please enter a valid photo URL."
-        );
-
-        return false;
-      }
-    }
-
-    // -------------------------------------------------------
+    // -----------------------------------------------
     // DISPLAY ORDER
-    // -------------------------------------------------------
+    // -----------------------------------------------
 
     const order =
       Number(
@@ -371,6 +539,7 @@ function CommitteeManagement() {
       !Number.isInteger(order) ||
       order < 0
     ) {
+
       setError(
         "Display order must be a valid number greater than or equal to 0."
       );
@@ -378,107 +547,183 @@ function CommitteeManagement() {
       return false;
     }
 
+
     return true;
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // SAVE MEMBER
-  // =========================================================
+  // =======================================================
 
   const handleSubmit = async (
     event
   ) => {
+
     event.preventDefault();
 
     clearMessages();
+
 
     if (!validateForm()) {
       return;
     }
 
+
     try {
+
       setSaving(true);
 
-      const payload = {
-        committeeName:
-          String(
-            form.committeeName
-          ).trim(),
 
-        memberName:
-          String(
-            form.memberName
-          ).trim(),
+      // =================================================
+      // FORM DATA
+      // =================================================
 
-        designation:
-          String(
-            form.designation || ""
-          ).trim(),
+      const formData =
+        new FormData();
 
-        bio:
-          String(
-            form.bio || ""
-          ).trim(),
 
-        qualification:
-          String(
-            form.qualification || ""
-          ).trim(),
+      formData.append(
+        "committeeName",
+        String(
+          form.committeeName
+        ).trim()
+      );
 
-        photoUrl:
-          String(
-            form.photoUrl || ""
-          ).trim(),
 
-        displayOrder:
+      formData.append(
+        "memberName",
+        String(
+          form.memberName
+        ).trim()
+      );
+
+
+      formData.append(
+        "designation",
+        String(
+          form.designation || ""
+        ).trim()
+      );
+
+
+      formData.append(
+        "bio",
+        String(
+          form.bio || ""
+        ).trim()
+      );
+
+
+      formData.append(
+        "qualification",
+        String(
+          form.qualification || ""
+        ).trim()
+      );
+
+
+      formData.append(
+        "displayOrder",
+        String(
           Number(
             form.displayOrder
-          ) || 0,
+          ) || 0
+        )
+      );
 
-        isActive:
+
+      formData.append(
+        "isActive",
+        String(
           Boolean(
             form.isActive
-          ),
-      };
+          )
+        )
+      );
 
-      // =====================================================
+
+      // =================================================
+      // PHOTO
+      // =================================================
+
+      if (form.photo) {
+
+        formData.append(
+          "photo",
+          form.photo
+        );
+
+      }
+
+
+      // =================================================
       // UPDATE
-      // =====================================================
+      // =================================================
 
       if (editingId) {
+
         const response =
           await api.put(
-            `/committees/${editingId}`,
-            payload
+            `/committees/admin/${editingId}`,
+            formData
           );
+
 
         setSuccess(
           response.data?.message ||
-            "Committee member updated successfully."
+          "Committee member updated successfully."
         );
+
       }
 
-      // =====================================================
+
+      // =================================================
       // ADD
-      // =====================================================
+      // =================================================
 
       else {
+
+        // Photo required for new member
+        if (!form.photo) {
+
+          setError(
+            "Please select a profile photo."
+          );
+
+          setSaving(false);
+
+          return;
+        }
+
+
         const response =
           await api.post(
-            "/committees",
-            payload
+            "/committees/admin",
+            formData
           );
+
 
         setSuccess(
           response.data?.message ||
-            "Committee member added successfully."
+          "Committee member added successfully."
         );
+
       }
+
+
+      // =================================================
+      // RELOAD
+      // =================================================
+
+      await loadMembers();
 
       resetForm();
 
-      await loadMembers();
+
     } catch (error) {
+
       console.error(
         "Save committee member error:",
         error
@@ -486,46 +731,61 @@ function CommitteeManagement() {
 
       setError(
         error.response?.data?.message ||
-          "Unable to save committee member."
+        "Unable to save committee member."
       );
+
     } finally {
+
       setSaving(false);
+
     }
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // DELETE MEMBER
-  // =========================================================
+  // =======================================================
 
   const handleDelete = async (
     id
   ) => {
+
     const confirmed =
       window.confirm(
         "Are you sure you want to permanently delete this committee member?"
       );
 
+
     if (!confirmed) {
       return;
     }
 
+
     try {
+
       clearMessages();
 
       setDeletingId(id);
 
+
       const response =
         await api.delete(
-          `/committees/${id}`
+          `/committees/admin/${id}`
         );
+
 
       setSuccess(
         response.data?.message ||
-          "Committee member deleted successfully."
+        "Committee member deleted successfully."
       );
 
+
       await loadMembers();
+
+
     } catch (error) {
+
       console.error(
         "Delete committee member error:",
         error
@@ -533,56 +793,91 @@ function CommitteeManagement() {
 
       setError(
         error.response?.data?.message ||
-          "Unable to delete committee member."
+        "Unable to delete committee member."
       );
+
     } finally {
+
       setDeletingId(null);
+
     }
+
   };
 
-  // =========================================================
+
+  // =======================================================
   // GROUP MEMBERS
-  // =========================================================
+  // =======================================================
 
   const groupedMembers =
     members.reduce(
       (groups, member) => {
+
         const committeeName =
           member.committeeName ||
           "Other";
+
 
         if (!groups[committeeName]) {
           groups[committeeName] = [];
         }
 
+
         groups[
           committeeName
         ].push(member);
 
+
         return groups;
+
       },
       {}
     );
 
-  // =========================================================
+
+  // =======================================================
   // COMMITTEE ORDER
-  // =========================================================
+  // =======================================================
 
   const orderedGroups =
     COMMITTEES.map(
       (committeeName) => [
+
         committeeName,
+
         groupedMembers[
           committeeName
         ] || [],
+
       ]
     );
 
-  // =========================================================
+
+  // =======================================================
+  // GET PHOTO
+  // =======================================================
+
+  const getMemberPhoto = (
+    member
+  ) => {
+
+    return (
+      member.photoUrl ||
+      member.photo ||
+      member.imageUrl ||
+      member.image ||
+      ""
+    );
+
+  };
+
+
+  // =======================================================
   // RENDER
-  // =========================================================
+  // =======================================================
 
   return (
+
     <main className="committee-admin-page">
 
       {/* =====================================================
@@ -609,6 +904,7 @@ function CommitteeManagement() {
 
         </div>
 
+
         <div className="committee-header-actions">
 
           <button
@@ -617,6 +913,7 @@ function CommitteeManagement() {
             onClick={loadMembers}
             disabled={loading}
           >
+
             <RefreshCw
               size={18}
               className={
@@ -627,27 +924,33 @@ function CommitteeManagement() {
             />
 
             Refresh
+
           </button>
+
 
           <button
             type="button"
             className="committee-add-button"
             onClick={openAddForm}
           >
+
             <Plus size={19} />
 
             Add Member
+
           </button>
 
         </div>
 
       </header>
 
+
       {/* =====================================================
-          MESSAGES
+          ERROR
       ===================================================== */}
 
       {error && (
+
         <div className="committee-message error">
 
           <span>
@@ -660,13 +963,22 @@ function CommitteeManagement() {
               setError("")
             }
           >
+
             <X size={16} />
+
           </button>
 
         </div>
+
       )}
 
+
+      {/* =====================================================
+          SUCCESS
+      ===================================================== */}
+
       {success && (
+
         <div className="committee-message success">
 
           <CheckCircle2
@@ -683,17 +995,22 @@ function CommitteeManagement() {
               setSuccess("")
             }
           >
+
             <X size={16} />
+
           </button>
 
         </div>
+
       )}
+
 
       {/* =====================================================
           FORM
       ===================================================== */}
 
       {showForm && (
+
         <section className="committee-form-card">
 
           <div className="committee-form-header">
@@ -701,35 +1018,46 @@ function CommitteeManagement() {
             <div>
 
               <span>
+
                 {editingId
                   ? "EDIT MEMBER"
                   : "NEW MEMBER"}
+
               </span>
 
               <h2>
+
                 {editingId
                   ? "Edit Committee Member"
                   : "Add Committee Member"}
+
               </h2>
 
               <p>
-                Enter the member information
-                that should appear on the
-                committee page.
+
+                Enter member information
+                and upload the profile photo
+                directly from your computer.
+
               </p>
 
             </div>
+
 
             <button
               type="button"
               onClick={resetForm}
               className="committee-close"
               aria-label="Close form"
+              disabled={saving}
             >
+
               <X size={21} />
+
             </button>
 
           </div>
+
 
           <form
             onSubmit={handleSubmit}
@@ -738,7 +1066,9 @@ function CommitteeManagement() {
 
             <div className="committee-form-grid">
 
-              {/* COMMITTEE */}
+              {/* =================================================
+                  COMMITTEE
+              ================================================= */}
 
               <div className="committee-field">
 
@@ -764,12 +1094,14 @@ function CommitteeManagement() {
 
                   {COMMITTEES.map(
                     (committee) => (
+
                       <option
                         key={committee}
                         value={committee}
                       >
                         {committee}
                       </option>
+
                     )
                   )}
 
@@ -777,7 +1109,10 @@ function CommitteeManagement() {
 
               </div>
 
-              {/* MEMBER NAME */}
+
+              {/* =================================================
+                  MEMBER NAME
+              ================================================= */}
 
               <div className="committee-field">
 
@@ -801,7 +1136,10 @@ function CommitteeManagement() {
 
               </div>
 
-              {/* DESIGNATION */}
+
+              {/* =================================================
+                  DESIGNATION
+              ================================================= */}
 
               <div className="committee-field">
 
@@ -823,7 +1161,10 @@ function CommitteeManagement() {
 
               </div>
 
-              {/* QUALIFICATION */}
+
+              {/* =================================================
+                  QUALIFICATION
+              ================================================= */}
 
               <div className="committee-field">
 
@@ -845,7 +1186,10 @@ function CommitteeManagement() {
 
               </div>
 
-              {/* BIO */}
+
+              {/* =================================================
+                  BIO
+              ================================================= */}
 
               <div className="committee-field committee-field-full">
 
@@ -861,46 +1205,150 @@ function CommitteeManagement() {
                   onChange={
                     handleChange
                   }
-                  placeholder="Write a short professional biography about this member..."
+                  placeholder="Write a short professional biography..."
                   maxLength={2000}
                   rows={5}
                 />
 
                 <small>
                   Maximum 2000 characters.
-                  This will appear on the
-                  public committee page.
                 </small>
 
               </div>
 
-              {/* PHOTO */}
 
-              <div className="committee-field">
+              {/* =================================================
+                  PROFILE PHOTO
+              ================================================= */}
+
+              <div className="committee-field committee-field-full">
 
                 <label>
-                  Profile Photo URL
+                  Profile Photo
+                  {!editingId && (
+                    <span>*</span>
+                  )}
                 </label>
 
-                <input
-                  name="photoUrl"
-                  value={
-                    form.photoUrl
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="https://example.com/photo.jpg"
-                />
+                <div className="committee-file-upload">
+
+                  <input
+                    id="committee-photo"
+                    type="file"
+                    name="photo"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={
+                      handlePhotoChange
+                    }
+                  />
+
+                  <label
+                    htmlFor="committee-photo"
+                    className="committee-file-label"
+                  >
+
+                    <ImageIcon
+                      size={22}
+                    />
+
+                    <span>
+
+                      {form.photo
+                        ? form.photo.name
+                        : "Browse Profile Photo"}
+
+                    </span>
+
+                  </label>
+
+                </div>
 
                 <small>
-                  Add a public image URL
-                  for the member.
+                  JPG, JPEG, PNG or WEBP.
+                  Maximum 5 MB.
                 </small>
 
               </div>
 
-              {/* DISPLAY ORDER */}
+
+              {/* =================================================
+                  PHOTO PREVIEW
+              ================================================= */}
+
+              {(photoPreview ||
+                existingPhoto) && (
+
+                <div className="committee-photo-preview">
+
+                  <div className="committee-preview-image">
+
+                    <img
+                      src={
+                        photoPreview ||
+                        existingPhoto
+                      }
+                      alt="Profile preview"
+                      onError={(
+                        event
+                      ) => {
+
+                        event.currentTarget.style.display =
+                          "none";
+
+                      }}
+                    />
+
+                  </div>
+
+
+                  <div className="committee-preview-info">
+
+                    <span>
+                      PROFILE PHOTO
+                    </span>
+
+                    <strong>
+                      {form.memberName ||
+                        "Member Photo"}
+                    </strong>
+
+                    <p>
+
+                      {form.photo
+                        ? "New photo selected. It will replace the existing photo."
+                        : "Current profile photo."}
+
+                    </p>
+
+
+                    {form.photo && (
+
+                      <button
+                        type="button"
+                        onClick={
+                          removeSelectedPhoto
+                        }
+                        className="committee-remove-photo"
+                      >
+
+                        <X size={14} />
+
+                        Remove New Photo
+
+                      </button>
+
+                    )}
+
+                  </div>
+
+                </div>
+
+              )}
+
+
+              {/* =================================================
+                  DISPLAY ORDER
+              ================================================= */}
 
               <div className="committee-field">
 
@@ -922,77 +1370,13 @@ function CommitteeManagement() {
                 />
 
                 <small>
-                  Lower numbers appear
-                  first.
+                  Lower numbers appear first.
                 </small>
 
               </div>
 
             </div>
 
-            {/* =================================================
-                PHOTO PREVIEW
-            ================================================= */}
-
-            {form.photoUrl && (
-              <div className="committee-photo-preview">
-
-                <div className="committee-preview-image">
-
-                  <img
-                    src={
-                      form.photoUrl
-                    }
-                    alt="Profile preview"
-                    onError={(
-                      event
-                    ) => {
-                      event.currentTarget.style.display =
-                        "none";
-                    }}
-                  />
-
-                </div>
-
-                <div>
-
-                  <span>
-                    PHOTO PREVIEW
-                  </span>
-
-                  <strong>
-                    {form.memberName ||
-                      "Member Photo"}
-                  </strong>
-
-                  <p>
-                    This image will be
-                    displayed on the
-                    public committee page.
-                  </p>
-
-                </div>
-
-              </div>
-            )}
-
-            {/* =================================================
-                BIO PREVIEW
-            ================================================= */}
-
-            {form.bio && (
-              <div className="committee-bio-preview">
-
-                <span>
-                  BIO PREVIEW
-                </span>
-
-                <p>
-                  {form.bio}
-                </p>
-
-              </div>
-            )}
 
             {/* =================================================
                 ACTIVE
@@ -1014,9 +1398,13 @@ function CommitteeManagement() {
               <span className="committee-active-icon">
 
                 {form.isActive ? (
+
                   <Eye size={17} />
+
                 ) : (
+
                   <EyeOff size={17} />
+
                 )}
 
               </span>
@@ -1028,14 +1416,17 @@ function CommitteeManagement() {
                 </strong>
 
                 <small>
+
                   {form.isActive
                     ? "This member is visible on the website."
                     : "This member is hidden from the website."}
+
                 </small>
 
               </span>
 
             </label>
+
 
             {/* =================================================
                 ACTIONS
@@ -1049,8 +1440,11 @@ function CommitteeManagement() {
                 onClick={resetForm}
                 disabled={saving}
               >
+
                 Cancel
+
               </button>
+
 
               <button
                 type="submit"
@@ -1059,30 +1453,34 @@ function CommitteeManagement() {
               >
 
                 {saving ? (
+
                   <>
+
                     <RefreshCw
                       size={17}
                       className="committee-spin"
                     />
 
                     Saving...
+
                   </>
+
                 ) : (
+
                   <>
+
                     {editingId ? (
-                      <Pencil
-                        size={17}
-                      />
+                      <Pencil size={17} />
                     ) : (
-                      <Plus
-                        size={17}
-                      />
+                      <Plus size={17} />
                     )}
 
                     {editingId
                       ? "Update Member"
                       : "Add Member"}
+
                   </>
+
                 )}
 
               </button>
@@ -1092,7 +1490,9 @@ function CommitteeManagement() {
           </form>
 
         </section>
+
       )}
+
 
       {/* =====================================================
           MEMBERS
@@ -1114,9 +1514,8 @@ function CommitteeManagement() {
             </h3>
 
             <p>
-              Please wait while the
-              latest committee data is
-              loaded.
+              Please wait while the latest
+              committee data is loaded.
             </p>
 
           </div>
@@ -1134,7 +1533,9 @@ function CommitteeManagement() {
                 key={committeeName}
               >
 
-                {/* GROUP HEADER */}
+                {/* =================================================
+                    GROUP HEADER
+                ================================================= */}
 
                 <div className="committee-group-title">
 
@@ -1156,16 +1557,16 @@ function CommitteeManagement() {
 
                 </div>
 
-                {/* EMPTY */}
 
-                {committeeMembers.length ===
-                0 ? (
+                {/* =================================================
+                    EMPTY
+                ================================================= */}
+
+                {committeeMembers.length === 0 ? (
 
                   <div className="committee-group-empty">
 
-                    <Users
-                      size={27}
-                    />
+                    <Users size={27} />
 
                     <div>
 
@@ -1174,10 +1575,9 @@ function CommitteeManagement() {
                       </h3>
 
                       <p>
-                        Add members to
-                        this committee
-                        using the button
-                        above.
+                        Add members to this
+                        committee using the
+                        button above.
                       </p>
 
                     </div>
@@ -1192,8 +1592,9 @@ function CommitteeManagement() {
                       (member) => {
 
                         const photo =
-                          member.photoUrl ||
-                          null;
+                          getMemberPhoto(
+                            member
+                          );
 
                         const name =
                           member.memberName ||
@@ -1215,7 +1616,9 @@ function CommitteeManagement() {
                           member.isActive ??
                           true;
 
+
                         return (
+
                           <article
                             className={`committee-member-card ${
                               !isActive
@@ -1227,11 +1630,14 @@ function CommitteeManagement() {
                             }
                           >
 
-                            {/* PHOTO */}
+                            {/* =================================================
+                                PHOTO
+                            ================================================= */}
 
                             <div className="committee-member-photo">
 
                               {photo ? (
+
                                 <img
                                   src={photo}
                                   alt={name}
@@ -1239,6 +1645,7 @@ function CommitteeManagement() {
                                   onError={(
                                     event
                                   ) => {
+
                                     event.currentTarget.style.display =
                                       "none";
 
@@ -1252,12 +1659,17 @@ function CommitteeManagement() {
                                     if (
                                       fallback
                                     ) {
+
                                       fallback.style.display =
                                         "flex";
+
                                     }
+
                                   }}
                                 />
+
                               ) : null}
+
 
                               <div
                                 className="committee-photo-fallback"
@@ -1268,66 +1680,86 @@ function CommitteeManagement() {
                                       : "flex",
                                 }}
                               >
+
                                 <Users
                                   size={30}
                                 />
+
                               </div>
 
                             </div>
 
-                            {/* INFO */}
+
+                            {/* =================================================
+                                INFO
+                            ================================================= */}
 
                             <div className="committee-member-info">
 
                               <span className="committee-member-tag">
 
                                 {isActive ? (
+
                                   <>
+
                                     <CheckCircle2
                                       size={13}
                                     />
 
                                     ACTIVE
+
                                   </>
+
                                 ) : (
+
                                   <>
+
                                     <EyeOff
                                       size={13}
                                     />
 
                                     HIDDEN
+
                                   </>
+
                                 )}
 
                               </span>
+
 
                               <h3>
                                 {name}
                               </h3>
 
+
                               <strong>
-                                {
-                                  designation
-                                }
+                                {designation}
                               </strong>
 
+
+                              {qualification && (
+
+                                <small>
+                                  {qualification}
+                                </small>
+
+                              )}
+
+
                               {bio && (
+
                                 <p className="committee-member-bio">
                                   {bio}
                                 </p>
-                              )}
 
-                              {qualification && (
-                                <small>
-                                  {
-                                    qualification
-                                  }
-                                </small>
                               )}
 
                             </div>
 
-                            {/* ACTIONS */}
+
+                            {/* =================================================
+                                ACTIONS
+                            ================================================= */}
 
                             <div className="committee-member-actions">
 
@@ -1340,6 +1772,7 @@ function CommitteeManagement() {
                                 }
                                 title="Edit member"
                               >
+
                                 <Pencil
                                   size={17}
                                 />
@@ -1349,6 +1782,7 @@ function CommitteeManagement() {
                                 </span>
 
                               </button>
+
 
                               <button
                                 type="button"
@@ -1367,14 +1801,18 @@ function CommitteeManagement() {
 
                                 {deletingId ===
                                 member.id ? (
+
                                   <RefreshCw
                                     size={17}
                                     className="committee-spin"
                                   />
+
                                 ) : (
+
                                   <Trash2
                                     size={17}
                                   />
+
                                 )}
 
                                 <span>
@@ -1386,7 +1824,9 @@ function CommitteeManagement() {
                             </div>
 
                           </article>
+
                         );
+
                       }
                     )}
 
@@ -1404,7 +1844,10 @@ function CommitteeManagement() {
       </section>
 
     </main>
+
   );
+
 }
+
 
 export default CommitteeManagement;

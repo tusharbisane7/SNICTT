@@ -1,4 +1,6 @@
 const pool = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 // =========================================================
 // VALID COMMITTEES
@@ -32,25 +34,20 @@ const cleanMember = (member) => {
     id: member.id,
 
     committeeName:
-      member.committee_name,
+      member.committee_name || "",
 
-    // MEMBER NAME
     memberName:
       member.member_name || "",
 
-    // DESIGNATION
     designation:
       member.designation || "",
 
-    // BIO
     bio:
       member.bio || "",
 
-    // QUALIFICATION
     qualification:
       member.qualification || "",
 
-    // PROFILE PICTURE
     photoUrl:
       member.photo_url || null,
 
@@ -85,6 +82,63 @@ const validateCommittee = (
 };
 
 // =========================================================
+// DELETE OLD IMAGE
+// =========================================================
+
+const deleteOldImage = (
+  imageUrl
+) => {
+  try {
+    if (!imageUrl) {
+      return;
+    }
+
+    // Only delete locally uploaded committee images.
+    if (
+      !imageUrl.startsWith(
+        "/uploads/committee/"
+      )
+    ) {
+      return;
+    }
+
+    const filename =
+      path.basename(imageUrl);
+
+    const filePath =
+      path.join(
+        process.cwd(),
+        "uploads",
+        "committee",
+        filename
+      );
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (error) {
+    console.error(
+      "Old committee image delete error:",
+      error
+    );
+  }
+};
+
+// =========================================================
+// GET IMAGE URL
+// =========================================================
+
+const getUploadedPhotoUrl = (
+  req
+) => {
+  if (!req.file) {
+    return null;
+  }
+
+  return `/uploads/committee/${req.file.filename}`;
+};
+
+// =========================================================
 // GET ALL ACTIVE COMMITTEE MEMBERS
 // PUBLIC
 //
@@ -96,48 +150,47 @@ const getCommitteeMembers = async (
   res
 ) => {
   try {
-    const result = await pool.query(
-      `
-      SELECT
-        id,
-        committee_name,
-        member_name,
-        designation,
-        bio,
-        qualification,
-        photo_url,
-        display_order,
-        is_active,
-        created_at,
-        updated_at
+    const result =
+      await pool.query(
+        `
+        SELECT
+          id,
+          committee_name,
+          member_name,
+          designation,
+          bio,
+          qualification,
+          photo_url,
+          display_order,
+          is_active,
+          created_at,
+          updated_at
 
-      FROM committee_members
+        FROM committee_members
 
-      WHERE is_active = TRUE
+        WHERE is_active = TRUE
 
-      ORDER BY
-        CASE committee_name
+        ORDER BY
+          CASE committee_name
+            WHEN 'Placement Committee'
+            THEN 1
 
-          WHEN 'Placement Committee'
-          THEN 1
+            WHEN 'Academic Committee'
+            THEN 2
 
-          WHEN 'Academic Committee'
-          THEN 2
+            WHEN 'Compliance Committee'
+            THEN 3
 
-          WHEN 'Compliance Committee'
-          THEN 3
+            WHEN 'Working Committee'
+            THEN 4
 
-          WHEN 'Working Committee'
-          THEN 4
+            ELSE 5
+          END,
 
-          ELSE 5
-
-        END,
-
-        display_order ASC,
-        id ASC
-      `
-    );
+          display_order ASC,
+          id ASC
+        `
+      );
 
     return res.json({
       success: true,
@@ -147,7 +200,6 @@ const getCommitteeMembers = async (
           cleanMember
         ),
     });
-
   } catch (error) {
     console.error(
       "Get committee members error:",
@@ -208,35 +260,36 @@ const getCommitteeByName = async (
       });
     }
 
-    const result = await pool.query(
-      `
-      SELECT
-        id,
-        committee_name,
-        member_name,
-        designation,
-        bio,
-        qualification,
-        photo_url,
-        display_order,
-        is_active,
-        created_at,
-        updated_at
+    const result =
+      await pool.query(
+        `
+        SELECT
+          id,
+          committee_name,
+          member_name,
+          designation,
+          bio,
+          qualification,
+          photo_url,
+          display_order,
+          is_active,
+          created_at,
+          updated_at
 
-      FROM committee_members
+        FROM committee_members
 
-      WHERE
-        committee_name = $1
-        AND is_active = TRUE
+        WHERE
+          committee_name = $1
+          AND is_active = TRUE
 
-      ORDER BY
-        display_order ASC,
-        id ASC
-      `,
-      [
-        actualCommittee,
-      ]
-    );
+        ORDER BY
+          display_order ASC,
+          id ASC
+        `,
+        [
+          actualCommittee,
+        ]
+      );
 
     return res.json({
       success: true,
@@ -249,7 +302,6 @@ const getCommitteeByName = async (
           cleanMember
         ),
     });
-
   } catch (error) {
     console.error(
       "Get committee by name error:",
@@ -298,7 +350,6 @@ const getAllCommitteeMembers =
 
           ORDER BY
             CASE committee_name
-
               WHEN 'Placement Committee'
               THEN 1
 
@@ -312,7 +363,6 @@ const getAllCommitteeMembers =
               THEN 4
 
               ELSE 5
-
             END,
 
             display_order ASC,
@@ -328,7 +378,6 @@ const getAllCommitteeMembers =
             cleanMember
           ),
       });
-
     } catch (error) {
       console.error(
         "Get all committee members error:",
@@ -405,7 +454,6 @@ const getCommitteeMemberById =
             result.rows[0]
           ),
       });
-
     } catch (error) {
       console.error(
         "Get committee member error:",
@@ -427,15 +475,17 @@ const getCommitteeMemberById =
 //
 // POST /api/committees/admin
 //
+// multipart/form-data
+//
 // Fields:
 // committeeName
 // memberName
 // designation
 // bio
 // qualification
-// photoUrl
 // displayOrder
 // isActive
+// photo -> FILE
 // =========================================================
 
 const addCommitteeMember =
@@ -450,7 +500,6 @@ const addCommitteeMember =
         designation,
         bio,
         qualification,
-        photoUrl,
         displayOrder,
         isActive,
       } = req.body;
@@ -601,12 +650,10 @@ const addCommitteeMember =
       // PROFILE PHOTO
       // =====================================================
 
-      const cleanPhotoUrl =
-        photoUrl
-          ? String(
-              photoUrl
-            ).trim()
-          : null;
+      const photoUrl =
+        getUploadedPhotoUrl(
+          req
+        );
 
       // =====================================================
       // DISPLAY ORDER
@@ -630,7 +677,8 @@ const addCommitteeMember =
       // =====================================================
 
       const finalIsActive =
-        isActive !== false;
+        isActive !== false &&
+        isActive !== "false";
 
       // =====================================================
       // INSERT
@@ -671,19 +719,12 @@ const addCommitteeMember =
           `,
           [
             cleanCommitteeName,
-
             cleanMemberName,
-
             cleanDesignation,
-
             cleanBio,
-
             cleanQualification,
-
-            cleanPhotoUrl,
-
+            photoUrl,
             finalOrder,
-
             finalIsActive,
           ]
         );
@@ -699,12 +740,26 @@ const addCommitteeMember =
             result.rows[0]
           ),
       });
-
     } catch (error) {
       console.error(
         "Add committee member error:",
         error
       );
+
+      // If database insert failed,
+      // remove newly uploaded image.
+      if (req.file) {
+        try {
+          fs.unlinkSync(
+            req.file.path
+          );
+        } catch (deleteError) {
+          console.error(
+            "Uploaded image cleanup error:",
+            deleteError
+          );
+        }
+      }
 
       return res.status(500).json({
         success: false,
@@ -726,6 +781,14 @@ const addCommitteeMember =
 // ADMIN
 //
 // PUT /api/committees/admin/:id
+//
+// multipart/form-data
+//
+// If photo is selected:
+// -> replace old photo
+//
+// If photo is NOT selected:
+// -> keep old photo
 // =========================================================
 
 const updateCommitteeMember =
@@ -744,10 +807,54 @@ const updateCommitteeMember =
         designation,
         bio,
         qualification,
-        photoUrl,
         displayOrder,
         isActive,
       } = req.body;
+
+      // =====================================================
+      // GET OLD MEMBER
+      // =====================================================
+
+      const existingResult =
+        await pool.query(
+          `
+          SELECT *
+          FROM committee_members
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [id]
+        );
+
+      if (
+        existingResult.rows.length ===
+        0
+      ) {
+        // New image may already have
+        // been uploaded by multer.
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Committee member not found",
+        });
+      }
+
+      const oldMember =
+        existingResult.rows[0];
 
       // =====================================================
       // REQUIRED
@@ -757,6 +864,19 @@ const updateCommitteeMember =
         !committeeName ||
         !memberName
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -779,6 +899,19 @@ const updateCommitteeMember =
           cleanCommitteeName
         )
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -800,6 +933,19 @@ const updateCommitteeMember =
         ).trim();
 
       if (!cleanMemberName) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -812,6 +958,19 @@ const updateCommitteeMember =
         cleanMemberName.length >
         150
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -836,6 +995,19 @@ const updateCommitteeMember =
         cleanDesignation.length >
           150
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -859,6 +1031,19 @@ const updateCommitteeMember =
         cleanBio &&
         cleanBio.length > 2000
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -883,6 +1068,19 @@ const updateCommitteeMember =
         cleanQualification.length >
           250
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(400).json({
           success: false,
 
@@ -892,15 +1090,20 @@ const updateCommitteeMember =
       }
 
       // =====================================================
-      // PROFILE PHOTO
+      // PHOTO
       // =====================================================
 
-      const cleanPhotoUrl =
-        photoUrl
-          ? String(
-              photoUrl
-            ).trim()
-          : null;
+      let finalPhotoUrl =
+        oldMember.photo_url ||
+        null;
+
+      // New photo selected
+      if (req.file) {
+        finalPhotoUrl =
+          getUploadedPhotoUrl(
+            req
+          );
+      }
 
       // =====================================================
       // DISPLAY ORDER
@@ -924,10 +1127,11 @@ const updateCommitteeMember =
       // =====================================================
 
       const finalIsActive =
-        isActive !== false;
+        isActive !== false &&
+        isActive !== "false";
 
       // =====================================================
-      // UPDATE
+      // UPDATE DATABASE
       // =====================================================
 
       const result =
@@ -952,21 +1156,13 @@ const updateCommitteeMember =
           `,
           [
             cleanCommitteeName,
-
             cleanMemberName,
-
             cleanDesignation,
-
             cleanBio,
-
             cleanQualification,
-
-            cleanPhotoUrl,
-
+            finalPhotoUrl,
             finalOrder,
-
             finalIsActive,
-
             id,
           ]
         );
@@ -974,12 +1170,41 @@ const updateCommitteeMember =
       if (
         result.rows.length === 0
       ) {
+        if (req.file) {
+          try {
+            fs.unlinkSync(
+              req.file.path
+            );
+          } catch (cleanupError) {
+            console.error(
+              "Image cleanup error:",
+              cleanupError
+            );
+          }
+        }
+
         return res.status(404).json({
           success: false,
 
           message:
             "Committee member not found",
         });
+      }
+
+      // =====================================================
+      // DELETE OLD IMAGE
+      // ONLY AFTER DATABASE UPDATE SUCCESS
+      // =====================================================
+
+      if (
+        req.file &&
+        oldMember.photo_url &&
+        oldMember.photo_url !==
+          finalPhotoUrl
+      ) {
+        deleteOldImage(
+          oldMember.photo_url
+        );
       }
 
       return res.json({
@@ -993,12 +1218,26 @@ const updateCommitteeMember =
             result.rows[0]
           ),
       });
-
     } catch (error) {
       console.error(
         "Update committee member error:",
         error
       );
+
+      // Cleanup newly uploaded image
+      // if update failed.
+      if (req.file) {
+        try {
+          fs.unlinkSync(
+            req.file.path
+          );
+        } catch (cleanupError) {
+          console.error(
+            "Uploaded image cleanup error:",
+            cleanupError
+          );
+        }
+      }
 
       return res.status(500).json({
         success: false,
@@ -1032,6 +1271,43 @@ const deleteCommitteeMember =
         id,
       } = req.params;
 
+      // =====================================================
+      // GET IMAGE BEFORE DELETE
+      // =====================================================
+
+      const existingResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            photo_url
+          FROM committee_members
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [id]
+        );
+
+      if (
+        existingResult.rows.length ===
+        0
+      ) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Committee member not found",
+        });
+      }
+
+      const oldPhoto =
+        existingResult.rows[0]
+          .photo_url;
+
+      // =====================================================
+      // DELETE MEMBER
+      // =====================================================
+
       const result =
         await pool.query(
           `
@@ -1055,13 +1331,22 @@ const deleteCommitteeMember =
         });
       }
 
+      // =====================================================
+      // DELETE IMAGE
+      // =====================================================
+
+      if (oldPhoto) {
+        deleteOldImage(
+          oldPhoto
+        );
+      }
+
       return res.json({
         success: true,
 
         message:
           "Committee member deleted successfully",
       });
-
     } catch (error) {
       console.error(
         "Delete committee member error:",

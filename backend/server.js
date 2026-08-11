@@ -32,7 +32,8 @@ const expenseRoutes =
 
 const membershipRoutes =
   require("./routes/membershipRoutes");
-
+const sliderRoutes =
+  require("./routes/sliderRoutes");
 
 // =========================================================
 // APP
@@ -239,7 +240,10 @@ app.use(
   expenseRoutes
 );
 
-
+app.use(
+  "/api/sliders",
+  sliderRoutes
+);
 // =========================================================
 // 404 ROUTE
 // =========================================================

@@ -1124,6 +1124,222 @@
 }
 
 
+
+
+/* =========================================================
+   NEW GENERATION / EXCELLENCE / OPPORTUNITY / TECHNOLOGY
+   ROTATING HERO CARDS AROUND HEART
+   ========================================================= */
+
+.medical-orbit {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  animation: medicalOrbitRotate 18s linear infinite;
+  transform-origin: center center;
+}
+
+.medical-orbit .medical-card {
+  pointer-events: auto;
+}
+
+/* Keep each card upright while the orbit rotates */
+.medical-orbit .medical-card-one,
+.medical-orbit .medical-card-two,
+.medical-orbit .medical-card-three,
+.medical-orbit .medical-card-four {
+  animation: medicalCardCounterRotate 18s linear infinite;
+}
+
+/* Four balanced positions around the heart */
+.medical-orbit .medical-card-one {
+  left: 50%;
+  top: 2%;
+  transform: translateX(-50%);
+}
+
+.medical-orbit .medical-card-two {
+  right: 1%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.medical-orbit .medical-card-three {
+  left: 50%;
+  bottom: 2%;
+  transform: translateX(-50%);
+}
+
+.medical-orbit .medical-card-four {
+  left: 1%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Override the old floating animations inside the rotating orbit */
+.medical-orbit .medical-card-one,
+.medical-orbit .medical-card-two,
+.medical-orbit .medical-card-three,
+.medical-orbit .medical-card-four {
+  min-width: 155px;
+}
+
+.medical-orbit .medical-card:hover {
+  animation-play-state: paused;
+  transform: translate(-50%, -50%) scale(1.045);
+}
+
+.medical-orbit .medical-card-one:hover,
+.medical-orbit .medical-card-three:hover {
+  transform: translateX(-50%) scale(1.045);
+}
+
+.medical-orbit .medical-card-two:hover,
+.medical-orbit .medical-card-four:hover {
+  transform: translateY(-50%) scale(1.045);
+}
+
+@keyframes medicalOrbitRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes medicalCardCounterRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* Subtle icon pulse for the four new cards */
+.medical-orbit .medical-card-icon {
+  animation: medicalIconPulse 2.8s ease-in-out infinite;
+}
+
+@keyframes medicalIconPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(110, 213, 223, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 18px rgba(110, 213, 223, 0.16);
+  }
+}
+
+/* Respect accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+  .medical-orbit,
+  .medical-orbit .medical-card-one,
+  .medical-orbit .medical-card-two,
+  .medical-orbit .medical-card-three,
+  .medical-orbit .medical-card-four,
+  .medical-orbit .medical-card-icon {
+    animation: none !important;
+  }
+}
+
+/* =========================================================
+   HERO ORBIT RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .medical-orbit .medical-card {
+    min-width: 135px;
+    padding: 11px 12px;
+    gap: 8px;
+  }
+
+  .medical-orbit .medical-card strong {
+    font-size: 11px;
+  }
+
+  .medical-orbit .medical-card span {
+    font-size: 9px;
+  }
+
+  .medical-orbit .medical-card-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .medical-orbit .medical-card-one {
+    top: 4%;
+  }
+
+  .medical-orbit .medical-card-three {
+    bottom: 4%;
+  }
+
+  .medical-orbit .medical-card-two {
+    right: -1%;
+  }
+
+  .medical-orbit .medical-card-four {
+    left: -1%;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-visual {
+    width: min(100%, 420px);
+  }
+
+  .medical-core {
+    width: 155px;
+    height: 155px;
+  }
+
+  .medical-orbit .medical-card {
+    min-width: 116px;
+    max-width: 132px;
+    padding: 9px 10px;
+    gap: 7px;
+    border-radius: 11px;
+  }
+
+  .medical-orbit .medical-card strong {
+    font-size: 9px;
+  }
+
+  .medical-orbit .medical-card span {
+    margin-top: 2px;
+    font-size: 7px;
+  }
+
+  .medical-orbit .medical-card-icon {
+    width: 27px;
+    height: 27px;
+    border-radius: 7px;
+  }
+
+  .medical-orbit .medical-card-one {
+    top: 7%;
+  }
+
+  .medical-orbit .medical-card-three {
+    bottom: 7%;
+  }
+
+  .medical-orbit .medical-card-two {
+    right: -2%;
+  }
+
+  .medical-orbit .medical-card-four {
+    left: -2%;
+  }
+}
+
+
 /* =========================================================
    ECG
 ========================================================= */
@@ -4216,4 +4432,907 @@
 
 /* =========================================================
    END
-========================================================= */
+=====================
+
+
+/* =========================================================
+   UPDATED COMMITTEE MEMBERS
+   CONTINUOUS AUTO-SCROLL CAROUSEL
+   ========================================================= */
+
+.home-committee-section {
+  overflow: hidden;
+}
+
+.committee-carousel-wrapper {
+  width: 100%;
+  overflow: hidden;
+  margin-top: 8px;
+  padding: 10px 0 18px;
+}
+
+.committee-carousel {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
+    transparent 100%
+  );
+}
+
+.committee-track {
+  display: flex;
+  width: max-content;
+  gap: 24px;
+  will-change: transform;
+  animation: committeeContinuousScroll 34s linear infinite;
+  transform: translate3d(0, 0, 0);
+}
+
+.committee-carousel:hover .committee-track {
+  animation-play-state: paused;
+}
+
+.committee-member-card {
+  width: 255px;
+  min-width: 255px;
+  overflow: hidden;
+  border: 1px solid #e1eaec;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow:
+    0 15px 45px rgba(7, 39, 48, 0.07);
+  transition:
+    transform 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.committee-member-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(34, 152, 167, 0.30);
+  box-shadow:
+    0 24px 55px rgba(7, 39, 48, 0.12),
+    0 0 25px rgba(110, 213, 223, 0.08);
+}
+
+.committee-member-image {
+  position: relative;
+  width: 100%;
+  height: 285px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      135deg,
+      #082b35,
+      #0d424c
+    );
+}
+
+.committee-member-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to top,
+      rgba(3, 19, 26, 0.25),
+      transparent 45%
+    );
+}
+
+.committee-member-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+  transition:
+    transform 0.55s ease;
+}
+
+.committee-member-card:hover
+.committee-member-image img {
+  transform: scale(1.06);
+}
+
+.committee-member-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--snict-cyan);
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(110, 213, 223, 0.13),
+      transparent 60%
+    );
+}
+
+.committee-member-info {
+  min-height: 122px;
+  padding: 21px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.committee-member-committee {
+  display: block;
+  margin-bottom: 6px;
+  color: #168d9c;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.committee-member-designation {
+  display: block;
+  margin-bottom: 8px;
+  color: #2298a7;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.committee-member-info h3 {
+  margin: 0;
+  color: #0c2830;
+  font-size: 21px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+@keyframes committeeContinuousScroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 12px));
+  }
+}
+
+/* =========================================================
+   COMMITTEE RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 850px) {
+  .committee-track {
+    gap: 18px;
+    animation-duration: 30s;
+  }
+
+  .committee-member-card {
+    width: 225px;
+    min-width: 225px;
+  }
+
+  .committee-member-image {
+    height: 255px;
+  }
+
+  .committee-member-info {
+    min-height: 112px;
+    padding: 18px;
+  }
+
+  .committee-member-info h3 {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 650px) {
+  .committee-carousel-wrapper {
+    margin-top: 0;
+    padding-top: 5px;
+  }
+
+  .committee-carousel {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      #000 2%,
+      #000 98%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      #000 2%,
+      #000 98%,
+      transparent 100%
+    );
+  }
+
+  .committee-track {
+    gap: 14px;
+    animation-duration: 25s;
+  }
+
+  .committee-member-card {
+    width: 190px;
+    min-width: 190px;
+    border-radius: 16px;
+  }
+
+  .committee-member-image {
+    height: 225px;
+  }
+
+  .committee-member-info {
+    min-height: 100px;
+    padding: 15px 12px 18px;
+  }
+
+  .committee-member-committee {
+    margin-bottom: 5px;
+    font-size: 8px;
+  }
+
+  .committee-member-designation {
+    margin-bottom: 6px;
+    font-size: 8px;
+  }
+
+  .committee-member-info h3 {
+    font-size: 17px;
+  }
+}
+
+/* =========================================================
+   COMMITTEE REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .committee-track {
+    animation: none !important;
+  }
+
+  .committee-member-card,
+  .committee-member-image img {
+    transition: none !important;
+  }
+}
+
+/* =========================================================
+   SNICT COMMITTEE CARD - FINAL FIX
+   PHOTO TOP
+   INFO BELOW
+   ========================================================= */
+
+/* Main card */
+.home-committee-slide-card,
+.committee-member-card {
+  width: 330px !important;
+  min-width: 330px !important;
+  max-width: 330px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+
+  padding: 0 !important;
+}
+
+/* =========================================================
+   PHOTO
+   ========================================================= */
+
+.home-committee-image,
+.committee-member-image {
+  width: 100% !important;
+  height: 330px !important;
+  min-height: 330px !important;
+  max-height: 330px !important;
+
+  flex: 0 0 330px !important;
+
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.home-committee-image img,
+.committee-member-image img {
+  width: 100% !important;
+  height: 100% !important;
+
+  display: block !important;
+
+  object-fit: cover !important;
+  object-position: center top !important;
+}
+
+/* =========================================================
+   INFORMATION
+   ========================================================= */
+
+.home-committee-content,
+.committee-member-info {
+  width: 100% !important;
+  min-width: 0 !important;
+
+  min-height: 145px !important;
+
+  padding: 20px 18px 22px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  text-align: center !important;
+
+  box-sizing: border-box !important;
+
+  background: #ffffff !important;
+}
+
+/* =========================================================
+   COMMITTEE NAME
+   ========================================================= */
+
+.home-committee-position {
+  display: block !important;
+
+  width: 100% !important;
+
+  margin: 0 0 7px !important;
+
+  color: #168d9c !important;
+
+  font-size: 11px !important;
+  font-weight: 800 !important;
+
+  line-height: 1.35 !important;
+
+  letter-spacing: 0.08em !important;
+
+  text-transform: uppercase !important;
+
+  white-space: normal !important;
+
+  overflow: visible !important;
+
+  text-overflow: unset !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+/* =========================================================
+   MEMBER NAME
+   ========================================================= */
+
+.home-committee-content h3,
+.committee-member-info h3 {
+  display: block !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+
+  color: #0c2830 !important;
+
+  font-size: 23px !important;
+
+  font-weight: 750 !important;
+
+  line-height: 1.25 !important;
+
+  text-align: center !important;
+
+  white-space: normal !important;
+
+  overflow: visible !important;
+
+  text-overflow: unset !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+/* =========================================================
+   OPTIONAL BIO
+   ========================================================= */
+
+.home-committee-content p {
+  width: 100% !important;
+
+  margin: 8px 0 0 !important;
+
+  color: #607b82 !important;
+
+  font-size: 13px !important;
+
+  line-height: 1.5 !important;
+
+  text-align: center !important;
+}
+
+/* =========================================================
+   REMOVE SIDE-BY-SIDE GRID/FLEX BEHAVIOUR
+   ========================================================= */
+
+.home-committee-slide-card {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto auto !important;
+}
+
+/* =========================================================
+   CAROUSEL
+   ========================================================= */
+
+.home-committee-slider,
+.committee-carousel-wrapper,
+.committee-carousel {
+  overflow: hidden !important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+  .home-committee-slide-card,
+  .committee-member-card {
+    width: 285px !important;
+    min-width: 285px !important;
+    max-width: 285px !important;
+  }
+
+  .home-committee-image,
+  .committee-member-image {
+    height: 285px !important;
+    min-height: 285px !important;
+    max-height: 285px !important;
+
+    flex-basis: 285px !important;
+  }
+
+  .home-committee-content,
+  .committee-member-info {
+    min-height: 130px !important;
+
+    padding: 18px 15px 20px !important;
+  }
+
+  .home-committee-content h3,
+  .committee-member-info h3 {
+    font-size: 20px !important;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+  .home-committee-slide-card,
+  .committee-member-card {
+    width: 245px !important;
+    min-width: 245px !important;
+    max-width: 245px !important;
+  }
+
+  .home-committee-image,
+  .committee-member-image {
+    height: 245px !important;
+    min-height: 245px !important;
+    max-height: 245px !important;
+
+    flex-basis: 245px !important;
+  }
+
+  .home-committee-content,
+  .committee-member-info {
+    min-height: 125px !important;
+
+    padding: 16px 12px 18px !important;
+  }
+
+  .home-committee-position {
+    font-size: 8px !important;
+  }
+
+  .home-committee-content h3,
+  .committee-member-info h3 {
+    font-size: 18px !important;
+  }
+}
+
+/* =========================================================
+   HOME PAGE BACKEND SLIDER
+   Positioned above OUR MISSION
+   Continuous seamless auto-scroll
+   ========================================================= */
+
+.home-slider-section {
+  position: relative;
+  padding: 95px 0 105px;
+  background:
+    linear-gradient(
+      180deg,
+      #f5f9fa 0%,
+      #ffffff 100%
+    );
+  overflow: hidden;
+}
+
+.home-slider-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 42px;
+}
+
+.home-slider-header h2 {
+  margin: 0;
+  color: #0b242c;
+  font-size: clamp(34px, 4vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  font-weight: 780;
+}
+
+.home-slider-header p {
+  max-width: 650px;
+  margin: 20px 0 0;
+  color: #657b80;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* Viewport */
+.home-slider-wrapper {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  /* Soft fade at both edges */
+  mask-image:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      black 5%,
+      black 95%,
+      transparent 100%
+    );
+  -webkit-mask-image:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      black 5%,
+      black 95%,
+      transparent 100%
+    );
+}
+
+/* The JSX contains two copies of the backend slides.
+   Moving exactly half the track creates the seamless loop. */
+.home-slider-track {
+  width: max-content;
+  display: flex;
+  align-items: stretch;
+  gap: 22px;
+  animation:
+    homeSliderScroll 32s linear infinite;
+  will-change: transform;
+}
+
+.home-slider-wrapper:hover .home-slider-track {
+  animation-play-state: paused;
+}
+
+@keyframes homeSliderScroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(
+      calc(-50% - 11px)
+    );
+  }
+}
+
+/* Individual slider card */
+.home-slider-card {
+  width: 390px;
+  min-width: 390px;
+  max-width: 390px;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #e0eaec;
+
+  border-radius:
+    var(--snict-radius);
+
+  box-shadow:
+    0 14px 38px
+    rgba(7, 36, 44, 0.07);
+
+  transition:
+    transform 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.home-slider-card:hover {
+  transform:
+    translateY(-8px);
+
+  border-color:
+    rgba(31, 153, 168, 0.32);
+
+  box-shadow:
+    0 25px 65px
+    rgba(8, 53, 62, 0.13);
+}
+
+/* Image */
+.home-slider-image {
+  position: relative;
+
+  width: 100%;
+  height: 235px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0a303a,
+      #061e27
+    );
+}
+
+.home-slider-image img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+
+  transition:
+    transform 0.65s ease;
+}
+
+.home-slider-card:hover
+.home-slider-image img {
+  transform:
+    scale(1.06);
+}
+
+.home-slider-image-placeholder,
+.home-slider-image-error {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color:
+    var(--snict-cyan);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(110, 213, 223, 0.12),
+      transparent 58%
+    );
+}
+
+/* Content */
+.home-slider-content {
+  min-height: 175px;
+
+  display: flex;
+  flex-direction: column;
+
+  padding:
+    22px 23px 24px;
+}
+
+.home-slider-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  width: fit-content;
+
+  margin-bottom: 10px;
+
+  color: #178e9e;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.home-slider-content h3 {
+  margin: 0;
+
+  color: #0b252d;
+
+  font-size: 22px;
+  line-height: 1.28;
+
+  font-weight: 750;
+
+  letter-spacing: -0.02em;
+}
+
+.home-slider-content p {
+  margin:
+    10px 0 0;
+
+  color: #667c81;
+
+  font-size: 13px;
+  line-height: 1.7;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+/* Loading / error message */
+.home-slider-message {
+  min-height: 150px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  color: #667c81;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   SLIDER RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .home-slider-section {
+    padding:
+      80px 0 90px;
+  }
+
+  .home-slider-header {
+    margin-bottom: 34px;
+  }
+
+  .home-slider-card {
+    width: 335px;
+    min-width: 335px;
+    max-width: 335px;
+  }
+
+  .home-slider-image {
+    height: 205px;
+  }
+}
+
+@media (max-width: 650px) {
+
+  .home-slider-section {
+    padding:
+      70px 0 80px;
+  }
+
+  .home-slider-header {
+    display: block;
+  }
+
+  .home-slider-header h2 {
+    font-size: 34px;
+  }
+
+  .home-slider-header p {
+    margin-top: 15px;
+    font-size: 14px;
+  }
+
+  .home-slider-card {
+    width: 285px;
+    min-width: 285px;
+    max-width: 285px;
+  }
+
+  .home-slider-image {
+    height: 180px;
+  }
+
+  .home-slider-content {
+    min-height: 155px;
+    padding:
+      18px 18px 20px;
+  }
+
+  .home-slider-content h3 {
+    font-size: 19px;
+  }
+
+  .home-slider-content p {
+    font-size: 12px;
+  }
+
+  .home-slider-track {
+    gap: 16px;
+    animation-duration: 26s;
+  }
+
+  @keyframes homeSliderScroll {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(
+        calc(-50% - 8px)
+      );
+    }
+  }
+}
+
+/* =========================================================
+   SLIDER REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .home-slider-track {
+    animation: none !important;
+  }
+
+  .home-slider-card,
+  .home-slider-image img {
+    transition: none !important;
+  }
+}
