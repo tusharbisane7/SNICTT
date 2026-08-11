@@ -1,16 +1,32 @@
 /* =========================================================
-   ACADEMIC COMMITTEE
-========================================================= */
+   ACADEMIC COMMITTEE PAGE
+   ========================================================= */
 
 .academic-page {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
 
-  background: #f7fbff;
-  color: #071a34;
-  font-family: inherit;
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(14, 165, 233, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 25%,
+      rgba(99, 102, 241, 0.07),
+      transparent 30%
+    ),
+    #f7fbfd;
+
+  color: #17324d;
 }
+
+
+/* =========================================================
+   BACKGROUND GRID
+   ========================================================= */
 
 .academic-grid {
   position: absolute;
@@ -18,572 +34,1038 @@
 
   pointer-events: none;
 
+  opacity: 0.35;
+
   background-image:
     linear-gradient(
-      rgba(21, 155, 197, 0.035) 1px,
+      rgba(14, 145, 170, 0.045) 1px,
       transparent 1px
     ),
     linear-gradient(
       90deg,
-      rgba(21, 155, 197, 0.035) 1px,
+      rgba(14, 145, 170, 0.045) 1px,
       transparent 1px
     );
 
   background-size: 45px 45px;
 }
 
+
+/* =========================================================
+   GLOW
+   ========================================================= */
+
 .academic-glow {
   position: absolute;
 
-  width: 500px;
-  height: 500px;
+  width: 420px;
+  height: 420px;
 
   border-radius: 50%;
 
-  filter: blur(100px);
+  filter: blur(90px);
 
   pointer-events: none;
+
+  opacity: 0.45;
 }
 
 .academic-glow-one {
-  top: -250px;
-  right: -180px;
+  top: 80px;
+  left: -220px;
 
-  background: rgba(21, 155, 197, 0.11);
+  background: rgba(14, 165, 233, 0.14);
 }
 
 .academic-glow-two {
-  top: 550px;
-  left: -250px;
+  top: 450px;
+  right: -220px;
 
-  background: rgba(125, 164, 255, 0.09);
+  background: rgba(99, 102, 241, 0.12);
 }
+
+
+/* =========================================================
+   CONTAINER
+   ========================================================= */
 
 .academic-container {
   position: relative;
   z-index: 2;
 
-  width: min(1200px, calc(100% - 40px));
-  margin: auto;
+  width: min(
+    1180px,
+    calc(100% - 48px)
+  );
+
+  margin: 0 auto;
 }
 
-/* HERO */
+
+/* =========================================================
+   HERO
+   ========================================================= */
 
 .academic-hero {
-  min-height: 620px;
+  position: relative;
 
-  display: flex;
-  align-items: center;
+  padding: 95px 0 80px;
 
-  padding: 100px 0 80px;
+  border-bottom: 1px solid #e2edf2;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(239, 251, 255, 0.92),
+      rgba(255, 255, 255, 0.95)
+    );
 }
 
 .academic-hero .academic-container {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
+
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(360px, 0.9fr);
 
   align-items: center;
 
   gap: 70px;
 }
 
+
+/* =========================================================
+   HERO CONTENT
+   ========================================================= */
+
 .academic-hero-content {
   max-width: 650px;
 }
 
 .academic-icon {
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin-bottom: 25px;
+  margin-bottom: 22px;
 
-  border: 1px solid #cdebf5;
-  border-radius: 20px;
+  border: 1px solid #bde5ee;
+  border-radius: 18px;
 
-  color: #159bc5;
-  background: white;
+  background:
+    linear-gradient(
+      135deg,
+      #e9faff,
+      #ffffff
+    );
+
+  color: #078aa3;
 
   box-shadow:
-    0 20px 50px rgba(9, 48, 78, 0.08);
+    0 15px 35px rgba(8, 138, 163, 0.12);
 }
 
 .academic-hero-content > span {
-  color: #159bc5;
+  display: inline-block;
 
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 3px;
+  margin-bottom: 10px;
+
+  color: #078aa3;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 2px;
 }
 
-.academic-hero h1 {
-  margin: 12px 0 0;
+.academic-hero-content h1 {
+  margin: 0;
 
-  font-size: clamp(44px, 6vw, 76px);
-  line-height: 1.02;
-  letter-spacing: -3px;
+  color: #17344d;
+
+  font-size: clamp(
+    42px,
+    5vw,
+    68px
+  );
+
+  line-height: 1.04;
+
+  font-weight: 800;
+
+  letter-spacing: -2px;
 }
 
-.academic-hero h1 strong {
+.academic-hero-content h1 strong {
   display: block;
 
-  color: #159bc5;
+  color: #078aa3;
+
+  font-weight: 800;
 }
 
 .academic-hero-content > p {
   max-width: 600px;
 
-  margin: 25px 0 0;
+  margin: 23px 0 28px;
 
-  color: #71859a;
+  color: #6d8290;
 
-  font-size: 18px;
-  line-height: 1.8;
+  font-size: 16px;
+
+  line-height: 1.75;
 }
 
-/* STAT */
+
+/* =========================================================
+   STAT
+   ========================================================= */
 
 .academic-stat {
   width: fit-content;
 
   display: flex;
   align-items: center;
-  gap: 12px;
 
-  margin-top: 32px;
-  padding: 13px 18px;
+  gap: 10px;
 
-  border: 1px solid #dceaf2;
-  border-radius: 14px;
+  padding: 12px 17px;
 
-  background: white;
-}
+  border: 1px solid #d6e9ee;
+  border-radius: 12px;
 
-.academic-stat svg {
-  color: #159bc5;
+  background: rgba(
+    255,
+    255,
+    255,
+    0.85
+  );
+
+  box-shadow:
+    0 10px 30px rgba(
+      25,
+      67,
+      88,
+      0.06
+    );
+
+  color: #078aa3;
 }
 
 .academic-stat strong {
-  font-size: 22px;
+  color: #183850;
+
+  font-size: 18px;
 }
 
 .academic-stat span {
-  color: #71859a;
-  font-size: 14px;
+  color: #708592;
+
+  font-size: 13px;
+  font-weight: 600;
 }
 
-/* VISUAL */
+
+/* =========================================================
+   HERO VISUAL
+   ========================================================= */
 
 .academic-visual {
   position: relative;
 
-  width: 420px;
-  height: 420px;
+  width: 380px;
+  height: 380px;
 
-  margin: auto;
+  margin: 0 auto;
 
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.academic-orbit {
-  position: absolute;
-
-  border: 1px solid rgba(21, 155, 197, 0.2);
-
-  border-radius: 50%;
-}
-
-.academic-orbit-one {
-  width: 310px;
-  height: 310px;
-
-  animation:
-    academicRotate 18s linear infinite;
-}
-
-.academic-orbit-two {
-  width: 420px;
-  height: 420px;
-
-  border-style: dashed;
-
-  animation:
-    academicRotateReverse 25s linear infinite;
 }
 
 .academic-core {
   position: relative;
   z-index: 3;
 
-  width: 220px;
-  height: 220px;
+  width: 190px;
+  height: 190px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 7px;
+  gap: 5px;
 
+  border: 1px solid #bfe2e9;
   border-radius: 50%;
-
-  color: #159bc5;
 
   background:
     radial-gradient(
-      circle,
-      white,
-      #ebf9ff
+      circle at 35% 30%,
+      #ffffff,
+      #eaf9fc
     );
 
+  color: #078aa3;
+
   box-shadow:
-    0 30px 80px rgba(21, 155, 197, 0.14);
+    0 20px 60px rgba(
+      7,
+      138,
+      163,
+      0.15
+    ),
+    inset 0 0 35px
+      rgba(
+        255,
+        255,
+        255,
+        0.8
+      );
 }
 
 .academic-core strong {
-  color: #071a34;
+  margin-top: 8px;
 
-  font-size: 27px;
-  letter-spacing: 3px;
+  color: #163750;
+
+  font-size: 19px;
+
+  letter-spacing: 2px;
 }
 
 .academic-core span {
-  font-size: 11px;
+  color: #078aa3;
+
+  font-size: 9px;
+
   font-weight: 800;
-  letter-spacing: 3px;
+
+  letter-spacing: 2px;
 }
 
-/* MEMBERS */
+
+/* =========================================================
+   ORBITS
+   ========================================================= */
+
+.academic-orbit {
+  position: absolute;
+
+  border: 1px solid
+    rgba(
+      7,
+      138,
+      163,
+      0.2
+    );
+
+  border-radius: 50%;
+}
+
+.academic-orbit-one {
+  width: 300px;
+  height: 300px;
+
+  animation:
+    academicOrbit 18s linear infinite;
+}
+
+.academic-orbit-two {
+  width: 370px;
+  height: 370px;
+
+  border-color:
+    rgba(
+      99,
+      102,
+      241,
+      0.15
+    );
+
+  animation:
+    academicOrbitReverse
+      25s linear infinite;
+}
+
+.academic-orbit-one::before,
+.academic-orbit-two::before {
+  content: "";
+
+  position: absolute;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  background: #078aa3;
+
+  box-shadow:
+    0 0 0 5px
+      rgba(
+        7,
+        138,
+        163,
+        0.08
+      );
+}
+
+.academic-orbit-one::before {
+  top: 15px;
+  left: 50%;
+}
+
+.academic-orbit-two::before {
+  bottom: 35px;
+  right: 25px;
+
+  background: #6366f1;
+}
+
+@keyframes academicOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes academicOrbitReverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+
+/* =========================================================
+   MEMBERS SECTION
+   ========================================================= */
 
 .academic-members {
   position: relative;
 
-  padding: 90px 0 110px;
-
-  background:
-    linear-gradient(
-      180deg,
-      transparent,
-      #edf8fd
-    );
+  padding: 85px 0 100px;
 }
+
+
+/* =========================================================
+   HEADING
+   ========================================================= */
 
 .academic-heading {
   max-width: 720px;
 
-  margin: 0 auto 55px;
+  margin: 0 auto 48px;
 
   text-align: center;
 }
 
 .academic-heading > span {
-  color: #159bc5;
+  color: #078aa3;
 
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 3px;
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 2px;
 }
 
 .academic-heading h2 {
-  margin: 12px 0;
+  margin: 9px 0 12px;
 
-  font-size: clamp(32px, 4vw, 52px);
+  color: #183750;
+
+  font-size: 38px;
+
+  line-height: 1.15;
+
+  font-weight: 800;
 }
 
 .academic-heading h2 strong {
-  color: #159bc5;
+  color: #078aa3;
 }
 
 .academic-heading p {
   margin: 0;
 
-  color: #71859a;
+  color: #718692;
 
-  font-size: 16px;
+  font-size: 15px;
+
   line-height: 1.7;
 }
 
-/* GRID */
+
+/* =========================================================
+   MEMBERS GRID
+   ========================================================= */
 
 .academic-members-grid {
   display: grid;
 
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
 
-  gap: 25px;
+  gap: 22px;
 }
 
-/* CARD */
+
+/* =========================================================
+   MEMBER CARD
+   ========================================================= */
 
 .academic-member-card {
+  position: relative;
+
   overflow: hidden;
 
-  border: 1px solid #dceaf2;
-  border-radius: 24px;
+  min-width: 0;
 
-  background: white;
+  border: 1px solid #dcebef;
+  border-radius: 20px;
+
+  background: #ffffff;
 
   box-shadow:
-    0 20px 60px rgba(9, 48, 78, 0.07);
+    0 12px 35px
+      rgba(
+        23,
+        67,
+        88,
+        0.07
+      );
 
   transition:
     transform 0.3s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .academic-member-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-7px);
+
+  border-color: #b9dfe7;
 
   box-shadow:
-    0 30px 70px rgba(9, 48, 78, 0.13);
+    0 22px 50px
+      rgba(
+        23,
+        67,
+        88,
+        0.12
+      );
 }
 
-/* PHOTO */
+
+/* =========================================================
+   PHOTO
+   ========================================================= */
 
 .academic-photo {
   position: relative;
 
-  height: 300px;
+  width: 100%;
+  height: 280px;
+
+  overflow: hidden;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  overflow: hidden;
-
-  color: #159bc5;
-
   background:
     linear-gradient(
-      145deg,
-      #eafaff,
-      #edf2ff
+      135deg,
+      #eaf8fb,
+      #f6fbfc
     );
+
+  border-bottom: 1px solid #e2edf0;
 }
+
+
+/* =========================================================
+   ACTUAL IMAGE
+   ========================================================= */
 
 .academic-photo img {
   width: 100%;
   height: 100%;
 
+  display: block;
+
   object-fit: cover;
+  object-position: center;
 
   transition:
-    transform 0.5s ease;
+    transform 0.45s ease;
 }
 
 .academic-member-card:hover
 .academic-photo img {
-  transform: scale(1.05);
+  transform: scale(1.045);
 }
 
-.academic-photo > span {
-  position: absolute;
 
-  top: 16px;
-  right: 16px;
+/* =========================================================
+   IMAGE PLACEHOLDER
+   ========================================================= */
 
-  min-width: 38px;
-  height: 38px;
+.academic-photo-placeholder {
+  width: 100%;
+  height: 100%;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 10px;
+  color: #7fa5b1;
 
-  color: white;
-  background: rgba(7, 26, 52, 0.6);
-
-  backdrop-filter: blur(10px);
-
-  font-size: 12px;
-  font-weight: 800;
+  background:
+    radial-gradient(
+      circle at center,
+      #ffffff 0%,
+      #e9f8fb 100%
+    );
 }
 
-/* CONTENT */
+.academic-photo-placeholder svg {
+  opacity: 0.65;
+}
+
+
+/* =========================================================
+   IMAGE NUMBER
+   ========================================================= */
+
+.academic-photo-number {
+  position: absolute;
+
+  left: 14px;
+  top: 14px;
+
+  min-width: 34px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 8px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(
+      14,
+      48,
+      67,
+      0.78
+    );
+
+  color: #ffffff;
+
+  backdrop-filter: blur(8px);
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   MEMBER CONTENT
+   ========================================================= */
 
 .academic-member-content {
-  padding: 25px;
+  min-width: 0;
+
+  padding: 24px;
 }
 
 .academic-member-content small {
   display: block;
 
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 
-  color: #159bc5;
+  color: #078aa3;
 
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 2px;
+  font-size: 9px;
+
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
 }
 
 .academic-member-content h3 {
-  margin: 0;
+  margin: 0 0 7px;
 
-  font-size: 23px;
-  line-height: 1.25;
+  color: #183750;
+
+  font-size: 20px;
+
+  line-height: 1.3;
+
+  font-weight: 800;
+
+  word-break: break-word;
 }
 
 .academic-member-content > strong {
   display: block;
 
-  margin-top: 7px;
+  color: #078aa3;
 
-  color: #159bc5;
+  font-size: 13px;
 
-  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.5;
 }
+
+
+/* =========================================================
+   BIO
+   ========================================================= */
 
 .academic-member-bio {
-  margin: 14px 0 0;
+  margin: 13px 0 0;
 
-  color: #71859a;
+  display: -webkit-box;
 
-  font-size: 14px;
-  line-height: 1.7;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+
+  overflow: hidden;
+
+  color: #728692;
+
+  font-size: 13px;
+
+  line-height: 1.65;
 }
+
+
+/* =========================================================
+   QUALIFICATION
+   ========================================================= */
 
 .academic-member-qualification {
   display: inline-block;
 
-  margin-top: 15px;
-  padding: 7px 11px;
+  margin-top: 14px;
 
-  border-radius: 8px;
+  padding: 6px 10px;
 
-  color: #526b80;
-  background: #f0f7fb;
+  border: 1px solid #d8ebef;
 
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: 7px;
+
+  background: #f2fafb;
+
+  color: #54717e;
+
+  font-size: 10px;
+
+  font-weight: 700;
 }
 
-/* LOADING / EMPTY */
 
-.academic-loading,
-.academic-empty {
-  padding: 80px 30px;
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.academic-loading {
+  min-height: 280px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+
+  border: 1px solid #deebef;
+
+  border-radius: 18px;
+
+  background: #ffffff;
 
   text-align: center;
 
-  border: 1px solid #dceaf2;
-  border-radius: 22px;
-
-  background: white;
+  box-shadow:
+    0 10px 30px
+      rgba(
+        23,
+        67,
+        88,
+        0.05
+      );
 }
 
 .academic-spinner {
   width: 38px;
   height: 38px;
 
-  margin: 0 auto 18px;
+  margin-bottom: 15px;
 
-  border: 3px solid #dceaf2;
-  border-top-color: #159bc5;
+  border: 3px solid #dceff3;
+
+  border-top-color: #078aa3;
 
   border-radius: 50%;
 
   animation:
-    academicSpin 0.8s linear infinite;
+    academicSpinner
+      0.8s linear infinite;
 }
 
-.academic-loading h3,
-.academic-empty h3 {
-  margin: 0 0 7px;
-
-  font-size: 19px;
+@keyframes academicSpinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.academic-loading p,
-.academic-empty p {
+.academic-loading h3 {
+  margin: 0 0 6px;
+
+  color: #24445a;
+
+  font-size: 17px;
+}
+
+.academic-loading p {
   margin: 0;
 
-  color: #71859a;
+  color: #81939d;
 
-  font-size: 14px;
+  font-size: 13px;
 }
 
-/* ERROR */
+
+/* =========================================================
+   ERROR
+   ========================================================= */
 
 .academic-error {
   display: flex;
   align-items: center;
-  gap: 18px;
 
-  padding: 22px;
+  gap: 15px;
 
-  border: 1px solid #ffd8d8;
-  border-radius: 16px;
+  padding: 20px;
 
-  color: #a52b2b;
-  background: #fff5f5;
+  border: 1px solid #f1d1d1;
+
+  border-radius: 14px;
+
+  background: #fff8f8;
+
+  color: #bd5050;
 }
 
-.academic-error div {
+.academic-error > div {
+  min-width: 0;
   flex: 1;
 }
 
 .academic-error h3 {
-  margin: 0 0 5px;
+  margin: 0 0 4px;
+
+  color: #a44141;
+
+  font-size: 15px;
 }
 
 .academic-error p {
   margin: 0;
+
+  color: #8f6a6a;
+
+  font-size: 13px;
 }
 
 .academic-error button {
-  display: flex;
+  min-height: 38px;
+
+  display: inline-flex;
+
   align-items: center;
+  justify-content: center;
+
   gap: 7px;
 
-  padding: 10px 14px;
+  padding: 0 13px;
 
-  border: 0;
-  border-radius: 9px;
+  border: 1px solid #e5bebe;
 
-  color: white;
-  background: #c74a4a;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #a94848;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  font-weight: 700;
 
   cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
-/* ANIMATION */
+.academic-error button:hover {
+  background: #fff0f0;
 
-@keyframes academicRotate {
-  to {
-    transform: rotate(360deg);
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.academic-empty {
+  min-height: 280px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+
+  border: 1px dashed #cbdfe5;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  color: #078aa3;
+}
+
+.academic-empty h3 {
+  margin: 15px 0 6px;
+
+  color: #28485d;
+
+  font-size: 18px;
+}
+
+.academic-empty p {
+  margin: 0;
+
+  color: #81939d;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   RESPONSIVE - 1050px
+   ========================================================= */
+
+@media (max-width: 1050px) {
+
+  .academic-hero .academic-container {
+    grid-template-columns:
+      minmax(0, 1fr)
+      340px;
+
+    gap: 40px;
+  }
+
+  .academic-visual {
+    width: 330px;
+    height: 330px;
+  }
+
+  .academic-orbit-one {
+    width: 270px;
+    height: 270px;
+  }
+
+  .academic-orbit-two {
+    width: 320px;
+    height: 320px;
+  }
+
+  .academic-core {
+    width: 165px;
+    height: 165px;
+  }
+
+  .academic-members-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
   }
 }
 
-@keyframes academicRotateReverse {
-  to {
-    transform: rotate(-360deg);
+
+/* =========================================================
+   RESPONSIVE - 800px
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+  .academic-container {
+    width: min(
+      100% - 34px,
+      650px
+    );
   }
-}
 
-@keyframes academicSpin {
-  to {
-    transform: rotate(360deg);
+  .academic-hero {
+    padding: 65px 0;
   }
-}
 
-/* RESPONSIVE */
-
-@media (max-width: 950px) {
   .academic-hero .academic-container {
     grid-template-columns: 1fr;
+
     text-align: center;
   }
 
   .academic-hero-content {
-    margin: auto;
+    max-width: none;
+  }
+
+  .academic-icon {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .academic-hero-content > p {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .academic-stat {
@@ -592,72 +1074,194 @@
   }
 
   .academic-visual {
-    width: 350px;
-    height: 350px;
+    width: 320px;
+    height: 320px;
   }
 
-  .academic-orbit-two {
-    width: 340px;
-    height: 340px;
+  .academic-heading h2 {
+    font-size: 32px;
   }
 
-  .academic-members-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .academic-members {
+    padding: 65px 0 80px;
   }
 }
 
-@media (max-width: 650px) {
+
+/* =========================================================
+   RESPONSIVE - 600px
+   ========================================================= */
+
+@media (max-width: 600px) {
+
   .academic-container {
-    width: min(100% - 28px, 1200px);
+    width: calc(100% - 28px);
   }
 
-  .academic-hero h1 {
-    font-size: 43px;
-    letter-spacing: -1.8px;
+  .academic-hero {
+    padding: 50px 0 55px;
+  }
+
+  .academic-hero-content h1 {
+    font-size: 42px;
+
+    letter-spacing: -1.5px;
   }
 
   .academic-hero-content > p {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .academic-visual {
-    width: 290px;
-    height: 290px;
+    width: 275px;
+    height: 275px;
   }
 
   .academic-orbit-one {
-    width: 220px;
-    height: 220px;
+    width: 225px;
+    height: 225px;
   }
 
   .academic-orbit-two {
-    width: 285px;
-    height: 285px;
+    width: 275px;
+    height: 275px;
   }
 
   .academic-core {
-    width: 160px;
-    height: 160px;
+    width: 140px;
+    height: 140px;
+  }
+
+  .academic-core svg {
+    width: 48px;
+    height: 48px;
   }
 
   .academic-core strong {
-    font-size: 20px;
+    font-size: 16px;
+  }
+
+  .academic-heading {
+    margin-bottom: 30px;
+  }
+
+  .academic-heading h2 {
+    font-size: 29px;
+  }
+
+  .academic-heading p {
+    font-size: 13px;
   }
 
   .academic-members-grid {
     grid-template-columns: 1fr;
+
+    gap: 18px;
   }
 
   .academic-photo {
-    height: 320px;
+    height: 300px;
+  }
+
+  .academic-member-content {
+    padding: 20px;
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE - 420px
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+  .academic-container {
+    width: calc(100% - 22px);
+  }
+
+  .academic-hero-content h1 {
+    font-size: 35px;
+  }
+
+  .academic-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .academic-stat {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    justify-content: center;
+  }
+
+  .academic-visual {
+    width: 245px;
+    height: 245px;
+  }
+
+  .academic-orbit-one {
+    width: 200px;
+    height: 200px;
+  }
+
+  .academic-orbit-two {
+    width: 240px;
+    height: 240px;
+  }
+
+  .academic-core {
+    width: 125px;
+    height: 125px;
+  }
+
+  .academic-core svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .academic-core strong {
+    font-size: 14px;
+  }
+
+  .academic-core span {
+    font-size: 8px;
+  }
+
+  .academic-photo {
+    height: 260px;
+  }
+
+  .academic-member-content h3 {
+    font-size: 18px;
   }
 
   .academic-error {
+    align-items: flex-start;
     flex-wrap: wrap;
   }
 
   .academic-error button {
     width: 100%;
-    justify-content: center;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .academic-orbit-one,
+  .academic-orbit-two,
+  .academic-spinner {
+    animation: none;
+  }
+
+  .academic-member-card,
+  .academic-photo img {
+    transition: none;
   }
 }

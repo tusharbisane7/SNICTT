@@ -10,6 +10,7 @@ const {
   hashOtp,
 } = require("../utils/generateOtp");
 
+
 // =========================================================
 // HELPERS
 // =========================================================
@@ -23,6 +24,100 @@ const createExpiry = () => {
 
   return expiry;
 };
+
+
+// =========================================================
+// BACKEND ORIGIN
+// =========================================================
+//
+// Converts relative upload paths:
+//
+// /uploads/profile/photo.jpg
+//
+// into:
+//
+// https://snict-backend.onrender.com/uploads/profile/photo.jpg
+//
+// Works on localhost and Render.
+//
+
+const getBackendOrigin = (req) => {
+  // -------------------------------------------------------
+  // OPTIONAL ENV URL
+  // -------------------------------------------------------
+
+  if (process.env.BACKEND_URL) {
+    return String(
+      process.env.BACKEND_URL
+    ).replace(/\/+$/, "");
+  }
+
+  // -------------------------------------------------------
+  // RENDER / PROXY SUPPORT
+  // -------------------------------------------------------
+
+  const forwardedProtocol =
+    req.get("x-forwarded-proto");
+
+  const protocol =
+    forwardedProtocol
+      ? forwardedProtocol
+          .split(",")[0]
+          .trim()
+      : req.protocol;
+
+  const host =
+    req.get("host");
+
+  return `${protocol}://${host}`;
+};
+
+
+// =========================================================
+// IMAGE URL HELPER
+// =========================================================
+
+const getImageUrl = (
+  req,
+  imagePath
+) => {
+  if (!imagePath) {
+    return null;
+  }
+
+  const image =
+    String(imagePath).trim();
+
+  if (!image) {
+    return null;
+  }
+
+  // -------------------------------------------------------
+  // ALREADY FULL URL
+  // -------------------------------------------------------
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("data:")
+  ) {
+    return image;
+  }
+
+  // -------------------------------------------------------
+  // RELATIVE UPLOAD PATH
+  // -------------------------------------------------------
+
+  const origin =
+    getBackendOrigin(req);
+
+  if (image.startsWith("/")) {
+    return `${origin}${image}`;
+  }
+
+  return `${origin}/${image}`;
+};
+
 
 // =========================================================
 // AUTH COOKIE
@@ -49,6 +144,7 @@ const authCookieOptions = {
   path: "/",
 };
 
+
 // =========================================================
 // SET AUTH COOKIE
 // =========================================================
@@ -63,6 +159,7 @@ const setAuthCookie = (
     authCookieOptions
   );
 };
+
 
 // =========================================================
 // BIO WORD COUNT
@@ -80,11 +177,15 @@ const getWordCount = (text) => {
     .length;
 };
 
+
 // =========================================================
 // CLEAN USER
 // =========================================================
 
-const cleanUser = (user) => {
+const cleanUser = (
+  user,
+  req
+) => {
   return {
     id: user.id,
 
@@ -113,7 +214,10 @@ const cleanUser = (user) => {
       user.blood_group,
 
     profileImageUrl:
-      user.profile_image_url || null,
+      getImageUrl(
+        req,
+        user.profile_image_url
+      ),
 
     designation:
       user.designation || "",
@@ -125,6 +229,7 @@ const cleanUser = (user) => {
       user.created_at,
   };
 };
+
 
 // =========================================================
 // SAFE OTP COMPARISON
@@ -166,6 +271,7 @@ const safeHashCompare = (
   );
 };
 
+
 // =========================================================
 // CHECK USERNAME
 // GET /api/auth/check-username
@@ -176,9 +282,7 @@ const checkUsername =
     req,
     res
   ) => {
-
     try {
-
       const username =
         String(
           req.query.username ||
@@ -188,15 +292,11 @@ const checkUsername =
           .toLowerCase();
 
       if (!username) {
-
         return res.json({
           success: true,
-
           available: false,
-
           message:
             "Enter a username",
-
           suggestions: [],
         });
       }
@@ -206,15 +306,11 @@ const checkUsername =
           username
         )
       ) {
-
         return res.json({
           success: true,
-
           available: false,
-
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
-
           suggestions: [],
         });
       }
@@ -227,24 +323,17 @@ const checkUsername =
           WHERE username = $1
           LIMIT 1
           `,
-          [
-            username,
-          ]
+          [username]
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.json({
           success: true,
-
           available: true,
-
           message:
             "Username available",
-
           suggestions: [],
         });
       }
@@ -258,17 +347,13 @@ const checkUsername =
 
       return res.json({
         success: true,
-
         available: false,
-
         message:
           "Username already taken",
-
         suggestions,
       });
 
     } catch (error) {
-
       console.error(
         "Check username error:",
         error
@@ -276,12 +361,12 @@ const checkUsername =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to check username",
       });
     }
   };
+
 
 // =========================================================
 // REGISTER USER
@@ -294,12 +379,10 @@ const registerUser =
     req,
     res
   ) => {
-
     const client =
       await pool.connect();
 
     try {
-
       const {
         fullName,
         username,
@@ -330,10 +413,8 @@ const registerUser =
         !address ||
         !bloodGroup
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "All fields are required",
         });
@@ -378,10 +459,8 @@ const registerUser =
           normalizedMobile
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid 10-digit mobile number",
         });
@@ -396,10 +475,8 @@ const registerUser =
           normalizedUsername
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
         });
@@ -417,10 +494,8 @@ const registerUser =
           normalizedEmail
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid email",
         });
@@ -433,10 +508,8 @@ const registerUser =
       if (
         password.length < 8
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Password must be at least 8 characters",
         });
@@ -456,10 +529,8 @@ const registerUser =
         numericAge < 1 ||
         numericAge > 120
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid age",
         });
@@ -477,10 +548,8 @@ const registerUser =
       if (
         bioWordCount > 300
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Bio must not exceed 300 words",
         });
@@ -494,10 +563,8 @@ const registerUser =
         cleanDesignation.length >
         150
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Designation must not exceed 150 characters",
         });
@@ -512,27 +579,15 @@ const registerUser =
 
       if (req.file) {
 
-        if (
-          req.file.location
-        ) {
-
+        if (req.file.location) {
           profileImageUrl =
             req.file.location;
 
         } else if (
           req.file.filename
         ) {
-
           profileImageUrl =
             `/uploads/profile/${req.file.filename}`;
-
-        } else if (
-          req.file.path
-        ) {
-
-          profileImageUrl =
-            req.file.path;
-
         }
       }
 
@@ -573,7 +628,6 @@ const registerUser =
         existingUser.rows.length >
         0
       ) {
-
         await client.query(
           "ROLLBACK"
         );
@@ -585,10 +639,8 @@ const registerUser =
           existing.email ===
           normalizedEmail
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Email already registered",
           });
@@ -598,10 +650,8 @@ const registerUser =
           existing.username ===
           normalizedUsername
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Username already taken",
           });
@@ -611,10 +661,8 @@ const registerUser =
           existing.mobile ===
           normalizedMobile
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Mobile number already registered",
           });
@@ -676,13 +724,9 @@ const registerUser =
             ).trim(),
 
             normalizedUsername,
-
             normalizedEmail,
-
             normalizedMobile,
-
             passwordHash,
-
             numericAge,
 
             String(
@@ -700,7 +744,6 @@ const registerUser =
             profileImageUrl,
 
             cleanDesignation,
-
             cleanBio,
           ]
         );
@@ -714,7 +757,6 @@ const registerUser =
       );
 
       return res.status(201).json({
-
         success: true,
 
         message:
@@ -725,22 +767,20 @@ const registerUser =
 
         user:
           cleanUser(
-            result.rows[0]
+            result.rows[0],
+            req
           ),
       });
 
     } catch (error) {
 
       try {
-
         await client.query(
           "ROLLBACK"
         );
-
       } catch (
         rollbackError
       ) {
-
         console.error(
           "Rollback error:",
           rollbackError.message
@@ -753,7 +793,6 @@ const registerUser =
       );
 
       return res.status(500).json({
-
         success: false,
 
         message:
@@ -765,13 +804,10 @@ const registerUser =
             ? {
                 error:
                   error.message,
-
                 code:
                   error.code,
-
                 detail:
                   error.detail,
-
                 constraint:
                   error.constraint,
               }
@@ -779,11 +815,10 @@ const registerUser =
       });
 
     } finally {
-
       client.release();
-
     }
   };
+
 
 // =========================================================
 // LOGIN
@@ -795,9 +830,7 @@ const loginUser =
     req,
     res
   ) => {
-
     try {
-
       const {
         identifier,
         password,
@@ -807,10 +840,8 @@ const loginUser =
         !identifier ||
         !password
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Username/email and password are required",
         });
@@ -837,13 +868,10 @@ const loginUser =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.status(401).json({
           success: false,
-
           message:
             "Invalid username/email or password",
         });
@@ -858,13 +886,9 @@ const loginUser =
           user.password_hash
         );
 
-      if (
-        !passwordMatch
-      ) {
-
+      if (!passwordMatch) {
         return res.status(401).json({
           success: false,
-
           message:
             "Invalid username/email or password",
         });
@@ -881,18 +905,19 @@ const loginUser =
       );
 
       return res.json({
-
         success: true,
 
         message:
           "Login successful",
 
         user:
-          cleanUser(user),
+          cleanUser(
+            user,
+            req
+          ),
       });
 
     } catch (error) {
-
       console.error(
         "Login error:",
         error
@@ -900,12 +925,12 @@ const loginUser =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to login",
       });
     }
   };
+
 
 // =========================================================
 // FORGOT PASSWORD
@@ -917,18 +942,14 @@ const forgotPassword =
     req,
     res
   ) => {
-
     try {
-
       const {
         email,
       } = req.body;
 
       if (!email) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Email is required",
         });
@@ -953,13 +974,10 @@ const forgotPassword =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.json({
           success: true,
-
           message:
             "If an account exists, a reset OTP has been sent.",
         });
@@ -1061,13 +1079,11 @@ const forgotPassword =
 
       return res.json({
         success: true,
-
         message:
           "If an account exists, a reset OTP has been sent.",
       });
 
     } catch (error) {
-
       console.error(
         "Forgot password error:",
         error
@@ -1075,12 +1091,12 @@ const forgotPassword =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to process password reset",
       });
     }
   };
+
 
 // =========================================================
 // RESET PASSWORD
@@ -1092,9 +1108,7 @@ const resetPassword =
     req,
     res
   ) => {
-
     try {
-
       const {
         email,
         otp,
@@ -1106,23 +1120,18 @@ const resetPassword =
         !otp ||
         !newPassword
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Email, OTP and new password are required",
         });
       }
 
       if (
-        newPassword.length <
-        8
+        newPassword.length < 8
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Password must be at least 8 characters",
         });
@@ -1147,13 +1156,10 @@ const resetPassword =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Invalid reset request",
         });
@@ -1166,10 +1172,8 @@ const resetPassword =
         !user.reset_otp_hash ||
         !user.reset_otp_expires
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Reset OTP not available",
         });
@@ -1181,10 +1185,8 @@ const resetPassword =
           user.reset_otp_expires
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Reset OTP has expired",
         });
@@ -1201,10 +1203,8 @@ const resetPassword =
           user.reset_otp_hash
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Invalid reset OTP",
         });
@@ -1240,13 +1240,11 @@ const resetPassword =
 
       return res.json({
         success: true,
-
         message:
           "Password reset successfully. Please login again.",
       });
 
     } catch (error) {
-
       console.error(
         "Reset password error:",
         error
@@ -1254,12 +1252,12 @@ const resetPassword =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to reset password",
       });
     }
   };
+
 
 // =========================================================
 // CHANGE PASSWORD
@@ -1271,9 +1269,7 @@ const changePassword =
     req,
     res
   ) => {
-
     try {
-
       const {
         currentPassword,
         newPassword,
@@ -1283,23 +1279,18 @@ const changePassword =
         !currentPassword ||
         !newPassword
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Current and new passwords are required",
         });
       }
 
       if (
-        newPassword.length <
-        8
+        newPassword.length < 8
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "New password must be at least 8 characters",
         });
@@ -1309,10 +1300,8 @@ const changePassword =
         currentPassword ===
         newPassword
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "New password must be different from current password",
         });
@@ -1332,13 +1321,10 @@ const changePassword =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "User not found",
         });
@@ -1354,10 +1340,8 @@ const changePassword =
         );
 
       if (!valid) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Current password is incorrect",
         });
@@ -1386,13 +1370,11 @@ const changePassword =
 
       return res.json({
         success: true,
-
         message:
           "Password changed successfully",
       });
 
     } catch (error) {
-
       console.error(
         "Change password error:",
         error
@@ -1400,12 +1382,12 @@ const changePassword =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to change password",
       });
     }
   };
+
 
 // =========================================================
 // GET PROFILE
@@ -1417,14 +1399,10 @@ const getProfile =
     req,
     res
   ) => {
-
     try {
-
       if (!req.userId) {
-
         return res.status(401).json({
           success: false,
-
           message:
             "Authentication required",
         });
@@ -1444,30 +1422,26 @@ const getProfile =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "User not found",
         });
       }
 
       return res.json({
-
         success: true,
 
         user:
           cleanUser(
-            result.rows[0]
+            result.rows[0],
+            req
           ),
       });
 
     } catch (error) {
-
       console.error(
         "Profile error:",
         error
@@ -1475,12 +1449,12 @@ const getProfile =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to fetch profile",
       });
     }
   };
+
 
 // =========================================================
 // UPDATE PROFILE
@@ -1492,9 +1466,7 @@ const updateProfile =
     req,
     res
   ) => {
-
     try {
-
       const {
         fullName,
         username,
@@ -1523,10 +1495,8 @@ const updateProfile =
         !address ||
         !bloodGroup
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "All profile fields are required",
         });
@@ -1590,10 +1560,8 @@ const updateProfile =
         numericAge < 1 ||
         numericAge > 120
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid age",
         });
@@ -1608,10 +1576,8 @@ const updateProfile =
           normalizedUsername
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
         });
@@ -1629,10 +1595,8 @@ const updateProfile =
           normalizedEmail
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid email",
         });
@@ -1647,10 +1611,8 @@ const updateProfile =
           cleanMobile
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid 10-digit mobile number",
         });
@@ -1664,10 +1626,8 @@ const updateProfile =
         cleanDesignation.length >
         150
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Designation must not exceed 150 characters",
         });
@@ -1685,10 +1645,8 @@ const updateProfile =
       if (
         bioWordCount > 300
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Bio must not exceed 300 words",
         });
@@ -1728,7 +1686,6 @@ const updateProfile =
         existingUser.rows.length >
         0
       ) {
-
         const existing =
           existingUser.rows[0];
 
@@ -1736,10 +1693,8 @@ const updateProfile =
           existing.username ===
           normalizedUsername
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Username already taken",
           });
@@ -1749,10 +1704,8 @@ const updateProfile =
           existing.email ===
           normalizedEmail
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Email already registered",
           });
@@ -1762,10 +1715,8 @@ const updateProfile =
           existing.mobile ===
           cleanMobile
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Mobile number already registered",
           });
@@ -1794,18 +1745,18 @@ const updateProfile =
         currentUserResult.rows.length ===
         0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "User not found",
         });
       }
 
       let profileImageUrl =
-        currentUserResult.rows[0]
-          .profile_image_url;
+        currentUserResult
+          .rows[0]
+          .profile_image_url ||
+        null;
 
       // =====================================================
       // NEW PROFILE IMAGE
@@ -1813,27 +1764,15 @@ const updateProfile =
 
       if (req.file) {
 
-        if (
-          req.file.location
-        ) {
-
+        if (req.file.location) {
           profileImageUrl =
             req.file.location;
 
         } else if (
           req.file.filename
         ) {
-
           profileImageUrl =
             `/uploads/profile/${req.file.filename}`;
-
-        } else if (
-          req.file.path
-        ) {
-
-          profileImageUrl =
-            req.file.path;
-
         }
       }
 
@@ -1879,20 +1818,16 @@ const updateProfile =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "User not found",
         });
       }
 
       return res.json({
-
         success: true,
 
         message:
@@ -1900,7 +1835,8 @@ const updateProfile =
 
         user:
           cleanUser(
-            result.rows[0]
+            result.rows[0],
+            req
           ),
       });
 
@@ -1927,7 +1863,6 @@ const updateProfile =
       );
 
       return res.status(500).json({
-
         success: false,
 
         message:
@@ -1939,10 +1874,8 @@ const updateProfile =
             ? {
                 error:
                   error.message,
-
                 code:
                   error.code,
-
                 detail:
                   error.detail,
               }
@@ -1950,6 +1883,7 @@ const updateProfile =
       });
     }
   };
+
 
 // =========================================================
 // GET ALL REGISTERED MEMBERS
@@ -1962,9 +1896,7 @@ const getMembers =
     req,
     res
   ) => {
-
     try {
-
       const result =
         await pool.query(
           `
@@ -1984,7 +1916,6 @@ const getMembers =
       const members =
         result.rows.map(
           (user) => ({
-
             id:
               user.id,
 
@@ -1995,8 +1926,10 @@ const getMembers =
               user.username || "",
 
             profileImageUrl:
-              user.profile_image_url ||
-              null,
+              getImageUrl(
+                req,
+                user.profile_image_url
+              ),
 
             designation:
               user.designation ||
@@ -2011,7 +1944,6 @@ const getMembers =
         );
 
       return res.json({
-
         success: true,
 
         count:
@@ -2028,7 +1960,6 @@ const getMembers =
       );
 
       return res.status(500).json({
-
         success: false,
 
         message:
@@ -2036,6 +1967,7 @@ const getMembers =
       });
     }
   };
+
 
 // =========================================================
 // DELETE PROFILE PHOTO
@@ -2047,14 +1979,11 @@ const deleteProfilePhoto =
     req,
     res
   ) => {
-
     try {
 
       if (!req.userId) {
-
         return res.status(401).json({
           success: false,
-
           message:
             "Authentication required",
         });
@@ -2077,20 +2006,16 @@ const deleteProfilePhoto =
         );
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
-
         return res.status(404).json({
           success: false,
-
           message:
             "User not found",
         });
       }
 
       return res.json({
-
         success: true,
 
         message:
@@ -2098,7 +2023,8 @@ const deleteProfilePhoto =
 
         user:
           cleanUser(
-            result.rows[0]
+            result.rows[0],
+            req
           ),
       });
 
@@ -2118,6 +2044,7 @@ const deleteProfilePhoto =
     }
   };
 
+
 // =========================================================
 // LOGOUT
 // POST /api/auth/logout
@@ -2135,13 +2062,13 @@ const logoutUser =
     );
 
     return res.json({
-
       success: true,
 
       message:
         "Logged out successfully",
     });
   };
+
 
 // =========================================================
 // EXPORT

@@ -377,20 +377,59 @@ const formatTime = (
 // =========================================================
 // GET COMMITTEE IMAGE
 // =========================================================
-// IMPORTANT:
 // Backend returns photoUrl
+// Example:
+// /uploads/committee/committee-123.jpg
 // =========================================================
 
-const getCommitteeImage = (
-  member
-) => {
-  return (
+const getCommitteeImage = (member) => {
+  const rawImage =
     member?.photoUrl ||
     member?.photo_url ||
     member?.image ||
     member?.image_url ||
-    ""
-  );
+    "";
+
+  if (!rawImage) {
+    return "";
+  }
+
+  // Backend already returned a complete URL
+  if (
+    rawImage.startsWith("http://") ||
+    rawImage.startsWith("https://") ||
+    rawImage.startsWith("data:")
+  ) {
+    return rawImage;
+  }
+
+  // Your API URL
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://snict-backend.onrender.com/api";
+
+  // Safely remove /api from the backend URL.
+  // No regex required.
+  let backendOrigin = apiUrl;
+
+  if (backendOrigin.endsWith("/api")) {
+    backendOrigin =
+      backendOrigin.slice(
+        0,
+        backendOrigin.length - 4
+      );
+  }
+
+  backendOrigin =
+    backendOrigin.replace(/\/$/, "");
+
+  // Make sure image path starts with /
+  const cleanPath =
+    rawImage.startsWith("/")
+      ? rawImage
+      : `/${rawImage}`;
+
+  return `${backendOrigin}${cleanPath}`;
 };
 
 // =========================================================
@@ -2416,8 +2455,22 @@ function Home() {
                                   onError={(
                                     e
                                   ) => {
+                                    console.warn(
+                                      "Committee image failed to load:",
+                                      image
+                                    );
+
                                     e.currentTarget.style.display =
                                       "none";
+
+                                    const parent =
+                                      e.currentTarget.parentElement;
+
+                                    if (parent) {
+                                      parent.classList.add(
+                                        "committee-member-image-error"
+                                      );
+                                    }
                                   }}
                                 />
 

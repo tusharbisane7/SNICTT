@@ -16,6 +16,69 @@ import api from "../../services/api";
 import "./PlacementCommittee.css";
 
 
+
+// =========================================================
+// GET COMMITTEE IMAGE URL
+// =========================================================
+// Backend may return either:
+// 1. Full URL: https://snict-backend.onrender.com/uploads/committee/...
+// 2. Relative path: /uploads/committee/...
+// 3. Relative path without leading slash
+// =========================================================
+
+const getCommitteeImage = (member) => {
+  const rawImage =
+    member?.photoUrl ||
+    member?.photo_url ||
+    member?.imageUrl ||
+    member?.image_url ||
+    member?.photo ||
+    member?.image ||
+    "";
+
+  if (!rawImage) {
+    return "";
+  }
+
+  const imageValue = String(rawImage).trim();
+
+  if (!imageValue) {
+    return "";
+  }
+
+  // Already a complete URL or data URL
+  if (
+    imageValue.startsWith("http://") ||
+    imageValue.startsWith("https://") ||
+    imageValue.startsWith("data:") ||
+    imageValue.startsWith("blob:")
+  ) {
+    return imageValue;
+  }
+
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://snict-backend.onrender.com/api";
+
+  // Remove /api from the API URL without using a problematic regex.
+  let backendOrigin = apiUrl.trim();
+
+  if (backendOrigin.endsWith("/api")) {
+    backendOrigin = backendOrigin.slice(
+      0,
+      backendOrigin.length - 4
+    );
+  }
+
+  backendOrigin = backendOrigin.replace(/\/+$/, "");
+
+  const cleanPath = imageValue.startsWith("/")
+    ? imageValue
+    : `/${imageValue}`;
+
+  return `${backendOrigin}${cleanPath}`;
+};
+
 function PlacementCommittee() {
 
   const [members, setMembers] = useState([]);
@@ -459,9 +522,7 @@ function PlacementCommittee() {
                   (member, index) => {
 
                     const photo =
-                      member.photoUrl ||
-                      member.photo_url ||
-                      null;
+                      getCommitteeImage(member);
 
                     const name =
                       member.memberName ||
@@ -503,6 +564,24 @@ function PlacementCommittee() {
                               src={photo}
                               alt={`${name} - ${designation}`}
                               loading="lazy"
+                              onError={(event) => {
+                                console.warn(
+                                  "Committee image failed to load:",
+                                  photo
+                                );
+
+                                event.currentTarget.style.display =
+                                  "none";
+
+                                const parent =
+                                  event.currentTarget.parentElement;
+
+                                if (parent) {
+                                  parent.classList.add(
+                                    "placement-photo-error"
+                                  );
+                                }
+                              }}
                             />
 
                           ) : (
