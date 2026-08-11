@@ -1668,3 +1668,836 @@
     max-height: calc(95vh - 80px);
   }
 }
+
+
+/* =========================================================
+   PREMIUM MOTION + POLISH OVERRIDES
+   Keeps the existing BookingManagement structure intact.
+   ========================================================= */
+
+.booking-management-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(70, 117, 208, 0.075), transparent 28%),
+    radial-gradient(circle at 92% 8%, rgba(82, 142, 230, 0.055), transparent 24%),
+    linear-gradient(180deg, #f8faff 0%, #f5f8fc 48%, #f3f6fb 100%);
+}
+
+.booking-management-page::before,
+.booking-management-page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.booking-management-page::before {
+  width: 360px;
+  height: 360px;
+  top: 70px;
+  right: -180px;
+  background: rgba(79, 125, 214, 0.055);
+  animation: bookingAmbientFloat 12s ease-in-out infinite;
+}
+
+.booking-management-page::after {
+  width: 280px;
+  height: 280px;
+  left: -150px;
+  bottom: 8%;
+  background: rgba(61, 117, 205, 0.045);
+  animation: bookingAmbientFloat 15s ease-in-out infinite reverse;
+}
+
+.booking-management-container {
+  animation: bookingPageReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.booking-management-header {
+  animation: bookingFadeUp 0.55s ease-out 0.04s both;
+}
+
+.booking-management-label {
+  position: relative;
+  width: fit-content;
+  padding-left: 13px;
+}
+
+.booking-management-label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #5d8de2, #2f62bd);
+  transform: translateY(-50%);
+  box-shadow: 0 0 14px rgba(59, 110, 220, 0.25);
+}
+
+.booking-management-header h1 {
+  background: linear-gradient(105deg, #10213f 0%, #284c83 48%, #10213f 100%);
+  background-size: 180% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: bookingTitleShimmer 7s ease-in-out infinite;
+}
+
+.booking-refresh-btn {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 7px 20px rgba(15, 35, 65, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.booking-refresh-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(
+    105deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 75%
+  );
+  transition: transform 0.55s ease;
+}
+
+.booking-refresh-btn:hover::before {
+  transform: translateX(120%);
+}
+
+.booking-management-alert {
+  animation: bookingAlertIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: 0 8px 24px rgba(30, 55, 90, 0.045);
+}
+
+.booking-management-stats {
+  perspective: 1000px;
+}
+
+.booking-stat-card {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  box-shadow:
+    0 8px 28px rgba(30, 55, 90, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: bookingStatIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.booking-stat-card:nth-child(1) { animation-delay: 0.08s; }
+.booking-stat-card:nth-child(2) { animation-delay: 0.14s; }
+.booking-stat-card:nth-child(3) { animation-delay: 0.20s; }
+.booking-stat-card:nth-child(4) { animation-delay: 0.26s; }
+
+.booking-stat-card::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  right: -62px;
+  top: -62px;
+  border-radius: 50%;
+  background: rgba(72, 116, 205, 0.055);
+  transition: transform 0.45s ease;
+}
+
+.booking-stat-card:hover {
+  transform: translateY(-5px);
+  border-color: #d2ddec;
+  box-shadow:
+    0 18px 38px rgba(30, 55, 90, 0.10),
+    0 0 0 1px rgba(70, 117, 208, 0.035);
+}
+
+.booking-stat-card:hover::after {
+  transform: scale(1.45);
+}
+
+.booking-stat-icon {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 7px 18px rgba(59, 110, 220, 0.10);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.booking-stat-card:hover .booking-stat-icon {
+  transform: scale(1.08) rotate(-3deg);
+  box-shadow: 0 10px 22px rgba(59, 110, 220, 0.16);
+}
+
+.booking-management-toolbar {
+  animation: bookingFadeUp 0.55s ease-out 0.3s both;
+  box-shadow:
+    0 8px 26px rgba(30, 55, 90, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.booking-search {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.booking-search:focus-within {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 3px rgba(59, 110, 220, 0.09),
+    0 8px 22px rgba(59, 110, 220, 0.07);
+}
+
+.booking-filters select {
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.booking-filters select:hover {
+  border-color: #c4d2e5;
+  background-color: #fbfdff;
+  transform: translateY(-1px);
+}
+
+.booking-filter-summary {
+  animation: bookingFadeUp 0.35s ease-out both;
+}
+
+.booking-table-wrapper {
+  position: relative;
+  animation: bookingTableIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
+  box-shadow:
+    0 12px 34px rgba(30, 55, 90, 0.065),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.booking-table-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(71, 118, 209, 0.32),
+    transparent
+  );
+}
+
+.booking-table thead th {
+  position: relative;
+}
+
+.booking-table thead th::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -1px;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: #6b94d8;
+  transition: transform 0.35s ease;
+}
+
+.booking-table thead:hover th::after {
+  transform: scaleX(1);
+}
+
+.booking-table tbody tr {
+  position: relative;
+  transition:
+    background 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+  animation: bookingRowIn 0.45s ease both;
+}
+
+.booking-table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.booking-table tbody tr:nth-child(2) { animation-delay: 0.08s; }
+.booking-table tbody tr:nth-child(3) { animation-delay: 0.11s; }
+.booking-table tbody tr:nth-child(4) { animation-delay: 0.14s; }
+.booking-table tbody tr:nth-child(5) { animation-delay: 0.17s; }
+.booking-table tbody tr:nth-child(6) { animation-delay: 0.20s; }
+.booking-table tbody tr:nth-child(7) { animation-delay: 0.23s; }
+.booking-table tbody tr:nth-child(8) { animation-delay: 0.26s; }
+
+.booking-table tbody tr:hover {
+  background: linear-gradient(90deg, #fbfdff, #f7faff, #fbfdff);
+}
+
+.booking-table tbody tr:hover td:first-child {
+  box-shadow: inset 3px 0 0 #5d87d4;
+}
+
+.booking-code-cell strong,
+.booking-member strong,
+.booking-event-cell strong {
+  transition: color 0.2s ease;
+}
+
+.booking-table tbody tr:hover .booking-code-cell strong,
+.booking-table tbody tr:hover .booking-member strong,
+.booking-table tbody tr:hover .booking-event-cell strong {
+  color: #28528d;
+}
+
+.booking-member-avatar {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.booking-table tbody tr:hover .booking-member-avatar {
+  transform: scale(1.08);
+  box-shadow: 0 6px 15px rgba(59, 110, 220, 0.13);
+}
+
+.booking-amount {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.booking-table tbody tr:hover .booking-amount {
+  transform: translateX(2px);
+  color: #285aa5;
+}
+
+.booking-status {
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.015);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.booking-status::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-110%);
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 80%
+  );
+  transition: transform 0.6s ease;
+}
+
+.booking-table tbody tr:hover .booking-status::after {
+  transform: translateX(110%);
+}
+
+.booking-row-actions button {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(30, 55, 90, 0.025);
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.booking-row-actions button::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+}
+
+.booking-row-actions button:active:not(:disabled)::after {
+  animation: bookingButtonPulse 0.42s ease-out;
+}
+
+.booking-row-actions button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.035);
+  box-shadow: 0 7px 15px rgba(30, 55, 90, 0.09);
+}
+
+.booking-empty {
+  animation: bookingFadeUp 0.5s ease-out both;
+}
+
+.booking-empty > svg {
+  animation: bookingEmptyFloat 3.5s ease-in-out infinite;
+}
+
+.booking-empty button {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.booking-empty button:hover {
+  transform: translateY(-2px);
+  border-color: #b8c9e1;
+  box-shadow: 0 8px 20px rgba(30, 55, 90, 0.08);
+}
+
+.booking-management-loading {
+  animation: bookingFadeUp 0.45s ease-out both;
+}
+
+.booking-loading-spinner {
+  box-shadow: 0 0 0 5px rgba(70, 117, 208, 0.055);
+}
+
+/* =========================================================
+   PREMIUM MODAL
+   ========================================================= */
+
+.booking-modal-overlay {
+  background:
+    radial-gradient(circle at 50% 20%, rgba(79, 126, 215, 0.09), transparent 38%),
+    rgba(7, 20, 40, 0.66);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  animation: bookingOverlayIn 0.25s ease-out both;
+}
+
+.booking-details-modal {
+  border-color: rgba(210, 222, 238, 0.95);
+  box-shadow:
+    0 35px 100px rgba(5, 22, 48, 0.30),
+    0 8px 30px rgba(15, 35, 65, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: bookingModalPremiumIn 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.booking-modal-header {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+}
+
+.booking-modal-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #5d87d4 25%,
+    #7aa0df 50%,
+    #5d87d4 75%,
+    transparent
+  );
+  opacity: 0.55;
+}
+
+.booking-modal-header > button {
+  transition:
+    transform 0.22s ease,
+    background 0.22s ease,
+    color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.booking-modal-header > button:hover {
+  transform: rotate(90deg);
+  box-shadow: 0 7px 18px rgba(30, 55, 90, 0.10);
+}
+
+.booking-details-body {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #c7d4e7 transparent;
+}
+
+.booking-details-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.booking-details-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.booking-details-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #c7d4e7;
+}
+
+.booking-detail-event {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(82, 132, 218, 0.10), transparent 35%),
+    linear-gradient(135deg, #f8fbff, #f4f8fe);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: bookingSectionIn 0.45s ease-out 0.08s both;
+}
+
+.booking-detail-event::after {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -90px;
+  bottom: -90px;
+  border-radius: 50%;
+  border: 1px solid rgba(75, 118, 207, 0.10);
+  animation: bookingRingPulse 4s ease-in-out infinite;
+}
+
+.booking-detail-event-icon {
+  box-shadow: 0 8px 20px rgba(59, 110, 220, 0.12);
+  animation: bookingIconFloat 3.5s ease-in-out infinite;
+}
+
+.booking-detail-event-info > div,
+.booking-detail-grid > div {
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+  animation: bookingDetailCardIn 0.42s ease-out both;
+}
+
+.booking-detail-event-info > div:nth-child(1) { animation-delay: 0.12s; }
+.booking-detail-event-info > div:nth-child(2) { animation-delay: 0.16s; }
+.booking-detail-event-info > div:nth-child(3) { animation-delay: 0.20s; }
+
+.booking-detail-event-info > div:hover,
+.booking-detail-grid > div:hover {
+  transform: translateY(-2px);
+  border-color: #d3deed;
+  background: #fcfdff;
+  box-shadow: 0 7px 18px rgba(30, 55, 90, 0.055);
+}
+
+.booking-detail-section {
+  animation: bookingSectionIn 0.45s ease-out both;
+}
+
+.booking-detail-section-title {
+  position: relative;
+}
+
+.booking-detail-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  margin-left: 5px;
+  background: linear-gradient(90deg, #dbe5f2, transparent);
+}
+
+.booking-payment-proof {
+  box-shadow: 0 7px 20px rgba(30, 75, 135, 0.045);
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.booking-payment-proof:hover {
+  transform: translateY(-2px);
+  border-color: #cbdcf1;
+  box-shadow: 0 10px 24px rgba(30, 75, 135, 0.075);
+}
+
+.booking-payment-proof a {
+  position: relative;
+}
+
+.booking-payment-proof a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  transition: transform 0.22s ease;
+}
+
+.booking-payment-proof a:hover::after {
+  transform: scaleX(1);
+}
+
+.booking-modal-actions button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.booking-modal-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(30, 55, 90, 0.09);
+}
+
+.booking-modal-actions button:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+/* =========================================================
+   KEYFRAMES
+   ========================================================= */
+
+@keyframes bookingPageReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bookingFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bookingStatIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bookingTableIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bookingRowIn {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bookingAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bookingOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bookingModalPremiumIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.965);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes bookingSectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bookingDetailCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bookingIconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes bookingEmptyFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes bookingAmbientFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-18px, 14px, 0) scale(1.05);
+  }
+}
+
+@keyframes bookingTitleShimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes bookingRingPulse {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bookingButtonPulse {
+  0% {
+    opacity: 0.28;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(13);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY / REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-management-page *,
+  .booking-management-page *::before,
+  .booking-management-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   MOBILE PREMIUM REFINEMENTS
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .booking-management-page::before {
+    width: 230px;
+    height: 230px;
+    right: -130px;
+  }
+
+  .booking-management-page::after {
+    width: 190px;
+    height: 190px;
+    left: -120px;
+  }
+
+  .booking-stat-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .booking-table-wrapper {
+    box-shadow: 0 9px 26px rgba(30, 55, 90, 0.06);
+  }
+
+  .booking-details-modal {
+    animation: bookingMobileModalIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .booking-modal-header {
+    padding: 18px 17px;
+  }
+}
+
+@keyframes bookingMobileModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

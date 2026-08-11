@@ -1418,10 +1418,8 @@ function BookingManagement() {
 
                             <span className="booking-date">
 
-                              {formatDate(
-                                booking.created_at ||
-                                  booking.createdAt ||
-                                  booking.booking_date
+                              {formatEventDate(
+                                booking.event_date
                               )}
 
                             </span>

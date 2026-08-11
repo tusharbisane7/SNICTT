@@ -1440,3 +1440,1452 @@
     font-size: 11.5px;
   }
 }
+
+/* =========================================================
+   SNICT EVENT DETAILS — PREMIUM MOTION SYSTEM
+   Added without removing the existing design.
+   Includes live-style blinkers, text reveals, card motion,
+   image effects, premium buttons and responsive animation.
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   PREMIUM BASE
+   --------------------------------------------------------- */
+
+.event-details-page {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+.event-details-page *,
+.event-details-page *::before,
+.event-details-page *::after {
+  box-sizing: border-box;
+  backface-visibility: hidden;
+}
+
+
+/* ---------------------------------------------------------
+   HERO AMBIENT MOTION
+   --------------------------------------------------------- */
+
+.event-details-hero {
+  isolation: isolate;
+}
+
+.event-details-hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+  pointer-events: none;
+
+  opacity: 0.38;
+
+  background-image:
+    linear-gradient(
+      rgba(130, 177, 240, 0.055) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(130, 177, 240, 0.055) 1px,
+      transparent 1px
+    );
+
+  background-size: 52px 52px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      black,
+      transparent 88%
+    );
+
+  animation:
+    eventDetailsGridMove 20s linear infinite;
+}
+
+@keyframes eventDetailsGridMove {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+
+  to {
+    background-position:
+      52px 52px,
+      52px 52px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO BACKGROUND ORBIT
+   --------------------------------------------------------- */
+
+.event-details-hero-background div:first-child {
+  animation:
+    eventDetailsOrbit 14s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.event-details-hero-background div:last-child {
+  animation:
+    eventDetailsGlowFloat 9s ease-in-out infinite;
+}
+
+@keyframes eventDetailsOrbit {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      rotate(0deg);
+  }
+
+  50% {
+    transform:
+      translate3d(-25px, 22px, 0)
+      rotate(8deg);
+  }
+}
+
+@keyframes eventDetailsGlowFloat {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      scale(0.96);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform:
+      translate3d(35px, -20px, 0)
+      scale(1.08);
+    opacity: 1;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO IMAGE PREMIUM EFFECT
+   --------------------------------------------------------- */
+
+.event-details-image {
+  isolation: isolate;
+  will-change: transform, box-shadow;
+
+  animation:
+    eventDetailsImageIn 0.9s 0.12s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-details-image::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 3;
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 15%,
+      rgba(255,255,255,0.18) 48%,
+      transparent 70%
+    );
+
+  transform:
+    translateX(-120%);
+
+  animation:
+    eventDetailsImageSweep 5.5s 1.2s ease-in-out infinite;
+}
+
+.event-details-image::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 2;
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.08),
+    inset 0 -80px 100px rgba(0,0,0,0.14);
+}
+
+.event-details-image img {
+  position: relative;
+  z-index: 1;
+
+  transform:
+    scale(1.015);
+
+  transition:
+    transform 0.9s cubic-bezier(.22,1,.36,1),
+    filter 0.5s ease;
+
+  animation:
+    eventDetailsImageReveal 1s 0.25s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-details-image:hover {
+  transform:
+    translateY(-5px)
+    scale(1.012);
+
+  box-shadow:
+    0 32px 75px rgba(0,0,0,0.36);
+}
+
+.event-details-image:hover img {
+  transform:
+    scale(1.055);
+
+  filter:
+    saturate(1.08)
+    contrast(1.04);
+}
+
+@keyframes eventDetailsImageIn {
+  from {
+    opacity: 0;
+    transform:
+      translateX(30px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateX(0)
+      scale(1);
+  }
+}
+
+@keyframes eventDetailsImageReveal {
+  from {
+    opacity: 0;
+    transform:
+      scale(1.07);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      scale(1.015);
+    filter: blur(0);
+  }
+}
+
+@keyframes eventDetailsImageSweep {
+  0%,
+  35% {
+    transform:
+      translateX(-120%);
+  }
+
+  65%,
+  100% {
+    transform:
+      translateX(120%);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO CONTENT REVEAL
+   --------------------------------------------------------- */
+
+.event-details-intro {
+  animation:
+    eventDetailsIntroIn 0.9s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-details-badges {
+  animation:
+    eventDetailsBadgesIn 0.65s 0.12s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-details-intro h1 {
+  animation:
+    eventDetailsTitleIn 0.95s 0.22s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-details-doctor {
+  animation:
+    eventDetailsDoctorIn 0.7s 0.4s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventDetailsIntroIn {
+  from {
+    opacity: 0;
+    transform:
+      translateX(-25px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateX(0);
+  }
+}
+
+@keyframes eventDetailsBadgesIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px)
+      scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes eventDetailsTitleIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(30px);
+    filter: blur(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes eventDetailsDoctorIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   LIVE / REAL-TIME STATUS BLINKER
+   --------------------------------------------------------- */
+
+.event-details-status.ongoing {
+  position: relative;
+
+  box-shadow:
+    0 0 0 0 rgba(112,216,173,0.28);
+
+  animation:
+    eventOngoingGlow 2s ease-in-out infinite;
+}
+
+.event-details-status.ongoing > span {
+  position: relative;
+
+  box-shadow:
+    0 0 0 0 rgba(112,216,173,0.65);
+
+  animation:
+    eventLiveBlink 1.5s ease-out infinite;
+}
+
+.event-details-status.ongoing > span::after {
+  content: "";
+
+  position: absolute;
+
+  inset: -4px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(112,216,173,0.5);
+
+  animation:
+    eventLiveRing 1.8s ease-out infinite;
+}
+
+@keyframes eventLiveBlink {
+  0%,
+  100% {
+    opacity: 1;
+    transform:
+      scale(1);
+    box-shadow:
+      0 0 0 0 rgba(112,216,173,0.65);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform:
+      scale(0.78);
+    box-shadow:
+      0 0 0 5px rgba(112,216,173,0);
+  }
+}
+
+@keyframes eventLiveRing {
+  0% {
+    opacity: 0.8;
+    transform:
+      scale(0.7);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      scale(1.9);
+  }
+}
+
+@keyframes eventOngoingGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(112,216,173,0.18);
+  }
+
+  50% {
+    box-shadow:
+      0 0 25px rgba(112,216,173,0.12);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   UPCOMING STATUS BLINKER
+   --------------------------------------------------------- */
+
+.event-details-status.upcoming > span {
+  animation:
+    eventUpcomingBlink 2.5s ease-in-out infinite;
+}
+
+@keyframes eventUpcomingBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   STATUS / TYPE MICRO INTERACTIONS
+   --------------------------------------------------------- */
+
+.event-details-status,
+.event-details-type {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.event-details-status:hover,
+.event-details-type:hover {
+  transform:
+    translateY(-2px)
+    scale(1.02);
+}
+
+.event-details-type:hover {
+  border-color:
+    rgba(255,255,255,0.24);
+
+  box-shadow:
+    0 8px 22px rgba(0,0,0,0.14);
+}
+
+
+/* ---------------------------------------------------------
+   DOCTOR ICON
+   --------------------------------------------------------- */
+
+.event-doctor-icon {
+  position: relative;
+
+  transition:
+    transform 0.35s cubic-bezier(.22,1,.36,1),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.event-doctor-icon::before {
+  content: "";
+
+  position: absolute;
+  inset: -5px;
+
+  border-radius: 16px;
+
+  border: 1px solid rgba(131,181,255,0.22);
+
+  opacity: 0;
+
+  transform:
+    scale(0.8);
+
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.event-details-doctor:hover .event-doctor-icon {
+  transform:
+    translateY(-3px)
+    rotate(-2deg);
+
+  background:
+    rgba(255,255,255,0.1);
+
+  box-shadow:
+    0 12px 25px rgba(0,0,0,0.15);
+}
+
+.event-details-doctor:hover .event-doctor-icon::before {
+  opacity: 1;
+  transform:
+    scale(1);
+}
+
+
+/* ---------------------------------------------------------
+   MAIN CONTENT REVEAL
+   --------------------------------------------------------- */
+
+.event-details-main {
+  animation:
+    eventMainReveal 0.8s 0.25s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-description {
+  animation:
+    eventDescriptionReveal 0.75s 0.35s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-section-label {
+  position: relative;
+  overflow: hidden;
+}
+
+.event-section-label::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -4px;
+
+  width: 38px;
+  height: 2px;
+
+  border-radius: 5px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #4c7bc7,
+      #7fb3ff
+    );
+
+  animation:
+    eventLabelLine 1s 0.55s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventMainReveal {
+  from {
+    opacity: 0;
+    transform:
+      translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes eventDescriptionReveal {
+  from {
+    opacity: 0;
+    transform:
+      translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes eventLabelLine {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+
+  to {
+    width: 38px;
+    opacity: 1;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   DESCRIPTION TEXT PREMIUM HOVER
+   --------------------------------------------------------- */
+
+.event-description p {
+  transition:
+    color 0.3s ease;
+}
+
+.event-description p:hover {
+  color:
+    #526174;
+}
+
+
+/* ---------------------------------------------------------
+   INFO CARDS STAGGER
+   --------------------------------------------------------- */
+
+.event-info-card {
+  position: relative;
+
+  overflow: hidden;
+
+  will-change: transform, box-shadow;
+
+  transition:
+    transform 0.35s cubic-bezier(.22,1,.36,1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+
+  animation:
+    eventInfoCardIn 0.65s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-info-card:nth-child(1) {
+  animation-delay: 0.45s;
+}
+
+.event-info-card:nth-child(2) {
+  animation-delay: 0.55s;
+}
+
+.event-info-card:nth-child(3) {
+  animation-delay: 0.65s;
+}
+
+.event-info-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 75%;
+  height: 100%;
+
+  pointer-events: none;
+
+  transform:
+    skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.7),
+      transparent
+    );
+}
+
+.event-info-card:hover {
+  transform:
+    translateY(-7px);
+
+  border-color:
+    #cfddec;
+
+  box-shadow:
+    0 18px 40px rgba(20,40,70,0.09);
+}
+
+.event-info-card:hover::before {
+  left: 140%;
+
+  transition:
+    left 0.75s ease;
+}
+
+@keyframes eventInfoCardIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(20px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.event-info-icon {
+  transition:
+    transform 0.35s cubic-bezier(.22,1,.36,1),
+    box-shadow 0.3s ease;
+}
+
+.event-info-card:hover .event-info-icon {
+  transform:
+    translateY(-3px)
+    scale(1.08)
+    rotate(-3deg);
+
+  box-shadow:
+    0 8px 18px rgba(77,121,181,0.12);
+}
+
+.event-info-card strong {
+  transition:
+    color 0.25s ease;
+}
+
+.event-info-card:hover strong {
+  color:
+    #3f6fae;
+}
+
+
+/* ---------------------------------------------------------
+   EXTRA INFORMATION ROW
+   --------------------------------------------------------- */
+
+.event-extra-info {
+  animation:
+    eventExtraIn 0.7s 0.72s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-extra-item {
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.event-extra-item:hover {
+  background:
+    #f8fbff;
+
+  transform:
+    translateY(-2px);
+}
+
+@keyframes eventExtraIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   CAPACITY CARD
+   --------------------------------------------------------- */
+
+.event-capacity-card {
+  position: relative;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+
+  animation:
+    eventCapacityIn 0.7s 0.82s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-capacity-card::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -100%;
+
+  width: 60%;
+  height: 100%;
+
+  pointer-events: none;
+
+  transform:
+    skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.8),
+      transparent
+    );
+}
+
+.event-capacity-card:hover {
+  transform:
+    translateY(-4px);
+
+  border-color:
+    #cbdcf1;
+
+  box-shadow:
+    0 14px 32px rgba(20,40,70,0.07);
+}
+
+.event-capacity-card:hover::after {
+  left: 135%;
+
+  transition:
+    left 0.7s ease;
+}
+
+.event-capacity-icon {
+  transition:
+    transform 0.35s cubic-bezier(.22,1,.36,1);
+}
+
+.event-capacity-card:hover .event-capacity-icon {
+  transform:
+    scale(1.1)
+    rotate(-4deg);
+}
+
+@keyframes eventCapacityIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM BOOKING CARD
+   --------------------------------------------------------- */
+
+.event-booking-card {
+  overflow: hidden;
+
+  animation:
+    eventBookingCardIn 0.8s 0.3s cubic-bezier(.22,1,.36,1) both;
+
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.event-booking-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: -100px;
+  right: -100px;
+
+  width: 220px;
+  height: 220px;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(76,123,199,0.1),
+      transparent 68%
+    );
+
+  animation:
+    bookingOrbFloat 7s ease-in-out infinite;
+}
+
+.event-booking-card:hover {
+  transform:
+    translateY(-5px);
+
+  box-shadow:
+    0 23px 55px rgba(20,40,70,0.11);
+}
+
+@keyframes eventBookingCardIn {
+  from {
+    opacity: 0;
+    transform:
+      translateX(22px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateX(0)
+      scale(1);
+  }
+}
+
+@keyframes bookingOrbFloat {
+  0%,
+  100% {
+    transform:
+      translate3d(0,0,0);
+  }
+
+  50% {
+    transform:
+      translate3d(-18px,20px,0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   BOOKING PRICE
+   --------------------------------------------------------- */
+
+.event-booking-price strong {
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
+}
+
+.event-booking-card:hover .event-booking-price strong {
+  color:
+    #3f6fae;
+
+  transform:
+    translateX(2px);
+}
+
+
+/* ---------------------------------------------------------
+   CAPACITY LIVE INDICATOR
+   --------------------------------------------------------- */
+
+.booking-capacity {
+  position: relative;
+
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.booking-capacity::before {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background:
+    #4b9a78;
+
+  box-shadow:
+    0 0 0 0 rgba(75,154,120,0.45);
+
+  animation:
+    bookingCapacityBlink 2s ease-out infinite;
+}
+
+.booking-capacity:hover {
+  background:
+    #eef4fc;
+
+  transform:
+    translateX(2px);
+}
+
+@keyframes bookingCapacityBlink {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(75,154,120,0.45);
+  }
+
+  70% {
+    box-shadow:
+      0 0 0 7px rgba(75,154,120,0);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(75,154,120,0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM BOOK BUTTON
+   --------------------------------------------------------- */
+
+.event-book-btn {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  will-change: transform, box-shadow;
+
+  transition:
+    transform 0.3s cubic-bezier(.22,1,.36,1),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.event-book-btn::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: -1;
+
+  background:
+    linear-gradient(
+      110deg,
+      #243e65 0%,
+      #315b8f 45%,
+      #243e65 75%
+    );
+
+  background-size: 220% 100%;
+
+  animation:
+    bookingButtonGradient 4s ease-in-out infinite;
+}
+
+.event-book-btn::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -130%;
+
+  width: 70%;
+  height: 100%;
+
+  transform:
+    skewX(-18deg);
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.25),
+      transparent
+    );
+}
+
+.event-book-btn:hover:not(:disabled) {
+  transform:
+    translateY(-4px)
+    scale(1.012);
+
+  box-shadow:
+    0 17px 35px rgba(36,62,101,0.3);
+}
+
+.event-book-btn:hover:not(:disabled)::after {
+  left: 145%;
+
+  transition:
+    left 0.7s cubic-bezier(.22,1,.36,1);
+}
+
+.event-book-btn:active:not(:disabled) {
+  transform:
+    translateY(-1px)
+    scale(0.99);
+}
+
+.event-book-btn svg {
+  transition:
+    transform 0.3s cubic-bezier(.22,1,.36,1);
+}
+
+.event-book-btn:hover:not(:disabled) svg {
+  transform:
+    translateX(4px)
+    scale(1.05);
+}
+
+@keyframes bookingButtonGradient {
+  0%,
+  100% {
+    background-position:
+      0% center;
+  }
+
+  50% {
+    background-position:
+      100% center;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   LOGIN NOTE
+   --------------------------------------------------------- */
+
+.booking-login-note {
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.booking-login-note:hover {
+  color:
+    #53657c;
+
+  transform:
+    translateX(2px);
+}
+
+.booking-login-note svg {
+  animation:
+    loginShieldPulse 3s ease-in-out infinite;
+}
+
+@keyframes loginShieldPulse {
+  0%,
+  100% {
+    transform:
+      scale(1);
+  }
+
+  50% {
+    transform:
+      scale(1.08);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   BACK BUTTON
+   --------------------------------------------------------- */
+
+.back-events-link {
+  position: relative;
+
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.back-events-link::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -5px;
+
+  width: 0;
+  height: 1px;
+
+  transform:
+    translateX(-50%);
+
+  background:
+    #315f9b;
+
+  transition:
+    width 0.3s ease;
+}
+
+.back-events-link:hover {
+  transform:
+    translateY(-2px);
+}
+
+.back-events-link:hover::after {
+  width: 100%;
+}
+
+.back-events-link svg {
+  transition:
+    transform 0.3s ease;
+}
+
+.back-events-link:hover svg {
+  transform:
+    translateX(-4px);
+}
+
+
+/* ---------------------------------------------------------
+   ERROR PAGE PREMIUM ANIMATION
+   --------------------------------------------------------- */
+
+.event-details-error {
+  animation:
+    eventErrorIn 0.7s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-error-icon {
+  animation:
+    eventErrorIconFloat 3s ease-in-out infinite;
+}
+
+.event-details-error h1 {
+  animation:
+    eventErrorTitle 0.65s 0.15s cubic-bezier(.22,1,.36,1) both;
+}
+
+.event-details-error p {
+  animation:
+    eventErrorText 0.65s 0.25s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventErrorIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes eventErrorIconFloat {
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      rotate(0deg);
+  }
+
+  50% {
+    transform:
+      translateY(-7px)
+      rotate(-3deg);
+  }
+}
+
+@keyframes eventErrorTitle {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes eventErrorText {
+  from {
+    opacity: 0;
+    transform:
+      translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+.event-error-back {
+  position: relative;
+  overflow: hidden;
+}
+
+.event-error-back::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 70%;
+  height: 100%;
+
+  transform:
+    skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.22),
+      transparent
+    );
+}
+
+.event-error-back:hover::after {
+  left: 140%;
+
+  transition:
+    left 0.65s ease;
+}
+
+
+/* ---------------------------------------------------------
+   LOADING PREMIUM
+   --------------------------------------------------------- */
+
+.event-details-loading {
+  animation:
+    eventLoadingFade 0.5s ease both;
+}
+
+.event-details-spinner {
+  box-shadow:
+    0 0 0 5px rgba(63,111,174,0.06),
+    0 10px 30px rgba(63,111,174,0.1);
+}
+
+@keyframes eventLoadingFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .event-details-image:hover {
+    transform:
+      translateY(-3px);
+  }
+
+  .event-details-image:hover img {
+    transform:
+      scale(1.035);
+  }
+
+  .event-booking-card:hover {
+    transform:
+      translateY(-3px);
+  }
+
+  .event-info-card:hover {
+    transform:
+      translateY(-4px);
+  }
+}
+
+@media (max-width: 420px) {
+  .event-details-intro h1 {
+    animation-duration:
+      0.75s;
+  }
+
+  .event-details-image::before {
+    animation-duration:
+      6.5s;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   ACCESSIBILITY — REDUCED MOTION
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .event-details-page *,
+  .event-details-page *::before,
+  .event-details-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .event-details-image,
+  .event-details-image img,
+  .event-info-card,
+  .event-capacity-card,
+  .event-booking-card,
+  .event-book-btn {
+    transform: none !important;
+  }
+}

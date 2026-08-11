@@ -210,64 +210,23 @@ function UserManagement() {
   // =========================================================
   // PROFILE IMAGE
   // =========================================================
-  // Images are uploaded from the user's desktop and served
-  // by the backend from /uploads/profile/...
+  // The backend returns the actual uploaded profile image in:
+  //
+  //   profile_image
+  //
+  // The admin panel does NOT accept or construct a manual
+  // image URL. The value comes directly from the authenticated
+  // backend member record.
   // =========================================================
 
   const getProfileImage = (member) => {
-    const rawImage =
-      member?.profileImage ||
-      member?.profile_image ||
-      member?.profileImageUrl ||
-      member?.profile_image_url ||
-      member?.photoUrl ||
-      member?.photo_url ||
-      member?.image ||
-      member?.image_url ||
-      "";
-
-    if (!rawImage) {
+    if (!member?.profile_image) {
       return "";
     }
 
-    const image = String(rawImage).trim();
-
-    if (!image) {
-      return "";
-    }
-
-    // Already a complete URL or data URL.
-    if (
-      image.startsWith("http://") ||
-      image.startsWith("https://") ||
-      image.startsWith("data:")
-    ) {
-      return image;
-    }
-
-    const apiUrl =
-      import.meta.env.VITE_API_URL ||
-      "https://snict-backend.onrender.com/api";
-
-    let backendOrigin = apiUrl.trim();
-
-    // API URL is normally .../api, while uploaded files
-    // are served from .../uploads/...
-    if (backendOrigin.endsWith("/api")) {
-      backendOrigin = backendOrigin.slice(
-        0,
-        backendOrigin.length - 4
-      );
-    }
-
-    backendOrigin =
-      backendOrigin.replace(/\/$/, "");
-
-    const cleanPath = image.startsWith("/")
-      ? image
-      : `/${image}`;
-
-    return `${backendOrigin}${cleanPath}`;
+    return String(
+      member.profile_image
+    ).trim();
   };
 
   // =========================================================

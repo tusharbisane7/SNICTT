@@ -5336,3 +5336,771 @@
     transition: none !important;
   }
 }
+
+/* =========================================================
+   SNICT PREMIUM ANIMATION & VISUAL ENHANCEMENT LAYER
+   Added without removing the existing design system.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   GLOBAL SMOOTHNESS
+   --------------------------------------------------------- */
+
+.home-page {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.home-page img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM SECTION REVEAL
+   --------------------------------------------------------- */
+
+.hero-section,
+.intro-section,
+.focus-section,
+.vision-section,
+.mission-section,
+.home-events-section,
+.home-committee-section,
+.home-slider-section {
+  position: relative;
+}
+
+.intro-section .section-heading,
+.focus-section .focus-header,
+.vision-section .vision-content,
+.mission-section .mission-title,
+.home-events-section .home-events-header,
+.home-committee-section .home-committee-header,
+.home-slider-section .home-slider-header {
+  animation: snictSectionReveal 0.9s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes snictSectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   TEXT SHIMMER
+   --------------------------------------------------------- */
+
+.hero-content h1 span,
+.section-heading h2 span,
+.focus-header h2 span,
+.home-events-header h2 span,
+.home-committee-header h2 span,
+.mission-title h2 span {
+  background:
+    linear-gradient(
+      110deg,
+      currentColor 20%,
+      #8ae8ef 45%,
+      currentColor 70%
+    );
+
+  background-size: 220% auto;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  animation: snictTextShimmer 5s ease-in-out infinite;
+}
+
+@keyframes snictTextShimmer {
+  0% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
+
+  100% {
+    background-position: 0% center;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   IMAGE PREMIUM EFFECT
+   --------------------------------------------------------- */
+
+.home-event-image,
+.home-slider-image {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-event-image::after,
+.home-slider-image::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent 25%,
+      rgba(255,255,255,0.16) 45%,
+      transparent 65%
+    );
+
+  transform:
+    translateX(-130%);
+
+  transition:
+    transform 0.8s cubic-bezier(.22,1,.36,1);
+}
+
+.home-event-card:hover .home-event-image::after,
+.home-slider-card:hover .home-slider-image::after {
+  transform:
+    translateX(130%);
+}
+
+.home-event-image img,
+.home-slider-image img {
+  filter: saturate(0.96) contrast(1.02);
+}
+
+.home-event-card:hover .home-event-image img,
+.home-slider-card:hover .home-slider-image img {
+  filter:
+    saturate(1.08)
+    contrast(1.04);
+}
+
+
+/* ---------------------------------------------------------
+   EVENT / SLIDER CARD DEPTH
+   --------------------------------------------------------- */
+
+.home-event-card,
+.home-slider-card,
+.focus-card {
+  transform-origin: center bottom;
+  will-change: transform;
+}
+
+.home-event-card:hover,
+.home-slider-card:hover,
+.focus-card:hover {
+  box-shadow:
+    0 28px 70px rgba(7, 43, 52, 0.14),
+    0 0 0 1px rgba(110, 213, 223, 0.06);
+}
+
+
+/* ---------------------------------------------------------
+   STAGGERED CARD ENTRANCE
+   --------------------------------------------------------- */
+
+.focus-grid > .focus-card:nth-child(1),
+.home-events-grid > .home-event-card:nth-child(1) {
+  animation:
+    snictCardReveal 0.7s 0.05s both
+    cubic-bezier(.22,1,.36,1);
+}
+
+.focus-grid > .focus-card:nth-child(2),
+.home-events-grid > .home-event-card:nth-child(2) {
+  animation:
+    snictCardReveal 0.7s 0.15s both
+    cubic-bezier(.22,1,.36,1);
+}
+
+.focus-grid > .focus-card:nth-child(3),
+.home-events-grid > .home-event-card:nth-child(3) {
+  animation:
+    snictCardReveal 0.7s 0.25s both
+    cubic-bezier(.22,1,.36,1);
+}
+
+.focus-grid > .focus-card:nth-child(4),
+.home-events-grid > .home-event-card:nth-child(4) {
+  animation:
+    snictCardReveal 0.7s 0.35s both
+    cubic-bezier(.22,1,.36,1);
+}
+
+.focus-grid > .focus-card:nth-child(5),
+.home-events-grid > .home-event-card:nth-child(5) {
+  animation:
+    snictCardReveal 0.7s 0.45s both
+    cubic-bezier(.22,1,.36,1);
+}
+
+.focus-grid > .focus-card:nth-child(6),
+.home-events-grid > .home-event-card:nth-child(6) {
+  animation:
+    snictCardReveal 0.7s 0.55s both
+    cubic-bezier(.22,1,.36,1);
+}
+
+@keyframes snictCardReveal {
+  from {
+    opacity: 0;
+    transform:
+      translateY(28px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   ICON MICRO-INTERACTIONS
+   --------------------------------------------------------- */
+
+.focus-icon,
+.medical-card-icon,
+.home-event-content svg,
+.home-slider-content svg {
+  will-change: transform;
+}
+
+.focus-card:hover .focus-icon,
+.home-event-card:hover svg,
+.home-slider-card:hover svg {
+  animation:
+    snictIconBounce 0.55s ease;
+}
+
+@keyframes snictIconBounce {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform:
+      scale(1.18)
+      rotate(-6deg);
+  }
+
+  70% {
+    transform:
+      scale(0.94)
+      rotate(3deg);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM BUTTON LIGHT SWEEP
+   --------------------------------------------------------- */
+
+.hero-primary-btn,
+.hero-secondary-btn,
+.vision-btn,
+.home-events-view-all,
+.home-committee-view-all,
+.text-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-primary-btn::after,
+.hero-secondary-btn::after,
+.vision-btn::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 70%;
+  height: 100%;
+
+  pointer-events: none;
+
+  transform: skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.18),
+      transparent
+    );
+}
+
+.hero-primary-btn:hover::after,
+.hero-secondary-btn:hover::after,
+.vision-btn:hover::after {
+  left: 150%;
+
+  transition:
+    left 0.7s ease;
+}
+
+
+/* ---------------------------------------------------------
+   HERO PARTICLE DOTS
+   Works without additional HTML.
+   --------------------------------------------------------- */
+
+.hero-section::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0.45;
+
+  background-image:
+    radial-gradient(
+      circle,
+      rgba(110,213,223,0.55) 1px,
+      transparent 1.5px
+    );
+
+  background-size:
+    115px 115px;
+
+  background-position:
+    15px 25px;
+
+  animation:
+    snictParticles 16s linear infinite;
+}
+
+@keyframes snictParticles {
+  from {
+    background-position:
+      15px 25px;
+  }
+
+  to {
+    background-position:
+      130px 140px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   VISION IMAGE / VISUAL GLOW
+   --------------------------------------------------------- */
+
+.vision-visual::before,
+.hero-visual::before {
+  content: "";
+
+  position: absolute;
+
+  width: 55%;
+  height: 55%;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(110,213,223,0.10),
+      transparent 68%
+    );
+
+  filter: blur(15px);
+
+  pointer-events: none;
+
+  animation:
+    snictVisualGlow 5s ease-in-out infinite;
+}
+
+@keyframes snictVisualGlow {
+  0%,
+  100% {
+    transform:
+      scale(0.88);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform:
+      scale(1.12);
+    opacity: 0.95;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   MEDICAL CARD HIGHLIGHT
+   --------------------------------------------------------- */
+
+.medical-card::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(110,213,223,0.08),
+      transparent 35%
+    );
+
+  opacity: 0;
+
+  transition:
+    opacity 0.35s ease;
+}
+
+.medical-card:hover::before {
+  opacity: 1;
+}
+
+
+/* ---------------------------------------------------------
+   ECG EXTRA GLOW
+   --------------------------------------------------------- */
+
+.hero-ecg {
+  animation:
+    snictEcgBreath 3s ease-in-out infinite;
+}
+
+@keyframes snictEcgBreath {
+  0%,
+  100% {
+    opacity: 0.68;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   SLIDER CARD IMAGE PLACEHOLDER
+   --------------------------------------------------------- */
+
+.home-slider-image-placeholder,
+.home-slider-image-error,
+.home-event-image-placeholder {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-slider-image-placeholder::before,
+.home-slider-image-error::before,
+.home-event-image-placeholder::before {
+  content: "";
+
+  position: absolute;
+
+  width: 180%;
+  height: 100%;
+
+  left: -200%;
+
+  background:
+    linear-gradient(
+      100deg,
+      transparent 30%,
+      rgba(110,213,223,0.12) 50%,
+      transparent 70%
+    );
+
+  animation:
+    snictPlaceholderSweep 3.5s ease-in-out infinite;
+}
+
+@keyframes snictPlaceholderSweep {
+  0% {
+    left: -200%;
+  }
+
+  55%,
+  100% {
+    left: 200%;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   EVENT STATUS GLOW
+   --------------------------------------------------------- */
+
+.home-event-status {
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.14);
+}
+
+.home-event-status > span {
+  box-shadow:
+    0 0 10px rgba(110,213,223,0.35);
+}
+
+
+/* ---------------------------------------------------------
+   SLIDER PREMIUM BORDER
+   --------------------------------------------------------- */
+
+.home-slider-card {
+  position: relative;
+}
+
+.home-slider-card::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 5;
+
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  padding: 1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(110,213,223,0.30),
+      transparent 35%,
+      transparent 65%,
+      rgba(110,213,223,0.16)
+    );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.4s ease;
+}
+
+.home-slider-card:hover::before {
+  opacity: 1;
+}
+
+
+/* ---------------------------------------------------------
+   SLIDER IMAGE KEN BURNS EFFECT
+   --------------------------------------------------------- */
+
+.home-slider-card.is-active .home-slider-image img {
+  animation:
+    snictKenBurns 7s ease-in-out both;
+}
+
+@keyframes snictKenBurns {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.06);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   NAVIGATION LINK ARROW
+   --------------------------------------------------------- */
+
+.home-events-view-all svg,
+.home-committee-view-all svg,
+.text-link svg,
+.focus-card > a svg {
+  transition:
+    transform 0.3s cubic-bezier(.22,1,.36,1);
+}
+
+.home-events-view-all:hover svg,
+.home-committee-view-all:hover svg,
+.text-link:hover svg,
+.focus-card > a:hover svg {
+  transform:
+    translateX(7px);
+}
+
+
+/* ---------------------------------------------------------
+   FLOATING SECTION DECORATION
+   --------------------------------------------------------- */
+
+.intro-section::after,
+.mission-section::after {
+  content: "";
+
+  position: absolute;
+
+  width: 240px;
+  height: 240px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(110,213,223,0.07),
+      transparent 68%
+    );
+
+  pointer-events: none;
+
+  animation:
+    snictAmbientFloat 8s ease-in-out infinite;
+}
+
+.intro-section::after {
+  right: -120px;
+  top: 18%;
+}
+
+.mission-section::after {
+  left: -120px;
+  bottom: 10%;
+  animation-delay: 2s;
+}
+
+@keyframes snictAmbientFloat {
+  0%,
+  100% {
+    transform:
+      translate3d(0,0,0);
+  }
+
+  50% {
+    transform:
+      translate3d(20px,-25px,0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   FOCUS CARD TOP ACCENT
+   --------------------------------------------------------- */
+
+.focus-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 18px;
+  right: 18px;
+
+  height: 2px;
+
+  border-radius: 0 0 10px 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #6ed5df,
+      transparent
+    );
+
+  opacity: 0;
+
+  transform:
+    scaleX(0.5);
+
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.focus-card:hover::before {
+  opacity: 1;
+
+  transform:
+    scaleX(1);
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE POLISH
+   --------------------------------------------------------- */
+
+@media (max-width: 650px) {
+  .hero-section::after {
+    opacity: 0.22;
+    background-size: 85px 85px;
+  }
+
+  .home-event-card:hover,
+  .home-slider-card:hover,
+  .focus-card:hover {
+    transform:
+      translateY(-5px)
+      scale(1.005);
+  }
+
+  .home-event-image::after,
+  .home-slider-image::after {
+    display: none;
+  }
+
+  .hero-primary-btn,
+  .hero-secondary-btn,
+  .vision-btn {
+    min-height: 50px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   ACCESSIBILITY
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page *,
+  .home-page *::before,
+  .home-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

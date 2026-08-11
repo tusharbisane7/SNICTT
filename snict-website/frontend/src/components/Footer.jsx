@@ -273,7 +273,7 @@ function Footer() {
         {/* COPYRIGHT */}
 
         <p>
-          © {currentYear} SNICT. All rights reserved.
+          © {currentYear} SNICT. All rights reserved. Made with ❤ by Tushar.
         </p>
 
 

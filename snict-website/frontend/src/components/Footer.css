@@ -1011,3 +1011,534 @@
   }
 
 }
+
+/* =========================================================
+   SNICT FOOTER — PREMIUM MOTION & INTERACTION UPGRADE
+   Existing layout/classes preserved
+========================================================= */
+
+.snict-footer {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(83,201,213,.13), transparent 26%),
+    radial-gradient(circle at 8% 88%, rgba(8,127,140,.08), transparent 25%),
+    linear-gradient(135deg, #f9fdfe 0%, #f3fafb 48%, #edf8fa 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+  animation: snictFooterReveal .8s cubic-bezier(.2,.8,.2,1) both;
+}
+
+/* Animated ambient orbs */
+.snict-footer::before,
+.snict-footer::after {
+  will-change: transform;
+  filter: blur(2px);
+}
+
+.snict-footer::before {
+  animation: snictFooterOrbRight 11s ease-in-out infinite;
+}
+
+.snict-footer::after {
+  animation: snictFooterOrbLeft 14s ease-in-out infinite;
+}
+
+/* Subtle grid texture */
+.snict-footer-grid {
+  position: relative;
+}
+
+.snict-footer-grid::before {
+  content: "";
+  position: absolute;
+  inset: 18px 0 auto;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(8,127,140,.08),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* =========================================================
+   BRAND — PREMIUM ENTRANCE
+========================================================= */
+
+.snict-footer-brand {
+  animation: snictFooterBrandIn .7s .08s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.snict-footer-logo {
+  position: relative;
+}
+
+.snict-footer-logo-mark {
+  position: relative;
+  box-shadow:
+    0 15px 38px rgba(17,77,86,.09),
+    inset 0 1px 0 rgba(255,255,255,.9);
+  will-change: transform;
+}
+
+.snict-footer-logo-mark::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(8,127,140,.28),
+    transparent 42%,
+    rgba(83,201,213,.28)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .65;
+  pointer-events: none;
+}
+
+.snict-footer-logo-mark::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -80%;
+  width: 45%;
+  height: 170%;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.75),
+    transparent
+  );
+  pointer-events: none;
+  animation: snictLogoShine 5.5s 1s ease-in-out infinite;
+}
+
+.snict-footer-logo:hover .snict-footer-logo-mark {
+  transform: translateY(-5px) rotate(-1deg) scale(1.045);
+  box-shadow:
+    0 22px 45px rgba(17,77,86,.14),
+    0 0 0 5px rgba(8,127,140,.045);
+}
+
+.snict-footer-logo-image {
+  position: relative;
+  z-index: 1;
+  transition: transform .4s cubic-bezier(.2,.8,.2,1);
+}
+
+.snict-footer-logo:hover .snict-footer-logo-image {
+  transform: scale(1.06);
+}
+
+.snict-footer-brand-name {
+  background: linear-gradient(
+    90deg,
+    #16383e,
+    #087f8c,
+    #16383e
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  animation: snictBrandGradient 6s ease-in-out infinite;
+}
+
+.snict-footer-brand-description {
+  animation: snictTextFadeUp .65s .2s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.snict-footer-description {
+  animation: snictTextFadeUp .7s .28s cubic-bezier(.2,.8,.2,1) both;
+}
+
+/* =========================================================
+   SOCIAL — PREMIUM ICON BUTTONS
+========================================================= */
+
+.snict-footer-social {
+  animation: snictTextFadeUp .7s .36s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.snict-social-link {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  will-change: transform;
+}
+
+.snict-social-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(8,127,140,.12),
+    rgba(83,201,213,.20)
+  );
+  transform: scale(0);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1);
+}
+
+.snict-social-link::after {
+  content: "";
+  position: absolute;
+  top: -90%;
+  left: -70%;
+  width: 45%;
+  height: 250%;
+  transform: rotate(25deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.7),
+    transparent
+  );
+  transition: left .65s ease;
+}
+
+.snict-social-link:hover::before {
+  transform: scale(1);
+}
+
+.snict-social-link:hover::after {
+  left: 135%;
+}
+
+.snict-social-link:hover {
+  transform: translateY(-6px) scale(1.08);
+}
+
+.snict-social-link:nth-child(1) { animation: snictSocialIn .5s .42s both; }
+.snict-social-link:nth-child(2) { animation: snictSocialIn .5s .48s both; }
+.snict-social-link:nth-child(3) { animation: snictSocialIn .5s .54s both; }
+.snict-social-link:nth-child(4) { animation: snictSocialIn .5s .60s both; }
+.snict-social-link:nth-child(5) { animation: snictSocialIn .5s .66s both; }
+
+/* =========================================================
+   COLUMNS — STAGGERED PREMIUM ENTRANCE
+========================================================= */
+
+.snict-footer-column {
+  animation: snictColumnIn .7s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.snict-footer-column:nth-child(2) { animation-delay: .16s; }
+.snict-footer-column:nth-child(3) { animation-delay: .24s; }
+.snict-footer-column:nth-child(4) { animation-delay: .32s; }
+
+.snict-footer-column h3 {
+  transition:
+    color .3s ease,
+    transform .3s ease;
+}
+
+.snict-footer-column:hover h3 {
+  color: #087f8c !important;
+  transform: translateX(2px);
+}
+
+.snict-footer-column h3::after {
+  height: 3px;
+  box-shadow: 0 2px 9px rgba(8,127,140,.16);
+}
+
+/* =========================================================
+   LINKS — SLIDE + ARROW REVEAL
+========================================================= */
+
+.snict-footer-links a {
+  position: relative;
+  width: fit-content;
+}
+
+.snict-footer-links a::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 0;
+  height: 1px;
+  border-radius: 2px;
+  background: #087f8c;
+  transition: width .3s ease;
+}
+
+.snict-footer-links a:hover::before {
+  width: calc(100% - 2px);
+}
+
+.snict-footer-links a svg {
+  color: #087f8c;
+  transition:
+    opacity .25s ease,
+    transform .3s cubic-bezier(.2,.8,.2,1);
+}
+
+.snict-footer-links a:hover {
+  transform: translateX(6px);
+}
+
+/* =========================================================
+   CONTACT — INTERACTIVE CARDS
+========================================================= */
+
+.snict-footer-contact-item {
+  position: relative;
+  padding: 7px 9px 7px 0;
+  border-radius: 14px;
+  transition:
+    transform .3s ease,
+    background .3s ease,
+    padding-left .3s ease;
+}
+
+.snict-footer-contact-item:hover {
+  transform: translateX(4px);
+  padding-left: 7px;
+  background: rgba(255,255,255,.5);
+}
+
+.snict-footer-contact-icon {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 7px 20px rgba(20,72,80,.05);
+}
+
+.snict-footer-contact-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(83,201,213,.12);
+  animation: snictContactRing 3s ease-in-out infinite;
+}
+
+.snict-footer-contact-item:hover .snict-footer-contact-icon {
+  transform: translateY(-3px) rotate(-2deg) scale(1.05);
+  box-shadow: 0 12px 25px rgba(8,127,140,.13);
+}
+
+/* =========================================================
+   BOTTOM BAR
+========================================================= */
+
+.snict-footer-bottom {
+  position: relative;
+  animation: snictTextFadeUp .7s .45s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.snict-footer-bottom p {
+  transition: color .25s ease;
+}
+
+.snict-footer-bottom:hover p {
+  color: #526f76;
+}
+
+.snict-footer-bottom-links > a {
+  position: relative;
+}
+
+.snict-footer-bottom-links > a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: right;
+  background: #087f8c;
+  transition: transform .3s ease;
+}
+
+.snict-footer-bottom-links > a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* =========================================================
+   ADMIN LOGIN — SPECIAL PREMIUM BUTTON
+========================================================= */
+
+.snict-footer-admin-link {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.snict-footer-admin-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(83,201,213,.18),
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  transition: transform .7s ease;
+}
+
+.snict-footer-admin-link:hover::before {
+  transform: translateX(100%);
+}
+
+/* =========================================================
+   KEYFRAMES
+========================================================= */
+
+@keyframes snictFooterReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes snictFooterOrbRight {
+  0%, 100% {
+    transform: translate3d(0,0,0) scale(1);
+  }
+  50% {
+    transform: translate3d(-55px,35px,0) scale(1.12);
+  }
+}
+
+@keyframes snictFooterOrbLeft {
+  0%, 100% {
+    transform: translate3d(0,0,0) scale(1);
+  }
+  50% {
+    transform: translate3d(45px,-30px,0) scale(1.1);
+  }
+}
+
+@keyframes snictLogoShine {
+  0%, 65%, 100% {
+    left: -80%;
+  }
+  82% {
+    left: 135%;
+  }
+}
+
+@keyframes snictBrandGradient {
+  0%, 100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+}
+
+@keyframes snictTextFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes snictSocialIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes snictColumnIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes snictContactRing {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+/* =========================================================
+   MOBILE PREMIUM TUNING
+========================================================= */
+
+@media (max-width: 650px) {
+  .snict-footer {
+    background:
+      radial-gradient(circle at 90% 8%, rgba(83,201,213,.10), transparent 30%),
+      linear-gradient(135deg, #f9fdfe, #eef8f9);
+  }
+
+  .snict-footer-logo:hover .snict-footer-logo-mark {
+    transform: translateY(-3px) scale(1.025);
+  }
+
+  .snict-footer-contact-item:hover {
+    transform: translateX(2px);
+  }
+
+  .snict-social-link:hover {
+    transform: translateY(-4px) scale(1.05);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.snict-footer a:focus-visible {
+  outline: 3px solid rgba(8,127,140,.28);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snict-footer,
+  .snict-footer *,
+  .snict-footer *::before,
+  .snict-footer *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .snict-footer-links a:hover,
+  .snict-footer-contact-item:hover,
+  .snict-social-link:hover,
+  .snict-footer-admin-link:hover {
+    transform: none !important;
+  }
+}

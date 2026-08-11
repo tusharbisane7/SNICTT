@@ -2451,3 +2451,695 @@
   }
 
 }
+
+/* =========================================================
+   SNICT — PREMIUM MOTION UPGRADE
+   Added without changing the existing class structure
+========================================================= */
+
+:root {
+  --snict-cyan: #087ea4;
+  --snict-cyan-dark: #075c73;
+  --snict-teal: #0a9bad;
+  --snict-ink: #073d4e;
+  --snict-glass: rgba(255, 255, 255, .72);
+  --snict-line: rgba(8, 126, 164, .14);
+  --snict-shadow-premium: 0 24px 70px rgba(5, 57, 72, .10);
+}
+
+/* Smooth page reveal */
+.booking-history-page {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 5% 5%, rgba(8,126,164,.13), transparent 27%),
+    radial-gradient(circle at 95% 18%, rgba(22,163,177,.10), transparent 25%),
+    linear-gradient(180deg, #f8fcfd 0%, #f2f8fa 100%);
+  animation: snictPageReveal .7s cubic-bezier(.2,.8,.2,1) both;
+}
+
+/* Ambient animated light */
+.booking-history-page::before,
+.booking-history-page::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(8px);
+  opacity: .55;
+}
+
+.booking-history-page::before {
+  top: 20%;
+  left: -230px;
+  background: radial-gradient(circle, rgba(8,126,164,.10), transparent 68%);
+  animation: snictAmbientLeft 12s ease-in-out infinite;
+}
+
+.booking-history-page::after {
+  right: -220px;
+  bottom: 8%;
+  background: radial-gradient(circle, rgba(22,163,177,.10), transparent 68%);
+  animation: snictAmbientRight 15s ease-in-out infinite;
+}
+
+/* =========================================================
+   HERO — PREMIUM GLASS + LIGHT SWEEP
+========================================================= */
+
+.booking-history-hero {
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,.08);
+}
+
+.booking-history-hero::before {
+  transform-origin: center;
+}
+
+.booking-history-hero-content span {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 8px 30px rgba(0,0,0,.08);
+  animation:
+    snictBadgeIn .7s .08s cubic-bezier(.2,.8,.2,1) both,
+    snictBadgeFloat 4s 1s ease-in-out infinite;
+}
+
+.booking-history-hero-content span::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -70%;
+  width: 42%;
+  height: 180%;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.34),
+    transparent
+  );
+  animation: snictGlassSweep 4.8s 1.3s ease-in-out infinite;
+}
+
+.booking-history-hero-content h1 {
+  text-shadow: 0 10px 35px rgba(0,0,0,.13);
+  animation:
+    heroContentIn .7s .08s cubic-bezier(.2,.8,.2,1) both,
+    snictHeroTextFloat 5s 1.1s ease-in-out infinite;
+}
+
+.booking-history-hero-content p {
+  animation: heroContentIn .7s .18s cubic-bezier(.2,.8,.2,1) both;
+}
+
+/* =========================================================
+   SUMMARY CARDS — STAGGER + SHINE
+========================================================= */
+
+.booking-history-summary > div {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--snict-shadow-premium);
+  animation: snictSummaryIn .65s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.booking-history-summary > div:nth-child(1) { animation-delay: .08s; }
+.booking-history-summary > div:nth-child(2) { animation-delay: .14s; }
+.booking-history-summary > div:nth-child(3) { animation-delay: .20s; }
+.booking-history-summary > div:nth-child(4) { animation-delay: .26s; }
+
+.booking-history-summary > div::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255,255,255,.62) 48%,
+    transparent 72%
+  );
+  transform: translateX(-125%);
+  transition: transform .8s cubic-bezier(.2,.8,.2,1);
+}
+
+.booking-history-summary > div:hover::before {
+  transform: translateX(125%);
+}
+
+.booking-history-summary > div strong {
+  transition: transform .3s ease, color .3s ease;
+}
+
+.booking-history-summary > div:hover strong {
+  transform: translateY(-2px);
+  color: var(--snict-cyan);
+}
+
+/* =========================================================
+   BOOKING CARDS — PREMIUM LIFT + BORDER GLOW
+========================================================= */
+
+.booking-history-card {
+  overflow: hidden;
+  box-shadow: var(--snict-shadow-premium);
+  will-change: transform;
+}
+
+.booking-history-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,.40),
+      transparent 30%,
+      transparent 70%,
+      rgba(8,126,164,.035)
+    );
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+
+.booking-history-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -45%;
+  width: 28%;
+  height: 100%;
+  pointer-events: none;
+  transform: skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.52),
+    transparent
+  );
+  transition: left .75s cubic-bezier(.2,.8,.2,1);
+}
+
+.booking-history-card:hover::before {
+  opacity: 1;
+}
+
+.booking-history-card:hover::after {
+  left: 125%;
+}
+
+.booking-history-card:hover {
+  transform: translateY(-7px) scale(1.003);
+}
+
+.booking-history-card.verification {
+  box-shadow:
+    0 20px 60px rgba(8,126,164,.11),
+    inset 0 0 0 1px rgba(8,126,164,.025);
+}
+
+.booking-history-card.verification::before {
+  opacity: 1;
+  background:
+    linear-gradient(
+      120deg,
+      rgba(8,126,164,.035),
+      transparent 35%,
+      rgba(8,126,164,.035)
+    );
+}
+
+/* Event icon floating */
+.booking-history-event-icon {
+  box-shadow:
+    inset 0 0 0 1px rgba(8,126,164,.07),
+    0 9px 25px rgba(8,126,164,.08);
+  animation: snictIconFloat 4s ease-in-out infinite;
+}
+
+.booking-history-card:hover .booking-history-event-icon {
+  animation: none;
+}
+
+/* Booking title becomes more alive */
+.booking-history-main h2 {
+  transition: color .25s ease, transform .25s ease;
+}
+
+.booking-history-card:hover .booking-history-main h2 {
+  color: var(--snict-cyan-dark);
+  transform: translateX(2px);
+}
+
+/* =========================================================
+   STATUS BADGES — MICRO ANIMATIONS
+========================================================= */
+
+.booking-event-status,
+.booking-status {
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+}
+
+.booking-history-card:hover .booking-event-status,
+.booking-history-card:hover .booking-status {
+  transform: translateY(-1px);
+}
+
+.booking-history-card.verification .booking-status {
+  animation: snictStatusPulse 2.4s ease-in-out infinite;
+}
+
+/* =========================================================
+   PAYMENT PANEL — GLASS / GLOW
+========================================================= */
+
+.booking-history-payment {
+  position: relative;
+  z-index: 1;
+}
+
+.booking-payment-badge {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 26px rgba(5,57,72,.045);
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+}
+
+.booking-payment-badge::after {
+  content: "";
+  position: absolute;
+  top: -70%;
+  left: -55%;
+  width: 35%;
+  height: 220%;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.55),
+    transparent
+  );
+  animation: snictPaymentSweep 5.5s 1.5s ease-in-out infinite;
+}
+
+.booking-payment-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(5,57,72,.08);
+}
+
+.booking-history-price strong {
+  transition: transform .3s ease, color .3s ease;
+}
+
+.booking-history-card:hover .booking-history-price strong {
+  transform: scale(1.025);
+  color: var(--snict-cyan);
+}
+
+/* =========================================================
+   BUTTONS — PREMIUM MAGNETIC FEEL
+========================================================= */
+
+.booking-history-view,
+.booking-empty-button,
+.booking-pass-print,
+.booking-pass-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.booking-history-view::before,
+.booking-empty-button::before,
+.booking-pass-print::before,
+.booking-pass-button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: -110%;
+  width: 70%;
+  height: 100%;
+  transform: skewX(-20deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.28),
+    transparent
+  );
+  transition: left .7s cubic-bezier(.2,.8,.2,1);
+}
+
+.booking-history-view:hover::before,
+.booking-empty-button:hover::before,
+.booking-pass-print:hover::before,
+.booking-pass-button:hover::before {
+  left: 135%;
+}
+
+.booking-history-view svg,
+.booking-empty-button svg,
+.booking-pass-print svg,
+.booking-pass-button svg {
+  transition: transform .28s ease;
+}
+
+.booking-history-view:hover svg,
+.booking-empty-button:hover svg,
+.booking-pass-print:hover svg,
+.booking-pass-button:hover svg {
+  transform: translateX(3px);
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.booking-history-empty {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--snict-shadow-premium);
+}
+
+.booking-history-empty::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  top: -130px;
+  right: -90px;
+  border-radius: 50%;
+  background: rgba(8,126,164,.055);
+  animation: snictEmptyOrb 8s ease-in-out infinite;
+}
+
+.booking-empty-icon {
+  box-shadow: 0 15px 40px rgba(8,126,164,.09);
+  animation: snictEmptyIcon 3.5s ease-in-out infinite;
+}
+
+/* =========================================================
+   EVENT PASS MODAL — PREMIUM ENTRANCE
+========================================================= */
+
+.booking-pass-modal {
+  background:
+    radial-gradient(circle at 50% 15%, rgba(8,126,164,.15), transparent 38%),
+    rgba(2,25,33,.78);
+}
+
+.booking-pass-card {
+  transform-origin: center bottom;
+  box-shadow:
+    0 45px 120px rgba(0,0,0,.38),
+    0 0 0 1px rgba(255,255,255,.08);
+}
+
+.booking-pass-header {
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,.08);
+}
+
+.booking-pass-header h2 {
+  animation: snictPassTitleIn .5s .12s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.booking-pass-close {
+  box-shadow: 0 7px 22px rgba(0,0,0,.08);
+}
+
+.booking-pass-user-image,
+.booking-pass-user-placeholder {
+  animation: snictPassUserIn .55s .18s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.booking-pass-field {
+  animation: snictFieldIn .45s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.booking-pass-grid .booking-pass-field:nth-child(1) { animation-delay: .08s; }
+.booking-pass-grid .booking-pass-field:nth-child(2) { animation-delay: .13s; }
+.booking-pass-grid .booking-pass-field:nth-child(3) { animation-delay: .18s; }
+.booking-pass-grid .booking-pass-field:nth-child(4) { animation-delay: .23s; }
+.booking-pass-grid .booking-pass-field:nth-child(5) { animation-delay: .28s; }
+.booking-pass-grid .booking-pass-field:nth-child(6) { animation-delay: .33s; }
+
+.booking-pass-validity {
+  animation:
+    snictFieldIn .5s .36s cubic-bezier(.2,.8,.2,1) both,
+    snictValidityGlow 2.8s 1s ease-in-out infinite;
+}
+
+/* =========================================================
+   KEYFRAMES
+========================================================= */
+
+@keyframes snictPageReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes snictAmbientLeft {
+  0%, 100% {
+    transform: translate3d(0,0,0) scale(1);
+  }
+  50% {
+    transform: translate3d(80px,-30px,0) scale(1.16);
+  }
+}
+
+@keyframes snictAmbientRight {
+  0%, 100% {
+    transform: translate3d(0,0,0) scale(1);
+  }
+  50% {
+    transform: translate3d(-70px,35px,0) scale(1.12);
+  }
+}
+
+@keyframes snictBadgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes snictBadgeFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes snictGlassSweep {
+  0%, 62%, 100% {
+    left: -70%;
+  }
+  80% {
+    left: 135%;
+  }
+}
+
+@keyframes snictHeroTextFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes snictSummaryIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes snictIconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes snictStatusPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(8,126,164,0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(8,126,164,.055);
+  }
+}
+
+@keyframes snictPaymentSweep {
+  0%, 68%, 100% {
+    left: -55%;
+  }
+  83% {
+    left: 135%;
+  }
+}
+
+@keyframes snictEmptyOrb {
+  0%, 100% {
+    transform: translate(0,0) scale(1);
+  }
+  50% {
+    transform: translate(-20px,15px) scale(1.1);
+  }
+}
+
+@keyframes snictEmptyIcon {
+  0%, 100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-7px) rotate(-2deg);
+  }
+}
+
+@keyframes snictPassTitleIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes snictPassUserIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) scale(.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes snictFieldIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes snictValidityGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(36,124,72,0);
+  }
+  50% {
+    box-shadow: 0 8px 28px rgba(36,124,72,.08);
+  }
+}
+
+/* =========================================================
+   BETTER FOCUS + ACTIVE STATES
+========================================================= */
+
+.booking-history-card:focus-within {
+  border-color: rgba(8,126,164,.35);
+  box-shadow:
+    0 20px 60px rgba(5,57,72,.11),
+    0 0 0 4px rgba(8,126,164,.055);
+}
+
+.booking-history-view:active,
+.booking-empty-button:active,
+.booking-pass-print:active,
+.booking-pass-button:active {
+  transform: translateY(0) scale(.97);
+}
+
+/* =========================================================
+   RESPONSIVE MOTION TUNING
+========================================================= */
+
+@media (max-width: 700px) {
+  .booking-history-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .booking-history-page::before,
+  .booking-history-page::after {
+    opacity: .35;
+  }
+
+  .booking-history-summary > div::before,
+  .booking-history-card::after {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .booking-history-hero-content h1 {
+    animation: heroContentIn .7s .08s cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .booking-history-card {
+    box-shadow: 0 14px 38px rgba(5,57,72,.075);
+  }
+
+  .booking-history-card:hover {
+    transform: translateY(-3px);
+  }
+
+  .booking-pass-validity {
+    animation:
+      snictFieldIn .5s .25s cubic-bezier(.2,.8,.2,1) both,
+      snictValidityGlow 3s 1s ease-in-out infinite;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION — KEEP ACCESSIBLE
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-history-page,
+  .booking-history-page *,
+  .booking-history-page *::before,
+  .booking-history-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .booking-history-card:hover,
+  .booking-history-summary > div:hover {
+    transform: none !important;
+  }
+}

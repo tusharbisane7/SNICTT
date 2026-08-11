@@ -1686,3 +1686,958 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   SNICT EVENTS — PREMIUM MOTION & VISUAL ENHANCEMENT
+   Existing design preserved; animation layer added.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   GLOBAL MOTION
+   --------------------------------------------------------- */
+
+.events-page {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.events-page *,
+.events-page *::before,
+.events-page *::after {
+  backface-visibility: hidden;
+}
+
+
+/* ---------------------------------------------------------
+   HERO PREMIUM GRID MOTION
+   --------------------------------------------------------- */
+
+.events-hero::before {
+  animation:
+    eventsGridDrift 18s linear infinite;
+}
+
+@keyframes eventsGridDrift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+
+  to {
+    background-position: 48px 48px, 48px 48px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO AMBIENT ORBS
+   --------------------------------------------------------- */
+
+.events-hero::after {
+  content: "";
+
+  position: absolute;
+  width: 280px;
+  height: 280px;
+
+  left: -100px;
+  bottom: -150px;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(42, 183, 180, 0.11),
+      transparent 68%
+    );
+
+  filter: blur(4px);
+
+  animation:
+    eventsOrbFloat 10s ease-in-out infinite;
+}
+
+@keyframes eventsOrbFloat {
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      scale(0.92);
+  }
+
+  50% {
+    transform:
+      translate3d(35px, -25px, 0)
+      scale(1.08);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO TEXT REVEAL
+   --------------------------------------------------------- */
+
+.events-label {
+  animation:
+    eventsLabelIn 0.7s 0.05s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-hero h1 {
+  animation:
+    eventsTitleIn 0.9s 0.12s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-hero-content p {
+  animation:
+    eventsParagraphIn 0.8s 0.28s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventsLabelIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px)
+      scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes eventsTitleIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(28px)
+      scale(0.97);
+    filter: blur(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes eventsParagraphIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO TITLE SHIMMER
+   --------------------------------------------------------- */
+
+.events-hero h1 span {
+  background-size: 220% auto;
+
+  animation:
+    eventsTitleShimmer 5s ease-in-out infinite;
+}
+
+@keyframes eventsTitleShimmer {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   HERO LABEL PULSE DOT
+   --------------------------------------------------------- */
+
+.events-label::before {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  margin-right: 7px;
+
+  border-radius: 50%;
+
+  background: var(--events-primary);
+
+  box-shadow:
+    0 0 0 0 rgba(8,127,140,0.32);
+
+  animation:
+    eventsLabelPulse 2.2s ease-out infinite;
+}
+
+@keyframes eventsLabelPulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(8,127,140,0.32);
+  }
+
+  70% {
+    box-shadow:
+      0 0 0 8px rgba(8,127,140,0);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(8,127,140,0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   FILTER BAR ENTRANCE
+   --------------------------------------------------------- */
+
+.events-filter-section {
+  animation:
+    eventsFilterIn 0.75s 0.2s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventsFilterIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(-15px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   SEARCH ICON MOTION
+   --------------------------------------------------------- */
+
+.events-search svg {
+  transition:
+    transform 0.3s cubic-bezier(.22,1,.36,1);
+}
+
+.events-search:focus-within svg {
+  transform:
+    scale(1.12)
+    rotate(-5deg);
+}
+
+
+/* ---------------------------------------------------------
+   FILTER BUTTON MICRO INTERACTION
+   --------------------------------------------------------- */
+
+.events-filter-group button {
+  position: relative;
+  overflow: hidden;
+}
+
+.events-filter-group button::after {
+  content: "";
+
+  position: absolute;
+
+  left: -120%;
+  top: 0;
+
+  width: 80%;
+  height: 100%;
+
+  pointer-events: none;
+
+  transform: skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.25),
+      transparent
+    );
+
+  transition:
+    left 0.6s ease;
+}
+
+.events-filter-group button:hover::after,
+.events-filter-group button.active::after {
+  left: 140%;
+}
+
+
+/* ---------------------------------------------------------
+   EVENT LIST STAGGER
+   --------------------------------------------------------- */
+
+.events-list-container > .event-card:nth-child(1) {
+  animation:
+    eventCardReveal 0.72s 0.05s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(2) {
+  animation:
+    eventCardReveal 0.72s 0.13s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(3) {
+  animation:
+    eventCardReveal 0.72s 0.21s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(4) {
+  animation:
+    eventCardReveal 0.72s 0.29s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(5) {
+  animation:
+    eventCardReveal 0.72s 0.37s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(6) {
+  animation:
+    eventCardReveal 0.72s 0.45s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(7) {
+  animation:
+    eventCardReveal 0.72s 0.53s cubic-bezier(.22,1,.36,1) both;
+}
+
+.events-list-container > .event-card:nth-child(8) {
+  animation:
+    eventCardReveal 0.72s 0.61s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventCardReveal {
+  from {
+    opacity: 0;
+    transform:
+      translateY(30px)
+      scale(0.975);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM EVENT CARD
+   --------------------------------------------------------- */
+
+.event-card {
+  transform-origin: center bottom;
+  will-change: transform, box-shadow;
+
+  isolation: isolate;
+}
+
+.event-card::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 6;
+
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  padding: 1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8,127,140,0.32),
+      transparent 30%,
+      transparent 68%,
+      rgba(42,183,180,0.22)
+    );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.4s ease;
+}
+
+.event-card:hover::before {
+  opacity: 1;
+}
+
+.event-card:hover {
+  transform:
+    translateY(-9px)
+    scale(1.008);
+}
+
+
+/* ---------------------------------------------------------
+   IMAGE LIGHT SWEEP
+   --------------------------------------------------------- */
+
+.event-image {
+  isolation: isolate;
+}
+
+.event-image::before {
+  content: "";
+
+  position: absolute;
+
+  z-index: 3;
+
+  top: 0;
+  left: -140%;
+
+  width: 65%;
+  height: 100%;
+
+  pointer-events: none;
+
+  transform: skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.22),
+      transparent
+    );
+}
+
+.event-card:hover .event-image::before {
+  left: 150%;
+
+  transition:
+    left 0.8s cubic-bezier(.22,1,.36,1);
+}
+
+
+/* ---------------------------------------------------------
+   IMAGE KEN BURNS
+   --------------------------------------------------------- */
+
+.event-card:hover .event-image img {
+  transform:
+    scale(1.075);
+  filter:
+    saturate(1.08)
+    contrast(1.03);
+}
+
+.event-image img {
+  filter:
+    saturate(0.98)
+    contrast(1);
+
+  transition:
+    transform 0.8s cubic-bezier(.22,1,.36,1),
+    filter 0.45s ease;
+}
+
+
+/* ---------------------------------------------------------
+   IMAGE PLACEHOLDER ANIMATION
+   --------------------------------------------------------- */
+
+.event-image-placeholder::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      110deg,
+      transparent 25%,
+      rgba(255,255,255,0.55) 50%,
+      transparent 75%
+    );
+
+  transform:
+    translateX(-120%);
+
+  animation:
+    eventPlaceholderSweep 3s ease-in-out infinite;
+}
+
+@keyframes eventPlaceholderSweep {
+  0%,
+  30% {
+    transform:
+      translateX(-120%);
+  }
+
+  70%,
+  100% {
+    transform:
+      translateX(120%);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   IMAGE OVERLAY
+   --------------------------------------------------------- */
+
+.event-image::after {
+  transition:
+    opacity 0.45s ease;
+}
+
+.event-card:hover .event-image::after {
+  opacity: 0.52;
+}
+
+
+/* ---------------------------------------------------------
+   STATUS BADGE
+   --------------------------------------------------------- */
+
+.event-status {
+  transform-origin: left center;
+
+  animation:
+    eventBadgeIn 0.55s 0.2s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventBadgeIn {
+  from {
+    opacity: 0;
+    transform:
+      translateX(-10px)
+      scale(0.88);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateX(0)
+      scale(1);
+  }
+}
+
+.event-status::before {
+  transition:
+    transform 0.25s ease;
+}
+
+.event-card:hover .event-status::before {
+  transform:
+    scale(1.35);
+}
+
+
+/* ---------------------------------------------------------
+   EVENT TYPE TAG
+   --------------------------------------------------------- */
+
+.event-type {
+  position: relative;
+  overflow: hidden;
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.event-type::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 80%;
+  height: 100%;
+
+  transform: skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.55),
+      transparent
+    );
+}
+
+.event-card:hover .event-type {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 7px 16px rgba(8,127,140,0.09);
+}
+
+.event-card:hover .event-type::after {
+  left: 140%;
+
+  transition:
+    left 0.65s ease;
+}
+
+
+/* ---------------------------------------------------------
+   CARD TEXT MICRO MOTION
+   --------------------------------------------------------- */
+
+.event-card-content h2 {
+  transition:
+    color 0.3s ease,
+    transform 0.3s cubic-bezier(.22,1,.36,1);
+}
+
+.event-card:hover .event-card-content h2 {
+  color:
+    var(--events-primary);
+
+  transform:
+    translateX(2px);
+}
+
+.event-doctor svg,
+.event-meta svg,
+.event-price svg {
+  transition:
+    transform 0.3s cubic-bezier(.22,1,.36,1);
+}
+
+.event-card:hover .event-doctor svg {
+  transform:
+    scale(1.12)
+    rotate(-4deg);
+}
+
+.event-card:hover .event-meta svg {
+  transform:
+    scale(1.1);
+}
+
+.event-card:hover .event-price svg {
+  transform:
+    scale(1.12)
+    rotate(-5deg);
+}
+
+
+/* ---------------------------------------------------------
+   META ROW HOVER
+   --------------------------------------------------------- */
+
+.event-meta span {
+  transition:
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.event-meta span:hover {
+  color:
+    var(--events-primary);
+
+  transform:
+    translateX(3px);
+}
+
+
+/* ---------------------------------------------------------
+   DESCRIPTION FADE
+   --------------------------------------------------------- */
+
+.event-card-content > p {
+  transition:
+    color 0.3s ease;
+}
+
+.event-card:hover .event-card-content > p {
+  color:
+    #5f7478;
+}
+
+
+/* ---------------------------------------------------------
+   BUTTON PREMIUM SWEEP
+   --------------------------------------------------------- */
+
+.event-view-btn {
+  position: relative;
+  overflow: hidden;
+
+  isolation: isolate;
+}
+
+.event-view-btn::before {
+  content: "";
+
+  position: absolute;
+
+  z-index: -1;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      110deg,
+      transparent 20%,
+      rgba(255,255,255,0.2) 48%,
+      transparent 75%
+    );
+
+  transform:
+    translateX(-120%);
+}
+
+.event-view-btn:hover::before {
+  transform:
+    translateX(120%);
+
+  transition:
+    transform 0.65s ease;
+}
+
+.event-view-btn:hover {
+  transform:
+    translateY(-3px)
+    scale(1.025);
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY / LOADING STATE
+   --------------------------------------------------------- */
+
+.events-state {
+  animation:
+    eventStateIn 0.65s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes eventStateIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(20px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.events-state svg {
+  animation:
+    eventsStateFloat 3s ease-in-out infinite;
+}
+
+@keyframes eventsStateFloat {
+  0%,
+  100% {
+    transform:
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateY(-7px);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   ERROR BUTTON
+   --------------------------------------------------------- */
+
+.events-state.error button {
+  position: relative;
+  overflow: hidden;
+}
+
+.events-state.error button::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -130%;
+
+  width: 75%;
+  height: 100%;
+
+  transform: skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.22),
+      transparent
+    );
+}
+
+.events-state.error button:hover::after {
+  left: 140%;
+
+  transition:
+    left 0.65s ease;
+}
+
+
+/* ---------------------------------------------------------
+   FILTER SELECT HOVER
+   --------------------------------------------------------- */
+
+.events-filter-container select:hover {
+  border-color:
+    rgba(8,127,140,0.28);
+
+  box-shadow:
+    0 7px 20px rgba(16,42,47,0.05);
+}
+
+
+/* ---------------------------------------------------------
+   SECTION BACKGROUND FLOATING LIGHT
+   --------------------------------------------------------- */
+
+.events-list-section {
+  position: relative;
+  isolation: isolate;
+}
+
+.events-list-section::before {
+  content: "";
+
+  position: absolute;
+
+  width: 330px;
+  height: 330px;
+
+  right: -160px;
+  top: 12%;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  z-index: -1;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(8,127,140,0.055),
+      transparent 68%
+    );
+
+  animation:
+    eventsSectionOrb 11s ease-in-out infinite;
+}
+
+@keyframes eventsSectionOrb {
+  0%,
+  100% {
+    transform:
+      translate3d(0,0,0);
+  }
+
+  50% {
+    transform:
+      translate3d(-25px,25px,0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE MOTION
+   --------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .event-card:hover {
+    transform:
+      translateY(-5px)
+      scale(1.004);
+  }
+
+  .event-card:hover .event-image img {
+    transform:
+      scale(1.045);
+  }
+
+  .events-hero::after {
+    width: 220px;
+    height: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-card:hover {
+    transform:
+      translateY(-4px);
+  }
+
+  .event-image::before {
+    display: none;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   ACCESSIBILITY / REDUCED MOTION
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .events-page *,
+  .events-page *::before,
+  .events-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .event-card:hover,
+  .event-card:hover .event-image img,
+  .event-card:hover .event-card-content h2 {
+    transform: none !important;
+  }
+}

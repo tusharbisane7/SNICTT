@@ -1,6 +1,9 @@
 import {
   ArrowRight,
   Activity,
+  Award,
+  BriefcaseBusiness,
+  Cpu,
   GraduationCap,
   Users,
   HeartPulse,
@@ -35,6 +38,10 @@ function About() {
         <div className="about-hero-glow about-glow-two" />
 
         <div className="about-hero-container">
+
+          {/* =================================================
+              HERO CONTENT
+          ================================================= */}
 
           <div className="about-hero-content">
 
@@ -78,13 +85,22 @@ function About() {
           </div>
 
 
-          {/* HERO VISUAL */}
+          {/* =================================================
+              HERO VISUAL
+          ================================================= */}
 
           <div className="about-hero-visual">
+
+            {/* Animated orbit rings */}
 
             <div className="about-orbit about-orbit-one" />
             <div className="about-orbit about-orbit-two" />
             <div className="about-orbit about-orbit-three" />
+
+
+            {/* =================================================
+                CENTRAL CORE
+            ================================================= */}
 
             <div className="about-core">
 
@@ -102,49 +118,83 @@ function About() {
             </div>
 
 
-            <div className="about-floating-card about-card-one">
+            {/* =================================================
+                HOME STYLE FLOATING CARDS
 
-              <GraduationCap size={19} />
+                01 - NEW GENERATION
+            ================================================= */}
+
+            <div className="about-floating-card about-card-one about-card-animated">
+
+              <div className="about-floating-icon">
+                <Sparkles size={19} />
+              </div>
 
               <div>
                 <strong>
-                  Education
+                  New Generation
                 </strong>
 
                 <span>
-                  Continuous Learning
+                  Healthcare
                 </span>
               </div>
 
             </div>
 
 
-            <div className="about-floating-card about-card-two">
+            {/* =================================================
+                02 - EXCELLENCE
+            ================================================= */}
 
-              <Users size={19} />
+            <div className="about-floating-card about-card-two about-card-animated">
+
+              <div className="about-floating-icon">
+                <Award size={19} />
+              </div>
 
               <div>
                 <strong>
-                  Community
+                  Excellence
                 </strong>
 
                 <span>
-                  Professional Collaboration
+                  In Practice
                 </span>
               </div>
 
             </div>
 
 
-            <div className="about-floating-card about-card-three">
+            {/* =================================================
+                03 - OPPORTUNITY
+            ================================================= */}
 
-              <Sparkles size={17} />
+            <div className="about-floating-card about-card-three about-card-animated">
 
-              <span>
-                Innovation
-              </span>
+              <div className="about-floating-icon">
+                <BriefcaseBusiness size={19} />
+              </div>
+
+              <div>
+                <strong>
+                  Opportunity
+                </strong>
+
+                <span>
+                  To Grow
+                </span>
+              </div>
 
             </div>
+
+
+            {/* =================================================
+                04 - TECHNOLOGY
+            ================================================= */}
+
+           
+
 
           </div>
 
@@ -236,7 +286,9 @@ function About() {
 
           <div className="about-vm-grid">
 
-            {/* VISION */}
+            {/* =================================================
+                VISION
+            ================================================= */}
 
             <article className="about-vm-card">
 
@@ -263,7 +315,9 @@ function About() {
             </article>
 
 
-            {/* MISSION */}
+            {/* =================================================
+                MISSION
+            ================================================= */}
 
             <article className="about-vm-card about-vm-featured">
 
@@ -330,7 +384,9 @@ function About() {
 
           <div className="about-focus-grid">
 
-            {/* EDUCATION */}
+            {/* =================================================
+                EDUCATION
+            ================================================= */}
 
             <article className="about-focus-card">
 
@@ -359,7 +415,9 @@ function About() {
             </article>
 
 
-            {/* KNOWLEDGE */}
+            {/* =================================================
+                KNOWLEDGE
+            ================================================= */}
 
             <article className="about-focus-card about-focus-featured">
 
@@ -388,7 +446,9 @@ function About() {
             </article>
 
 
-            {/* COLLABORATION */}
+            {/* =================================================
+                COLLABORATION
+            ================================================= */}
 
             <article className="about-focus-card">
 
@@ -417,7 +477,9 @@ function About() {
             </article>
 
 
-            {/* INNOVATION */}
+            {/* =================================================
+                INNOVATION
+            ================================================= */}
 
             <article className="about-focus-card">
 
@@ -452,80 +514,6 @@ function About() {
       </section>
 
 
-      {/* =====================================================
-          PROFESSIONAL COMMUNITY
-      ===================================================== */}
-
-      <section className="about-community">
-
-        <div className="about-community-glow" />
-
-        <div className="about-container">
-
-          <div className="about-community-grid">
-
-            <div className="about-community-visual">
-
-              <div className="community-circle community-circle-one" />
-              <div className="community-circle community-circle-two" />
-
-              <div className="community-center">
-
-                <Users size={52} />
-
-                <strong>
-                  SNICT
-                </strong>
-
-                <span>
-                  Professional Community
-                </span>
-
-              </div>
-
-            </div>
-
-
-            <div className="about-community-content">
-
-              <span className="about-section-label">
-                OUR COMMUNITY
-              </span>
-
-              <h2>
-                Connecting professionals
-                <span> beyond institutions.</span>
-              </h2>
-
-              <p>
-                Cardiovascular care continues to evolve rapidly.
-                Professionals need opportunities to communicate,
-                learn from one another and stay connected with
-                developments in their field.
-              </p>
-
-              <p>
-                SNICT provides a platform for such professional
-                interaction by bringing cardiovascular technologists
-                together around common interests, experiences and
-                learning opportunities.
-              </p>
-
-              <Link
-                to="/team"
-                className="about-community-btn"
-              >
-                Meet Our Community
-                <ArrowRight size={17} />
-              </Link>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
 
 
       {/* =====================================================
@@ -552,6 +540,10 @@ function About() {
 
           <div className="about-values-grid">
 
+            {/* =================================================
+                EXCELLENCE
+            ================================================= */}
+
             <div className="about-value">
 
               <div className="about-value-icon">
@@ -569,6 +561,10 @@ function About() {
 
             </div>
 
+
+            {/* =================================================
+                LEARNING
+            ================================================= */}
 
             <div className="about-value">
 
@@ -588,6 +584,10 @@ function About() {
             </div>
 
 
+            {/* =================================================
+                COLLABORATION
+            ================================================= */}
+
             <div className="about-value">
 
               <div className="about-value-icon">
@@ -605,6 +605,10 @@ function About() {
 
             </div>
 
+
+            {/* =================================================
+                PROGRESS
+            ================================================= */}
 
             <div className="about-value">
 
@@ -684,8 +688,9 @@ function About() {
 
       </section>
 
+
     </main>
   );
 }
 
-export default About
+export default About;

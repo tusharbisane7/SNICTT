@@ -10,46 +10,70 @@ import {
   UserCircle,
   WalletCards,
   AlertCircle,
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Sparkles,
+  Users,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
-
 import api from "../../services/api";
 
 import "./Dashboard.css";
 
 
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
 function Dashboard() {
 
-  // =========================================================
-  // AUTH
-  // =========================================================
+  /* =========================================================
+     AUTH
+  ========================================================= */
 
   const { user } = useAuth();
 
 
-  // =========================================================
-  // STATE
-  // =========================================================
+  /* =========================================================
+     STATE
+  ========================================================= */
 
   const [bookings, setBookings] = useState([]);
 
+  const [events, setEvents] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
+  const [eventsLoading, setEventsLoading] =
+    useState(true);
 
   const [error, setError] = useState("");
 
-  // Upcoming booked-events slider
-  const [upcomingSlide, setUpcomingSlide] = useState(0);
-  const [imageError, setImageError] = useState(false);
+  const [eventsError, setEventsError] =
+    useState("");
+
+  const [imageError, setImageError] =
+    useState(false);
+
+  const [bookedEventSlide, setBookedEventSlide] =
+    useState(0);
 
 
-  // =========================================================
-  // LOAD BOOKINGS
-  // =========================================================
+  /* =========================================================
+     LOAD USER BOOKINGS
+     
+     Backend:
+     GET /api/bookings
+========================================================= */
 
   useEffect(() => {
+
+    let mounted = true;
 
     const loadBookings = async () => {
 
@@ -59,16 +83,27 @@ function Dashboard() {
 
         setError("");
 
-
-        const response = await api.get(
-          "/bookings"
-        );
+        const response =
+          await api.get("/bookings");
 
 
-        if (response.data?.success) {
+        if (!mounted) {
+          return;
+        }
+
+
+        const data =
+          response?.data;
+
+
+        if (data?.success) {
 
           setBookings(
-            response.data.bookings || []
+            Array.isArray(data.bookings)
+              ? data.bookings
+              : Array.isArray(data.data)
+                ? data.data
+                : []
           );
 
         } else {
@@ -77,21 +112,32 @@ function Dashboard() {
 
         }
 
-      } catch (error) {
+      } catch (err) {
 
         console.error(
           "Dashboard bookings error:",
-          error
+          err
         );
 
+
+        if (!mounted) {
+          return;
+        }
+
+
         setError(
-          error.response?.data?.message ||
+          err?.response?.data?.message ||
           "Unable to load your bookings."
         );
 
+
+        setBookings([]);
+
       } finally {
 
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
 
       }
 
@@ -100,16 +146,149 @@ function Dashboard() {
 
     loadBookings();
 
+
+    return () => {
+      mounted = false;
+    };
+
   }, []);
 
 
-  // =========================================================
-  // USER INFORMATION
-  // =========================================================
+  /* =========================================================
+     LOAD EVENTS
+     
+     Backend:
+     GET /api/events
+     
+     IMPORTANT:
+     eventRoutes.js:
+     
+     router.get("/", getEvents);
+========================================================= */
+
+  useEffect(() => {
+
+    let mounted = true;
+
+
+    const loadEvents = async () => {
+
+      try {
+
+        setEventsLoading(true);
+
+        setEventsError("");
+
+
+        const response =
+          await api.get("/events");
+
+
+        if (!mounted) {
+          return;
+        }
+
+
+        const data =
+          response?.data;
+
+
+        /*
+         * Supports common response formats:
+         *
+         * {
+         *   success: true,
+         *   events: []
+         * }
+         *
+         * {
+         *   success: true,
+         *   data: []
+         * }
+         *
+         * []
+         */
+
+        let eventList = [];
+
+
+        if (
+          Array.isArray(data)
+        ) {
+
+          eventList = data;
+
+        } else if (
+          Array.isArray(
+            data?.events
+          )
+        ) {
+
+          eventList = data.events;
+
+        } else if (
+          Array.isArray(
+            data?.data
+          )
+        ) {
+
+          eventList = data.data;
+
+        }
+
+
+        setEvents(eventList);
+
+      } catch (err) {
+
+        console.error(
+          "Dashboard events error:",
+          err
+        );
+
+
+        if (!mounted) {
+          return;
+        }
+
+
+        setEventsError(
+          err?.response?.data?.message ||
+          "Unable to load event information."
+        );
+
+
+        setEvents([]);
+
+      } finally {
+
+        if (mounted) {
+          setEventsLoading(false);
+        }
+
+      }
+
+    };
+
+
+    loadEvents();
+
+
+    return () => {
+      mounted = false;
+    };
+
+  }, []);
+
+
+  /* =========================================================
+     USER INFORMATION
+========================================================= */
 
   const displayName =
     user?.fullName ||
     user?.username ||
+    user?.name ||
     "SNICT Member";
 
 
@@ -123,61 +302,144 @@ function Dashboard() {
       .charAt(0)
       .toUpperCase();
 
-  // =========================================================
-  // USER PROFILE IMAGE
-  // =========================================================
-  // Supports:
-  // - Full http/https image URLs
-  // - /uploads/profile/... paths from backend
-  // - Relative image paths
-  // =========================================================
+
+  /* =========================================================
+     PROFILE IMAGE
+========================================================= */
 
   const profileImageUrl = useMemo(() => {
+
     const image =
       user?.profileImageUrl ||
       user?.profile_image_url ||
       user?.photoUrl ||
       user?.photo ||
+      user?.profileImage ||
       "";
+
 
     if (!image) {
       return "";
     }
 
-    const imageString = String(image).trim();
+
+    const imageString =
+      String(image).trim();
+
 
     if (
-      imageString.startsWith("http://") ||
-      imageString.startsWith("https://") ||
-      imageString.startsWith("data:")
+      imageString.startsWith(
+        "http://"
+      ) ||
+      imageString.startsWith(
+        "https://"
+      ) ||
+      imageString.startsWith(
+        "data:"
+      )
     ) {
+
       return imageString;
+
     }
+
 
     const apiUrl =
       import.meta.env.VITE_API_URL ||
-      "https://snict-backend.onrender.com/api";
+      "";
 
-    const backendOrigin =
-      apiUrl.replace(/\/api\/?$/, "");
 
-    if (imageString.startsWith("/")) {
-      return `${backendOrigin}${imageString}`;
+    if (!apiUrl) {
+
+      return imageString;
+
     }
 
-    return `${backendOrigin}/${imageString}`;
+
+    const backendOrigin =
+      apiUrl.replace(
+        /\/api\/?$/,
+        ""
+      );
+
+
+    if (
+      imageString.startsWith("/")
+    ) {
+
+      return (
+        `${backendOrigin}${imageString}`
+      );
+
+    }
+
+
+    return (
+      `${backendOrigin}/${imageString}`
+    );
+
   }, [user]);
 
+
   useEffect(() => {
+
     setImageError(false);
+
   }, [profileImageUrl]);
 
 
-  // =========================================================
-  // BOOKING HELPERS
-  // =========================================================
+  /* =========================================================
+     GENERIC ID HELPER
+========================================================= */
 
-  const getBookingStatus = (booking) => {
+  const getId = (
+    item
+  ) => {
+
+    if (!item) {
+      return null;
+    }
+
+
+    return (
+      item.id ??
+      item.event_id ??
+      item.eventId ??
+      item.event?.id ??
+      item.event?.event_id ??
+      null
+    );
+
+  };
+
+
+  /* =========================================================
+     BOOKING EVENT ID
+========================================================= */
+
+  const getBookingEventId = (
+    booking
+  ) => {
+
+    return (
+      booking?.event_id ??
+      booking?.eventId ??
+      booking?.event?.id ??
+      booking?.event?.event_id ??
+      booking?.eventId_fk ??
+      null
+    );
+
+  };
+
+
+  /* =========================================================
+     BOOKING STATUS
+========================================================= */
+
+  const getBookingStatus = (
+    booking
+  ) => {
 
     return String(
       booking?.booking_status ||
@@ -188,41 +450,447 @@ function Dashboard() {
   };
 
 
-  const getPaymentStatus = (booking) => {
+  /* =========================================================
+     PAYMENT STATUS
+========================================================= */
+
+  const getPaymentStatus = (
+    booking
+  ) => {
 
     return String(
       booking?.payment_status ||
+      booking?.paymentStatus ||
       "pending"
     ).toLowerCase();
 
   };
 
 
-  const getEventTitle = (booking) => {
+  /* =========================================================
+     EVENT TITLE
+========================================================= */
+
+  const getEventTitle = (
+    item
+  ) => {
 
     return (
-      booking?.title ||
-      booking?.event_title ||
+      item?.title ||
+      item?.event_title ||
+      item?.eventName ||
+      item?.name ||
+      item?.event?.title ||
+      item?.event?.event_title ||
       "SNICT Event"
     );
 
   };
 
 
-  const getBookingAmount = (booking) => {
+  /* =========================================================
+     EVENT DESCRIPTION
+========================================================= */
+
+  const getEventDescription = (
+    event
+  ) => {
+
+    return (
+      event?.description ||
+      event?.short_description ||
+      event?.summary ||
+      event?.event_description ||
+      ""
+    );
+
+  };
+
+
+  /* =========================================================
+     EVENT IMAGE
+========================================================= */
+
+  const getEventImage = (
+    event
+  ) => {
+
+    const image =
+      event?.image_url ||
+      event?.imageUrl ||
+      event?.image ||
+      event?.photo ||
+      event?.photo_url ||
+      event?.event_image ||
+      event?.banner ||
+      "";
+
+
+    if (!image) {
+      return "";
+    }
+
+
+    const imageString =
+      String(image).trim();
+
+
+    if (
+      imageString.startsWith(
+        "http://"
+      ) ||
+      imageString.startsWith(
+        "https://"
+      ) ||
+      imageString.startsWith(
+        "data:"
+      )
+    ) {
+
+      return imageString;
+
+    }
+
+
+    const apiUrl =
+      import.meta.env.VITE_API_URL ||
+      "";
+
+
+    if (!apiUrl) {
+      return imageString;
+    }
+
+
+    const backendOrigin =
+      apiUrl.replace(
+        /\/api\/?$/,
+        ""
+      );
+
+
+    if (
+      imageString.startsWith("/")
+    ) {
+
+      return (
+        `${backendOrigin}${imageString}`
+      );
+
+    }
+
+
+    return (
+      `${backendOrigin}/${imageString}`
+    );
+
+  };
+
+
+  /* =========================================================
+     EVENT DATE
+========================================================= */
+
+  const getEventDate = (
+    event,
+    booking
+  ) => {
+
+    return (
+      event?.event_date ||
+      event?.eventDate ||
+      event?.date ||
+      booking?.event_date ||
+      booking?.eventDate ||
+      event?.start_date ||
+      booking?.start_date ||
+      ""
+    );
+
+  };
+
+
+  /* =========================================================
+     EVENT TIME
+========================================================= */
+
+  const getEventTime = (
+    event,
+    booking
+  ) => {
+
+    return (
+      event?.start_time ||
+      event?.startTime ||
+      event?.time ||
+      booking?.start_time ||
+      booking?.startTime ||
+      ""
+    );
+
+  };
+
+
+  /* =========================================================
+     EVENT LOCATION
+========================================================= */
+
+  const getEventLocation = (
+    event,
+    booking
+  ) => {
+
+    return (
+      event?.location ||
+      event?.venue ||
+      event?.event_location ||
+      event?.address ||
+      booking?.location ||
+      booking?.venue ||
+      booking?.event_location ||
+      ""
+    );
+
+  };
+
+
+  /* =========================================================
+     EVENT PRICE
+========================================================= */
+
+  const getEventPrice = (
+    event
+  ) => {
 
     return Number(
-      booking?.amount ||
-      booking?.payment_amount ||
+      event?.price ??
+      event?.registration_fee ??
+      event?.registrationFee ??
+      event?.amount ??
       0
     );
 
   };
 
 
-  // =========================================================
-  // STATISTICS
-  // =========================================================
+  /* =========================================================
+     BOOKING AMOUNT
+========================================================= */
+
+  const getBookingAmount = (
+    booking
+  ) => {
+
+    return Number(
+      booking?.amount ??
+      booking?.payment_amount ??
+      booking?.paymentAmount ??
+      booking?.price ??
+      0
+    );
+
+  };
+
+
+  /* =========================================================
+     FIND EVENT FOR BOOKING
+     
+     Priority:
+     
+     1. booking.event
+     2. matching event from GET /events
+========================================================= */
+
+  const findEventForBooking = (
+    booking
+  ) => {
+
+    if (
+      booking?.event &&
+      typeof booking.event ===
+        "object"
+    ) {
+
+      return booking.event;
+
+    }
+
+
+    const bookingEventId =
+      getBookingEventId(
+        booking
+      );
+
+
+    if (
+      bookingEventId === null ||
+      bookingEventId === undefined
+    ) {
+
+      return null;
+
+    }
+
+
+    return (
+      events.find(
+        (event) =>
+          String(
+            getId(event)
+          ) ===
+          String(
+            bookingEventId
+          )
+      ) ||
+      null
+    );
+
+  };
+
+
+  /* =========================================================
+     MERGED BOOKED EVENTS
+     
+     This is the important part.
+     
+     User bookings are matched with:
+     
+     GET /api/events
+========================================================= */
+
+  const bookedEvents =
+    useMemo(() => {
+
+      if (
+        !Array.isArray(
+          bookings
+        )
+      ) {
+
+        return [];
+
+      }
+
+
+      const result = [];
+
+
+      bookings.forEach(
+        (booking) => {
+
+          const event =
+            findEventForBooking(
+              booking
+            );
+
+
+          /*
+           * If booking already contains
+           * event information, use it.
+           *
+           * Otherwise match it with
+           * GET /api/events.
+           */
+
+          if (
+            event
+          ) {
+
+            result.push({
+              ...event,
+
+              booking,
+            });
+
+            return;
+
+          }
+
+
+          /*
+           * Fallback:
+           *
+           * Some booking APIs may directly
+           * return title/date/image.
+           */
+
+          if (
+            booking?.event_id ||
+            booking?.eventId ||
+            booking?.event
+          ) {
+
+            result.push({
+              ...booking,
+
+              booking,
+            });
+
+          }
+
+        }
+      );
+
+
+      /*
+       * Remove duplicate event cards
+       * if the user has multiple bookings
+       * for the same event.
+       */
+
+      const unique =
+        [];
+
+
+      const seen =
+        new Set();
+
+
+      result.forEach(
+        (item) => {
+
+          const eventId =
+            getId(item) ||
+            getBookingEventId(
+              item.booking
+            );
+
+
+          const key =
+            eventId !== null &&
+            eventId !== undefined
+              ? String(eventId)
+              : `booking-${item.booking?.id}`;
+
+
+          if (
+            seen.has(key)
+          ) {
+
+            return;
+
+          }
+
+
+          seen.add(key);
+
+          unique.push(item);
+
+        }
+      );
+
+
+      return unique;
+
+    }, [
+      bookings,
+      events,
+    ]);
+
+
+  /* =========================================================
+     STATISTICS
+========================================================= */
 
   const stats = useMemo(() => {
 
@@ -233,14 +901,11 @@ function Dashboard() {
     const confirmed =
       bookings.filter(
         (booking) =>
-          getBookingStatus(booking) ===
-          "confirmed"
+          getBookingStatus(
+            booking
+          ) === "confirmed"
       ).length;
 
-
-    /*
-     * Payment has NOT been submitted.
-     */
 
     const pending =
       bookings.filter(
@@ -251,10 +916,12 @@ function Dashboard() {
               booking
             );
 
+
           const payment =
             getPaymentStatus(
               booking
             );
+
 
           return (
             (
@@ -271,18 +938,26 @@ function Dashboard() {
       ).length;
 
 
-    /*
-     * Payment submitted by user.
-     * Waiting for admin verification.
-     */
-
     const waitingVerification =
       bookings.filter(
-        (booking) =>
-          getPaymentStatus(
-            booking
-          ) ===
-          "submitted"
+        (booking) => {
+
+          const payment =
+            getPaymentStatus(
+              booking
+            );
+
+
+          return (
+            payment ===
+              "submitted" ||
+            payment ===
+              "waiting" ||
+            payment ===
+              "verification_pending"
+          );
+
+        }
       ).length;
 
 
@@ -291,8 +966,7 @@ function Dashboard() {
         (booking) =>
           getBookingStatus(
             booking
-          ) ===
-          "completed"
+          ) === "completed"
       ).length;
 
 
@@ -307,185 +981,194 @@ function Dashboard() {
   }, [bookings]);
 
 
-  // =========================================================
-  // RECENT BOOKINGS
-  // =========================================================
+  /* =========================================================
+     RECENT BOOKINGS
+========================================================= */
 
   const recentBookings =
     useMemo(() => {
 
-      return [...bookings]
-        .sort((a, b) => {
+      return [
+        ...bookings,
+      ]
+        .sort(
+          (a, b) => {
 
-          const first =
-            new Date(
-              a.created_at ||
-              a.createdAt ||
-              0
-            ).getTime();
-
-
-          const second =
-            new Date(
-              b.created_at ||
-              b.createdAt ||
-              0
-            ).getTime();
+            const first =
+              new Date(
+                a.created_at ||
+                a.createdAt ||
+                0
+              ).getTime();
 
 
-          return second - first;
+            const second =
+              new Date(
+                b.created_at ||
+                b.createdAt ||
+                0
+              ).getTime();
 
-        })
-        .slice(0, 4);
 
-    }, [bookings]);
-
-
-  // =========================================================
-  // UPCOMING BOOKED EVENTS
-  // =========================================================
-
-  const upcomingBookings =
-    useMemo(() => {
-
-      const now =
-        new Date();
-
-      return bookings
-        .filter((booking) => {
-
-          if (!booking.event_date) {
-            return false;
-          }
-
-          const eventDate =
-            new Date(
-              `${booking.event_date}T${
-                booking.start_time ||
-                "00:00:00"
-              }`
+            return (
+              second - first
             );
 
-          const status =
-            getBookingStatus(booking);
-
-          return (
-            !Number.isNaN(eventDate.getTime()) &&
-            eventDate >= now &&
-            status !== "cancelled" &&
-            status !== "rejected"
-          );
-
-        })
-        .sort((a, b) => {
-
-          const first =
-            new Date(
-              `${a.event_date}T${
-                a.start_time ||
-                "00:00:00"
-              }`
-            ).getTime();
-
-          const second =
-            new Date(
-              `${b.event_date}T${
-                b.start_time ||
-                "00:00:00"
-              }`
-            ).getTime();
-
-          return first - second;
-
-        });
-
-    }, [bookings]);
-
-
-  // Keep slider index valid when bookings change.
-  useEffect(() => {
-
-    setUpcomingSlide((current) => {
-
-      if (upcomingBookings.length === 0) {
-        return 0;
-      }
-
-      return Math.min(
-        current,
-        upcomingBookings.length - 1
-      );
-
-    });
-
-  }, [upcomingBookings.length]);
-
-
-  // Auto-slide through all upcoming booked events.
-  useEffect(() => {
-
-    if (upcomingBookings.length <= 1) {
-      return undefined;
-    }
-
-    const timer =
-      setInterval(() => {
-
-        setUpcomingSlide((current) =>
-          (current + 1) %
-          upcomingBookings.length
+          }
+        )
+        .slice(
+          0,
+          4
         );
 
-      }, 5000);
-
-    return () => clearInterval(timer);
-
-  }, [upcomingBookings.length]);
+    }, [
+      bookings,
+    ]);
 
 
-  const upcomingBooking =
-    upcomingBookings[upcomingSlide] ||
-    upcomingBookings[0] ||
+  /* =========================================================
+     BOOKED EVENT SLIDER
+========================================================= */
+
+  useEffect(() => {
+
+    if (
+      bookedEvents.length <= 1
+    ) {
+
+      return undefined;
+
+    }
+
+
+    const timer =
+      setInterval(
+        () => {
+
+          setBookedEventSlide(
+            (current) =>
+              (
+                current + 1
+              ) %
+              bookedEvents.length
+          );
+
+        },
+        5000
+      );
+
+
+    return () =>
+      clearInterval(
+        timer
+      );
+
+  }, [
+    bookedEvents.length,
+  ]);
+
+
+  /* =========================================================
+     KEEP SLIDER INDEX VALID
+========================================================= */
+
+  useEffect(() => {
+
+    setBookedEventSlide(
+      (current) => {
+
+        if (
+          bookedEvents.length === 0
+        ) {
+
+          return 0;
+
+        }
+
+
+        return Math.min(
+          current,
+          bookedEvents.length - 1
+        );
+
+      }
+    );
+
+  }, [
+    bookedEvents.length,
+  ]);
+
+
+  /* =========================================================
+     SLIDER NAVIGATION
+========================================================= */
+
+  const previousBookedEvent =
+    () => {
+
+      if (
+        bookedEvents.length <= 1
+      ) {
+
+        return;
+
+      }
+
+
+      setBookedEventSlide(
+        (current) =>
+          current === 0
+            ? bookedEvents.length - 1
+            : current - 1
+      );
+
+    };
+
+
+  const nextBookedEvent =
+    () => {
+
+      if (
+        bookedEvents.length <= 1
+      ) {
+
+        return;
+
+      }
+
+
+      setBookedEventSlide(
+        (current) =>
+          (
+            current + 1
+          ) %
+          bookedEvents.length
+      );
+
+    };
+
+
+  /* =========================================================
+     CURRENT BOOKED EVENT
+========================================================= */
+
+  const currentBookedEvent =
+    bookedEvents[
+      bookedEventSlide
+    ] ||
     null;
 
 
-  const goToPreviousUpcoming = () => {
+  /* =========================================================
+     FORMAT DATE
+========================================================= */
 
-    if (upcomingBookings.length <= 1) {
-      return;
-    }
-
-    setUpcomingSlide((current) =>
-      current === 0
-        ? upcomingBookings.length - 1
-        : current - 1
-    );
-
-  };
-
-
-  const goToNextUpcoming = () => {
-
-    if (upcomingBookings.length <= 1) {
-      return;
-    }
-
-    setUpcomingSlide((current) =>
-      (current + 1) %
-      upcomingBookings.length
-    );
-
-  };
-
-
-  // =========================================================
-  // FORMAT DATE
-  // =========================================================
-
-  const formatDate = (value) => {
+  const formatDate = (
+    value
+  ) => {
 
     if (!value) {
-      return "—";
+      return "Date TBA";
     }
 
 
@@ -498,7 +1181,9 @@ function Dashboard() {
         date.getTime()
       )
     ) {
-      return value;
+
+      return String(value);
+
     }
 
 
@@ -514,11 +1199,13 @@ function Dashboard() {
   };
 
 
-  // =========================================================
-  // FORMAT TIME
-  // =========================================================
+  /* =========================================================
+     FORMAT TIME
+========================================================= */
 
-  const formatTime = (value) => {
+  const formatTime = (
+    value
+  ) => {
 
     if (!value) {
       return "";
@@ -526,13 +1213,17 @@ function Dashboard() {
 
 
     const parts =
-      String(value).split(":");
+      String(value).split(
+        ":"
+      );
 
 
     if (
       parts.length < 2
     ) {
-      return value;
+
+      return String(value);
+
     }
 
 
@@ -567,11 +1258,13 @@ function Dashboard() {
   };
 
 
-  // =========================================================
-  // STATUS LABEL
-  // =========================================================
+  /* =========================================================
+     FORMAT STATUS
+========================================================= */
 
-  const formatStatus = (status) => {
+  const formatStatus = (
+    status
+  ) => {
 
     if (!status) {
       return "Pending";
@@ -592,9 +1285,9 @@ function Dashboard() {
   };
 
 
-  // =========================================================
-  // PAYMENT BADGE
-  // =========================================================
+  /* =========================================================
+     PAYMENT BADGE
+========================================================= */
 
   const renderPaymentBadge = (
     payment
@@ -604,9 +1297,17 @@ function Dashboard() {
 
       case "submitted":
 
+      case "waiting":
+
+      case "verification_pending":
+
         return (
+
           <small
-            className="dashboard-payment-status submitted"
+            className="
+              dashboard-payment-status
+              submitted
+            "
           >
 
             <Clock3
@@ -614,18 +1315,23 @@ function Dashboard() {
             />
 
             <span>
-              Waiting for Verification
+              Waiting Verification
             </span>
 
           </small>
+
         );
 
 
       case "verified":
 
         return (
+
           <small
-            className="dashboard-payment-status verified"
+            className="
+              dashboard-payment-status
+              verified
+            "
           >
 
             <CheckCircle2
@@ -637,14 +1343,19 @@ function Dashboard() {
             </span>
 
           </small>
+
         );
 
 
       case "rejected":
 
         return (
+
           <small
-            className="dashboard-payment-status rejected"
+            className="
+              dashboard-payment-status
+              rejected
+            "
           >
 
             <AlertCircle
@@ -656,14 +1367,19 @@ function Dashboard() {
             </span>
 
           </small>
+
         );
 
 
       case "refunded":
 
         return (
+
           <small
-            className="dashboard-payment-status refunded"
+            className="
+              dashboard-payment-status
+              refunded
+            "
           >
 
             <AlertCircle
@@ -675,14 +1391,19 @@ function Dashboard() {
             </span>
 
           </small>
+
         );
 
 
       default:
 
         return (
+
           <small
-            className="dashboard-payment-status pending"
+            className="
+              dashboard-payment-status
+              pending
+            "
           >
 
             <WalletCards
@@ -694,6 +1415,7 @@ function Dashboard() {
             </span>
 
           </small>
+
         );
 
     }
@@ -701,20 +1423,41 @@ function Dashboard() {
   };
 
 
-  // =========================================================
-  // LOADING
-  // =========================================================
+  /* =========================================================
+     LOADING
+========================================================= */
 
-  if (loading) {
+  if (
+    loading &&
+    eventsLoading
+  ) {
 
     return (
-      <main className="member-dashboard-page">
 
-        <div className="member-dashboard-container">
+      <main
+        className="
+          member-dashboard-page
+          dashboard-page-loading
+        "
+      >
 
-          <div className="dashboard-loading">
+        <div
+          className="
+            member-dashboard-container
+          "
+        >
 
-            <div className="dashboard-loading-spinner" />
+          <div
+            className="
+              dashboard-loading
+          "
+          >
+
+            <div
+              className="
+                dashboard-loading-spinner
+              "
+            />
 
             <p>
               Loading your dashboard...
@@ -725,40 +1468,64 @@ function Dashboard() {
         </div>
 
       </main>
+
     );
 
   }
 
 
-  // =========================================================
-  // MAIN UI
-  // =========================================================
+  /* =========================================================
+     MAIN UI
+========================================================= */
 
   return (
 
-    <main className="member-dashboard-page">
+    <main
+      className="
+        member-dashboard-page
+      "
+    >
 
-      <div className="member-dashboard-container">
+      <div
+        className="
+          member-dashboard-container
+      "
+      >
 
 
         {/* =================================================
             WELCOME
         ================================================= */}
 
-        <section className="dashboard-welcome">
+        <section
+          className="
+            dashboard-welcome
+          "
+        >
 
-          <div className="dashboard-welcome-content">
+          <div
+            className="
+              dashboard-welcome-content
+          "
+          >
 
-            <span className="dashboard-eyebrow">
+            <span
+              className="
+                dashboard-eyebrow
+              "
+            >
               SNICT MEMBER AREA
             </span>
 
 
             <h1>
+
               Welcome back,{" "}
+
               <span>
                 {displayName}
               </span>
+
             </h1>
 
 
@@ -768,28 +1535,99 @@ function Dashboard() {
               from one place.
             </p>
 
+
+            <div
+              className="
+                dashboard-welcome-actions
+              "
+            >
+
+              <Link
+                to="/events"
+                className="
+                  dashboard-primary-button
+                "
+              >
+
+                <CalendarDays
+                  size={16}
+                />
+
+                Browse Events
+
+                <ArrowRight
+                  size={15}
+                />
+
+              </Link>
+
+
+              <Link
+                to="/booking-history"
+                className="
+                  dashboard-secondary-button
+                "
+              >
+
+                <TicketCheck
+                  size={16}
+                />
+
+                My Bookings
+
+              </Link>
+
+            </div>
+
           </div>
 
 
           {/* MEMBER CARD */}
 
-          <div className="dashboard-member-card">
+          <div
+            className="
+              dashboard-member-card
+            "
+          >
 
-            <div className="dashboard-member-avatar">
-              {profileImageUrl && !imageError ? (
+            <div
+              className="
+                dashboard-member-avatar
+            "
+            >
+
+              {profileImageUrl &&
+              !imageError ? (
+
                 <img
-                  src={profileImageUrl}
-                  alt={`${displayName} profile`}
-                  onError={() => setImageError(true)}
+                  src={
+                    profileImageUrl
+                  }
+                  alt={
+                    `${displayName} profile`
+                  }
+                  onError={() =>
+                    setImageError(
+                      true
+                    )
+                  }
                   loading="eager"
                 />
+
               ) : (
+
                 avatarLetter
+
               )}
+
             </div>
 
 
-            <div className="dashboard-member-info">
+            <div
+              className="
+                dashboard-member-info
+              "
+            >
 
               <strong>
                 {displayName}
@@ -813,6 +1651,16 @@ function Dashboard() {
 
             </div>
 
+
+            <Link
+              to="/profile"
+              className="
+                dashboard-member-edit
+              "
+            >
+              View Profile
+            </Link>
+
           </div>
 
         </section>
@@ -822,14 +1670,23 @@ function Dashboard() {
             STATISTICS
         ================================================= */}
 
-        <section className="dashboard-stats">
+        <section
+          className="
+            dashboard-stats
+          "
+        >
 
+          <div
+            className="
+              dashboard-stat-card
+            "
+          >
 
-          {/* TOTAL */}
-
-          <div className="dashboard-stat-card">
-
-            <div className="dashboard-stat-icon">
+            <div
+              className="
+                dashboard-stat-icon
+            "
+            >
 
               <TicketCheck
                 size={21}
@@ -838,12 +1695,15 @@ function Dashboard() {
             </div>
 
 
-            <div className="dashboard-stat-content">
+            <div
+              className="
+                dashboard-stat-content
+            "
+            >
 
               <span>
                 Total Bookings
               </span>
-
 
               <strong>
                 {stats.total}
@@ -854,11 +1714,17 @@ function Dashboard() {
           </div>
 
 
-          {/* CONFIRMED */}
+          <div
+            className="
+              dashboard-stat-card
+            "
+          >
 
-          <div className="dashboard-stat-card">
-
-            <div className="dashboard-stat-icon">
+            <div
+              className="
+                dashboard-stat-icon
+            "
+            >
 
               <CheckCircle2
                 size={21}
@@ -867,12 +1733,15 @@ function Dashboard() {
             </div>
 
 
-            <div className="dashboard-stat-content">
+            <div
+              className="
+                dashboard-stat-content
+            "
+            >
 
               <span>
                 Confirmed
               </span>
-
 
               <strong>
                 {stats.confirmed}
@@ -883,11 +1752,18 @@ function Dashboard() {
           </div>
 
 
-          {/* PAYMENT PENDING */}
+          <div
+            className="
+              dashboard-stat-card
+              dashboard-stat-pending
+            "
+          >
 
-          <div className="dashboard-stat-card dashboard-stat-pending">
-
-            <div className="dashboard-stat-icon">
+            <div
+              className="
+                dashboard-stat-icon
+            "
+            >
 
               <Clock3
                 size={21}
@@ -896,12 +1772,15 @@ function Dashboard() {
             </div>
 
 
-            <div className="dashboard-stat-content">
+            <div
+              className="
+                dashboard-stat-content
+            "
+            >
 
               <span>
                 Payment Pending
               </span>
-
 
               <strong>
                 {stats.pending}
@@ -912,11 +1791,18 @@ function Dashboard() {
           </div>
 
 
-          {/* WAITING VERIFICATION */}
+          <div
+            className="
+              dashboard-stat-card
+              dashboard-stat-verification
+            "
+          >
 
-          <div className="dashboard-stat-card dashboard-stat-verification">
-
-            <div className="dashboard-stat-icon">
+            <div
+              className="
+                dashboard-stat-icon
+            "
+            >
 
               <Clock3
                 size={21}
@@ -925,12 +1811,15 @@ function Dashboard() {
             </div>
 
 
-            <div className="dashboard-stat-content">
+            <div
+              className="
+                dashboard-stat-content
+            "
+            >
 
               <span>
                 Waiting Verification
               </span>
-
 
               <strong>
                 {stats.waitingVerification}
@@ -941,11 +1830,17 @@ function Dashboard() {
           </div>
 
 
-          {/* COMPLETED */}
+          <div
+            className="
+              dashboard-stat-card
+            "
+          >
 
-          <div className="dashboard-stat-card">
-
-            <div className="dashboard-stat-icon">
+            <div
+              className="
+                dashboard-stat-icon
+            "
+            >
 
               <HeartPulse
                 size={21}
@@ -954,12 +1849,15 @@ function Dashboard() {
             </div>
 
 
-            <div className="dashboard-stat-content">
+            <div
+              className="
+                dashboard-stat-content
+            "
+            >
 
               <span>
                 Completed
               </span>
-
 
               <strong>
                 {stats.completed}
@@ -973,24 +1871,40 @@ function Dashboard() {
 
 
         {/* =================================================
-            MAIN GRID
+            QUICK ACTIONS + BOOKED EVENTS
         ================================================= */}
 
-        <section className="dashboard-main-grid">
-
+        <section
+          className="
+            dashboard-main-grid
+          "
+        >
 
 
           {/* =================================================
               QUICK ACTIONS
           ================================================= */}
 
-          <article className="dashboard-card dashboard-services-card">
+          <article
+            className="
+              dashboard-card
+              dashboard-services-card
+            "
+          >
 
-            <header className="dashboard-card-header">
+            <header
+              className="
+                dashboard-card-header
+            "
+            >
 
-              <div className="dashboard-card-header-left">
+              <div>
 
-                <span className="dashboard-section-label">
+                <span
+                  className="
+                    dashboard-section-label
+                  "
+                >
                   MEMBER SERVICES
                 </span>
 
@@ -1003,24 +1917,36 @@ function Dashboard() {
 
 
               <WalletCards
-                size={21}
-                className="dashboard-card-header-icon"
+                size={22}
+                className="
+                  dashboard-card-header-icon
+                "
               />
 
             </header>
 
 
-            <div className="dashboard-services-list">
+            <div
+              className="
+                dashboard-services-list
+              "
+            >
 
 
               {/* EVENTS */}
 
               <Link
                 to="/events"
-                className="dashboard-service-link"
+                className="
+                  dashboard-service-link
+                "
               >
 
-                <div className="dashboard-service-icon">
+                <div
+                  className="
+                    dashboard-service-icon
+                  "
+                >
 
                   <CalendarDays
                     size={19}
@@ -1029,12 +1955,15 @@ function Dashboard() {
                 </div>
 
 
-                <div className="dashboard-service-content">
+                <div
+                  className="
+                    dashboard-service-content
+                  "
+                >
 
                   <strong>
                     Browse Events
                   </strong>
-
 
                   <span>
                     Find upcoming SNICT events
@@ -1045,7 +1974,9 @@ function Dashboard() {
 
                 <ArrowRight
                   size={16}
-                  className="dashboard-service-arrow"
+                  className="
+                    dashboard-service-arrow
+                  "
                 />
 
               </Link>
@@ -1055,10 +1986,16 @@ function Dashboard() {
 
               <Link
                 to="/booking-history"
-                className="dashboard-service-link"
+                className="
+                  dashboard-service-link
+                "
               >
 
-                <div className="dashboard-service-icon">
+                <div
+                  className="
+                    dashboard-service-icon
+                  "
+                >
 
                   <TicketCheck
                     size={19}
@@ -1067,12 +2004,15 @@ function Dashboard() {
                 </div>
 
 
-                <div className="dashboard-service-content">
+                <div
+                  className="
+                    dashboard-service-content
+                  "
+                >
 
                   <strong>
                     My Bookings
                   </strong>
-
 
                   <span>
                     View your registrations
@@ -1083,7 +2023,9 @@ function Dashboard() {
 
                 <ArrowRight
                   size={16}
-                  className="dashboard-service-arrow"
+                  className="
+                    dashboard-service-arrow
+                  "
                 />
 
               </Link>
@@ -1093,10 +2035,16 @@ function Dashboard() {
 
               <Link
                 to="/profile"
-                className="dashboard-service-link"
+                className="
+                  dashboard-service-link
+                "
               >
 
-                <div className="dashboard-service-icon">
+                <div
+                  className="
+                    dashboard-service-icon
+                  "
+                >
 
                   <UserCircle
                     size={19}
@@ -1105,12 +2053,15 @@ function Dashboard() {
                 </div>
 
 
-                <div className="dashboard-service-content">
+                <div
+                  className="
+                    dashboard-service-content
+                  "
+                >
 
                   <strong>
                     My Profile
                   </strong>
-
 
                   <span>
                     Manage your member profile
@@ -1121,7 +2072,9 @@ function Dashboard() {
 
                 <ArrowRight
                   size={16}
-                  className="dashboard-service-arrow"
+                  className="
+                    dashboard-service-arrow
+                  "
                 />
 
               </Link>
@@ -1131,27 +2084,36 @@ function Dashboard() {
 
               <Link
                 to="/change-password"
-                className="dashboard-service-link"
+                className="
+                  dashboard-service-link
+                "
               >
 
-                <div className="dashboard-service-icon">
+                <div
+                  className="
+                    dashboard-service-icon
+                  "
+                >
 
-                  <WalletCards
+                  <ShieldCheck
                     size={19}
                   />
 
                 </div>
 
 
-                <div className="dashboard-service-content">
+                <div
+                  className="
+                    dashboard-service-content
+                  "
+                >
 
                   <strong>
                     Account Security
                   </strong>
 
-
                   <span>
-                    Manage your account settings
+                    Manage your account security
                   </span>
 
                 </div>
@@ -1159,12 +2121,547 @@ function Dashboard() {
 
                 <ArrowRight
                   size={16}
-                  className="dashboard-service-arrow"
+                  className="
+                    dashboard-service-arrow
+                  "
                 />
 
               </Link>
 
             </div>
+
+          </article>
+
+
+          {/* =================================================
+              MY BOOKED EVENTS SLIDER
+          ================================================= */}
+
+          <article
+            className="
+              dashboard-card
+              dashboard-booked-events-card
+            "
+          >
+
+            <header
+              className="
+                dashboard-card-header
+            "
+            >
+
+              <div>
+
+                <span
+                  className="
+                    dashboard-section-label
+                  "
+                >
+                  MY ACTIVITY
+                </span>
+
+
+                <h2>
+                  My Booked Events
+                </h2>
+
+              </div>
+
+
+              <div
+                className="
+                  dashboard-booked-events-controls
+                "
+              >
+
+                {bookedEvents.length > 1 && (
+
+                  <>
+
+                    <button
+                      type="button"
+                      onClick={
+                        previousBookedEvent
+                      }
+                      className="
+                        dashboard-slider-button
+                      "
+                      aria-label="
+                        Previous booked event
+                      "
+                    >
+
+                      <ChevronLeft
+                        size={17}
+                      />
+
+                    </button>
+
+
+                    <button
+                      type="button"
+                      onClick={
+                        nextBookedEvent
+                      }
+                      className="
+                        dashboard-slider-button
+                      "
+                      aria-label="
+                        Next booked event
+                      "
+                    >
+
+                      <ChevronRight
+                        size={17}
+                      />
+
+                    </button>
+
+                  </>
+
+                )}
+
+              </div>
+
+            </header>
+
+
+            {/* LOADING */}
+
+            {eventsLoading && (
+
+              <div
+                className="
+                  dashboard-booked-event-loading
+                "
+              >
+
+                <div
+                  className="
+                    dashboard-loading-spinner
+                  "
+                />
+
+                <span>
+                  Loading your booked events...
+                </span>
+
+              </div>
+
+            )}
+
+
+            {/* ERROR */}
+
+            {!eventsLoading &&
+            eventsError && (
+
+              <div
+                className="
+                  dashboard-booked-event-error
+                "
+              >
+
+                <AlertCircle
+                  size={24}
+                />
+
+                <p>
+                  {eventsError}
+                </p>
+
+                <Link
+                  to="/events"
+                  className="
+                    dashboard-empty-button
+                  "
+                >
+                  Browse Events
+                </Link>
+
+              </div>
+
+            )}
+
+
+            {/* NO BOOKED EVENTS */}
+
+            {!eventsLoading &&
+            !eventsError &&
+            bookedEvents.length === 0 && (
+
+              <div
+                className="
+                  dashboard-no-booked-events
+                "
+              >
+
+                <div
+                  className="
+                    dashboard-no-booked-events-icon
+                  "
+                >
+
+                  <CalendarDays
+                    size={34}
+                  />
+
+                </div>
+
+
+                <h3>
+                  No booked events yet
+                </h3>
+
+
+                <p>
+                  Once you register for an event,
+                  it will appear here.
+                </p>
+
+
+                <Link
+                  to="/events"
+                  className="
+                    dashboard-empty-button
+                  "
+                >
+
+                  Explore Events
+
+                  <ArrowRight
+                    size={15}
+                  />
+
+                </Link>
+
+              </div>
+
+            )}
+
+
+            {/* BOOKED EVENT */}
+
+            {!eventsLoading &&
+            !eventsError &&
+            currentBookedEvent && (
+
+              <div
+                className="
+                  dashboard-booked-event-slider
+                "
+              >
+
+                <div
+                  className="
+                    dashboard-booked-event-image
+                  "
+                >
+
+                  {getEventImage(
+                    currentBookedEvent
+                  ) ? (
+
+                    <img
+                      src={
+                        getEventImage(
+                          currentBookedEvent
+                        )
+                      }
+                      alt={
+                        getEventTitle(
+                          currentBookedEvent
+                        )
+                      }
+                    />
+
+                  ) : (
+
+                    <div
+                      className="
+                        dashboard-booked-event-placeholder
+                      "
+                    >
+
+                      <HeartPulse
+                        size={42}
+                      />
+
+                    </div>
+
+                  )}
+
+
+                  <div
+                    className="
+                      dashboard-booked-event-overlay
+                    "
+                  />
+
+                  <span
+                    className="
+                      dashboard-booked-event-badge
+                    "
+                  >
+
+                    <CheckCircle2
+                      size={13}
+                    />
+
+                    BOOKED
+
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="
+                    dashboard-booked-event-content
+                  "
+                >
+
+                  <div
+                    className="
+                      dashboard-booked-event-top
+                    "
+                  >
+
+                    <span
+                      className="
+                        dashboard-booked-event-label
+                      "
+                    >
+
+                      EVENT{" "}
+
+                      {bookedEvents.length > 1 &&
+                        `${bookedEventSlide + 1}/${bookedEvents.length}`}
+
+                    </span>
+
+
+                    <span
+                      className="
+                        dashboard-booked-event-status
+                      "
+                    >
+
+                      {formatStatus(
+                        getBookingStatus(
+                          currentBookedEvent.booking
+                        )
+                      )}
+
+                    </span>
+
+                  </div>
+
+
+                  <h3>
+                    {getEventTitle(
+                      currentBookedEvent
+                    )}
+                  </h3>
+
+
+                  {getEventDescription(
+                    currentBookedEvent
+                  ) && (
+
+                    <p
+                      className="
+                        dashboard-booked-event-description
+                      "
+                    >
+                      {getEventDescription(
+                        currentBookedEvent
+                      ).length > 100
+                        ? `${getEventDescription(
+                            currentBookedEvent
+                          ).slice(0, 100)}...`
+                        : getEventDescription(
+                            currentBookedEvent
+                          )}
+                    </p>
+
+                  )}
+
+
+                  <div
+                    className="
+                      dashboard-booked-event-meta
+                    "
+                  >
+
+                    <span>
+
+                      <CalendarDays
+                        size={14}
+                      />
+
+                      {formatDate(
+                        getEventDate(
+                          currentBookedEvent,
+                          currentBookedEvent.booking
+                        )
+                      )}
+
+                    </span>
+
+
+                    {getEventTime(
+                      currentBookedEvent,
+                      currentBookedEvent.booking
+                    ) && (
+
+                      <span>
+
+                        <Clock3
+                          size={14}
+                        />
+
+                        {formatTime(
+                          getEventTime(
+                            currentBookedEvent,
+                            currentBookedEvent.booking
+                          )
+                        )}
+
+                      </span>
+
+                    )}
+
+
+                    {getEventLocation(
+                      currentBookedEvent,
+                      currentBookedEvent.booking
+                    ) && (
+
+                      <span>
+
+                        <MapPin
+                          size={14}
+                        />
+
+                        {getEventLocation(
+                          currentBookedEvent,
+                          currentBookedEvent.booking
+                        )}
+
+                      </span>
+
+                    )}
+
+                  </div>
+
+
+                  <div
+                    className="
+                      dashboard-booked-event-bottom
+                    "
+                  >
+
+                    <div
+                      className="
+                        dashboard-booked-event-payment
+                      "
+                    >
+
+                      <span>
+                        Booking Amount
+                      </span>
+
+                      <strong>
+                        ₹
+                        {getBookingAmount(
+                          currentBookedEvent.booking
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
+                      </strong>
+
+                    </div>
+
+
+                    {renderPaymentBadge(
+                      getPaymentStatus(
+                        currentBookedEvent.booking
+                      )
+                    )}
+
+                  </div>
+
+
+                  {/* <Link
+                    to={
+                      `/booking-history/${
+                        currentBookedEvent.booking?.id
+                      }`
+                    }
+                    className="
+                      dashboard-booked-event-button
+                    "
+                  >
+
+                    View Booking
+
+                    <ArrowRight
+                      size={15}
+                    />
+
+                  </Link> */}
+
+                </div>
+
+
+                {/* SLIDER DOTS */}
+
+                {bookedEvents.length > 1 && (
+
+                  <div
+                    className="
+                      dashboard-booked-event-dots
+                    "
+                  >
+
+                    {bookedEvents.map(
+                      (_, index) => (
+
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() =>
+                            setBookedEventSlide(
+                              index
+                            )
+                          }
+                          className={`
+                            dashboard-slider-dot
+                            ${
+                              index ===
+                              bookedEventSlide
+                                ? "active"
+                                : ""
+                            }
+                          `}
+                          aria-label={
+                            `Show booked event ${
+                              index + 1
+                            }`
+                          }
+                        />
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            )}
 
           </article>
 
@@ -1175,13 +2672,26 @@ function Dashboard() {
             RECENT BOOKINGS
         ================================================= */}
 
-        <section className="dashboard-card dashboard-recent-card">
+        <section
+          className="
+            dashboard-card
+            dashboard-recent-card
+          "
+        >
 
-          <header className="dashboard-recent-header">
+          <header
+            className="
+              dashboard-recent-header
+            "
+          >
 
             <div>
 
-              <span className="dashboard-section-label">
+              <span
+                className="
+                  dashboard-section-label
+                "
+              >
                 ACTIVITY
               </span>
 
@@ -1190,12 +2700,24 @@ function Dashboard() {
                 Recent Bookings
               </h2>
 
+
+              <p
+                className="
+                  dashboard-recent-subtitle
+                "
+              >
+                Your latest event registrations
+                and booking activity.
+              </p>
+
             </div>
 
 
             <Link
               to="/booking-history"
-              className="dashboard-view-all"
+              className="
+                dashboard-view-all
+              "
             >
 
               View All
@@ -1209,22 +2731,50 @@ function Dashboard() {
           </header>
 
 
+          {/* ERROR */}
+
           {error && (
 
-            <div className="dashboard-error">
-              {error}
+            <div
+              className="
+                dashboard-error
+              "
+            >
+
+              <AlertCircle
+                size={16}
+              />
+
+              <span>
+                {error}
+              </span>
+
             </div>
 
           )}
 
 
+          {/* EMPTY */}
+
           {recentBookings.length === 0 ? (
 
-            <div className="dashboard-empty-bookings">
+            <div
+              className="
+                dashboard-empty-bookings
+              "
+            >
 
-              <TicketCheck
-                size={35}
-              />
+              <div
+                className="
+                  dashboard-empty-icon
+                "
+              >
+
+                <TicketCheck
+                  size={32}
+                />
+
+              </div>
 
 
               <h3>
@@ -1238,11 +2788,31 @@ function Dashboard() {
                 bookings here.
               </p>
 
+
+              <Link
+                to="/events"
+                className="
+                  dashboard-empty-button
+                "
+              >
+
+                Browse Events
+
+                <ArrowRight
+                  size={16}
+                />
+
+              </Link>
+
             </div>
 
           ) : (
 
-            <div className="dashboard-recent-list">
+            <div
+              className="
+                dashboard-recent-list
+              "
+            >
 
               {recentBookings.map(
                 (booking) => {
@@ -1259,21 +2829,41 @@ function Dashboard() {
                     );
 
 
+                  const event =
+                    findEventForBooking(
+                      booking
+                    );
+
+
                   return (
 
-                    <div
-                      className="dashboard-booking-item"
+                    <Link
                       key={
                         booking.id
                       }
+                      to={
+                        `/booking-history/${
+                          booking.id
+                        }`
+                      }
+                      className="
+                        dashboard-booking-item
+                      "
                     >
 
+                      {/* EVENT */}
 
-                      {/* LEFT */}
+                      <div
+                        className="
+                          dashboard-booking-left
+                        "
+                      >
 
-                      <div className="dashboard-booking-left">
-
-                        <div className="dashboard-booking-icon">
+                        <div
+                          className="
+                            dashboard-booking-icon
+                          "
+                        >
 
                           <TicketCheck
                             size={18}
@@ -1282,18 +2872,31 @@ function Dashboard() {
                         </div>
 
 
-                        <div className="dashboard-booking-info">
+                        <div
+                          className="
+                            dashboard-booking-info
+                          "
+                        >
 
                           <strong>
-                            {getEventTitle(
-                              booking
-                            )}
+
+                            {event
+                              ? getEventTitle(
+                                  event
+                                )
+                              : getEventTitle(
+                                  booking
+                                )}
+
                           </strong>
 
 
                           <span>
+
                             {booking.booking_code ||
+                              booking.bookingCode ||
                               `Booking #${booking.id}`}
+
                           </span>
 
                         </div>
@@ -1301,15 +2904,51 @@ function Dashboard() {
                       </div>
 
 
-                      {/* MIDDLE */}
+                      {/* DATE */}
 
-                      <div className="dashboard-booking-middle">
+                      <div
+                        className="
+                          dashboard-booking-middle
+                        "
+                      >
 
-                        <span>
+                        <span
+                          className="
+                            booking-data-label
+                          "
+                        >
+                          Event Date
+                        </span>
+
+
+                        <strong>
+
                           {formatDate(
-                            booking.event_date ||
-                            booking.created_at
+                            getEventDate(
+                              event,
+                              booking
+                            )
                           )}
+
+                        </strong>
+
+                      </div>
+
+
+                      {/* AMOUNT */}
+
+                      <div
+                        className="
+                          dashboard-booking-amount
+                        "
+                      >
+
+                        <span
+                          className="
+                            booking-data-label
+                          "
+                        >
+                          Amount
                         </span>
 
 
@@ -1329,10 +2968,17 @@ function Dashboard() {
 
                       {/* STATUS */}
 
-                      <div className="dashboard-booking-right">
+                      <div
+                        className="
+                          dashboard-booking-right
+                        "
+                      >
 
                         <span
-                          className={`dashboard-booking-status ${status}`}
+                          className={`
+                            dashboard-booking-status
+                            ${status}
+                          `}
                         >
 
                           {formatStatus(
@@ -1349,21 +2995,22 @@ function Dashboard() {
                       </div>
 
 
-                      {/* VIEW */}
+                      {/* ARROW */}
 
-                      <Link
-                        to={`/booking-history/${booking.id}`}
-                        className="dashboard-booking-view"
-                        title="View booking"
+                      {/* <div
+                        className="
+                          dashboard-booking-view
+                        "
+                        aria-hidden="true"
                       >
 
                         <ArrowRight
                           size={16}
                         />
 
-                      </Link>
+                      </div> */}
 
-                    </div>
+                    </Link>
 
                   );
 
@@ -1373,6 +3020,67 @@ function Dashboard() {
             </div>
 
           )}
+
+        </section>
+
+
+        {/* =================================================
+            BOTTOM CTA
+        ================================================= */}
+
+        <section
+          className="
+            dashboard-bottom-cta
+          "
+        >
+
+          <div
+            className="
+              dashboard-bottom-cta-icon
+            "
+          >
+
+            <Sparkles
+              size={21}
+            />
+
+          </div>
+
+
+          <div
+            className="
+              dashboard-bottom-cta-content
+            "
+          >
+
+            <strong>
+              Discover more SNICT events
+            </strong>
+
+
+            <span>
+              Stay connected with conferences,
+              academic programs and community
+              activities.
+            </span>
+
+          </div>
+
+
+          <Link
+            to="/events"
+            className="
+              dashboard-bottom-cta-button
+            "
+          >
+
+            Explore Events
+
+            <ArrowRight
+              size={16}
+            />
+
+          </Link>
 
         </section>
 
