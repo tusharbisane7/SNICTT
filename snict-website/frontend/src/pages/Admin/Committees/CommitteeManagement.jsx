@@ -84,13 +84,84 @@ function CommitteeManagement() {
       ...EMPTY_FORM,
     });
 
-  // Existing image while editing
+  // Existing backend image
   const [existingPhoto, setExistingPhoto] =
     useState("");
 
-  // Local preview
+  // Local selected image preview
   const [photoPreview, setPhotoPreview] =
     useState("");
+
+
+  // =======================================================
+  // API BASE URL
+  // =======================================================
+
+  const getApiBaseUrl = () => {
+
+    const baseURL =
+      api?.defaults?.baseURL || "";
+
+    return String(baseURL)
+      .replace(/\/+$/, "")
+      .replace(/\/api$/, "");
+
+  };
+
+
+  // =======================================================
+  // GET FULL IMAGE URL
+  // =======================================================
+
+  const getImageUrl = (photo) => {
+
+    if (!photo) {
+      return "";
+    }
+
+    const value =
+      String(photo).trim();
+
+    if (!value) {
+      return "";
+    }
+
+    // -----------------------------------------------------
+    // Already absolute URL
+    // -----------------------------------------------------
+
+    if (
+      value.startsWith("http://") ||
+      value.startsWith("https://") ||
+      value.startsWith("blob:")
+    ) {
+      return value;
+    }
+
+    const apiBaseUrl =
+      getApiBaseUrl();
+
+    // -----------------------------------------------------
+    // Backend path
+    // Example:
+    // /uploads/committee/file.jpg
+    // -----------------------------------------------------
+
+    if (value.startsWith("/")) {
+
+      return `${apiBaseUrl}${value}`;
+
+    }
+
+    // -----------------------------------------------------
+    // Relative backend path
+    // Example:
+    // uploads/committee/file.jpg
+    // -----------------------------------------------------
+
+    return `${apiBaseUrl}/${value}`;
+
+  };
 
 
   // =======================================================
@@ -135,6 +206,7 @@ function CommitteeManagement() {
       setLoading(false);
 
     }
+
   };
 
 
@@ -199,15 +271,25 @@ function CommitteeManagement() {
       return;
     }
 
+    // -----------------------------------------------------
+    // VALIDATE IMAGE TYPE
+    // -----------------------------------------------------
 
-    // -----------------------------------------------
-    // VALIDATE FILE TYPE
-    // -----------------------------------------------
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
 
-    if (!file.type.startsWith("image/")) {
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
 
       setError(
-        "Please select a valid image file."
+        "Only JPG, JPEG, PNG and WEBP images are allowed."
       );
 
       event.target.value = "";
@@ -216,9 +298,9 @@ function CommitteeManagement() {
     }
 
 
-    // -----------------------------------------------
-    // VALIDATE SIZE
-    // -----------------------------------------------
+    // -----------------------------------------------------
+    // VALIDATE IMAGE SIZE
+    // -----------------------------------------------------
 
     const maxSize =
       5 * 1024 * 1024;
@@ -226,7 +308,7 @@ function CommitteeManagement() {
     if (file.size > maxSize) {
 
       setError(
-        "Image size must be less than 5 MB."
+        "Image size must be 5 MB or less."
       );
 
       event.target.value = "";
@@ -238,9 +320,22 @@ function CommitteeManagement() {
     clearMessages();
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
+    // REVOKE OLD PREVIEW
+    // -----------------------------------------------------
+
+    if (photoPreview) {
+
+      URL.revokeObjectURL(
+        photoPreview
+      );
+
+    }
+
+
+    // -----------------------------------------------------
     // SAVE FILE
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     setForm((previous) => ({
       ...previous,
@@ -248,9 +343,9 @@ function CommitteeManagement() {
     }));
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
     // CREATE PREVIEW
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     const previewUrl =
       URL.createObjectURL(file);
@@ -268,12 +363,31 @@ function CommitteeManagement() {
 
   const removeSelectedPhoto = () => {
 
+    if (photoPreview) {
+
+      URL.revokeObjectURL(
+        photoPreview
+      );
+
+    }
+
     setForm((previous) => ({
       ...previous,
       photo: null,
     }));
 
     setPhotoPreview("");
+
+
+    // Reset file input
+    const fileInput =
+      document.getElementById(
+        "committee-photo"
+      );
+
+    if (fileInput) {
+      fileInput.value = "";
+    }
 
   };
 
@@ -285,9 +399,11 @@ function CommitteeManagement() {
   const resetForm = () => {
 
     if (photoPreview) {
+
       URL.revokeObjectURL(
         photoPreview
       );
+
     }
 
     setForm({
@@ -316,6 +432,14 @@ function CommitteeManagement() {
     setEditingId(null);
 
     setExistingPhoto("");
+
+    if (photoPreview) {
+
+      URL.revokeObjectURL(
+        photoPreview
+      );
+
+    }
 
     setPhotoPreview("");
 
@@ -371,14 +495,31 @@ function CommitteeManagement() {
     });
 
 
+    // -----------------------------------------------------
     // Existing backend image
-    setExistingPhoto(
+    // -----------------------------------------------------
+
+    const backendPhoto =
       member.photoUrl ||
       member.photo ||
       member.imageUrl ||
       member.image ||
-      ""
+      "";
+
+    setExistingPhoto(
+      getImageUrl(
+        backendPhoto
+      )
     );
+
+
+    if (photoPreview) {
+
+      URL.revokeObjectURL(
+        photoPreview
+      );
+
+    }
 
     setPhotoPreview("");
 
@@ -424,9 +565,9 @@ function CommitteeManagement() {
       ).trim();
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
     // COMMITTEE
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     if (!committeeName) {
 
@@ -452,9 +593,9 @@ function CommitteeManagement() {
     }
 
 
-    // -----------------------------------------------
-    // NAME
-    // -----------------------------------------------
+    // -----------------------------------------------------
+    // MEMBER NAME
+    // -----------------------------------------------------
 
     if (!memberName) {
 
@@ -478,9 +619,9 @@ function CommitteeManagement() {
     }
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
     // DESIGNATION
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     if (
       designation.length > 150
@@ -494,9 +635,9 @@ function CommitteeManagement() {
     }
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
     // BIO
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     if (
       bio.length > 2000
@@ -510,9 +651,9 @@ function CommitteeManagement() {
     }
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
     // QUALIFICATION
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     if (
       qualification.length > 250
@@ -526,9 +667,9 @@ function CommitteeManagement() {
     }
 
 
-    // -----------------------------------------------
+    // -----------------------------------------------------
     // DISPLAY ORDER
-    // -----------------------------------------------
+    // -----------------------------------------------------
 
     const order =
       Number(
@@ -577,7 +718,7 @@ function CommitteeManagement() {
 
 
       // =================================================
-      // FORM DATA
+      // CREATE FORM DATA
       // =================================================
 
       const formData =
@@ -628,8 +769,8 @@ function CommitteeManagement() {
         "displayOrder",
         String(
           Number(
-            form.displayOrder
-          ) || 0
+            form.displayOrder || 0
+          )
         )
       );
 
@@ -645,7 +786,7 @@ function CommitteeManagement() {
 
 
       // =================================================
-      // PHOTO
+      // PROFILE PHOTO
       // =================================================
 
       if (form.photo) {
@@ -669,7 +810,6 @@ function CommitteeManagement() {
             `/committees/admin/${editingId}`,
             formData
           );
-
 
         setSuccess(
           response.data?.message ||
@@ -704,7 +844,6 @@ function CommitteeManagement() {
             formData
           );
 
-
         setSuccess(
           response.data?.message ||
           "Committee member added successfully."
@@ -714,13 +853,17 @@ function CommitteeManagement() {
 
 
       // =================================================
-      // RELOAD
+      // RELOAD MEMBERS
       // =================================================
 
       await loadMembers();
 
-      resetForm();
 
+      // =================================================
+      // RESET
+      // =================================================
+
+      resetForm();
 
     } catch (error) {
 
@@ -756,7 +899,6 @@ function CommitteeManagement() {
         "Are you sure you want to permanently delete this committee member?"
       );
 
-
     if (!confirmed) {
       return;
     }
@@ -782,7 +924,6 @@ function CommitteeManagement() {
 
 
       await loadMembers();
-
 
     } catch (error) {
 
@@ -818,8 +959,13 @@ function CommitteeManagement() {
           "Other";
 
 
-        if (!groups[committeeName]) {
-          groups[committeeName] = [];
+        if (
+          !groups[committeeName]
+        ) {
+
+          groups[committeeName] =
+            [];
+
         }
 
 
@@ -854,20 +1000,51 @@ function CommitteeManagement() {
 
 
   // =======================================================
-  // GET PHOTO
+  // GET MEMBER PHOTO
   // =======================================================
 
   const getMemberPhoto = (
     member
   ) => {
 
-    return (
+    const photo =
       member.photoUrl ||
       member.photo ||
       member.imageUrl ||
       member.image ||
-      ""
+      "";
+
+    return getImageUrl(
+      photo
     );
+
+  };
+
+
+  // =======================================================
+  // IMAGE ERROR
+  // =======================================================
+
+  const handleMemberImageError = (
+    event
+  ) => {
+
+    event.currentTarget.style.display =
+      "none";
+
+    const fallback =
+      event.currentTarget
+        .parentElement
+        ?.querySelector(
+          ".committee-photo-fallback"
+        );
+
+    if (fallback) {
+
+      fallback.style.display =
+        "flex";
+
+    }
 
   };
 
@@ -910,7 +1087,9 @@ function CommitteeManagement() {
           <button
             type="button"
             className="committee-refresh-button"
-            onClick={loadMembers}
+            onClick={
+              loadMembers
+            }
             disabled={loading}
           >
 
@@ -931,7 +1110,9 @@ function CommitteeManagement() {
           <button
             type="button"
             className="committee-add-button"
-            onClick={openAddForm}
+            onClick={
+              openAddForm
+            }
           >
 
             <Plus size={19} />
@@ -1034,11 +1215,9 @@ function CommitteeManagement() {
               </h2>
 
               <p>
-
                 Enter member information
                 and upload the profile photo
                 directly from your computer.
-
               </p>
 
             </div>
@@ -1046,7 +1225,9 @@ function CommitteeManagement() {
 
             <button
               type="button"
-              onClick={resetForm}
+              onClick={
+                resetForm
+              }
               className="committee-close"
               aria-label="Close form"
               disabled={saving}
@@ -1060,7 +1241,9 @@ function CommitteeManagement() {
 
 
           <form
-            onSubmit={handleSubmit}
+            onSubmit={
+              handleSubmit
+            }
             className="committee-form"
           >
 
@@ -1225,10 +1408,13 @@ function CommitteeManagement() {
 
                 <label>
                   Profile Photo
+
                   {!editingId && (
                     <span>*</span>
                   )}
+
                 </label>
+
 
                 <div className="committee-file-upload">
 
@@ -1241,6 +1427,7 @@ function CommitteeManagement() {
                       handlePhotoChange
                     }
                   />
+
 
                   <label
                     htmlFor="committee-photo"
@@ -1262,6 +1449,7 @@ function CommitteeManagement() {
                   </label>
 
                 </div>
+
 
                 <small>
                   JPG, JPEG, PNG or WEBP.
@@ -1288,15 +1476,40 @@ function CommitteeManagement() {
                         existingPhoto
                       }
                       alt="Profile preview"
-                      onError={(
-                        event
-                      ) => {
+                      onError={(event) => {
 
                         event.currentTarget.style.display =
                           "none";
 
+                        const fallback =
+                          event.currentTarget
+                            .parentElement
+                            ?.querySelector(
+                              ".committee-preview-fallback"
+                            );
+
+                        if (fallback) {
+
+                          fallback.style.display =
+                            "flex";
+
+                        }
+
                       }}
                     />
+
+                    <div
+                      className="committee-preview-fallback"
+                      style={{
+                        display: "none",
+                      }}
+                    >
+
+                      <Users
+                        size={32}
+                      />
+
+                    </div>
 
                   </div>
 
@@ -1437,7 +1650,9 @@ function CommitteeManagement() {
               <button
                 type="button"
                 className="committee-cancel"
-                onClick={resetForm}
+                onClick={
+                  resetForm
+                }
                 disabled={saving}
               >
 
@@ -1566,7 +1781,9 @@ function CommitteeManagement() {
 
                   <div className="committee-group-empty">
 
-                    <Users size={27} />
+                    <Users
+                      size={27}
+                    />
 
                     <div>
 
@@ -1642,30 +1859,9 @@ function CommitteeManagement() {
                                   src={photo}
                                   alt={name}
                                   loading="lazy"
-                                  onError={(
-                                    event
-                                  ) => {
-
-                                    event.currentTarget.style.display =
-                                      "none";
-
-                                    const fallback =
-                                      event.currentTarget
-                                        .parentElement
-                                        ?.querySelector(
-                                          ".committee-photo-fallback"
-                                        );
-
-                                    if (
-                                      fallback
-                                    ) {
-
-                                      fallback.style.display =
-                                        "flex";
-
-                                    }
-
-                                  }}
+                                  onError={
+                                    handleMemberImageError
+                                  }
                                 />
 
                               ) : null}

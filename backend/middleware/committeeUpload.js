@@ -14,101 +14,59 @@ const uploadDirectory = path.join(
 );
 
 // =========================================================
-// CREATE DIRECTORY IF NOT EXISTS
+// CREATE UPLOAD DIRECTORY
 // =========================================================
 
 if (!fs.existsSync(uploadDirectory)) {
-  fs.mkdirSync(
-    uploadDirectory,
-    {
-      recursive: true,
-    }
-  );
+  fs.mkdirSync(uploadDirectory, {
+    recursive: true,
+  });
 }
 
 // =========================================================
 // STORAGE
 // =========================================================
 
-const storage =
-  multer.diskStorage({
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDirectory);
+  },
 
-    destination: (
-      req,
-      file,
-      cb
-    ) => {
+  filename: (req, file, cb) => {
+    try {
+      // Get original extension
+      const extension = path
+        .extname(file.originalname)
+        .toLowerCase();
 
-      cb(
-        null,
-        uploadDirectory
-      );
+      // Generate secure random filename
+      const randomName = crypto
+        .randomBytes(16)
+        .toString("hex");
 
-    },
-
-    filename: (
-      req,
-      file,
-      cb
-    ) => {
-
-      // =====================================================
-      // ORIGINAL EXTENSION
-      // =====================================================
-
-      const extension =
-        path.extname(
-          file.originalname
-        ).toLowerCase();
-
-      // =====================================================
-      // SAFE RANDOM FILE NAME
-      // =====================================================
-
-      const randomName =
-        crypto
-          .randomBytes(16)
-          .toString("hex");
-
-      const timestamp =
-        Date.now();
+      const timestamp = Date.now();
 
       const filename =
         `committee-${timestamp}-${randomName}${extension}`;
 
-      cb(
-        null,
-        filename
-      );
-
-    },
-
-  });
+      cb(null, filename);
+    } catch (error) {
+      cb(error);
+    }
+  },
+});
 
 // =========================================================
 // FILE FILTER
 // =========================================================
 
-const fileFilter = (
-  req,
-  file,
-  cb
-) => {
-
-  // =======================================================
-  // ALLOWED MIME TYPES
-  // =======================================================
-
+const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     "image/jpeg",
     "image/jpg",
     "image/png",
     "image/webp",
   ];
-
-  // =======================================================
-  // ALLOWED EXTENSIONS
-  // =======================================================
 
   const allowedExtensions = [
     ".jpg",
@@ -117,164 +75,126 @@ const fileFilter = (
     ".webp",
   ];
 
-  const extension =
-    path.extname(
-      file.originalname
-    ).toLowerCase();
+  const extension = path
+    .extname(file.originalname)
+    .toLowerCase();
 
-  // =======================================================
-  // VALIDATE
-  // =======================================================
-
+  // Validate MIME type + extension
   if (
-    allowedMimeTypes.includes(
-      file.mimetype
-    ) &&
-    allowedExtensions.includes(
-      extension
-    )
+    allowedMimeTypes.includes(file.mimetype) &&
+    allowedExtensions.includes(extension)
   ) {
-
-    cb(
-      null,
-      true
-    );
-
-  } else {
-
-    cb(
-      new Error(
-        "Only JPG, JPEG, PNG and WEBP images are allowed."
-      )
-    );
-
+    return cb(null, true);
   }
 
+  return cb(
+    new Error(
+      "Only JPG, JPEG, PNG and WEBP images are allowed."
+    )
+  );
 };
 
 // =========================================================
-// MULTER
+// MULTER CONFIGURATION
 // =========================================================
 
-const upload =
-  multer({
+const upload = multer({
+  storage,
 
-    storage,
+  fileFilter,
 
-    fileFilter,
+  limits: {
+    // Maximum image size = 5 MB
+    fileSize: 5 * 1024 * 1024,
 
-    limits: {
-
-      // Maximum image size = 5 MB
-      fileSize:
-        5 * 1024 * 1024,
-
-      // Only one file
-      files: 1,
-
-    },
-
-  });
+    // Only one image
+    files: 1,
+  },
+});
 
 // =========================================================
-// ERROR HANDLER
-// =========================================================
+// COMMITTEE UPLOAD MIDDLEWARE
 //
-// This wrapper converts Multer errors into
-// proper API responses.
+// IMPORTANT:
+// This already contains:
 //
+// upload.single("photo")
+//
+// Therefore committeeRoutes.js should use:
+//
+// committeeUpload
+//
+// NOT:
+//
+// committeeUpload.single("photo")
 // =========================================================
 
-const committeeUpload =
-  (
-    req,
-    res,
-    next
-  ) => {
+const committeeUpload = (req, res, next) => {
+  upload.single("photo")(req, res, (error) => {
+    // =====================================================
+    // NO ERROR
+    // =====================================================
 
-    upload.single("photo")(
-      req,
-      res,
-      (error) => {
+    if (!error) {
+      return next();
+    }
 
-        // ===================================================
-        // NO ERROR
-        // ===================================================
-
-        if (!error) {
-
-          return next();
-
-        }
-
-        console.error(
-          "Committee image upload error:",
-          error
-        );
-
-        // ===================================================
-        // MULTER FILE SIZE ERROR
-        // ===================================================
-
-        if (
-          error.code ===
-          "LIMIT_FILE_SIZE"
-        ) {
-
-          return res.status(400).json({
-
-            success: false,
-
-            message:
-              "Image size must be 5 MB or less.",
-
-          });
-
-        }
-
-        // ===================================================
-        // TOO MANY FILES
-        // ===================================================
-
-        if (
-          error.code ===
-          "LIMIT_FILE_COUNT"
-        ) {
-
-          return res.status(400).json({
-
-            success: false,
-
-            message:
-              "Only one profile image can be uploaded.",
-
-          });
-
-        }
-
-        // ===================================================
-        // INVALID FILE TYPE
-        // ===================================================
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            error.message ||
-            "Unable to upload image.",
-
-        });
-
-      }
-
+    console.error(
+      "Committee image upload error:",
+      error
     );
 
-  };
+    // =====================================================
+    // FILE TOO LARGE
+    // =====================================================
+
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Image size must be 5 MB or less.",
+      });
+    }
+
+    // =====================================================
+    // TOO MANY FILES
+    // =====================================================
+
+    if (error.code === "LIMIT_FILE_COUNT") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Only one profile image can be uploaded.",
+      });
+    }
+
+    // =====================================================
+    // UNEXPECTED FILE
+    // =====================================================
+
+    if (error.code === "LIMIT_UNEXPECTED_FILE") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Unexpected image field. Please upload the image using the 'photo' field.",
+      });
+    }
+
+    // =====================================================
+    // INVALID FILE TYPE
+    // =====================================================
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to upload committee image.",
+    });
+  });
+};
 
 // =========================================================
 // EXPORT
 // =========================================================
 
-module.exports =
-  committeeUpload;
+module.exports = committeeUpload;

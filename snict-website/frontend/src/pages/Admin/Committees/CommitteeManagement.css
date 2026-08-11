@@ -1,9 +1,13 @@
 /* =========================================================
    COMMITTEE ADMIN PAGE
-========================================================= */
+   ========================================================= */
 
 .committee-admin-page {
+  width: 100%;
   min-height: 100vh;
+
+  box-sizing: border-box;
+
   padding: 120px 30px 80px;
 
   background:
@@ -12,17 +16,24 @@
       rgba(76, 211, 244, 0.08),
       transparent 28%
     ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(125, 164, 255, 0.07),
+      transparent 25%
+    ),
     #f6fbff;
 
   color: #071a34;
 }
 
+
 /* =========================================================
    HEADER
-========================================================= */
+   ========================================================= */
 
 .committee-admin-header {
   width: min(1250px, 100%);
+
   margin: 0 auto 30px;
 
   display: flex;
@@ -55,6 +66,8 @@
   font-size: 38px;
   line-height: 1.15;
 
+  font-weight: 850;
+
   letter-spacing: -0.8px;
 }
 
@@ -67,15 +80,18 @@
   line-height: 1.7;
 }
 
+
 /* =========================================================
    HEADER ACTIONS
-========================================================= */
+   ========================================================= */
 
 .committee-header-actions {
   display: flex;
   align-items: center;
 
   gap: 10px;
+
+  flex-shrink: 0;
 }
 
 .committee-refresh-button,
@@ -84,7 +100,7 @@
 
   padding: 0 20px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
@@ -92,6 +108,7 @@
 
   border-radius: 11px;
 
+  font-family: inherit;
   font-size: 14px;
   font-weight: 800;
 
@@ -100,7 +117,8 @@
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .committee-refresh-button {
@@ -115,6 +133,8 @@
   transform: translateY(-2px);
 
   background: #f8fcff;
+
+  border-color: #c7dce7;
 
   box-shadow:
     0 8px 20px rgba(9, 48, 78, 0.08);
@@ -148,13 +168,16 @@
 .committee-refresh-button:disabled,
 .committee-add-button:disabled {
   opacity: 0.6;
+
   cursor: not-allowed;
+
   transform: none;
 }
 
+
 /* =========================================================
    MESSAGES
-========================================================= */
+   ========================================================= */
 
 .committee-message {
   width: min(1250px, 100%);
@@ -165,12 +188,12 @@
 
   padding: 13px 17px;
 
+  box-sizing: border-box;
+
   display: flex;
   align-items: center;
 
   gap: 12px;
-
-  box-sizing: border-box;
 
   border-radius: 11px;
 
@@ -180,11 +203,15 @@
 
 .committee-message span {
   flex: 1;
+
+  line-height: 1.5;
 }
 
 .committee-message button {
   width: 32px;
   height: 32px;
+
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
@@ -196,6 +223,10 @@
   background: transparent;
 
   cursor: pointer;
+}
+
+.committee-message button:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .committee-message.error {
@@ -214,9 +245,10 @@
   border: 1px solid #ccefe0;
 }
 
+
 /* =========================================================
    FORM CARD
-========================================================= */
+   ========================================================= */
 
 .committee-form-card {
   width: min(1250px, 100%);
@@ -238,9 +270,10 @@
     rgba(9, 48, 78, 0.09);
 }
 
+
 /* =========================================================
    FORM HEADER
-========================================================= */
+   ========================================================= */
 
 .committee-form-header {
   display: flex;
@@ -255,6 +288,10 @@
   padding-bottom: 22px;
 
   border-bottom: 1px solid #edf2f6;
+}
+
+.committee-form-header > div {
+  min-width: 0;
 }
 
 .committee-form-header > div > span {
@@ -273,6 +310,8 @@
 
   font-size: 25px;
   line-height: 1.25;
+
+  font-weight: 800;
 }
 
 .committee-form-header p {
@@ -307,7 +346,8 @@
   transition:
     color 0.2s ease,
     background 0.2s ease,
-    border 0.2s ease;
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .committee-close:hover {
@@ -316,11 +356,31 @@
   background: #fff4f4;
 
   border-color: #ffd4d4;
+
+  transform: rotate(3deg);
 }
+
+.committee-close:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.committee-form {
+  width: 100%;
+}
+
 
 /* =========================================================
    FORM GRID
-========================================================= */
+   ========================================================= */
 
 .committee-form-grid {
   display: grid;
@@ -339,9 +399,10 @@
   grid-column: 1 / -1;
 }
 
+
 /* =========================================================
    LABEL
-========================================================= */
+   ========================================================= */
 
 .committee-field label {
   display: block;
@@ -360,9 +421,10 @@
   color: #e34b4b;
 }
 
+
 /* =========================================================
    INPUT / SELECT / TEXTAREA
-========================================================= */
+   ========================================================= */
 
 .committee-field input,
 .committee-field select,
@@ -386,7 +448,7 @@
   font-size: 15px;
 
   transition:
-    border 0.2s ease,
+    border-color 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
 }
@@ -408,6 +470,12 @@
   line-height: 1.65;
 }
 
+.committee-field input:hover,
+.committee-field select:hover,
+.committee-field textarea:hover {
+  border-color: #c8dce8;
+}
+
 .committee-field input:focus,
 .committee-field select:focus,
 .committee-field textarea:focus {
@@ -425,9 +493,14 @@
   color: #9aabba;
 }
 
+.committee-field select {
+  cursor: pointer;
+}
+
+
 /* =========================================================
    FIELD HELP TEXT
-========================================================= */
+   ========================================================= */
 
 .committee-field small {
   display: block;
@@ -437,15 +510,131 @@
   color: #8194a5;
 
   font-size: 12px;
+
   line-height: 1.5;
 }
 
+
+/* =========================================================
+   FILE UPLOAD
+   ========================================================= */
+
+.committee-file-upload {
+  width: 100%;
+
+  position: relative;
+}
+
+.committee-file-upload input[type="file"] {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  opacity: 0;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+.committee-file-label {
+  width: 100%;
+  min-height: 90px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  padding: 18px 20px;
+
+  border: 1.5px dashed #b9dce8;
+
+  border-radius: 13px;
+
+  color: #159bc5;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f7fdff,
+      #f1f8ff
+    );
+
+  font-family: inherit;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.committee-file-label:hover {
+  border-color: #4dcee9;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f0fcff,
+      #edf4ff
+    );
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 22px
+    rgba(58, 188, 231, 0.10);
+}
+
+.committee-file-label svg {
+  flex-shrink: 0;
+}
+
+.committee-file-label span {
+  min-width: 0;
+
+  max-width: 80%;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.committee-file-upload
+input[type="file"]:focus
++ .committee-file-label {
+  border-color: #4dcee9;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(67, 205, 240, 0.10);
+}
+
+
 /* =========================================================
    PHOTO PREVIEW
-========================================================= */
+   ========================================================= */
 
 .committee-photo-preview {
-  margin-top: 25px;
+  grid-column: 1 / -1;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin-top: 0;
 
   padding: 18px;
 
@@ -467,8 +656,8 @@
 }
 
 .committee-preview-image {
-  width: 82px;
-  height: 82px;
+  width: 92px;
+  height: 92px;
 
   flex-shrink: 0;
 
@@ -480,7 +669,14 @@
 
   border-radius: 14px;
 
-  background: #eafaff;
+  color: #159bc5;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eafaff,
+      #eef3ff
+    );
 
   border: 1px solid #d7eaf2;
 }
@@ -489,11 +685,32 @@
   width: 100%;
   height: 100%;
 
+  display: block;
+
   object-fit: cover;
 }
 
-.committee-photo-preview span,
-.committee-bio-preview > span {
+.committee-preview-fallback {
+  width: 100%;
+  height: 100%;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #159bc5;
+}
+
+.committee-preview-info {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.committee-preview-info > span {
   display: block;
 
   margin-bottom: 5px;
@@ -506,15 +723,18 @@
   letter-spacing: 1.8px;
 }
 
-.committee-photo-preview strong {
+.committee-preview-info > strong {
   display: block;
 
   color: #142b43;
 
   font-size: 16px;
+  line-height: 1.35;
+
+  word-break: break-word;
 }
 
-.committee-photo-preview p {
+.committee-preview-info > p {
   margin: 5px 0 0;
 
   color: #7b8fa2;
@@ -523,35 +743,59 @@
   line-height: 1.5;
 }
 
+
 /* =========================================================
-   BIO PREVIEW
-========================================================= */
+   REMOVE NEW PHOTO
+   ========================================================= */
 
-.committee-bio-preview {
-  margin-top: 18px;
+.committee-remove-photo {
+  width: fit-content;
 
-  padding: 17px 19px;
+  margin-top: 10px;
 
-  border-left: 3px solid #4dcee9;
+  min-height: 32px;
 
-  border-radius: 10px;
+  padding: 0 11px;
 
-  background: #f5fcff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: 1px solid #ffd6d6;
+
+  border-radius: 8px;
+
+  color: #c74b4b;
+
+  background: #fff5f5;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.committee-bio-preview p {
-  margin: 0;
+.committee-remove-photo:hover {
+  background: #ffebeb;
 
-  color: #536b80;
+  border-color: #ffbebe;
 
-  font-size: 14px;
-
-  line-height: 1.7;
+  transform: translateY(-1px);
 }
+
 
 /* =========================================================
    ACTIVE TOGGLE
-========================================================= */
+   ========================================================= */
 
 .committee-active {
   margin-top: 24px;
@@ -570,6 +814,16 @@
   background: #f9fcff;
 
   cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.committee-active:hover {
+  border-color: #c6e3ee;
+
+  background: #f5fbff;
 }
 
 .committee-active input {
@@ -577,6 +831,8 @@
   height: 18px;
 
   flex-shrink: 0;
+
+  margin: 0;
 
   accent-color: #159bc5;
 
@@ -601,7 +857,10 @@
 }
 
 .committee-active-text {
+  min-width: 0;
+
   display: flex;
+
   flex-direction: column;
 
   gap: 3px;
@@ -617,11 +876,14 @@
   color: #8194a5;
 
   font-size: 12px;
+
+  line-height: 1.45;
 }
+
 
 /* =========================================================
    FORM ACTIONS
-========================================================= */
+   ========================================================= */
 
 .committee-form-actions {
   margin-top: 27px;
@@ -629,6 +891,7 @@
   padding-top: 22px;
 
   display: flex;
+
   justify-content: flex-end;
 
   gap: 11px;
@@ -642,13 +905,15 @@
 
   padding: 0 21px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
   gap: 8px;
 
   border-radius: 10px;
+
+  font-family: inherit;
 
   font-size: 14px;
   font-weight: 800;
@@ -657,7 +922,8 @@
 
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .committee-cancel {
@@ -670,6 +936,8 @@
 
 .committee-cancel:hover {
   background: #f7fafc;
+
+  transform: translateY(-1px);
 }
 
 .committee-save {
@@ -706,9 +974,10 @@
   transform: none;
 }
 
+
 /* =========================================================
    GROUPS
-========================================================= */
+   ========================================================= */
 
 .committee-groups {
   width: min(1250px, 100%);
@@ -722,11 +991,16 @@
   gap: 25px;
 }
 
+
 /* =========================================================
    GROUP
-========================================================= */
+   ========================================================= */
 
 .committee-group {
+  width: 100%;
+
+  box-sizing: border-box;
+
   padding: 25px;
 
   border: 1px solid #dceaf2;
@@ -740,9 +1014,10 @@
     rgba(9, 48, 78, 0.06);
 }
 
+
 /* =========================================================
    GROUP HEADER
-========================================================= */
+   ========================================================= */
 
 .committee-group-title {
   display: flex;
@@ -757,6 +1032,10 @@
   padding-bottom: 17px;
 
   border-bottom: 1px solid #edf2f6;
+}
+
+.committee-group-title > div {
+  min-width: 0;
 }
 
 .committee-group-title span {
@@ -775,6 +1054,8 @@
 
   font-size: 23px;
   line-height: 1.3;
+
+  font-weight: 800;
 }
 
 .committee-group-title strong {
@@ -789,6 +1070,8 @@
 
   box-sizing: border-box;
 
+  flex-shrink: 0;
+
   border-radius: 11px;
 
   color: #159bc5;
@@ -798,9 +1081,10 @@
   font-size: 14px;
 }
 
+
 /* =========================================================
-   GROUP EMPTY
-========================================================= */
+   EMPTY GROUP
+   ========================================================= */
 
 .committee-group-empty {
   min-height: 100px;
@@ -811,6 +1095,8 @@
   align-items: center;
 
   gap: 15px;
+
+  box-sizing: border-box;
 
   border: 1px dashed #d6e5ed;
 
@@ -835,11 +1121,14 @@
   color: #8194a5;
 
   font-size: 13px;
+
+  line-height: 1.5;
 }
+
 
 /* =========================================================
    MEMBER LIST
-========================================================= */
+   ========================================================= */
 
 .committee-member-list {
   display: flex;
@@ -849,11 +1138,14 @@
   gap: 12px;
 }
 
+
 /* =========================================================
    MEMBER CARD
-========================================================= */
+   ========================================================= */
 
 .committee-member-card {
+  width: 100%;
+
   min-height: 105px;
 
   padding: 13px 15px;
@@ -879,7 +1171,7 @@
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
-    border 0.2s ease;
+    border-color 0.2s ease;
 }
 
 .committee-member-card:hover {
@@ -896,15 +1188,16 @@
   opacity: 0.68;
 }
 
+
 /* =========================================================
    MEMBER PHOTO
-========================================================= */
+   ========================================================= */
 
 .committee-member-photo {
   width: 78px;
   height: 78px;
 
-  flex-shrink: 0;
+  flex: 0 0 78px;
 
   position: relative;
 
@@ -947,9 +1240,10 @@
   color: #159bc5;
 }
 
+
 /* =========================================================
    MEMBER INFO
-========================================================= */
+   ========================================================= */
 
 .committee-member-info {
   min-width: 0;
@@ -995,6 +1289,8 @@
   line-height: 1.3;
 
   font-weight: 800;
+
+  word-break: break-word;
 }
 
 .committee-member-info strong {
@@ -1006,6 +1302,8 @@
   font-weight: 800;
 
   line-height: 1.4;
+
+  word-break: break-word;
 }
 
 .committee-member-info small {
@@ -1016,6 +1314,8 @@
   font-size: 12px;
 
   line-height: 1.5;
+
+  word-break: break-word;
 }
 
 .committee-member-bio {
@@ -1032,14 +1332,16 @@
   display: -webkit-box;
 
   -webkit-line-clamp: 2;
+
   -webkit-box-orient: vertical;
 
   overflow: hidden;
 }
 
+
 /* =========================================================
    MEMBER ACTIONS
-========================================================= */
+   ========================================================= */
 
 .committee-member-actions {
   display: flex;
@@ -1056,7 +1358,7 @@
 
   padding: 0 13px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
@@ -1080,7 +1382,7 @@
   transition:
     color 0.2s ease,
     background 0.2s ease,
-    border 0.2s ease,
+    border-color 0.2s ease,
     transform 0.2s ease;
 }
 
@@ -1110,9 +1412,10 @@
   transform: none;
 }
 
+
 /* =========================================================
    LOADING
-========================================================= */
+   ========================================================= */
 
 .committee-loading {
   min-height: 260px;
@@ -1151,11 +1454,14 @@
   color: #71859a;
 
   font-size: 14px;
+
+  line-height: 1.5;
 }
+
 
 /* =========================================================
    SPINNER
-========================================================= */
+   ========================================================= */
 
 .committee-spin {
   animation:
@@ -1164,6 +1470,7 @@
 }
 
 @keyframes committee-spin-animation {
+
   from {
     transform: rotate(0deg);
   }
@@ -1171,11 +1478,47 @@
   to {
     transform: rotate(360deg);
   }
+
 }
+
+
+/* =========================================================
+   LARGE TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .committee-admin-page {
+    padding:
+      110px 24px 70px;
+  }
+
+  .committee-admin-header {
+    gap: 20px;
+  }
+
+  .committee-form-card {
+    padding: 27px;
+  }
+
+  .committee-group {
+    padding: 21px;
+  }
+
+  .committee-member-card {
+    gap: 14px;
+  }
+
+  .committee-member-actions button {
+    padding: 0 11px;
+  }
+
+}
+
 
 /* =========================================================
    TABLET
-========================================================= */
+   ========================================================= */
 
 @media (max-width: 900px) {
 
@@ -1190,6 +1533,10 @@
     flex-direction: column;
   }
 
+  .committee-header-content {
+    max-width: 100%;
+  }
+
   .committee-header-actions {
     justify-content: flex-end;
   }
@@ -1202,6 +1549,10 @@
     grid-column: auto;
   }
 
+  .committee-photo-preview {
+    grid-column: 1 / -1;
+  }
+
   .committee-member-card {
     align-items: flex-start;
   }
@@ -1210,164 +1561,50 @@
     flex-direction: column;
   }
 
+  .committee-member-actions button {
+    min-width: 90px;
+  }
+
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
 
-@media (max-width: 650px) {
+/* =========================================================
+   TABLET / SMALL
+   ========================================================= */
+
+@media (max-width: 760px) {
 
   .committee-admin-page {
     padding:
-      95px 14px 50px;
+      100px 18px 55px;
   }
 
   .committee-admin-header h1 {
-    font-size: 30px;
-  }
-
-  .committee-admin-header p {
-    font-size: 14px;
-  }
-
-  .committee-header-actions {
-    display: grid;
-
-    grid-template-columns:
-      1fr 1fr;
-  }
-
-  .committee-refresh-button,
-  .committee-add-button {
-    width: 100%;
-
-    padding: 0 12px;
-
-    font-size: 13px;
+    font-size: 32px;
   }
 
   .committee-form-card {
-    padding: 20px;
-
-    border-radius: 17px;
-  }
-
-  .committee-form-header h2 {
-    font-size: 21px;
-  }
-
-  .committee-form-header p {
-    font-size: 13px;
+    padding: 22px;
   }
 
   .committee-group {
     padding: 18px;
-
-    border-radius: 16px;
-  }
-
-  .committee-group-title h2 {
-    font-size: 19px;
-  }
-
-  .committee-member-card {
-    padding: 14px;
-
-    flex-wrap: wrap;
-  }
-
-  .committee-member-photo {
-    width: 70px;
-    height: 70px;
-  }
-
-  .committee-member-info {
-    width: calc(100% - 87px);
-  }
-
-  .committee-member-info h3 {
-    font-size: 18px;
-  }
-
-  .committee-member-info strong {
-    font-size: 13px;
-  }
-
-  .committee-member-bio {
-    font-size: 12px;
-  }
-
-  .committee-member-actions {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns:
-      1fr 1fr;
-  }
-
-  .committee-member-actions button {
-    width: 100%;
-  }
-
-  .committee-form-actions {
-    display: grid;
-
-    grid-template-columns:
-      1fr 1fr;
-  }
-
-  .committee-cancel,
-  .committee-save {
-    width: 100%;
-  }
-
-  .committee-photo-preview {
-    align-items: flex-start;
-
-    padding: 14px;
-  }
-
-  .committee-preview-image {
-    width: 68px;
-    height: 68px;
-  }
-
-  .committee-active {
-    align-items: flex-start;
-  }
-
-}
-
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
-
-@media (max-width: 420px) {
-
-  .committee-admin-header h1 {
-    font-size: 27px;
-  }
-
-  .committee-header-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .committee-form-actions {
-    grid-template-columns: 1fr;
   }
 
   .committee-member-card {
     display: grid;
 
     grid-template-columns:
-      65px 1fr;
+      72px minmax(0, 1fr);
+
+    align-items: start;
   }
 
   .committee-member-photo {
-    width: 65px;
-    height: 65px;
+    width: 72px;
+    height: 72px;
+
+    flex-basis: 72px;
   }
 
   .committee-member-info {
@@ -1376,213 +1613,156 @@
 
   .committee-member-actions {
     grid-column: 1 / -1;
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    flex-direction: row;
   }
 
-  .committee-group-title {
-    align-items: flex-start;
-  }
-
-  .committee-group-title strong {
-    min-width: 36px;
-    height: 36px;
+  .committee-member-actions button {
+    width: 100%;
   }
 
 }
 
 
 /* =========================================================
-   PHOTO FILE UPLOAD
-   ========================================================= */
-
-.committee-file-upload {
-  width: 100%;
-  position: relative;
-}
-
-.committee-file-upload input[type="file"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-
-/* =========================================================
-   BROWSE PHOTO BUTTON
-   ========================================================= */
-
-.committee-file-label {
-  width: 100%;
-  min-height: 82px;
-  box-sizing: border-box;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 11px;
-
-  padding: 18px 20px;
-
-  border: 1.5px dashed #b9dce8;
-  border-radius: 13px;
-
-  color: #159bc5;
-
-  background:
-    linear-gradient(
-      135deg,
-      #f7fdff,
-      #f1f8ff
-    );
-
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-
-  cursor: pointer;
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.committee-file-label:hover {
-  border-color: #4dcee9;
-
-  background:
-    linear-gradient(
-      135deg,
-      #f0fcff,
-      #edf4ff
-    );
-
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 8px 22px
-    rgba(58, 188, 231, 0.10);
-}
-
-.committee-file-label svg {
-  flex-shrink: 0;
-}
-
-.committee-file-label span {
-  overflow: hidden;
-  max-width: 80%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.committee-file-upload
-  input[type="file"]:focus
-  + .committee-file-label {
-  border-color: #4dcee9;
-
-  box-shadow:
-    0 0 0 4px
-    rgba(67, 205, 240, 0.10);
-}
-
-
-/* =========================================================
-   REMOVE NEW PHOTO BUTTON
-   ========================================================= */
-
-.committee-remove-photo {
-  margin-top: 10px;
-
-  min-height: 32px;
-  padding: 0 11px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
-  border: 1px solid #ffd6d6;
-  border-radius: 8px;
-
-  color: #c74b4b;
-  background: #fff5f5;
-
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 800;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.committee-remove-photo:hover {
-  background: #ffebeb;
-  border-color: #ffbebe;
-  transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   PHOTO PREVIEW INFO
-   ========================================================= */
-
-.committee-preview-info {
-  min-width: 0;
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.committee-preview-info > span {
-  display: block;
-  margin-bottom: 5px;
-
-  color: #159bc5;
-
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 1.8px;
-}
-
-.committee-preview-info > strong {
-  display: block;
-
-  color: #142b43;
-
-  font-size: 16px;
-  line-height: 1.35;
-
-  word-break: break-word;
-}
-
-.committee-preview-info > p {
-  margin: 5px 0 0;
-
-  color: #7b8fa2;
-
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-
-/* =========================================================
-   FILE UPLOAD - MOBILE
+   MOBILE
    ========================================================= */
 
 @media (max-width: 650px) {
 
-  .committee-file-label {
-    min-height: 75px;
-    padding: 15px;
+  .committee-admin-page {
+    padding:
+      95px 14px 50px;
+  }
+
+
+  /* HEADER */
+
+  .committee-admin-header {
+    margin-bottom: 22px;
+
+    gap: 18px;
+  }
+
+  .admin-label {
+    font-size: 10px;
+
+    letter-spacing: 2px;
+  }
+
+  .committee-admin-header h1 {
+    margin-top: 8px;
+
+    font-size: 29px;
+
+    letter-spacing: -0.5px;
+  }
+
+  .committee-admin-header p {
     font-size: 13px;
+
+    line-height: 1.6;
+  }
+
+
+  /* HEADER BUTTONS */
+
+  .committee-header-actions {
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    width: 100%;
+  }
+
+  .committee-refresh-button,
+  .committee-add-button {
+    width: 100%;
+
+    min-height: 45px;
+
+    padding: 0 12px;
+
+    font-size: 13px;
+  }
+
+
+  /* MESSAGE */
+
+  .committee-message {
+    padding: 11px 13px;
+
+    font-size: 13px;
+  }
+
+
+  /* FORM */
+
+  .committee-form-card {
+    padding: 19px;
+
+    border-radius: 17px;
+  }
+
+  .committee-form-header {
+    gap: 12px;
+
+    margin-bottom: 22px;
+
+    padding-bottom: 18px;
+  }
+
+  .committee-form-header h2 {
+    font-size: 20px;
+  }
+
+  .committee-form-header p {
+    font-size: 12px;
+  }
+
+  .committee-close {
+    width: 37px;
+    height: 37px;
+  }
+
+
+  /* INPUT */
+
+  .committee-field input,
+  .committee-field select {
+    height: 46px;
+
+    padding: 0 13px;
+
+    font-size: 14px;
+  }
+
+  .committee-field textarea {
+    min-height: 120px;
+
+    padding: 12px 13px;
+
+    font-size: 14px;
+  }
+
+
+  /* FILE */
+
+  .committee-file-label {
+    min-height: 76px;
+
+    padding: 15px;
+
+    font-size: 13px;
+
     text-align: center;
   }
 
@@ -1590,8 +1770,18 @@
     max-width: 75%;
   }
 
+
+  /* PHOTO PREVIEW */
+
   .committee-photo-preview {
     gap: 12px;
+
+    padding: 14px;
+  }
+
+  .committee-preview-image {
+    width: 70px;
+    height: 70px;
   }
 
   .committee-preview-info > strong {
@@ -1602,14 +1792,223 @@
     font-size: 12px;
   }
 
+
+  /* ACTIVE */
+
+  .committee-active {
+    align-items: flex-start;
+
+    padding: 13px;
+  }
+
+  .committee-active-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .committee-active-text strong {
+    font-size: 13px;
+  }
+
+  .committee-active-text small {
+    font-size: 11px;
+  }
+
+
+  /* FORM BUTTONS */
+
+  .committee-form-actions {
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 8px;
+  }
+
+  .committee-cancel,
+  .committee-save {
+    width: 100%;
+
+    min-height: 44px;
+
+    padding: 0 12px;
+
+    font-size: 13px;
+  }
+
+
+  /* GROUP */
+
+  .committee-groups {
+    gap: 18px;
+  }
+
+  .committee-group {
+    padding: 16px;
+
+    border-radius: 16px;
+  }
+
+  .committee-group-title {
+    margin-bottom: 16px;
+
+    padding-bottom: 14px;
+
+    gap: 10px;
+  }
+
+  .committee-group-title h2 {
+    font-size: 18px;
+  }
+
+  .committee-group-title span {
+    font-size: 9px;
+
+    letter-spacing: 1.6px;
+  }
+
+  .committee-group-title strong {
+    min-width: 36px;
+    height: 36px;
+
+    font-size: 13px;
+  }
+
+
+  /* EMPTY */
+
+  .committee-group-empty {
+    min-height: 90px;
+
+    padding: 15px;
+
+    gap: 11px;
+  }
+
+  .committee-group-empty h3 {
+    font-size: 14px;
+  }
+
+  .committee-group-empty p {
+    font-size: 12px;
+  }
+
+
+  /* MEMBER CARD */
+
+  .committee-member-card {
+    padding: 13px;
+
+    grid-template-columns:
+      65px minmax(0, 1fr);
+
+    gap: 11px;
+  }
+
+  .committee-member-photo {
+    width: 65px;
+    height: 65px;
+
+    flex-basis: 65px;
+
+    border-radius: 13px;
+  }
+
+  .committee-member-info h3 {
+    font-size: 17px;
+  }
+
+  .committee-member-info strong {
+    font-size: 12px;
+  }
+
+  .committee-member-info small {
+    font-size: 11px;
+  }
+
+  .committee-member-bio {
+    font-size: 11px;
+
+    line-height: 1.5;
+  }
+
+
+  /* ACTIONS */
+
+  .committee-member-actions {
+    grid-column: 1 / -1;
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 7px;
+  }
+
+  .committee-member-actions button {
+    min-height: 38px;
+
+    padding: 0 8px;
+
+    font-size: 12px;
+  }
+
 }
 
 
 /* =========================================================
-   FILE UPLOAD - SMALL MOBILE
+   SMALL MOBILE
    ========================================================= */
 
 @media (max-width: 420px) {
+
+  .committee-admin-page {
+    padding:
+      88px 11px 40px;
+  }
+
+
+  /* HEADER */
+
+  .committee-admin-header h1 {
+    font-size: 26px;
+  }
+
+  .committee-admin-header p {
+    font-size: 12px;
+  }
+
+  .committee-header-actions {
+    grid-template-columns: 1fr;
+  }
+
+
+  /* FORM */
+
+  .committee-form-card {
+    padding: 15px;
+
+    border-radius: 15px;
+  }
+
+  .committee-form-header {
+    align-items: flex-start;
+  }
+
+  .committee-form-header h2 {
+    font-size: 18px;
+  }
+
+  .committee-form-header p {
+    font-size: 11px;
+  }
+
+
+  /* FILE */
 
   .committee-file-label {
     min-height: 70px;
@@ -1618,7 +2017,7 @@
 
     gap: 7px;
 
-    padding: 14px;
+    padding: 13px;
 
     font-size: 12px;
   }
@@ -1627,14 +2026,167 @@
     max-width: 100%;
   }
 
+
+  /* PHOTO */
+
   .committee-photo-preview {
     flex-direction: column;
+
     align-items: flex-start;
   }
 
   .committee-preview-image {
     width: 80px;
     height: 80px;
+  }
+
+
+  /* ACTIVE */
+
+  .committee-active {
+    gap: 9px;
+  }
+
+
+  /* FORM ACTIONS */
+
+  .committee-form-actions {
+    grid-template-columns: 1fr;
+  }
+
+
+  /* GROUP */
+
+  .committee-group {
+    padding: 13px;
+  }
+
+  .committee-group-title h2 {
+    font-size: 16px;
+  }
+
+
+  /* MEMBER CARD */
+
+  .committee-member-card {
+    display: grid;
+
+    grid-template-columns:
+      58px minmax(0, 1fr);
+
+    padding: 11px;
+  }
+
+  .committee-member-photo {
+    width: 58px;
+    height: 58px;
+  }
+
+  .committee-member-info h3 {
+    font-size: 15px;
+  }
+
+  .committee-member-info strong {
+    font-size: 11px;
+  }
+
+  .committee-member-tag {
+    font-size: 8px;
+  }
+
+
+  /* ACTIONS */
+
+  .committee-member-actions {
+    grid-column: 1 / -1;
+
+    grid-template-columns: 1fr;
+  }
+
+  .committee-member-actions button {
+    width: 100%;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+   ========================================================= */
+
+@media (max-width: 340px) {
+
+  .committee-admin-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .committee-admin-header h1 {
+    font-size: 23px;
+  }
+
+  .committee-form-card {
+    padding: 12px;
+  }
+
+  .committee-group {
+    padding: 11px;
+  }
+
+  .committee-member-card {
+    grid-template-columns:
+      52px minmax(0, 1fr);
+
+    padding: 9px;
+  }
+
+  .committee-member-photo {
+    width: 52px;
+    height: 52px;
+  }
+
+  .committee-member-info h3 {
+    font-size: 14px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.committee-refresh-button:focus-visible,
+.committee-add-button:focus-visible,
+.committee-close:focus-visible,
+.committee-cancel:focus-visible,
+.committee-save:focus-visible,
+.committee-member-actions button:focus-visible,
+.committee-remove-photo:focus-visible,
+.committee-file-label:focus-visible {
+  outline: 3px solid
+    rgba(77, 206, 233, 0.28);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .committee-admin-page *,
+  .committee-admin-page *::before,
+  .committee-admin-page *::after {
+    scroll-behavior: auto !important;
+
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
   }
 
 }

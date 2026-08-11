@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
 require("dotenv").config();
-
 
 // =========================================================
 // ROUTES
@@ -32,6 +32,7 @@ const expenseRoutes =
 
 const membershipRoutes =
   require("./routes/membershipRoutes");
+
 const sliderRoutes =
   require("./routes/sliderRoutes");
 
@@ -40,7 +41,6 @@ const sliderRoutes =
 // =========================================================
 
 const app = express();
-
 
 // =========================================================
 // CORS
@@ -53,49 +53,24 @@ const allowedOrigins = [
 
 app.use(
   cors({
+    origin: function (origin, callback) {
 
-    origin: function (
-      origin,
-      callback
-    ) {
-
-      // Allow requests that do not have
-      // an Origin header
+      // Allow requests without Origin
       if (!origin) {
-        return callback(
-          null,
-          true
-        );
+        return callback(null, true);
       }
-
 
       // Allow localhost and production frontend
-      if (
-        allowedOrigins.includes(
-          origin
-        )
-      ) {
-
-        return callback(
-          null,
-          true
-        );
-
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
 
-
-      // Reject unknown origins
       return callback(
-        new Error(
-          "Not allowed by CORS"
-        )
+        new Error("Not allowed by CORS")
       );
-
     },
 
-
     credentials: true,
-
 
     methods: [
       "GET",
@@ -106,15 +81,12 @@ app.use(
       "OPTIONS",
     ],
 
-
     allowedHeaders: [
       "Content-Type",
       "Authorization",
     ],
-
   })
 );
-
 
 // =========================================================
 // BODY PARSERS
@@ -130,7 +102,6 @@ app.use(
   })
 );
 
-
 // =========================================================
 // COOKIE PARSER
 // =========================================================
@@ -139,6 +110,28 @@ app.use(
   cookieParser()
 );
 
+// =========================================================
+// UPLOADS / STATIC FILES
+// =========================================================
+//
+// Committee images:
+// /uploads/committee/filename.jpg
+//
+// Slider images:
+// /uploads/slider/filename.jpg
+//
+// This makes uploaded files publicly accessible.
+// =========================================================
+
+app.use(
+  "/uploads",
+  express.static(
+    path.join(
+      __dirname,
+      "uploads"
+    )
+  )
+);
 
 // =========================================================
 // HEALTH CHECK
@@ -149,17 +142,13 @@ app.get(
   (req, res) => {
 
     return res.json({
-
       success: true,
 
       message:
         "SNICT Backend API is running",
-
     });
-
   }
 );
-
 
 // =========================================================
 // MEMBERSHIP ROUTES
@@ -170,7 +159,6 @@ app.use(
   membershipRoutes
 );
 
-
 // =========================================================
 // AUTH ROUTES
 // =========================================================
@@ -179,7 +167,6 @@ app.use(
   "/api/auth",
   authRoutes
 );
-
 
 // =========================================================
 // ADMIN ROUTES
@@ -190,7 +177,6 @@ app.use(
   adminRoutes
 );
 
-
 // =========================================================
 // COMMITTEE ROUTES
 // =========================================================
@@ -199,7 +185,6 @@ app.use(
   "/api/committees",
   committeeRoutes
 );
-
 
 // =========================================================
 // EVENT ROUTES
@@ -210,7 +195,6 @@ app.use(
   eventRoutes
 );
 
-
 // =========================================================
 // BOOKING ROUTES
 // =========================================================
@@ -219,7 +203,6 @@ app.use(
   "/api/bookings",
   bookingRoutes
 );
-
 
 // =========================================================
 // PAYMENT ROUTES
@@ -230,7 +213,6 @@ app.use(
   paymentRoutes
 );
 
-
 // =========================================================
 // EXPENSE ROUTES
 // =========================================================
@@ -240,10 +222,15 @@ app.use(
   expenseRoutes
 );
 
+// =========================================================
+// SLIDER ROUTES
+// =========================================================
+
 app.use(
   "/api/sliders",
   sliderRoutes
 );
+
 // =========================================================
 // 404 ROUTE
 // =========================================================
@@ -252,17 +239,13 @@ app.use(
   (req, res) => {
 
     return res.status(404).json({
-
       success: false,
 
       message:
         "API route not found",
-
     });
-
   }
 );
-
 
 // =========================================================
 // GLOBAL ERROR HANDLER
@@ -281,19 +264,14 @@ app.use(
       error
     );
 
-
     return res.status(500).json({
-
       success: false,
 
       message:
         "Internal server error",
-
     });
-
   }
 );
-
 
 // =========================================================
 // SERVER
@@ -301,7 +279,6 @@ app.use(
 
 const PORT =
   process.env.PORT || 5000;
-
 
 app.listen(
   PORT,
@@ -311,5 +288,11 @@ app.listen(
       `🚀 SNICT backend running on port ${PORT}`
     );
 
+    console.log(
+      `📁 Uploads served from: ${path.join(
+        __dirname,
+        "uploads"
+      )}`
+    );
   }
 );
