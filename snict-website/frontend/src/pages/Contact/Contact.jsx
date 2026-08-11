@@ -263,7 +263,7 @@ function Contact() {
 
 
                 <h3>
-                  info@snict.org
+                   support@snict.org
                 </h3>
 
 
@@ -306,7 +306,7 @@ function Contact() {
 
 
                 <h3>
-                  +91 XXXXX XXXXX
+                  +91 9731464382
                 </h3>
 
 
@@ -346,13 +346,12 @@ function Contact() {
 
 
                 <h3>
-                  India
+                  45/25 Socitey of Neo Interventional Cardiovascular Technologites,
+                1-1/Pelleru, Chrjerla, SPSR, Nellore, Andhra Pradesh - 524309
                 </h3>
 
 
-                <p>
-                  SNICT professional community.
-                </p>
+               
 
               </div>
 
@@ -386,7 +385,7 @@ function Contact() {
 
 
                 <h3>
-                  Professional Support
+                  24/7
                 </h3>
 
 

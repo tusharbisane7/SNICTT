@@ -221,7 +221,7 @@ function Footer() {
               </div>
 
               <a href="mailto:info@snict.org">
-                snict2025@gmail.com
+                support@snict.org
               </a>
 
             </div>
