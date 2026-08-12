@@ -2266,7 +2266,7 @@ const approveMembership = async (
 
         WHERE m.id = $1
 
-        FOR UPDATE
+        FOR UPDATE OF m
 
         `,
         [
