@@ -523,9 +523,9 @@ const getEventImage = (event) => {
   }
 
   // VITE_API_URL normally contains:
-  // https://your-backend.onrender.com/api
+  // https://snict.net/api
   // Uploaded files are served from:
-  // https://your-backend.onrender.com/uploads/...
+  // https://snict.net/uploads/...
   const apiUrl =
     import.meta.env.VITE_API_URL ||
     "https://backend.snict.net/api";

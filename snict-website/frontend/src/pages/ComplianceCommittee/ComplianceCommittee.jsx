@@ -25,7 +25,7 @@ function ComplianceCommittee() {
 
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://snict-backend.onrender.com/api";
+    "https://snict.net/api";
 
 
   const backendOrigin = apiUrl.endsWith("/api")

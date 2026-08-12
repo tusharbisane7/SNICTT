@@ -8,33 +8,24 @@ require("dotenv").config();
 // ROUTES
 // =========================================================
 
-const authRoutes =
-  require("./routes/authRoutes");
+const authRoutes = require("./routes/authRoutes");
 
-const adminRoutes =
-  require("./routes/adminRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
-const committeeRoutes =
-  require("./routes/committeeRoutes");
+const committeeRoutes = require("./routes/committeeRoutes");
 
-const eventRoutes =
-  require("./routes/eventRoutes");
+const eventRoutes = require("./routes/eventRoutes");
 
-const bookingRoutes =
-  require("./routes/bookingRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
-const paymentRoutes =
-  require("./routes/paymentRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
-const expenseRoutes =
-  require("./routes/expenseRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 const membershipRoutes =
   require("./routes/membershipRoutes");
 
-const sliderRoutes =
-  require("./routes/sliderRoutes");
-
+const sliderRoutes = require("./routes/sliderRoutes");
 
 // =========================================================
 // APP
@@ -42,41 +33,77 @@ const sliderRoutes =
 
 const app = express();
 
-
 // =========================================================
 // CORS
 // =========================================================
 //
-// Frontend:
+// Allowed Frontends:
+//
+// Production:
+// https://snict.net
+//
+// Old/previous frontend:
 // https://demositesnict.netlify.app
 //
 // Local development:
 // http://localhost:5173
+// http://localhost:5174
 //
-// credentials: true is REQUIRED because authentication
-// uses the HTTP-only snict_token cookie.
+// IMPORTANT:
+// These must be plain URLs.
+// DO NOT use Markdown format.
 // =========================================================
 
 const allowedOrigins = [
-  "http://localhost:5173",
+  "https://snict.net",
+  "https://www.snict.net",
+
+  // Old frontend - keep if still required
   "https://demositesnict.netlify.app",
+
+  // Local development
+  "http://localhost:5173",
+  "http://localhost:5174",
 ];
+
+// =========================================================
+// CORS MIDDLEWARE
+// =========================================================
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // ===================================================
+      // REQUEST WITHOUT ORIGIN
+      // ===================================================
+      //
+      // Examples:
+      // Postman
+      // Server-to-server requests
+      // Health checks
+      //
+      // ===================================================
 
-      // Allow requests without Origin
-      // Example: Postman/server-side requests
       if (!origin) {
         return callback(null, true);
       }
 
-      if (
-        allowedOrigins.includes(origin)
-      ) {
+      // ===================================================
+      // CHECK ALLOWED ORIGIN
+      // ===================================================
+
+      if (allowedOrigins.includes(origin)) {
+        console.log(
+          "✅ CORS allowed:",
+          origin
+        );
+
         return callback(null, true);
       }
+
+      // ===================================================
+      // BLOCK UNKNOWN ORIGIN
+      // ===================================================
 
       console.error(
         "❌ CORS blocked origin:",
@@ -84,13 +111,19 @@ app.use(
       );
 
       return callback(
-        new Error(
-          "Not allowed by CORS"
-        )
+        new Error("Not allowed by CORS")
       );
     },
 
+    // =====================================================
+    // HTTP-ONLY COOKIE SUPPORT
+    // =====================================================
+
     credentials: true,
+
+    // =====================================================
+    // METHODS
+    // =====================================================
 
     methods: [
       "GET",
@@ -101,13 +134,25 @@ app.use(
       "OPTIONS",
     ],
 
+    // =====================================================
+    // HEADERS
+    // =====================================================
+
     allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
       "Content-Type",
+      "Accept",
       "Authorization",
     ],
+
+    // =====================================================
+    // PREFLIGHT
+    // =====================================================
+
+    optionsSuccessStatus: 204,
   })
 );
-
 
 // =========================================================
 // BODY PARSERS
@@ -126,7 +171,6 @@ app.use(
   })
 );
 
-
 // =========================================================
 // COOKIE PARSER
 // =========================================================
@@ -135,7 +179,6 @@ app.use(
   cookieParser()
 );
 
-
 // =========================================================
 // HEALTH CHECK
 // =========================================================
@@ -143,7 +186,6 @@ app.use(
 app.get(
   "/",
   (req, res) => {
-
     return res.json({
       success: true,
 
@@ -153,10 +195,15 @@ app.get(
       environment:
         process.env.NODE_ENV ||
         "development",
+
+      frontend:
+        "https://snict.net",
+
+      api:
+        "https://backend.snict.net/api",
     });
   }
 );
-
 
 // =========================================================
 // MEMBERSHIP ROUTES
@@ -167,7 +214,6 @@ app.use(
   membershipRoutes
 );
 
-
 // =========================================================
 // AUTH ROUTES
 // =========================================================
@@ -176,7 +222,6 @@ app.use(
   "/api/auth",
   authRoutes
 );
-
 
 // =========================================================
 // ADMIN ROUTES
@@ -187,7 +232,6 @@ app.use(
   adminRoutes
 );
 
-
 // =========================================================
 // COMMITTEE ROUTES
 // =========================================================
@@ -196,7 +240,6 @@ app.use(
   "/api/committees",
   committeeRoutes
 );
-
 
 // =========================================================
 // EVENT ROUTES
@@ -207,7 +250,6 @@ app.use(
   eventRoutes
 );
 
-
 // =========================================================
 // BOOKING ROUTES
 // =========================================================
@@ -216,7 +258,6 @@ app.use(
   "/api/bookings",
   bookingRoutes
 );
-
 
 // =========================================================
 // PAYMENT ROUTES
@@ -227,7 +268,6 @@ app.use(
   paymentRoutes
 );
 
-
 // =========================================================
 // EXPENSE ROUTES
 // =========================================================
@@ -236,7 +276,6 @@ app.use(
   "/api/admin/expenses",
   expenseRoutes
 );
-
 
 // =========================================================
 // SLIDER ROUTES
@@ -247,23 +286,23 @@ app.use(
   sliderRoutes
 );
 
-
 // =========================================================
 // 404 ROUTE
 // =========================================================
 
 app.use(
   (req, res) => {
-
     return res.status(404).json({
       success: false,
 
       message:
         "API route not found",
+
+      path:
+        req.originalUrl,
     });
   }
 );
-
 
 // =========================================================
 // GLOBAL ERROR HANDLER
@@ -276,25 +315,34 @@ app.use(
     res,
     next
   ) => {
-
     console.error(
       "❌ Global server error:",
       error
     );
 
-    // CORS error
+    // =====================================================
+    // CORS ERROR
+    // =====================================================
+
     if (
       error.message ===
       "Not allowed by CORS"
     ) {
-
       return res.status(403).json({
         success: false,
 
         message:
           "CORS origin not allowed",
+
+        origin:
+          req.headers.origin ||
+          null,
       });
     }
+
+    // =====================================================
+    // GENERAL ERROR
+    // =====================================================
 
     return res.status(500).json({
       success: false,
@@ -311,7 +359,6 @@ app.use(
   }
 );
 
-
 // =========================================================
 // SERVER
 // =========================================================
@@ -322,7 +369,6 @@ const PORT =
 app.listen(
   PORT,
   () => {
-
     console.log(
       `🚀 SNICT backend running on port ${PORT}`
     );
@@ -332,6 +378,14 @@ app.listen(
         process.env.NODE_ENV ||
         "development"
       }`
+    );
+
+    console.log(
+      `🌐 Frontend: https://snict.net`
+    );
+
+    console.log(
+      `🔗 Backend: https://backend.snict.net`
     );
 
     console.log(

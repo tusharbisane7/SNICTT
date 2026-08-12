@@ -20,7 +20,7 @@ import "./AcademicCommittee.css";
 const getBackendOrigin = () => {
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://snict-backend.onrender.com/api";
+    "https://snict.net/api";
 
   try {
     return new URL(apiUrl).origin;
@@ -30,7 +30,7 @@ const getBackendOrigin = () => {
       apiUrl
     );
 
-    return "https://snict-backend.onrender.com";
+    return "https://snict.net";
   }
 };
 

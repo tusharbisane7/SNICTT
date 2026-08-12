@@ -21,7 +21,7 @@ import "./PlacementCommittee.css";
 // GET COMMITTEE IMAGE URL
 // =========================================================
 // Backend may return either:
-// 1. Full URL: https://snict-backend.onrender.com/uploads/committee/...
+// 1. Full URL: https://snict.net/uploads/committee/...
 // 2. Relative path: /uploads/committee/...
 // 3. Relative path without leading slash
 // =========================================================
@@ -58,7 +58,7 @@ const getCommitteeImage = (member) => {
 
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://snict-backend.onrender.com/api";
+    "https://snict.net/api";
 
   // Remove /api from the API URL without using a problematic regex.
   let backendOrigin = apiUrl.trim();
