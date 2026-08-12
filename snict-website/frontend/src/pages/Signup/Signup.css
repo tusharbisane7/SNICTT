@@ -2191,3 +2191,392 @@
     transform: scale(1);
   }
 }
+
+
+/* =========================================================
+   SNICT SIGNUP — TYPOGRAPHY UPGRADE
+   Larger, clearer typography while preserving the
+   existing premium medical / teal UI and animations.
+   ========================================================= */
+
+/* Main text */
+.auth-page {
+  font-size: 16px;
+}
+
+/* Brand */
+.auth-brand {
+  font-size: 31px;
+}
+
+.auth-brand-subtitle {
+  font-size: 11px;
+}
+
+/* Main heading */
+.auth-title > span {
+  font-size: 12px;
+}
+
+.auth-title h1 {
+  font-size: 42px;
+}
+
+.auth-title p {
+  font-size: 16px;
+}
+
+/* Alerts */
+.auth-error,
+.auth-success {
+  font-size: 15px;
+  min-height: 52px;
+  padding: 13px 16px;
+}
+
+/* Form labels */
+.form-field > label {
+  font-size: 16px;
+}
+
+/* Inputs */
+.form-field input,
+.form-field select,
+.form-field textarea {
+  font-size: 16px;
+}
+
+.form-field input,
+.form-field select {
+  height: 54px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.form-field textarea {
+  font-size: 16px;
+  line-height: 1.65;
+  padding: 15px 16px;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  font-size: 15px;
+}
+
+.field-help {
+  font-size: 13px;
+}
+
+/* Username */
+.username-message {
+  font-size: 13px;
+}
+
+.username-suggestions > span {
+  font-size: 13px;
+}
+
+.username-suggestions button {
+  min-height: 32px;
+  font-size: 13px;
+}
+
+/* Password eye button */
+.password-wrapper button {
+  width: 42px;
+  height: 42px;
+}
+
+/* Profile photo */
+.profile-photo-actions h3 {
+  font-size: 20px;
+}
+
+.profile-photo-actions p {
+  font-size: 15px;
+}
+
+.profile-photo-actions small {
+  font-size: 13px;
+}
+
+.profile-upload-button,
+.profile-remove-button {
+  min-height: 46px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.profile-photo-placeholder {
+  font-size: 14px;
+}
+
+/* Bio counter */
+.bio-counter {
+  font-size: 13px;
+}
+
+/* Main submit */
+.auth-submit {
+  min-height: 58px;
+  font-size: 16px;
+  border-radius: 11px;
+}
+
+/* Footer */
+.auth-footer {
+  font-size: 15px;
+}
+
+/* =========================================================
+   MEMBERSHIP — LARGER TYPOGRAPHY
+   ========================================================= */
+
+.signup-membership-section,
+.signup-payment-section,
+.signup-membership-success {
+  padding: 28px;
+}
+
+.signup-membership-eyebrow {
+  min-height: 28px;
+  padding: 0 11px;
+  font-size: 11px;
+}
+
+.signup-membership-header h2,
+.signup-payment-header h2,
+.signup-membership-success h2 {
+  font-size: 27px;
+}
+
+.signup-membership-header p,
+.signup-payment-header p,
+.signup-membership-success p {
+  font-size: 15px;
+}
+
+.signup-membership-plan {
+  min-height: 158px;
+  padding: 24px 22px;
+}
+
+.membership-plan-name {
+  font-size: 19px;
+}
+
+.membership-plan-duration {
+  font-size: 14px;
+}
+
+.membership-plan-price {
+  font-size: 27px;
+}
+
+.signup-membership-empty {
+  font-size: 14px;
+}
+
+.signup-payment-details > div {
+  padding: 15px 17px;
+}
+
+.signup-payment-details span {
+  font-size: 11px;
+}
+
+.signup-payment-details strong {
+  font-size: 16px;
+}
+
+.signup-payment-form .field-help {
+  font-size: 13px;
+}
+
+.membership-success-icon {
+  width: 70px;
+  height: 70px;
+  font-size: 31px;
+}
+
+/* =========================================================
+   MOBILE TYPOGRAPHY
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .auth-title h1 {
+    font-size: 38px;
+  }
+
+  .auth-title p {
+    font-size: 15px;
+  }
+
+  .form-field > label {
+    font-size: 15px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 16px;
+  }
+
+  .signup-membership-header h2,
+  .signup-payment-header h2,
+  .signup-membership-success h2 {
+    font-size: 24px;
+  }
+
+  .signup-membership-header p,
+  .signup-payment-header p,
+  .signup-membership-success p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-brand {
+    font-size: 25px;
+  }
+
+  .auth-brand-subtitle {
+    font-size: 9px;
+  }
+
+  .auth-title > span {
+    font-size: 11px;
+  }
+
+  .auth-title h1 {
+    font-size: 34px;
+  }
+
+  .auth-title p {
+    font-size: 15px;
+  }
+
+  .auth-error,
+  .auth-success {
+    font-size: 14px;
+  }
+
+  .form-field > label {
+    font-size: 15px;
+  }
+
+  .form-field input,
+  .form-field select {
+    height: 52px;
+    font-size: 16px;
+  }
+
+  .form-field textarea {
+    font-size: 16px;
+  }
+
+  .form-field input::placeholder,
+  .form-field textarea::placeholder {
+    font-size: 14px;
+  }
+
+  .profile-photo-actions h3 {
+    font-size: 19px;
+  }
+
+  .profile-photo-actions p {
+    font-size: 14px;
+  }
+
+  .profile-upload-button,
+  .profile-remove-button {
+    font-size: 13px;
+  }
+
+  .auth-submit {
+    min-height: 56px;
+    font-size: 15px;
+  }
+
+  .auth-footer {
+    font-size: 14px;
+  }
+
+  .signup-membership-section,
+  .signup-payment-section,
+  .signup-membership-success {
+    padding: 21px 17px;
+  }
+
+  .signup-membership-header h2,
+  .signup-payment-header h2,
+  .signup-membership-success h2 {
+    font-size: 22px;
+  }
+
+  .signup-membership-header p,
+  .signup-payment-header p,
+  .signup-membership-success p {
+    font-size: 14px;
+  }
+
+  .signup-membership-plan {
+    min-height: 145px;
+    padding: 21px 18px;
+  }
+
+  .membership-plan-name {
+    font-size: 18px;
+  }
+
+  .membership-plan-duration {
+    font-size: 13px;
+  }
+
+  .membership-plan-price {
+    font-size: 25px;
+  }
+
+  .signup-payment-details span {
+    font-size: 11px;
+  }
+
+  .signup-payment-details strong {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 380px) {
+  .auth-title h1 {
+    font-size: 31px;
+  }
+
+  .auth-title p {
+    font-size: 14px;
+  }
+
+  .form-field > label {
+    font-size: 14px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 15px;
+  }
+
+  .signup-membership-header h2,
+  .signup-payment-header h2,
+  .signup-membership-success h2 {
+    font-size: 21px;
+  }
+
+  .membership-plan-name {
+    font-size: 17px;
+  }
+
+  .membership-plan-price {
+    font-size: 23px;
+  }
+}

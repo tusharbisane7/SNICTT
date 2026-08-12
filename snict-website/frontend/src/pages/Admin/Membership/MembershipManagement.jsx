@@ -200,6 +200,16 @@ const StatusBadge = ({
       label = "Paid";
     } else if (
       normalized ===
+      "received"
+    ) {
+      label = "Payment Received";
+    } else if (
+      normalized ===
+      "not_received"
+    ) {
+      label = "Payment Not Received";
+    } else if (
+      normalized ===
       "rejected"
     ) {
       label = "Payment Rejected";
@@ -239,9 +249,21 @@ const StatusBadge = ({
         )}
 
       {type === "payment" &&
-        normalized ===
-          "submitted" && (
+        (normalized === "submitted" ||
+          normalized === "not_received") && (
           <Clock3 size={14} />
+        )}
+
+      {type === "payment" &&
+        (normalized === "received" ||
+          normalized === "approved") && (
+          <CheckCircle2 size={14} />
+        )}
+
+      {type === "payment" &&
+        normalized ===
+          "rejected" && (
+          <XCircle size={14} />
         )}
 
       {type === "membership" &&
@@ -371,6 +393,11 @@ const MembershipManagement =
     const [
       showDetails,
       setShowDetails,
+    ] = useState(false);
+
+    const [
+      showPaymentVerification,
+      setShowPaymentVerification,
     ] = useState(false);
 
     const [
@@ -758,6 +785,162 @@ const MembershipManagement =
     };
 
     // =======================================================
+    // OPEN PAYMENT VERIFICATION
+    // =======================================================
+
+    const openPaymentVerification = (
+      membership
+    ) => {
+      if (!membership?.id) {
+        return;
+      }
+
+      setSelectedMembership(
+        membership
+      );
+
+      setShowPaymentVerification(
+        true
+      );
+
+      setError("");
+      setSuccess("");
+    };
+
+
+    // =======================================================
+    // MARK PAYMENT RECEIVED
+    // =======================================================
+
+    const markPaymentReceived =
+      async (
+        membership
+      ) => {
+        if (!membership?.id) {
+          return;
+        }
+
+        const confirmed =
+          window.confirm(
+            `Confirm that payment has been received from ${getUserName(
+              membership
+            )}?`
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+          setActionLoading(
+            `payment-received-${membership.id}`
+          );
+
+          setError("");
+          setSuccess("");
+
+          const response =
+            await api.put(
+              `/membership/admin/${membership.id}/payment-received`
+            );
+
+          const updatedMembership =
+            response.data?.membership ||
+            response.data?.data ||
+            membership;
+
+          setSelectedMembership(
+            updatedMembership
+          );
+
+          setSuccess(
+            response.data?.message ||
+              "Payment marked as received successfully."
+          );
+
+          await loadMemberships();
+        } catch (err) {
+          console.error(
+            "Mark payment received error:",
+            err
+          );
+
+          setError(
+            err.response?.data?.message ||
+              "Unable to mark payment as received."
+          );
+        } finally {
+          setActionLoading(null);
+        }
+      };
+
+    // =======================================================
+    // MARK PAYMENT NOT RECEIVED
+    // =======================================================
+
+    const markPaymentNotReceived =
+      async (
+        membership
+      ) => {
+        if (!membership?.id) {
+          return;
+        }
+
+        const confirmed =
+          window.confirm(
+            `Mark payment as NOT received for ${getUserName(
+              membership
+            )}?`
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+          setActionLoading(
+            `payment-not-received-${membership.id}`
+          );
+
+          setError("");
+          setSuccess("");
+
+          const response =
+            await api.put(
+              `/membership/admin/${membership.id}/payment-not-received`
+            );
+
+          const updatedMembership =
+            response.data?.membership ||
+            response.data?.data ||
+            membership;
+
+          setSelectedMembership(
+            updatedMembership
+          );
+
+          setSuccess(
+            response.data?.message ||
+              "Payment marked as not received."
+          );
+
+          await loadMemberships();
+        } catch (err) {
+          console.error(
+            "Mark payment not received error:",
+            err
+          );
+
+          setError(
+            err.response?.data?.message ||
+              "Unable to mark payment as not received."
+          );
+        } finally {
+          setActionLoading(null);
+        }
+      };
+
+    // =======================================================
     // APPROVE
     // =======================================================
 
@@ -775,11 +958,11 @@ const MembershipManagement =
           );
 
         if (
-          paymentStatus !==
-          "submitted"
+          paymentStatus !== "received" &&
+          paymentStatus !== "approved"
         ) {
           setError(
-            "Payment must be submitted with a UTR before approval."
+            "Payment must be marked as received before approving the membership."
           );
 
           return;
@@ -1854,37 +2037,123 @@ const MembershipManagement =
                                 </button>
 
                                 {status ===
-                                  "pending" &&
-                                  paymentStatus ===
-                                    "submitted" && (
+                                  "pending" && (
                                     <>
-                                      <button
-                                        type="button"
-                                        className="mm-action-approve"
-                                        disabled={
-                                          actionLoading ===
-                                          `approve-${membership.id}`
-                                        }
-                                        onClick={() =>
-                                          approveMembership(
-                                            membership
-                                          )
-                                        }
-                                      >
-                                        {actionLoading ===
-                                        `approve-${membership.id}` ? (
-                                          <Loader2
-                                            size={15}
-                                            className="mm-spin"
-                                          />
-                                        ) : (
-                                          <Check
+                                      {(paymentStatus ===
+                                        "submitted" ||
+                                        paymentStatus ===
+                                          "received" ||
+                                        paymentStatus ===
+                                          "approved") && (
+                                        <button
+                                          type="button"
+                                          className="mm-action-verify"
+                                          onClick={() =>
+                                            openPaymentVerification(
+                                              membership
+                                            )
+                                          }
+                                        >
+                                          <CreditCard
                                             size={15}
                                           />
-                                        )}
+                                          Verify Payment
+                                        </button>
+                                      )}
 
-                                        Approve
-                                      </button>
+                                      {paymentStatus ===
+                                        "submitted" && (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className="mm-action-approve"
+                                            disabled={
+                                              actionLoading ===
+                                              `payment-received-${membership.id}`
+                                            }
+                                            onClick={() =>
+                                              markPaymentReceived(
+                                                membership
+                                              )
+                                            }
+                                          >
+                                            {actionLoading ===
+                                            `payment-received-${membership.id}` ? (
+                                              <Loader2
+                                                size={15}
+                                                className="mm-spin"
+                                              />
+                                            ) : (
+                                              <CheckCircle2
+                                                size={15}
+                                              />
+                                            )}
+
+                                            Payment Received
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            className="mm-action-reject"
+                                            disabled={
+                                              actionLoading ===
+                                              `payment-not-received-${membership.id}`
+                                            }
+                                            onClick={() =>
+                                              markPaymentNotReceived(
+                                                membership
+                                              )
+                                            }
+                                          >
+                                            {actionLoading ===
+                                            `payment-not-received-${membership.id}` ? (
+                                              <Loader2
+                                                size={15}
+                                                className="mm-spin"
+                                              />
+                                            ) : (
+                                              <XCircle
+                                                size={15}
+                                              />
+                                            )}
+
+                                            Not Received
+                                          </button>
+                                        </>
+                                      )}
+
+                                      {(paymentStatus ===
+                                        "received" ||
+                                        paymentStatus ===
+                                          "approved") && (
+                                        <button
+                                          type="button"
+                                          className="mm-action-approve"
+                                          disabled={
+                                            actionLoading ===
+                                            `approve-${membership.id}`
+                                          }
+                                          onClick={() =>
+                                            approveMembership(
+                                              membership
+                                            )
+                                          }
+                                        >
+                                          {actionLoading ===
+                                          `approve-${membership.id}` ? (
+                                            <Loader2
+                                              size={15}
+                                              className="mm-spin"
+                                            />
+                                          ) : (
+                                            <Check
+                                              size={15}
+                                            />
+                                          )}
+
+                                          Approve Membership
+                                        </button>
+                                      )}
 
                                       <button
                                         type="button"
@@ -2500,6 +2769,19 @@ const MembershipManagement =
 
                   <div className="mm-detail-card">
                     <span>
+                      Payment Submitted At
+                    </span>
+
+                    <strong>
+                      {formatDateTime(
+                        selectedMembership?.paymentSubmittedAt ||
+                          selectedMembership?.payment_submitted_at
+                      )}
+                    </strong>
+                  </div>
+
+                  <div className="mm-detail-card">
+                    <span>
                       Membership Status
                     </span>
 
@@ -2594,12 +2876,124 @@ const MembershipManagement =
                   {getMembershipStatus(
                     selectedMembership
                   ) ===
-                    "pending" &&
-                    getPaymentStatus(
-                      selectedMembership
-                    ) ===
-                      "submitted" && (
+                    "pending" && (
                       <>
+                        {getPaymentStatus(
+                          selectedMembership
+                        ) !== "not_submitted" && (
+                          <button
+                            type="button"
+                            className="mm-action-verify large"
+                            onClick={() =>
+                              openPaymentVerification(
+                                selectedMembership
+                              )
+                            }
+                          >
+                            <CreditCard
+                              size={17}
+                            />
+                            Verify Payment
+                          </button>
+                        )}
+
+                        {getPaymentStatus(
+                          selectedMembership
+                        ) === "submitted" && (
+                          <>
+                            <button
+                              type="button"
+                              className="mm-action-approve large"
+                              disabled={
+                                actionLoading ===
+                                `payment-received-${selectedMembership.id}`
+                              }
+                              onClick={() =>
+                                markPaymentReceived(
+                                  selectedMembership
+                                )
+                              }
+                            >
+                              {actionLoading ===
+                              `payment-received-${selectedMembership.id}` ? (
+                                <Loader2
+                                  size={17}
+                                  className="mm-spin"
+                                />
+                              ) : (
+                                <CheckCircle2
+                                  size={17}
+                                />
+                              )}
+
+                              Payment Received
+                            </button>
+
+                            <button
+                              type="button"
+                              className="mm-action-reject large"
+                              disabled={
+                                actionLoading ===
+                                `payment-not-received-${selectedMembership.id}`
+                              }
+                              onClick={() =>
+                                markPaymentNotReceived(
+                                  selectedMembership
+                                )
+                              }
+                            >
+                              {actionLoading ===
+                              `payment-not-received-${selectedMembership.id}` ? (
+                                <Loader2
+                                  size={17}
+                                  className="mm-spin"
+                                />
+                              ) : (
+                                <XCircle
+                                  size={17}
+                                />
+                              )}
+
+                              Payment Not Received
+                            </button>
+                          </>
+                        )}
+
+                        {(getPaymentStatus(
+                          selectedMembership
+                        ) === "received" ||
+                          getPaymentStatus(
+                            selectedMembership
+                          ) === "approved") && (
+                          <button
+                            type="button"
+                            className="mm-action-approve large"
+                            disabled={
+                              actionLoading ===
+                              `approve-${selectedMembership.id}`
+                            }
+                            onClick={() =>
+                              approveMembership(
+                                selectedMembership
+                              )
+                            }
+                          >
+                            {actionLoading ===
+                            `approve-${selectedMembership.id}` ? (
+                              <Loader2
+                                size={17}
+                                className="mm-spin"
+                              />
+                            ) : (
+                              <Check
+                                size={17}
+                              />
+                            )}
+
+                            Approve Membership
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           className="mm-action-reject large"
@@ -2619,36 +3013,259 @@ const MembershipManagement =
 
                           Reject
                         </button>
-
-                        <button
-                          type="button"
-                          className="mm-action-approve large"
-                          disabled={
-                            actionLoading ===
-                            `approve-${selectedMembership.id}`
-                          }
-                          onClick={() =>
-                            approveMembership(
-                              selectedMembership
-                            )
-                          }
-                        >
-                          {actionLoading ===
-                          `approve-${selectedMembership.id}` ? (
-                            <Loader2
-                              size={17}
-                              className="mm-spin"
-                            />
-                          ) : (
-                            <Check
-                              size={17}
-                            />
-                          )}
-
-                          Approve Membership
-                        </button>
                       </>
                     )}
+                </div>
+              </div>
+            </div>
+          )}
+
+        {/* ===================================================
+            PAYMENT VERIFICATION MODAL
+        =================================================== */}
+
+        {showPaymentVerification &&
+          selectedMembership && (
+            <div
+              className="mm-modal-overlay"
+              onMouseDown={(event) => {
+                if (
+                  event.target ===
+                  event.currentTarget
+                ) {
+                  setShowPaymentVerification(
+                    false
+                  );
+                }
+              }}
+            >
+              <div className="mm-modal mm-payment-verification-modal">
+
+                <div className="mm-modal-header">
+                  <div>
+                    <span>
+                      PAYMENT VERIFICATION
+                    </span>
+
+                    <h2>
+                      Verify Payment
+                    </h2>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPaymentVerification(
+                        false
+                      )
+                    }
+                  >
+                    <X />
+                  </button>
+                </div>
+
+                <div className="mm-payment-check-banner">
+                  <CreditCard size={22} />
+
+                  <div>
+                    <strong>
+                      Check this payment before approving
+                    </strong>
+
+                    <p>
+                      Compare the UTR number and amount below
+                      with your bank / UPI transaction statement.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mm-payment-verification-grid">
+
+                  <div className="mm-detail-card">
+                    <span>Member</span>
+                    <strong>
+                      {getUserName(selectedMembership)}
+                    </strong>
+                  </div>
+
+                  <div className="mm-detail-card">
+                    <span>Membership Plan</span>
+                    <strong>
+                      {getPlanName(selectedMembership)}
+                    </strong>
+                  </div>
+
+                  <div className="mm-detail-card mm-payment-highlight">
+                    <span>Amount to Verify</span>
+                    <strong>
+                      {formatAmount(
+                        getAmount(selectedMembership)
+                      )}
+                    </strong>
+                  </div>
+
+                  <div className="mm-detail-card mm-payment-highlight">
+                    <span>UTR Number</span>
+                    <strong className="mm-utr-large">
+                      {selectedMembership?.utrNumber ||
+                        selectedMembership?.utr_number ||
+                        "Not submitted"}
+                    </strong>
+                  </div>
+
+                  <div className="mm-detail-card">
+                    <span>Payment Status</span>
+                    <StatusBadge
+                      status={getPaymentStatus(
+                        selectedMembership
+                      )}
+                      type="payment"
+                    />
+                  </div>
+
+                  <div className="mm-detail-card">
+                    <span>Submitted At</span>
+                    <strong>
+                      {formatDateTime(
+                        selectedMembership?.paymentSubmittedAt ||
+                          selectedMembership?.payment_submitted_at
+                      )}
+                    </strong>
+                  </div>
+
+                </div>
+
+                <div className="mm-payment-verification-note">
+                  <ShieldCheck size={17} />
+
+                  <span>
+                    Only approve if the UTR exists in your
+                    bank/UPI statement and the received amount
+                    matches the membership amount.
+                  </span>
+                </div>
+
+                <div className="mm-modal-footer">
+
+                  <button
+                    type="button"
+                    className="mm-secondary-button"
+                    onClick={() =>
+                      setShowPaymentVerification(
+                        false
+                      )
+                    }
+                  >
+                    Close
+                  </button>
+
+                  <button
+                    type="button"
+                    className="mm-action-reject large"
+                    disabled={
+                      actionLoading ===
+                      `payment-not-received-${selectedMembership.id}`
+                    }
+                    onClick={async () => {
+                      await markPaymentNotReceived(
+                        selectedMembership
+                      );
+
+                      setShowPaymentVerification(
+                        false
+                      );
+                    }}
+                  >
+                    {actionLoading ===
+                    `payment-not-received-${selectedMembership.id}` ? (
+                      <Loader2
+                        size={17}
+                        className="mm-spin"
+                      />
+                    ) : (
+                      <XCircle
+                        size={17}
+                      />
+                    )}
+
+                    Payment Not Received
+                  </button>
+
+                  {getPaymentStatus(
+                    selectedMembership
+                  ) === "submitted" && (
+                    <button
+                      type="button"
+                      className="mm-action-approve large"
+                      disabled={
+                        actionLoading ===
+                        `payment-received-${selectedMembership.id}`
+                      }
+                      onClick={async () => {
+                        await markPaymentReceived(
+                          selectedMembership
+                        );
+
+                        setShowPaymentVerification(
+                          false
+                        );
+                      }}
+                    >
+                      {actionLoading ===
+                      `payment-received-${selectedMembership.id}` ? (
+                        <Loader2
+                          size={17}
+                          className="mm-spin"
+                        />
+                      ) : (
+                        <CheckCircle2
+                          size={17}
+                        />
+                      )}
+
+                      Payment Received
+                    </button>
+                  )}
+
+                  {(getPaymentStatus(
+                    selectedMembership
+                  ) === "received" ||
+                    getPaymentStatus(
+                      selectedMembership
+                    ) === "approved") && (
+                    <button
+                      type="button"
+                      className="mm-action-approve large"
+                      disabled={
+                        actionLoading ===
+                        `approve-${selectedMembership.id}`
+                      }
+                      onClick={() => {
+                        setShowPaymentVerification(
+                          false
+                        );
+
+                        approveMembership(
+                          selectedMembership
+                        );
+                      }}
+                    >
+                      {actionLoading ===
+                      `approve-${selectedMembership.id}` ? (
+                        <Loader2
+                          size={17}
+                          className="mm-spin"
+                        />
+                      ) : (
+                        <Check
+                          size={17}
+                        />
+                      )}
+
+                      Approve Membership
+                    </button>
+                  )}
+
                 </div>
               </div>
             </div>

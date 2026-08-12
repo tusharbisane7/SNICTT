@@ -1,7 +1,7 @@
 /* =========================================================
    SNICT LOGIN
    Premium Medical / Professional / Futuristic
-   Updated Typography + Animations
+   Membership Verification + Approval Popup
 ========================================================= */
 
 :root {
@@ -20,6 +20,12 @@
 
   --login-danger: #c94b4b;
   --login-danger-bg: #fff2f2;
+
+  --login-warning: #d97706;
+  --login-warning-bg: #fff8eb;
+
+  --login-success: #16845b;
+  --login-success-bg: #effaf5;
 
   --login-shadow:
     0 25px 70px rgba(16, 42, 47, 0.10);
@@ -74,8 +80,7 @@
       #f1f8f9 100%
     );
 
-  color:
-    var(--login-text);
+  color: var(--login-text);
 
   font-family:
     Inter,
@@ -88,10 +93,12 @@
 
 
 /* =========================================================
-   BACKGROUND GLOW
+   BACKGROUND DECORATION
 ========================================================= */
 
-.login-glow {
+.login-page::before {
+  content: "";
+
   position: absolute;
 
   width: 520px;
@@ -115,11 +122,13 @@
 
   pointer-events: none;
 
-  filter:
-    blur(3px);
+  filter: blur(3px);
 
   animation:
-    loginGlowPulse 7s ease-in-out infinite;
+    loginGlowPulse
+    7s
+    ease-in-out
+    infinite;
 }
 
 
@@ -132,18 +141,15 @@
 
   z-index: 2;
 
-  width:
-    min(500px, 100%);
+  width: min(500px, 100%);
 
-  padding:
-    46px 46px 34px;
+  padding: 46px 46px 34px;
 
   border:
     1px solid
     rgba(8, 127, 140, 0.13);
 
-  border-radius:
-    24px;
+  border-radius: 24px;
 
   background:
     rgba(255, 255, 255, 0.97);
@@ -151,16 +157,18 @@
   box-shadow:
     var(--login-shadow);
 
-  backdrop-filter:
-    blur(20px);
+  backdrop-filter: blur(20px);
 
   animation:
-    loginFadeUp 0.65s cubic-bezier(
+    loginFadeUp
+    0.65s
+    cubic-bezier(
       0.22,
       1,
       0.36,
       1
-    ) both;
+    )
+    both;
 
   transition:
     box-shadow 0.35s ease,
@@ -209,34 +217,33 @@
     200% 100%;
 
   animation:
-    loginAccent 4s linear infinite;
+    loginAccent
+    4s
+    linear
+    infinite;
 }
 
 
 /* =========================================================
-   LOGO
+   LOGIN ICON
 ========================================================= */
 
-.login-logo {
-  width: 88px;
-  height: 88px;
+.login-icon {
+  width: 78px;
+  height: 78px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   margin:
-    0 auto 17px;
-
-  padding:
-    8px;
+    0 auto 18px;
 
   border:
     1px solid
     rgba(8, 127, 140, 0.15);
 
-  border-radius:
-    22px;
+  border-radius: 20px;
 
   background:
     linear-gradient(
@@ -245,6 +252,9 @@
       #edf9fa
     );
 
+  color:
+    var(--login-primary);
+
   box-shadow:
     0 14px 34px
     rgba(8, 127, 140, 0.12);
@@ -252,10 +262,17 @@
   transition:
     transform 0.35s ease,
     box-shadow 0.35s ease;
+
+  animation:
+    loginIconIn
+    0.6s
+    0.05s
+    ease
+    both;
 }
 
 
-.login-logo:hover {
+.login-icon:hover {
   transform:
     translateY(-5px)
     rotate(-1deg)
@@ -264,88 +281,6 @@
   box-shadow:
     0 20px 42px
     rgba(8, 127, 140, 0.19);
-}
-
-
-/* =========================================================
-   LOGO IMAGE
-========================================================= */
-
-.login-logo-image {
-  width: 100%;
-  height: 100%;
-
-  display: block;
-
-  object-fit: contain;
-
-  border-radius:
-    15px;
-}
-
-
-/* =========================================================
-   BRAND
-========================================================= */
-
-.login-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  gap:
-    5px;
-
-  margin-bottom:
-    27px;
-
-  text-align:
-    center;
-
-  animation:
-    loginBrandIn 0.7s 0.15s ease both;
-}
-
-
-.login-brand-name {
-  color:
-    var(--login-primary);
-
-  font-size:
-    25px;
-
-  font-weight:
-    900;
-
-  line-height:
-    1;
-
-  letter-spacing:
-    0.13em;
-}
-
-
-.login-brand-description {
-  max-width:
-    320px;
-
-  color:
-    var(--login-light);
-
-  font-size:
-    10px;
-
-  font-weight:
-    700;
-
-  line-height:
-    1.5;
-
-  letter-spacing:
-    0.06em;
-
-  text-transform:
-    uppercase;
 }
 
 
@@ -376,6 +311,13 @@
 
   text-transform:
     uppercase;
+
+  animation:
+    loginBrandIn
+    0.7s
+    0.12s
+    ease
+    both;
 }
 
 
@@ -406,15 +348,19 @@
     center;
 
   animation:
-    loginTitleIn 0.65s 0.18s ease both;
+    loginTitleIn
+    0.65s
+    0.18s
+    ease
+    both;
 }
 
 
 /* =========================================================
-   SUBTITLE
+   DESCRIPTION
 ========================================================= */
 
-.login-subtitle {
+.login-card > p {
   max-width:
     350px;
 
@@ -432,6 +378,13 @@
 
   text-align:
     center;
+
+  animation:
+    loginTitleIn
+    0.65s
+    0.22s
+    ease
+    both;
 }
 
 
@@ -445,6 +398,9 @@
 
   align-items:
     flex-start;
+
+  gap:
+    9px;
 
   margin-bottom:
     20px;
@@ -475,7 +431,59 @@
     1.55;
 
   animation:
-    loginErrorIn 0.3s ease both;
+    loginErrorIn
+    0.3s
+    ease
+    both;
+}
+
+
+.login-error svg {
+  flex-shrink: 0;
+
+  margin-top:
+    2px;
+}
+
+
+/* =========================================================
+   SUCCESS
+========================================================= */
+
+.login-success {
+  margin-bottom:
+    20px;
+
+  padding:
+    13px 15px;
+
+  border:
+    1px solid
+    #c7e8d9;
+
+  border-radius:
+    10px;
+
+  background:
+    var(--login-success-bg);
+
+  color:
+    var(--login-success);
+
+  font-size:
+    14px;
+
+  font-weight:
+    650;
+
+  line-height:
+    1.55;
+
+  animation:
+    loginSuccessIn
+    0.3s
+    ease
+    both;
 }
 
 
@@ -483,7 +491,7 @@
    FORM
 ========================================================= */
 
-.login-form {
+.login-card form {
   display:
     flex;
 
@@ -510,7 +518,10 @@
     8px;
 
   animation:
-    loginFieldIn 0.5s ease both;
+    loginFieldIn
+    0.5s
+    ease
+    both;
 }
 
 
@@ -525,6 +536,10 @@
     0.22s;
 }
 
+
+/* =========================================================
+   FIELD LABEL
+========================================================= */
 
 .login-field label {
   color:
@@ -542,10 +557,10 @@
 
 
 /* =========================================================
-   LABEL ROW
+   PASSWORD LABEL ROW
 ========================================================= */
 
-.login-label-row {
+.login-password-label {
   display:
     flex;
 
@@ -560,13 +575,7 @@
 }
 
 
-.login-label-row label {
-  margin:
-    0;
-}
-
-
-.login-label-row a {
+.login-forgot-link {
   color:
     var(--login-primary);
 
@@ -585,7 +594,7 @@
 }
 
 
-.login-label-row a:hover {
+.login-forgot-link:hover {
   color:
     var(--login-primary-dark);
 
@@ -675,11 +684,23 @@
 }
 
 
+.login-field input:disabled {
+  opacity:
+    0.65;
+
+  cursor:
+    not-allowed;
+
+  background:
+    #f2f7f8;
+}
+
+
 /* =========================================================
    PASSWORD WRAPPER
 ========================================================= */
 
-.login-password {
+.login-password-wrap {
   position:
     relative;
 
@@ -688,7 +709,7 @@
 }
 
 
-.login-password input {
+.login-password-wrap input {
   padding-right:
     53px;
 }
@@ -761,13 +782,12 @@
 }
 
 
-.login-password-toggle:focus-visible {
-  outline:
-    2px solid
-    var(--login-primary);
+.login-password-toggle:disabled {
+  opacity:
+    0.5;
 
-  outline-offset:
-    2px;
+  cursor:
+    not-allowed;
 }
 
 
@@ -874,16 +894,6 @@
 }
 
 
-.login-submit:focus-visible {
-  outline:
-    2px solid
-    var(--login-primary);
-
-  outline-offset:
-    3px;
-}
-
-
 .login-submit svg {
   transition:
     transform 0.25s ease;
@@ -897,10 +907,39 @@
 
 
 /* =========================================================
-   REGISTER
+   SPINNER
 ========================================================= */
 
-.login-register {
+.login-spinner {
+  width:
+    17px;
+
+  height:
+    17px;
+
+  border:
+    2px solid
+    rgba(255, 255, 255, 0.35);
+
+  border-top-color:
+    #ffffff;
+
+  border-radius:
+    50%;
+
+  animation:
+    loginSpinner
+    0.7s
+    linear
+    infinite;
+}
+
+
+/* =========================================================
+   SIGNUP
+========================================================= */
+
+.login-signup {
   display:
     flex;
 
@@ -927,13 +966,13 @@
 }
 
 
-.login-register span {
+.login-signup span {
   color:
     var(--login-muted);
 }
 
 
-.login-register a {
+.login-signup a {
   color:
     var(--login-primary);
 
@@ -949,7 +988,7 @@
 }
 
 
-.login-register a:hover {
+.login-signup a:hover {
   color:
     var(--login-primary-dark);
 
@@ -962,10 +1001,10 @@
 
 
 /* =========================================================
-   SECURITY FOOTER
+   SUPPORT
 ========================================================= */
 
-.login-security {
+.login-support {
   display:
     flex;
 
@@ -1005,28 +1044,787 @@
 }
 
 
-.login-security-dot {
+.login-support button {
+  padding:
+    0;
+
+  color:
+    var(--login-primary);
+
+  border:
+    0;
+
+  background:
+    transparent;
+
+  font-family:
+    inherit;
+
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  transition:
+    color 0.2s ease;
+}
+
+
+.login-support button:hover {
+  color:
+    var(--login-primary-dark);
+
+  text-decoration:
+    underline;
+}
+
+
+/* =========================================================
+   MEMBERSHIP MODAL OVERLAY
+========================================================= */
+
+.login-membership-overlay {
+  position:
+    fixed;
+
+  inset:
+    0;
+
+  z-index:
+    99999;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    20px;
+
+  background:
+    rgba(16, 42, 47, 0.58);
+
+  backdrop-filter:
+    blur(9px);
+
+  -webkit-backdrop-filter:
+    blur(9px);
+
+  animation:
+    membershipOverlayIn
+    0.25s
+    ease
+    both;
+}
+
+
+/* =========================================================
+   MEMBERSHIP MODAL
+========================================================= */
+
+.login-membership-modal {
+  position:
+    relative;
+
   width:
-    7px;
+    min(480px, 100%);
+
+  max-height:
+    calc(100vh - 40px);
+
+  overflow-y:
+    auto;
+
+  padding:
+    38px 38px 30px;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.15);
+
+  border-radius:
+    22px;
+
+  background:
+    rgba(255, 255, 255, 0.98);
+
+  box-shadow:
+    0 35px 100px
+    rgba(16, 42, 47, 0.28);
+
+  text-align:
+    center;
+
+  animation:
+    membershipModalIn
+    0.35s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
+}
+
+
+/* =========================================================
+   MODAL TOP ACCENT
+========================================================= */
+
+.login-membership-modal::before {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  top:
+    0;
+
+  left:
+    40px;
+
+  right:
+    40px;
 
   height:
+    3px;
+
+  border-radius:
+    0 0 10px 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--login-primary),
+      #2aaeb0,
+      var(--login-primary),
+      transparent
+    );
+
+  background-size:
+    200% 100%;
+
+  animation:
+    loginAccent
+    4s
+    linear
+    infinite;
+}
+
+
+/* =========================================================
+   MODAL CLOSE
+========================================================= */
+
+.login-membership-close {
+  position:
+    absolute;
+
+  top:
+    13px;
+
+  right:
+    13px;
+
+  width:
+    36px;
+
+  height:
+    36px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border:
+    1px solid
+    #e4eeee;
+
+  border-radius:
+    9px;
+
+  background:
+    #f7fbfb;
+
+  color:
+    var(--login-muted);
+
+  font-family:
+    inherit;
+
+  font-size:
+    22px;
+
+  line-height:
+    1;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.login-membership-close:hover {
+  background:
+    var(--login-primary-light);
+
+  color:
+    var(--login-primary);
+
+  transform:
+    rotate(5deg);
+}
+
+
+/* =========================================================
+   MEMBERSHIP ICON
+========================================================= */
+
+.login-membership-icon {
+  width:
+    72px;
+
+  height:
+    72px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  margin:
+    0 auto 18px;
+
+  border:
+    1px solid
+    rgba(8, 127, 140, 0.15);
+
+  border-radius:
+    20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #edf9fa
+    );
+
+  color:
+    var(--login-primary);
+
+  box-shadow:
+    0 13px 30px
+    rgba(8, 127, 140, 0.11);
+
+  animation:
+    membershipIconIn
+    0.45s
+    0.05s
+    ease
+    both;
+}
+
+
+/* =========================================================
+   PENDING
+========================================================= */
+
+.login-membership-pending
+.login-membership-icon {
+  color:
+    var(--login-warning);
+
+  border-color:
+    #f4d7a3;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffdf8,
+      #fff7e8
+    );
+
+  box-shadow:
+    0 13px 30px
+    rgba(217, 119, 6, 0.10);
+}
+
+
+/* =========================================================
+   REJECTED
+========================================================= */
+
+.login-membership-rejected
+.login-membership-icon {
+  color:
+    var(--login-danger);
+
+  border-color:
+    #f0cccc;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fff2f2
+    );
+
+  box-shadow:
+    0 13px 30px
+    rgba(201, 75, 75, 0.10);
+}
+
+
+/* =========================================================
+   EXPIRED
+========================================================= */
+
+.login-membership-expired
+.login-membership-icon {
+  color:
+    var(--login-danger);
+
+  border-color:
+    #f0cccc;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fff2f2
+    );
+}
+
+
+/* =========================================================
+   WARNING
+========================================================= */
+
+.login-membership-warning
+.login-membership-icon {
+  color:
+    var(--login-primary);
+
+  border-color:
+    rgba(8, 127, 140, 0.15);
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #edf9fa
+    );
+}
+
+
+/* =========================================================
+   MODAL LABEL
+========================================================= */
+
+.login-membership-label {
+  display:
+    block;
+
+  margin-bottom:
+    9px;
+
+  color:
+    var(--login-primary);
+
+  font-size:
+    10px;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    0.18em;
+
+  text-transform:
+    uppercase;
+}
+
+
+/* =========================================================
+   MODAL TITLE
+========================================================= */
+
+.login-membership-modal h2 {
+  margin:
+    0;
+
+  color:
+    var(--login-text);
+
+  font-size:
+    29px;
+
+  font-weight:
+    850;
+
+  line-height:
+    1.18;
+
+  letter-spacing:
+    -0.035em;
+}
+
+
+/* =========================================================
+   MODAL MESSAGE
+========================================================= */
+
+.login-membership-modal > p {
+  max-width:
+    375px;
+
+  margin:
+    11px auto 23px;
+
+  color:
+    var(--login-muted);
+
+  font-size:
+    14px;
+
+  line-height:
+    1.7;
+}
+
+
+/* =========================================================
+   SUPPORT CONTACT
+========================================================= */
+
+.login-membership-support {
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    9px;
+
+  margin-bottom:
+    17px;
+}
+
+
+.login-membership-support > div {
+  min-height:
+    45px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
     7px;
 
+  padding:
+    0 10px;
+
+  border:
+    1px solid
+    #e1ecee;
+
+  border-radius:
+    9px;
+
+  background:
+    #f8fcfc;
+
+  color:
+    var(--login-muted);
+
+  font-size:
+    10px;
+}
+
+
+.login-membership-support svg {
   flex-shrink:
     0;
 
+  color:
+    var(--login-primary);
+}
+
+
+.login-membership-support a {
+  overflow:
+    hidden;
+
+  color:
+    var(--login-text);
+
+  font-size:
+    10px;
+
+  font-weight:
+    750;
+
+  text-decoration:
+    none;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+
+  transition:
+    color 0.2s ease;
+}
+
+
+.login-membership-support a:hover {
+  color:
+    var(--login-primary);
+
+  text-decoration:
+    underline;
+}
+
+
+/* =========================================================
+   MODAL ACTIONS
+========================================================= */
+
+.login-membership-actions {
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    9px;
+}
+
+
+/* =========================================================
+   CONTACT BUTTON
+========================================================= */
+
+.login-membership-contact,
+.login-membership-call {
+  min-height:
+    50px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    7px;
+
+  padding:
+    0 13px;
+
   border-radius:
-    50%;
+    10px;
+
+  font-family:
+    inherit;
+
+  font-size:
+    12px;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease,
+    border-color 0.22s ease;
+}
+
+
+/* =========================================================
+   CONTACT EMAIL
+========================================================= */
+
+.login-membership-contact {
+  border:
+    1px solid
+    var(--login-primary);
 
   background:
-    #16845b;
+    linear-gradient(
+      135deg,
+      var(--login-primary),
+      var(--login-primary-dark)
+    );
+
+  color:
+    #ffffff;
 
   box-shadow:
-    0 0 0 4px
-    rgba(22, 132, 91, 0.10);
+    0 9px 22px
+    rgba(8, 127, 140, 0.17);
+}
 
-  animation:
-    securityPulse 2s ease-in-out infinite;
+
+.login-membership-contact:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 14px 30px
+    rgba(8, 127, 140, 0.23);
+}
+
+
+/* =========================================================
+   CALL
+========================================================= */
+
+.login-membership-call {
+  border:
+    1px solid
+    #cbe4e6;
+
+  background:
+    #eef9fa;
+
+  color:
+    var(--login-primary);
+}
+
+
+.login-membership-call:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #9fcfd3;
+
+  background:
+    #e2f5f6;
+
+  box-shadow:
+    0 9px 22px
+    rgba(8, 127, 140, 0.09);
+}
+
+
+/* =========================================================
+   MODAL CLOSE / LATER
+========================================================= */
+
+.login-membership-later {
+  width:
+    100%;
+
+  margin-top:
+    12px;
+
+  padding:
+    7px;
+
+  border:
+    0;
+
+  background:
+    transparent;
+
+  color:
+    var(--login-light);
+
+  font-family:
+    inherit;
+
+  font-size:
+    11px;
+
+  font-weight:
+    750;
+
+  cursor:
+    pointer;
+
+  transition:
+    color 0.2s ease;
+}
+
+
+.login-membership-later:hover {
+  color:
+    var(--login-primary);
+
+  text-decoration:
+    underline;
+}
+
+
+/* =========================================================
+   MODAL SCROLLBAR
+========================================================= */
+
+.login-membership-modal::-webkit-scrollbar {
+  width:
+    6px;
+}
+
+
+.login-membership-modal::-webkit-scrollbar-track {
+  background:
+    transparent;
+}
+
+
+.login-membership-modal::-webkit-scrollbar-thumb {
+  border-radius:
+    20px;
+
+  background:
+    #c8dcde;
+}
+
+
+.login-membership-modal::-webkit-scrollbar-thumb:hover {
+  background:
+    var(--login-primary);
 }
 
 
@@ -1043,6 +1841,29 @@
     transform:
       translateY(28px)
       scale(0.98);
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+@keyframes loginIconIn {
+
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(12px)
+      scale(0.85);
   }
 
   to {
@@ -1143,6 +1964,29 @@
 }
 
 
+@keyframes loginSuccessIn {
+
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(-7px)
+      scale(0.98);
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
 @keyframes loginGlowPulse {
 
   0%,
@@ -1182,19 +2026,72 @@
 }
 
 
-@keyframes securityPulse {
+@keyframes loginSpinner {
 
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 3px
-      rgba(22, 132, 91, 0.10);
+  to {
+    transform:
+      rotate(360deg);
   }
 
-  50% {
-    box-shadow:
-      0 0 0 7px
-      rgba(22, 132, 91, 0.03);
+}
+
+
+@keyframes membershipOverlayIn {
+
+  from {
+    opacity:
+      0;
+  }
+
+  to {
+    opacity:
+      1;
+  }
+
+}
+
+
+@keyframes membershipModalIn {
+
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(25px)
+      scale(0.96);
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+@keyframes membershipIconIn {
+
+  from {
+    opacity:
+      0;
+
+    transform:
+      scale(0.65)
+      rotate(-8deg);
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      scale(1)
+      rotate(0);
   }
 
 }
@@ -1233,24 +2130,27 @@
   }
 
 
-  .login-logo {
+  .login-icon {
     width:
-      80px;
+      74px;
 
     height:
-      80px;
-  }
-
-
-  .login-brand-name {
-    font-size:
-      23px;
+      74px;
   }
 
 
   .login-card h1 {
     font-size:
       35px;
+  }
+
+
+  .login-membership-modal {
+    width:
+      min(460px, 100%);
+
+    padding:
+      34px 30px 27px;
   }
 
 }
@@ -1274,7 +2174,7 @@
   }
 
 
-  .login-glow {
+  .login-page::before {
     width:
       360px;
 
@@ -1304,39 +2204,18 @@
   }
 
 
-  .login-logo {
+  .login-icon {
     width:
-      72px;
+      70px;
 
     height:
-      72px;
+      70px;
 
     margin-bottom:
-      14px;
+      15px;
 
     border-radius:
       18px;
-  }
-
-
-  .login-brand {
-    margin-bottom:
-      22px;
-  }
-
-
-  .login-brand-name {
-    font-size:
-      21px;
-  }
-
-
-  .login-brand-description {
-    max-width:
-      260px;
-
-    font-size:
-      8px;
   }
 
 
@@ -1352,7 +2231,7 @@
   }
 
 
-  .login-subtitle {
+  .login-card > p {
     margin-top:
       9px;
 
@@ -1364,7 +2243,7 @@
   }
 
 
-  .login-form {
+  .login-card form {
     gap:
       18px;
   }
@@ -1391,7 +2270,7 @@
   }
 
 
-  .login-label-row a {
+  .login-forgot-link {
     font-size:
       12px;
   }
@@ -1406,15 +2285,95 @@
   }
 
 
-  .login-register {
+  .login-signup {
     font-size:
       13px;
   }
 
 
-  .login-security {
+  .login-support {
     font-size:
       10px;
+  }
+
+
+  /* ===============================================
+     MEMBERSHIP POPUP
+  =============================================== */
+
+  .login-membership-overlay {
+    padding:
+      12px;
+  }
+
+
+  .login-membership-modal {
+    width:
+      100%;
+
+    max-height:
+      calc(100vh - 24px);
+
+    padding:
+      31px 20px 23px;
+
+    border-radius:
+      18px;
+  }
+
+
+  .login-membership-modal::before {
+    left:
+      22px;
+
+    right:
+      22px;
+  }
+
+
+  .login-membership-icon {
+    width:
+      64px;
+
+    height:
+      64px;
+
+    border-radius:
+      17px;
+  }
+
+
+  .login-membership-modal h2 {
+    font-size:
+      25px;
+  }
+
+
+  .login-membership-modal > p {
+    font-size:
+      13px;
+
+    line-height:
+      1.6;
+  }
+
+
+  .login-membership-support {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .login-membership-actions {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .login-membership-contact,
+  .login-membership-call {
+    min-height:
+      49px;
   }
 
 }
@@ -1447,24 +2406,12 @@
   }
 
 
-  .login-logo {
+  .login-icon {
     width:
-      65px;
+      64px;
 
     height:
-      65px;
-  }
-
-
-  .login-brand-name {
-    font-size:
-      19px;
-  }
-
-
-  .login-brand-description {
-    font-size:
-      7px;
+      64px;
   }
 
 
@@ -1480,7 +2427,7 @@
   }
 
 
-  .login-subtitle {
+  .login-card > p {
     font-size:
       13px;
   }
@@ -1501,18 +2448,39 @@
   }
 
 
-  .login-label-row a {
-    font-size:
-      11px;
-  }
-
-
   .login-submit {
     min-height:
       50px;
 
     font-size:
       14px;
+  }
+
+
+  .login-membership-modal {
+    padding:
+      27px 16px 21px;
+  }
+
+
+  .login-membership-icon {
+    width:
+      58px;
+
+    height:
+      58px;
+  }
+
+
+  .login-membership-modal h2 {
+    font-size:
+      22px;
+  }
+
+
+  .login-membership-modal > p {
+    font-size:
+      12px;
   }
 
 }
@@ -1524,8 +2492,13 @@
 
 .login-submit:focus-visible,
 .login-password-toggle:focus-visible,
-.login-label-row a:focus-visible,
-.login-register a:focus-visible {
+.login-forgot-link:focus-visible,
+.login-signup a:focus-visible,
+.login-support button:focus-visible,
+.login-membership-close:focus-visible,
+.login-membership-contact:focus-visible,
+.login-membership-call:focus-visible,
+.login-membership-later:focus-visible {
   outline:
     3px solid
     rgba(8, 127, 140, 0.25);
