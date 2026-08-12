@@ -1048,6 +1048,25 @@ function Profile() {
     });
   };
 
+  const formatMembershipDateTime = (value) => {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const getMembershipAmount = () => {
     const amount =
@@ -1065,9 +1084,49 @@ function Profile() {
       return "—";
     }
 
-    return `₹${Number(amount).toLocaleString("en-IN")}`;
+    const numericAmount = Number(amount);
+
+    return Number.isNaN(numericAmount)
+      ? String(amount)
+      : `₹${numericAmount.toLocaleString("en-IN")}`;
   };
 
+  const getMembershipPlanName = () =>
+    membership?.plan?.name ||
+    membership?.planName ||
+    membership?.membershipPlanName ||
+    membership?.tenure ||
+    membership?.plan?.durationYears
+      ? (
+          membership?.plan?.name ||
+          membership?.planName ||
+          membership?.membershipPlanName ||
+          membership?.tenure ||
+          `${membership.plan.durationYears} Year Membership`
+        )
+      : "Membership";
+
+  const getMembershipDuration = () => {
+    const duration =
+      membership?.durationYears ??
+      membership?.plan?.durationYears ??
+      membership?.tenureYears ??
+      membership?.plan?.tenureYears;
+
+    if (
+      duration !== null &&
+      duration !== undefined &&
+      duration !== ""
+    ) {
+      return `${duration} ${Number(duration) === 1 ? "Year" : "Years"}`;
+    }
+
+    return (
+      membership?.duration ||
+      membership?.plan?.duration ||
+      "—"
+    );
+  };
 
   const getMembershipStartDate = () =>
     membership?.startDate ||
@@ -1075,13 +1134,11 @@ function Profile() {
     membership?.membershipStartDate ||
     membership?.approvedAt;
 
-
   const getMembershipEndDate = () =>
     membership?.endDate ||
     membership?.expiryDate ||
     membership?.expiresAt ||
     membership?.membershipEndDate;
-
 
   const getMembershipPurchaseDate = () =>
     membership?.purchaseDate ||
@@ -1089,20 +1146,83 @@ function Profile() {
     membership?.paymentDate ||
     membership?.createdAt;
 
+  const getMembershipUtr = () =>
+    membership?.utrNumber ||
+    membership?.utr ||
+    membership?.paymentUtr ||
+    membership?.transactionId ||
+    membership?.transactionNumber ||
+    "Not submitted";
 
-  const membershipStatus =
-    String(
+  const getPaymentStatus = () => {
+    const status = String(
+      membership?.paymentStatus ||
+      membership?.payment?.status ||
+      ""
+    ).toLowerCase();
+
+    if (status) {
+      return status;
+    }
+
+    if (
+      membership?.paymentReceived === true ||
+      membership?.paymentVerified === true
+    ) {
+      return "approved";
+    }
+
+    if (getMembershipUtr() !== "Not submitted") {
+      return "pending";
+    }
+
+    return "pending";
+  };
+
+  const getMembershipStatus = () => {
+    const status = String(
       membership?.status ||
       membership?.membershipStatus ||
       ""
     ).toLowerCase();
 
+    if (status) {
+      return status;
+    }
+
+    if (
+      membership?.isActive === true
+    ) {
+      return "active";
+    }
+
+    return "pending";
+  };
+
+  const membershipStatus = getMembershipStatus();
+  const paymentStatus = getPaymentStatus();
 
   const isMembershipActive =
     membershipStatus === "active" ||
     membershipStatus === "approved" ||
     membership?.isActive === true;
 
+  const isPaymentPending =
+    paymentStatus === "pending" ||
+    paymentStatus === "submitted" ||
+    paymentStatus === "verification_pending";
+
+  const isPaymentApproved =
+    paymentStatus === "approved" ||
+    paymentStatus === "paid" ||
+    paymentStatus === "received" ||
+    membership?.paymentReceived === true ||
+    membership?.paymentVerified === true;
+
+  const isPaymentRejected =
+    paymentStatus === "rejected" ||
+    paymentStatus === "failed" ||
+    paymentStatus === "not_received";
 
   // =========================================================
   // UI
@@ -2122,6 +2242,7 @@ function Profile() {
               </div>
 
               <div>
+
                 <span className="profile-label">
                   MEMBERSHIP
                 </span>
@@ -2131,8 +2252,10 @@ function Profile() {
                 </h2>
 
                 <p>
-                  View your membership payment and validity details.
+                  View your membership plan, payment,
+                  UTR and validity details.
                 </p>
+
               </div>
 
             </div>
@@ -2144,6 +2267,8 @@ function Profile() {
                     ? "profile-membership-status active"
                     : membershipStatus === "pending"
                     ? "profile-membership-status pending"
+                    : membershipStatus === "rejected"
+                    ? "profile-membership-status rejected"
                     : "profile-membership-status"
                 }
               >
@@ -2166,16 +2291,28 @@ function Profile() {
 
           ) : membership ? (
 
-            <div className="profile-membership-grid">
+            <>
 
-              <div className="profile-membership-item">
+              {/* PLAN SUMMARY */}
 
-                <div className="profile-membership-item-icon">
-                  <IndianRupee size={17} />
+              <div className="profile-membership-plan-summary">
+
+                <div>
+                  <span>Membership Plan</span>
+                  <strong>
+                    {getMembershipPlanName()}
+                  </strong>
                 </div>
 
                 <div>
-                  <span>Amount Paid</span>
+                  <span>Tenure</span>
+                  <strong>
+                    {getMembershipDuration()}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Amount</span>
                   <strong>
                     {getMembershipAmount()}
                   </strong>
@@ -2184,60 +2321,193 @@ function Profile() {
               </div>
 
 
-              <div className="profile-membership-item">
+              {/* PAYMENT STATUS */}
 
-                <div className="profile-membership-item-icon">
-                  <ShoppingCart size={17} />
-                </div>
+              <div
+                className={
+                  `profile-membership-payment-status ${
+                    isPaymentApproved
+                      ? "approved"
+                      : isPaymentRejected
+                      ? "rejected"
+                      : "pending"
+                  }`
+                }
+              >
+
+                {isPaymentApproved ? (
+                  <CheckCircle size={20} />
+                ) : isPaymentRejected ? (
+                  <AlertCircle size={20} />
+                ) : (
+                  <Clock3 size={20} />
+                )}
 
                 <div>
-                  <span>Date of Purchase</span>
+
                   <strong>
-                    {formatMembershipDate(
-                      getMembershipPurchaseDate()
-                    )}
+                    {isPaymentApproved
+                      ? "Payment Received"
+                      : isPaymentRejected
+                      ? "Payment Not Accepted"
+                      : "Payment Verification Pending"}
                   </strong>
+
+                  <p>
+                    {isPaymentApproved
+                      ? "Your payment has been received/verified by the administrator."
+                      : isPaymentRejected
+                      ? (
+                          membership?.rejectionReason ||
+                          membership?.paymentMessage ||
+                          "Your payment could not be verified. Please contact the administrator."
+                        )
+                      : "Your UTR has been submitted. Please wait while the administrator verifies your payment."}
+                  </p>
+
                 </div>
 
               </div>
 
 
-              <div className="profile-membership-item">
+              {/* MEMBERSHIP DETAILS */}
 
-                <div className="profile-membership-item-icon">
-                  <CalendarDays size={17} />
+              <div className="profile-membership-grid">
+
+                <div className="profile-membership-item">
+
+                  <div className="profile-membership-item-icon">
+                    <IndianRupee size={17} />
+                  </div>
+
+                  <div>
+                    <span>Amount Paid</span>
+                    <strong>
+                      {getMembershipAmount()}
+                    </strong>
+                  </div>
+
                 </div>
 
-                <div>
-                  <span>Membership Starts</span>
-                  <strong>
-                    {formatMembershipDate(
-                      getMembershipStartDate()
-                    )}
-                  </strong>
+
+             
+
+
+                <div className="profile-membership-item">
+
+                  <div className="profile-membership-item-icon">
+                    <FileText size={17} />
+                  </div>
+
+                  <div>
+                    <span>UTR / Transaction ID</span>
+                    <strong>
+                      {getMembershipUtr()}
+                    </strong>
+                  </div>
+
                 </div>
+
+
+                <div className="profile-membership-item">
+
+                  <div className="profile-membership-item-icon">
+                    <CheckCircle size={17} />
+                  </div>
+
+                  <div>
+                    <span>Payment Status</span>
+                    <strong>
+                      {isPaymentApproved
+                        ? "Received"
+                        : isPaymentRejected
+                        ? "Not Received"
+                        : "Pending Verification"}
+                    </strong>
+                  </div>
+
+                </div>
+
+
+                <div className="profile-membership-item">
+
+                  <div className="profile-membership-item-icon">
+                    <CalendarDays size={17} />
+                  </div>
+
+                  <div>
+                    <span>Membership Starts</span>
+                    <strong>
+                      {formatMembershipDate(
+                        getMembershipStartDate()
+                      )}
+                    </strong>
+                  </div>
+
+                </div>
+
+
+                <div className="profile-membership-item">
+
+                  <div className="profile-membership-item-icon">
+                    <Clock3 size={17} />
+                  </div>
+
+                  <div>
+                    <span>Membership Expires</span>
+                    <strong>
+                      {formatMembershipDate(
+                        getMembershipEndDate()
+                      )}
+                    </strong>
+                  </div>
+
+                </div>
+
+
+                {membership?.membershipNumber && (
+                  <div className="profile-membership-item">
+
+                    <div className="profile-membership-item-icon">
+                      <BadgeCheck size={17} />
+                    </div>
+
+                    <div>
+                      <span>Membership Number</span>
+                      <strong>
+                        {membership.membershipNumber}
+                      </strong>
+                    </div>
+
+                  </div>
+                )}
 
               </div>
 
 
-              <div className="profile-membership-item">
+              {/* PENDING MESSAGE */}
 
-                <div className="profile-membership-item-icon">
-                  <Clock3 size={17} />
+              {isPaymentPending && (
+                <div className="profile-membership-waiting">
+
+                  <Clock3 size={18} />
+
+                  <div>
+                    <strong>
+                      Waiting for confirmation
+                    </strong>
+
+                    <p>
+                      Your membership will become active
+                      only after the administrator confirms
+                      your payment.
+                    </p>
+                  </div>
+
                 </div>
+              )}
 
-                <div>
-                  <span>Membership Expires</span>
-                  <strong>
-                    {formatMembershipDate(
-                      getMembershipEndDate()
-                    )}
-                  </strong>
-                </div>
-
-              </div>
-
-            </div>
+            </>
 
           ) : (
 
@@ -2246,13 +2516,16 @@ function Profile() {
               <BadgeCheck size={25} />
 
               <div>
+
                 <strong>
                   No membership found
                 </strong>
 
                 <p>
-                  You have not purchased or activated a membership yet.
+                  You have not purchased or activated
+                  a membership yet.
                 </p>
+
               </div>
 
             </div>

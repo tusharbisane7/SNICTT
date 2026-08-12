@@ -337,6 +337,17 @@ const MembershipManagement =
       qrCode: "",
     });
 
+    // Desktop QR file selected by admin.
+    const [
+      qrFile,
+      setQrFile,
+    ] = useState(null);
+
+    const [
+      qrPreview,
+      setQrPreview,
+    ] = useState("");
+
     // =======================================================
     // UI
     // =======================================================
@@ -581,6 +592,18 @@ const MembershipManagement =
         },
         []
       );
+
+    // =======================================================
+    // CLEANUP LOCAL QR PREVIEW
+    // =======================================================
+
+    useEffect(() => {
+      return () => {
+        if (qrPreview) {
+          URL.revokeObjectURL(qrPreview);
+        }
+      };
+    }, [qrPreview]);
 
     // =======================================================
     // INITIAL LOAD
@@ -1366,6 +1389,58 @@ const MembershipManagement =
     // SAVE PAYMENT SETTINGS
     // =======================================================
 
+    const handleQrFileChange =
+      (event) => {
+        const file =
+          event.target.files?.[0];
+
+        if (!file) {
+          return;
+        }
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/webp",
+        ];
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+          setError(
+            "Only JPG, JPEG, PNG and WEBP images are allowed for payment QR."
+          );
+
+          event.target.value = "";
+          return;
+        }
+
+        if (
+          file.size >
+          5 * 1024 * 1024
+        ) {
+          setError(
+            "Payment QR image must be 5 MB or smaller."
+          );
+
+          event.target.value = "";
+          return;
+        }
+
+        setError("");
+        setQrFile(file);
+
+        const previewUrl =
+          URL.createObjectURL(file);
+
+        setQrPreview(
+          previewUrl
+        );
+      };
+
     const savePaymentSettings =
       async (
         event
@@ -1392,11 +1467,14 @@ const MembershipManagement =
           return;
         }
 
+        // A QR already stored in Cloudinary is valid.
+        // A new desktop file can also replace it.
         if (
+          !qrFile &&
           !paymentSettings.qrCode.trim()
         ) {
           setError(
-            "Payment QR URL is required."
+            "Please upload a payment QR image."
           );
 
           return;
@@ -1408,26 +1486,48 @@ const MembershipManagement =
           );
 
           setError("");
+          setSuccess("");
+
+          const formData =
+            new FormData();
+
+          formData.append(
+            "accountName",
+            paymentSettings.accountName.trim()
+          );
+
+          formData.append(
+            "upiId",
+            paymentSettings.upiId.trim()
+          );
+
+          if (qrFile) {
+            formData.append(
+              "qrCode",
+              qrFile
+            );
+          }
 
           const response =
             await api.put(
               "/membership/admin/payment-settings",
-              {
-                accountName:
-                  paymentSettings.accountName.trim(),
-
-                upiId:
-                  paymentSettings.upiId.trim(),
-
-                qrCode:
-                  paymentSettings.qrCode.trim(),
-              }
+              formData
             );
 
           setSuccess(
             response.data?.message ||
               "Payment settings updated successfully."
           );
+
+          setQrFile(null);
+
+          if (qrPreview) {
+            URL.revokeObjectURL(
+              qrPreview
+            );
+          }
+
+          setQrPreview("");
 
           await loadPaymentSettings();
         } catch (err) {
@@ -2477,32 +2577,33 @@ const MembershipManagement =
 
                 <div className="mm-form-field">
                   <label>
-                    Payment QR URL
+                    Payment QR Code
                   </label>
 
                   <input
-                    type="url"
-                    value={
-                      paymentSettings.qrCode
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={
+                      handleQrFileChange
                     }
-                    onChange={(
-                      event
-                    ) =>
-                      updatePaymentField(
-                        "qrCode",
-                        event.target
-                          .value
-                      )
-                    }
-                    placeholder="https://example.com/payment-qr.png"
                   />
 
                   <small>
-                    Upload the QR to your
-                    image hosting service
-                    and paste the public
-                    image URL here.
+                    Select the QR image directly
+                    from your desktop. Maximum
+                    size: 5 MB. JPG, JPEG, PNG
+                    and WEBP are supported.
                   </small>
+
+                  {qrFile && (
+                    <div className="mm-selected-file">
+                      <QrCode size={15} />
+
+                      <span>
+                        {qrFile.name}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -2539,9 +2640,11 @@ const MembershipManagement =
                 </div>
 
                 <div className="mm-qr-preview">
-                  {paymentSettings.qrCode ? (
+                  {qrPreview ||
+                  paymentSettings.qrCode ? (
                     <img
                       src={
+                        qrPreview ||
                         paymentSettings.qrCode
                       }
                       alt="Membership payment QR"

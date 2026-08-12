@@ -1694,14 +1694,45 @@ function Signup() {
 
             </div>
 
-            {paymentSettings?.qrCode && (
+            {paymentSettings?.qrCode ? (
               <div className="signup-payment-qr">
 
                 <img
                   src={paymentSettings.qrCode}
                   alt="SNICT membership payment QR"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+
+                    const parent =
+                      event.currentTarget.parentElement;
+
+                    if (
+                      parent &&
+                      !parent.querySelector(
+                        ".signup-payment-qr-error"
+                      )
+                    ) {
+                      const message =
+                        document.createElement("div");
+
+                      message.className =
+                        "signup-payment-qr-error";
+
+                      message.innerText =
+                        "Payment QR could not be loaded. Please contact the administrator.";
+
+                      parent.appendChild(message);
+                    }
+                  }}
                 />
 
+              </div>
+            ) : (
+              <div className="signup-payment-qr signup-payment-qr-empty">
+                <span>
+                  Payment QR is currently unavailable.
+                  Please contact the administrator.
+                </span>
               </div>
             )}
 

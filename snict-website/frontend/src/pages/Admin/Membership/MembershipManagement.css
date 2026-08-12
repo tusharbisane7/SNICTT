@@ -955,6 +955,29 @@
 }
 
 
+.mm-status-received {
+  background: #eaf8f1;
+  color: #16804b;
+  border: 1px solid #ccebd9;
+}
+
+.mm-status-approved {
+  background: #eaf8f1;
+  color: #16804b;
+}
+
+.mm-status-not_received {
+  background: #fff5f4;
+  color: #b42318;
+  border: 1px solid #f1d0cc;
+}
+
+.mm-status-rejected {
+  background: #fff5f4;
+  color: #b42318;
+}
+
+
 /* =========================================================
    ACTIONS
    ========================================================= */
@@ -2428,34 +2451,103 @@
 
 }
 
-.mm-action-verify {
+/* =========================================================
+   PAYMENT VERIFICATION / ADMIN ACTIONS - UPDATED
+   ========================================================= */
+
+.mm-actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mm-action-verify,
+.mm-action-approve,
+.mm-action-reject {
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 11px;
-  border: 1px solid #dbe4ff;
+  padding: 8px 12px;
   border-radius: 8px;
-  background: #f4f7ff;
-  color: #3157d5;
+  font-family: inherit;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    background .2s ease,
+    border-color .2s ease,
+    opacity .2s ease;
 }
 
-.mm-action-verify:hover {
+.mm-action-verify {
+  color: #3157d5;
+  border: 1px solid #dbe4ff;
+  background: #f4f7ff;
+}
+
+.mm-action-verify:hover:not(:disabled) {
+  transform: translateY(-1px);
   background: #e9efff;
   border-color: #b9c8ff;
+  box-shadow: 0 5px 14px rgba(49, 87, 213, .10);
 }
 
-.mm-action-verify.large {
-  padding: 11px 16px;
-  font-size: 12px;
+.mm-action-approve {
+  color: var(--mm-success);
+  border: 1px solid #ccebd9;
+  background: var(--mm-success-bg);
 }
+
+.mm-action-approve:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #e2f5e9;
+  border-color: #a8ddbd;
+  box-shadow: 0 5px 14px rgba(22, 128, 75, .10);
+}
+
+.mm-action-reject {
+  color: var(--mm-danger);
+  border: 1px solid #f1d0cc;
+  background: var(--mm-danger-bg);
+}
+
+.mm-action-reject:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #ffeceb;
+  border-color: #e4aaa4;
+  box-shadow: 0 5px 14px rgba(180, 35, 24, .08);
+}
+
+.mm-action-verify:disabled,
+.mm-action-approve:disabled,
+.mm-action-reject:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mm-action-verify.large,
+.mm-action-approve.large,
+.mm-action-reject.large {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: 9px;
+}
+
+
+/* =========================================================
+   PAYMENT VERIFICATION MODAL
+   ========================================================= */
 
 .mm-payment-verification-modal {
-  width: min(720px, calc(100vw - 30px));
+  width: min(760px, calc(100vw - 30px));
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -2464,55 +2556,84 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 15px;
-  margin-bottom: 18px;
+  margin: 20px 24px 0;
+  padding: 16px;
   border: 1px solid #dbe4ff;
   border-radius: 12px;
-  background: #f5f7ff;
+  background:
+    linear-gradient(135deg, #f5f7ff, #fafbff);
   color: #3157d5;
+}
+
+.mm-payment-check-banner svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .mm-payment-check-banner strong {
   display: block;
-  color: #172033;
-  font-size: 13px;
   margin-bottom: 4px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 850;
 }
 
 .mm-payment-check-banner p {
   margin: 0;
   color: #64748b;
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .mm-payment-verification-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  padding: 20px 24px 0;
+}
+
+.mm-payment-verification-grid .mm-detail-card {
+  min-height: 76px;
 }
 
 .mm-payment-highlight {
   border-color: #dbe4ff;
-  background: #f8faff;
+  background:
+    linear-gradient(135deg, #f8faff, #ffffff);
+  box-shadow: inset 3px 0 0 #647ff0;
+}
+
+.mm-payment-highlight > span {
+  color: #5266b8;
+}
+
+.mm-payment-highlight > strong {
+  color: #172b6b;
 }
 
 .mm-utr-large {
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  font-size: 15px !important;
+  letter-spacing: .35px;
   word-break: break-all;
-  letter-spacing: 0.4px;
 }
 
 .mm-payment-verification-note {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  margin-top: 16px;
-  padding: 12px;
+  margin: 18px 24px 0;
+  padding: 13px 14px;
+  border: 1px solid #f0dfb0;
   border-radius: 10px;
   background: #fff8e8;
   color: #8a5a00;
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .mm-payment-verification-note svg {
@@ -2520,18 +2641,144 @@
   margin-top: 1px;
 }
 
-@media (max-width: 600px) {
+
+/* =========================================================
+   DETAIL MODAL - LARGER READABLE TYPE
+   ========================================================= */
+
+.mm-details-modal {
+  width: min(850px, calc(100vw - 30px));
+}
+
+.mm-details-modal .mm-detail-card {
+  min-height: 78px;
+  padding: 16px;
+}
+
+.mm-details-modal .mm-detail-card > span {
+  font-size: 11px;
+}
+
+.mm-details-modal .mm-detail-card > strong {
+  font-size: 14px;
+}
+
+.mm-detail-card .mm-status-badge {
+  margin-top: 1px;
+}
+
+
+/* =========================================================
+   ACTION BAR
+   ========================================================= */
+
+.mm-modal-footer {
+  flex-wrap: wrap;
+}
+
+.mm-modal-footer .mm-action-verify.large,
+.mm-modal-footer .mm-action-approve.large,
+.mm-modal-footer .mm-action-reject.large,
+.mm-modal-footer .mm-secondary-button {
+  min-width: 145px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .mm-actions {
+    min-width: 150px;
+  }
+
+  .mm-action-verify,
+  .mm-action-approve,
+  .mm-action-reject {
+    font-size: 10px;
+    padding: 7px 9px;
+  }
+}
+
+@media (max-width: 700px) {
   .mm-payment-verification-grid {
     grid-template-columns: 1fr;
   }
 
-  .mm-payment-verification-modal
-  .mm-modal-footer {
-    flex-wrap: wrap;
+  .mm-payment-check-banner,
+  .mm-payment-verification-note {
+    margin-left: 18px;
+    margin-right: 18px;
   }
 
-  .mm-payment-verification-modal
+  .mm-payment-verification-grid {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .mm-modal-footer {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
   .mm-modal-footer button {
-    flex: 1;
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-width: 480px) {
+  .mm-payment-verification-modal,
+  .mm-details-modal {
+    width: calc(100vw - 18px);
+    max-height: 94vh;
+    border-radius: 14px;
+  }
+
+  .mm-modal-header {
+    padding: 17px;
+  }
+
+  .mm-modal-header h2 {
+    font-size: 19px;
+  }
+
+  .mm-payment-check-banner {
+    margin-top: 15px;
+    padding: 13px;
+  }
+
+  .mm-payment-check-banner strong {
+    font-size: 12px;
+  }
+
+  .mm-payment-check-banner p,
+  .mm-payment-verification-note {
+    font-size: 11px;
+  }
+
+  .mm-payment-verification-grid {
+    padding: 15px 13px 0;
+  }
+
+  .mm-payment-verification-note {
+    margin: 14px 13px 0;
+  }
+
+  .mm-modal-footer {
+    padding: 12px 13px;
+  }
+
+  .mm-modal-footer button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-action-verify,
+  .mm-action-approve,
+  .mm-action-reject {
+    transition: none !important;
   }
 }
