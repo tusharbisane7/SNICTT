@@ -15,6 +15,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 import api from "../../services/api";
 
+// Membership signup uses the authenticated membership endpoints
+// after registration. Make sure ../../services/api.js has
+// withCredentials: true for cookie authentication.
+
 import snictLogo from "../../assets/snict-logo.png";
 
 import "./Signup.css";
@@ -52,6 +56,31 @@ function Signup() {
 
   const [profilePreview, setProfilePreview] =
     useState("");
+
+  // =========================================================
+  // MEMBERSHIP STATE
+  // =========================================================
+
+  const [membershipPlans, setMembershipPlans] =
+    useState([]);
+
+  const [selectedPlanId, setSelectedPlanId] =
+    useState("");
+
+  const [paymentSettings, setPaymentSettings] =
+    useState(null);
+
+  const [membershipId, setMembershipId] =
+    useState(null);
+
+  const [utrNumber, setUtrNumber] =
+    useState("");
+
+  const [membershipStep, setMembershipStep] =
+    useState("plan");
+
+  const [membershipLoading, setMembershipLoading] =
+    useState(false);
 
   // =========================================================
   // UI STATE
@@ -282,6 +311,40 @@ function Signup() {
       }
     };
   }, [profilePreview]);
+
+  // =========================================================
+  // LOAD MEMBERSHIP PLANS
+  // =========================================================
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadMembershipPlans = async () => {
+      try {
+        const response = await api.get("/membership/plans");
+
+        if (mounted) {
+          setMembershipPlans(
+            Array.isArray(response.data?.plans)
+              ? response.data.plans
+              : []
+          );
+        }
+      } catch (error) {
+        console.error("Membership plans error:", error);
+
+        if (mounted) {
+          setMembershipPlans([]);
+        }
+      }
+    };
+
+    loadMembershipPlans();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // =========================================================
   // CHECK USERNAME
@@ -548,6 +611,10 @@ function Signup() {
       return "Passwords do not match.";
     }
 
+    if (membershipPlans.length > 0 && !selectedPlanId) {
+      return "Please select a membership plan.";
+    }
+
     return "";
   };
 
@@ -689,20 +756,110 @@ function Signup() {
         response.data
       );
 
-      setSuccess(
-        response.data?.message ||
-          "Account created successfully."
-      );
-
       // =====================================================
-      // REDIRECT TO LOGIN
+      // MEMBERSHIP FLOW
+      //
+      // Registration itself is completed first.
+      // Then we login using the same credentials so the
+      // protected membership endpoints can be called.
       // =====================================================
 
-      setTimeout(() => {
-        navigate("/login", {
-          replace: true,
-        });
-      }, 1200);
+      if (selectedPlanId) {
+        setMembershipLoading(true);
+
+        try {
+          const loginResponse = await api.post(
+            "/auth/login",
+            {
+              identifier: form.username.trim().toLowerCase(),
+              password: form.password,
+            }
+          );
+
+          if (!loginResponse.data?.success) {
+            throw new Error("Automatic login failed");
+          }
+
+          const applyResponse = await api.post(
+            "/membership/apply",
+            {
+              planId: Number(selectedPlanId),
+            }
+          );
+
+          const createdMembership =
+            applyResponse.data?.membership;
+
+          if (!createdMembership?.id) {
+            throw new Error(
+              "Membership application was not created"
+            );
+          }
+
+          setMembershipId(createdMembership.id);
+
+          // Load the admin-managed payment QR/settings.
+          // The backend should expose payment settings publicly
+          // if payment is required immediately after signup.
+          try {
+            const settingsResponse = await api.get(
+              "/membership/payment-settings"
+            );
+
+            setPaymentSettings(
+              settingsResponse.data?.settings ||
+                settingsResponse.data?.paymentSettings ||
+                null
+            );
+          } catch (settingsError) {
+            console.warn(
+              "Public payment settings endpoint unavailable:",
+              settingsError
+            );
+
+            // Keep the flow usable if your backend instead
+            // returns payment settings from the apply endpoint.
+            setPaymentSettings(
+              applyResponse.data?.paymentSettings ||
+                null
+            );
+          }
+
+          setMembershipStep("payment");
+
+          setSuccess(
+            "Account created. Complete your membership payment and enter the UTR number."
+          );
+        } catch (membershipError) {
+          console.error(
+            "Membership signup flow error:",
+            membershipError
+          );
+
+          setSuccess(
+            response.data?.message ||
+              "Account created successfully."
+          );
+
+          setError(
+            membershipError.response?.data?.message ||
+              "Account was created, but membership setup could not be completed. Please login and complete membership from your membership page."
+          );
+        } finally {
+          setMembershipLoading(false);
+        }
+      } else {
+        setSuccess(
+          response.data?.message ||
+            "Account created successfully."
+        );
+
+        setTimeout(() => {
+          navigate("/login", {
+            replace: true,
+          });
+        }, 1200);
+      }
 
     } catch (error) {
       console.error(
@@ -760,6 +917,80 @@ function Signup() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // =========================================================
+  // SUBMIT MEMBERSHIP PAYMENT / UTR
+  // =========================================================
+
+  const handlePaymentSubmit = async (event) => {
+    event.preventDefault();
+
+    if (membershipLoading) {
+      return;
+    }
+
+    const cleanUtr = String(utrNumber).trim();
+
+    if (!membershipId) {
+      setError(
+        "Membership application was not created. Please login and try again."
+      );
+      return;
+    }
+
+    if (!cleanUtr) {
+      setError("Please enter your UTR / transaction number.");
+      return;
+    }
+
+    if (cleanUtr.length < 6 || cleanUtr.length > 50) {
+      setError("Please enter a valid UTR / transaction number.");
+      return;
+    }
+
+    try {
+      setError("");
+      setSuccess("");
+      setMembershipLoading(true);
+
+      const response = await api.post(
+        "/membership/payment",
+        {
+          membershipId,
+          utrNumber: cleanUtr,
+        }
+      );
+
+      setSuccess(
+        response.data?.message ||
+          "Payment submitted successfully. Your membership is now waiting for admin approval."
+      );
+
+      setMembershipStep("submitted");
+    } catch (error) {
+      console.error(
+        "Membership payment error:",
+        error
+      );
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to submit payment details."
+      );
+    } finally {
+      setMembershipLoading(false);
+    }
+  };
+
+  // =========================================================
+  // CONTINUE TO LOGIN
+  // =========================================================
+
+  const finishMembershipFlow = () => {
+    navigate("/login", {
+      replace: true,
+    });
   };
 
   // =========================================================
@@ -1535,9 +1766,237 @@ function Signup() {
 
 
           {/* =================================================
+              MEMBERSHIP PLAN
+          ================================================= */}
+
+          {membershipStep === "plan" && (
+            <section className="signup-membership-section">
+              <div className="signup-membership-header">
+                <div>
+                  <span className="signup-membership-eyebrow">
+                    MEMBERSHIP
+                  </span>
+
+                  <h2>
+                    Choose your SNICT membership
+                  </h2>
+
+                  <p>
+                    Select a membership plan. After your account
+                    is created, you can pay using the official
+                    payment QR and submit your UTR for approval.
+                  </p>
+                </div>
+              </div>
+
+              {membershipPlans.length > 0 ? (
+                <div className="signup-membership-plans">
+                  {membershipPlans.map((plan) => {
+                    const planId = String(
+                      plan.id ?? plan.planId
+                    );
+
+                    const duration =
+                      plan.durationYears ??
+                      plan.duration_years ??
+                      1;
+
+                    const price =
+                      Number(
+                        plan.price ??
+                          plan.amount ??
+                          0
+                      );
+
+                    const name =
+                      plan.name ||
+                      `${duration} Year Membership`;
+
+                    const active =
+                      plan.isActive ??
+                      plan.is_active ??
+                      true;
+
+                    if (!active) {
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={planId}
+                        type="button"
+                        className={`signup-membership-plan ${
+                          String(selectedPlanId) === planId
+                            ? "selected"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setSelectedPlanId(planId)
+                        }
+                      >
+                        <span className="membership-plan-check">
+                          {String(selectedPlanId) === planId
+                            ? "✓"
+                            : ""}
+                        </span>
+
+                        <span className="membership-plan-name">
+                          {name}
+                        </span>
+
+                        <span className="membership-plan-duration">
+                          Valid for {duration}{" "}
+                          {Number(duration) === 1
+                            ? "year"
+                            : "years"}
+                        </span>
+
+                        <strong className="membership-plan-price">
+                          ₹{price.toLocaleString("en-IN")}
+                        </strong>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="signup-membership-empty">
+                  Membership plans are currently unavailable.
+                  You can create your account and join later
+                  from the membership section.
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* =================================================
+              MEMBERSHIP PAYMENT
+          ================================================= */}
+
+          {membershipStep === "payment" && (
+            <section className="signup-payment-section">
+              <div className="signup-payment-header">
+                <span className="signup-membership-eyebrow">
+                  PAYMENT
+                </span>
+
+                <h2>
+                  Complete membership payment
+                </h2>
+
+                <p>
+                  Scan the official SNICT payment QR, complete
+                  the payment, then enter the UTR number below.
+                </p>
+              </div>
+
+              {paymentSettings?.qrCode && (
+                <div className="signup-payment-qr">
+                  <img
+                    src={paymentSettings.qrCode}
+                    alt="SNICT membership payment QR"
+                  />
+                </div>
+              )}
+
+              <div className="signup-payment-details">
+                {paymentSettings?.accountName && (
+                  <div>
+                    <span>Account Name</span>
+                    <strong>
+                      {paymentSettings.accountName}
+                    </strong>
+                  </div>
+                )}
+
+                {paymentSettings?.upiId && (
+                  <div>
+                    <span>UPI ID</span>
+                    <strong>
+                      {paymentSettings.upiId}
+                    </strong>
+                  </div>
+                )}
+              </div>
+
+              <form
+                className="signup-payment-form"
+                onSubmit={handlePaymentSubmit}
+              >
+                <div className="form-field full">
+                  <label htmlFor="utrNumber">
+                    UTR / Transaction Number
+                  </label>
+
+                  <input
+                    id="utrNumber"
+                    type="text"
+                    value={utrNumber}
+                    onChange={(event) =>
+                      setUtrNumber(event.target.value)
+                    }
+                    placeholder="Enter payment UTR number"
+                    maxLength={50}
+                    autoComplete="off"
+                  />
+
+                  <small className="field-help">
+                    Your payment will remain pending until
+                    an administrator verifies it.
+                  </small>
+                </div>
+
+                <button
+                  type="submit"
+                  className="auth-submit"
+                  disabled={membershipLoading}
+                >
+                  {membershipLoading
+                    ? "Submitting payment..."
+                    : "Submit UTR for Approval"}
+                </button>
+              </form>
+            </section>
+          )}
+
+          {/* =================================================
+              MEMBERSHIP SUBMITTED
+          ================================================= */}
+
+          {membershipStep === "submitted" && (
+            <section className="signup-membership-success">
+              <div className="membership-success-icon">
+                ✓
+              </div>
+
+              <h2>
+                Membership application submitted
+              </h2>
+
+              <p>
+                Your payment details have been submitted.
+                Your membership is now waiting for admin
+                approval.
+              </p>
+
+              <p>
+                You can login to check your membership status.
+              </p>
+
+              <button
+                type="button"
+                className="auth-submit"
+                onClick={finishMembershipFlow}
+              >
+                Continue to Login
+              </button>
+            </section>
+          )}
+
+          {/* =================================================
               SUBMIT
           ================================================= */}
 
+          {membershipStep === "plan" && (
           <button
             type="submit"
             className="auth-submit"
@@ -1581,6 +2040,7 @@ function Signup() {
             )}
 
           </button>
+          )}
 
         </form>
 

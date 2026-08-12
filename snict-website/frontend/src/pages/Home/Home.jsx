@@ -19,11 +19,12 @@ import {
   Video,
 } from "lucide-react";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import api from "../../services/api";
 
 import "./Home.css";
+import LoginRequiredModal from "../../components/LoginRequiredModal";
 
 // =========================================================
 // LOOPING TYPING TEXT COMPONENT
@@ -614,6 +615,8 @@ const formatSliderDate = (value) => {
 
 function Home() {
 
+  const navigate = useNavigate();
+
   // =========================================================
   // USER AUTHENTICATION
   // =========================================================
@@ -623,6 +626,9 @@ function Home() {
 
   const [authLoading, setAuthLoading] =
     useState(true);
+
+  const [showLoginModal, setShowLoginModal] =
+    useState(false);
 
   // =========================================================
   // COMMITTEE
@@ -1241,6 +1247,28 @@ function Home() {
     ]);
 
   // =========================================================
+  // PROTECTED EVENT NAVIGATION
+  // =========================================================
+  // Event booking is available only to logged-in users.
+  // If the visitor is not logged in, show the login/signup
+  // popup instead of opening the event page.
+  // =========================================================
+
+  const handleProtectedEventNavigation = (path) => {
+
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    navigate(path);
+  };
+
+  // =========================================================
   // RENDER
   // =========================================================
 
@@ -1415,7 +1443,7 @@ function Home() {
                   </strong>
 
                   <span>
-                    Healthcare
+                    Building the Future
                   </span>
 
                 </div>
@@ -1435,7 +1463,7 @@ function Home() {
                   </strong>
 
                   <span>
-                    In Practice
+                    Striving for Excellence in Knowledge, Skills, Practice and Patient Care.
                   </span>
 
                 </div>
@@ -1457,7 +1485,7 @@ function Home() {
                   </strong>
 
                   <span>
-                    To Grow
+                    Creating Opportunities for Growth, Leadership, Innovation and a better future.
                   </span>
 
                 </div>
@@ -1477,7 +1505,7 @@ function Home() {
                   </strong>
 
                   <span>
-                    For Tomorrow
+                    Advancing Patient Care.
                   </span>
 
                 </div>
@@ -2039,6 +2067,13 @@ function Home() {
             <Link
               to="/events"
               className="home-events-view-all"
+              onClick={(eventClick) => {
+                if (authLoading || !user) {
+                  eventClick.preventDefault();
+                  setShowLoginModal(true);
+                  return;
+                }
+              }}
             >
 
               View All Events
@@ -2331,6 +2366,13 @@ function Home() {
                             <Link
                               to={`/events/${event.id}`}
                               className="home-event-link"
+                              onClick={(eventClick) => {
+                                if (authLoading || !user) {
+                                  eventClick.preventDefault();
+                                  setShowLoginModal(true);
+                                  return;
+                                }
+                              }}
                             >
 
                               View Event
@@ -2685,6 +2727,13 @@ function Home() {
           <Link
             to="/events"
             className="events-btn"
+            onClick={(eventClick) => {
+              if (authLoading || !user) {
+                eventClick.preventDefault();
+                setShowLoginModal(true);
+                return;
+              }
+            }}
           >
 
             Explore Events
@@ -2754,6 +2803,14 @@ function Home() {
         </div>
 
       </section>
+
+      {/* =====================================================
+          LOGIN REQUIRED POPUP
+          ===================================================== */}
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
 
     </main>
 

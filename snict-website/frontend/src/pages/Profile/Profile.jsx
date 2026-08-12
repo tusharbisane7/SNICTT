@@ -6,6 +6,10 @@ import {
   CheckCircle,
   AlertCircle,
   ShieldCheck,
+  BadgeCheck,
+  Clock3,
+  IndianRupee,
+  ShoppingCart,
   Mail,
   Phone,
   MapPin,
@@ -85,6 +89,16 @@ function Profile() {
   const [success, setSuccess] =
     useState("");
 
+  // =========================================================
+  // MEMBERSHIP
+  // =========================================================
+
+  const [membership, setMembership] =
+    useState(null);
+
+  const [membershipLoading, setMembershipLoading] =
+    useState(true);
+
 
   // =========================================================
   // BIO WORD COUNT
@@ -138,6 +152,36 @@ function Profile() {
     }
 
     return `${cleanBaseUrl}/${imageUrl}`;
+  };
+
+
+  // =========================================================
+  // LOAD MEMBERSHIP
+  // =========================================================
+
+  const loadMembership = async () => {
+    try {
+      setMembershipLoading(true);
+
+      const response =
+        await api.get("/membership/me");
+
+      const data =
+        response.data;
+
+      const membershipData =
+        data?.membership ||
+        data?.data ||
+        data?.member ||
+        null;
+
+      setMembership(membershipData);
+    } catch (error) {
+      // A user may simply not have a membership yet.
+      setMembership(null);
+    } finally {
+      setMembershipLoading(false);
+    }
   };
 
 
@@ -197,6 +241,8 @@ function Profile() {
     setImagePreview(
       existingImage
     );
+
+    loadMembership();
 
     setProfileImage(null);
 
@@ -978,6 +1024,84 @@ function Profile() {
     );
 
   }
+
+
+  // =========================================================
+  // MEMBERSHIP HELPERS
+  // =========================================================
+
+  const formatMembershipDate = (value) => {
+    if (!value) {
+      return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+
+  const getMembershipAmount = () => {
+    const amount =
+      membership?.amount ??
+      membership?.price ??
+      membership?.paymentAmount ??
+      membership?.plan?.price ??
+      membership?.planPrice;
+
+    if (
+      amount === null ||
+      amount === undefined ||
+      amount === ""
+    ) {
+      return "—";
+    }
+
+    return `₹${Number(amount).toLocaleString("en-IN")}`;
+  };
+
+
+  const getMembershipStartDate = () =>
+    membership?.startDate ||
+    membership?.validFrom ||
+    membership?.membershipStartDate ||
+    membership?.approvedAt;
+
+
+  const getMembershipEndDate = () =>
+    membership?.endDate ||
+    membership?.expiryDate ||
+    membership?.expiresAt ||
+    membership?.membershipEndDate;
+
+
+  const getMembershipPurchaseDate = () =>
+    membership?.purchaseDate ||
+    membership?.purchasedAt ||
+    membership?.paymentDate ||
+    membership?.createdAt;
+
+
+  const membershipStatus =
+    String(
+      membership?.status ||
+      membership?.membershipStatus ||
+      ""
+    ).toLowerCase();
+
+
+  const isMembershipActive =
+    membershipStatus === "active" ||
+    membershipStatus === "approved" ||
+    membership?.isActive === true;
 
 
   // =========================================================
@@ -1979,6 +2103,161 @@ function Profile() {
             </button>
 
           </form>
+
+        </section>
+
+
+        {/* =================================================
+            MEMBERSHIP INFORMATION
+        ================================================= */}
+
+        <section className="profile-membership-card">
+
+          <div className="profile-membership-header">
+
+            <div className="profile-membership-title-wrap">
+
+              <div className="profile-membership-icon">
+                <BadgeCheck size={22} />
+              </div>
+
+              <div>
+                <span className="profile-label">
+                  MEMBERSHIP
+                </span>
+
+                <h2>
+                  Membership Information
+                </h2>
+
+                <p>
+                  View your membership payment and validity details.
+                </p>
+              </div>
+
+            </div>
+
+            {membership && (
+              <span
+                className={
+                  isMembershipActive
+                    ? "profile-membership-status active"
+                    : membershipStatus === "pending"
+                    ? "profile-membership-status pending"
+                    : "profile-membership-status"
+                }
+              >
+                {membershipStatus
+                  ? membershipStatus.charAt(0).toUpperCase() +
+                    membershipStatus.slice(1)
+                  : "Membership"}
+              </span>
+            )}
+
+          </div>
+
+
+          {membershipLoading ? (
+
+            <div className="profile-membership-loading">
+              <span className="profile-button-spinner" />
+              <span>Loading membership details...</span>
+            </div>
+
+          ) : membership ? (
+
+            <div className="profile-membership-grid">
+
+              <div className="profile-membership-item">
+
+                <div className="profile-membership-item-icon">
+                  <IndianRupee size={17} />
+                </div>
+
+                <div>
+                  <span>Amount Paid</span>
+                  <strong>
+                    {getMembershipAmount()}
+                  </strong>
+                </div>
+
+              </div>
+
+
+              <div className="profile-membership-item">
+
+                <div className="profile-membership-item-icon">
+                  <ShoppingCart size={17} />
+                </div>
+
+                <div>
+                  <span>Date of Purchase</span>
+                  <strong>
+                    {formatMembershipDate(
+                      getMembershipPurchaseDate()
+                    )}
+                  </strong>
+                </div>
+
+              </div>
+
+
+              <div className="profile-membership-item">
+
+                <div className="profile-membership-item-icon">
+                  <CalendarDays size={17} />
+                </div>
+
+                <div>
+                  <span>Membership Starts</span>
+                  <strong>
+                    {formatMembershipDate(
+                      getMembershipStartDate()
+                    )}
+                  </strong>
+                </div>
+
+              </div>
+
+
+              <div className="profile-membership-item">
+
+                <div className="profile-membership-item-icon">
+                  <Clock3 size={17} />
+                </div>
+
+                <div>
+                  <span>Membership Expires</span>
+                  <strong>
+                    {formatMembershipDate(
+                      getMembershipEndDate()
+                    )}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+          ) : (
+
+            <div className="profile-membership-empty">
+
+              <BadgeCheck size={25} />
+
+              <div>
+                <strong>
+                  No membership found
+                </strong>
+
+                <p>
+                  You have not purchased or activated a membership yet.
+                </p>
+              </div>
+
+            </div>
+
+          )}
 
         </section>
 

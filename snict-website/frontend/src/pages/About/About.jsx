@@ -15,13 +15,28 @@ import {
   Handshake,
 } from "lucide-react";
 
+import { useState } from "react";
+
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import LoginRequiredModal from "../../components/LoginRequiredModal";
 
 import "./About.css";
 
 function About() {
   const { user } = useAuth();
+
+  const [showLoginModal, setShowLoginModal] =
+    useState(false);
+
+  const handleMembershipClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    window.location.href = "/membership";
+  };
 
   return (
     <main className="about-page">
@@ -63,15 +78,14 @@ function About() {
 
             <div className="about-hero-actions">
 
-              {!user && (
-                <Link
-                  to="/membership"
-                  className="about-primary-btn"
-                >
-                  Become a Member
-                  <ArrowRight size={17} />
-                </Link>
-              )}
+              <button
+                type="button"
+                className="about-primary-btn"
+                onClick={handleMembershipClick}
+              >
+                Become a Member
+                <ArrowRight size={17} />
+              </button>
 
               <Link
                 to="/team"
@@ -136,7 +150,7 @@ function About() {
                 </strong>
 
                 <span>
-                  Healthcare
+                 Building the Future,
                 </span>
               </div>
 
@@ -159,7 +173,7 @@ function About() {
                 </strong>
 
                 <span>
-                  In Practice
+                 Striving for Excellence in Knowledge, Skills, Practice and Patient Care.
                 </span>
               </div>
 
@@ -182,7 +196,7 @@ function About() {
                 </strong>
 
                 <span>
-                  To Grow
+                Creating Opportunities for Growth, Leadership, Innovation and a better future.
                 </span>
               </div>
 
@@ -663,15 +677,23 @@ function About() {
 
             <div className="about-cta-actions">
 
-              {!user && (
-                <Link
-                  to="/signup"
-                  className="about-cta-primary"
-                >
-                  Create Your Account
-                  <ArrowRight size={18} />
-                </Link>
-              )}
+              <button
+                type="button"
+                className="about-cta-primary"
+                onClick={() => {
+                  if (!user) {
+                    setShowLoginModal(true);
+                    return;
+                  }
+
+                  window.location.href = "/membership";
+                }}
+              >
+                {user
+                  ? "Become a Member"
+                  : "Create Your Account"}
+                <ArrowRight size={18} />
+              </button>
 
               <Link
                 to="/contact"
@@ -688,6 +710,13 @@ function About() {
 
       </section>
 
+
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() =>
+          setShowLoginModal(false)
+        }
+      />
 
     </main>
   );

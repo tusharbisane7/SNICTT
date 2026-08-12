@@ -1,6 +1,5 @@
 const express = require("express");
 
-
 // =========================================================
 // ADMIN CONTROLLER
 // =========================================================
@@ -11,8 +10,10 @@ const {
   getAdminProfile,
   updateAdminProfile,
   changeAdminPassword,
-} = require("../controllers/adminController");
 
+  // NEW
+  resetUserPassword,
+} = require("../controllers/adminController");
 
 // =========================================================
 // USER MANAGEMENT CONTROLLER
@@ -26,7 +27,6 @@ const {
   getMemberStats,
 } = require("../controllers/userManagementController");
 
-
 // =========================================================
 // ADMIN MIDDLEWARE
 // =========================================================
@@ -34,19 +34,15 @@ const {
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-
 // =========================================================
 // ROUTER
 // =========================================================
 
-const router =
-  express.Router();
-
+const router = express.Router();
 
 // =========================================================
 // PUBLIC ADMIN ROUTES
 // =========================================================
-
 
 // ---------------------------------------------------------
 // ADMIN LOGIN
@@ -58,11 +54,9 @@ router.post(
   adminLogin
 );
 
-
 // =========================================================
 // PROTECTED ADMIN ROUTES
 // =========================================================
-
 
 // ---------------------------------------------------------
 // GET ADMIN PROFILE
@@ -75,7 +69,6 @@ router.get(
   getAdminProfile
 );
 
-
 // ---------------------------------------------------------
 // UPDATE ADMIN PROFILE
 // PUT /api/admin/profile
@@ -86,7 +79,6 @@ router.put(
   adminMiddleware,
   updateAdminProfile
 );
-
 
 // ---------------------------------------------------------
 // CHANGE ADMIN PASSWORD
@@ -99,7 +91,6 @@ router.put(
   changeAdminPassword
 );
 
-
 // ---------------------------------------------------------
 // ADMIN LOGOUT
 // POST /api/admin/logout
@@ -111,11 +102,9 @@ router.post(
   adminLogout
 );
 
-
 // =========================================================
 // MEMBER / USER MANAGEMENT
 // =========================================================
-
 
 // ---------------------------------------------------------
 // GET MEMBER STATISTICS
@@ -128,7 +117,6 @@ router.get(
   getMemberStats
 );
 
-
 // ---------------------------------------------------------
 // GET ALL MEMBERS
 // GET /api/admin/members
@@ -139,7 +127,6 @@ router.get(
   adminMiddleware,
   getAllMembers
 );
-
 
 // ---------------------------------------------------------
 // GET SINGLE MEMBER
@@ -152,7 +139,6 @@ router.get(
   getMemberById
 );
 
-
 // ---------------------------------------------------------
 // UPDATE MEMBER
 // PUT /api/admin/members/:id
@@ -163,7 +149,6 @@ router.put(
   adminMiddleware,
   updateMember
 );
-
 
 // ---------------------------------------------------------
 // DELETE MEMBER
@@ -176,6 +161,27 @@ router.delete(
   deleteMember
 );
 
+// =========================================================
+// RESET USER PASSWORD
+// =========================================================
+//
+// Admin creates a new password for a user.
+//
+// PUT
+// /api/admin/members/:id/reset-password
+//
+// Body:
+// {
+//   "newPassword": "NewPassword123"
+// }
+//
+// =========================================================
+
+router.put(
+  "/members/:id/reset-password",
+  adminMiddleware,
+  resetUserPassword
+);
 
 // =========================================================
 // EXPORT

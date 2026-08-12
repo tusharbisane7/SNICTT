@@ -3,10 +3,12 @@ import {
   Routes,
   Route,
 } from "react-router-dom";
+
 import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+
 
 // =====================================================
 // PUBLIC PAGES
@@ -21,6 +23,7 @@ import EventDetails from "./pages/EventDetails/EventDetails";
 import Membership from "./pages/Membership/Membership";
 import Contact from "./pages/Contact/Contact";
 import Members from "./pages/Members/Members";
+
 import PlacementCommittee
   from "./pages/PlacementCommittee/PlacementCommittee";
 
@@ -32,6 +35,8 @@ import ComplianceCommittee
 
 import WorkingCommittee
   from "./pages/WorkingCommittee/WorkingCommittee";
+
+
 // =====================================================
 // USER AUTHENTICATION
 // =====================================================
@@ -43,6 +48,7 @@ import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import ChangePassword from "./pages/ChangePassword/ChangePassword";
 import Dashboard from "./pages/Dashboard/Dashboard";
 
+
 // =====================================================
 // EVENT USER PAGES
 // =====================================================
@@ -50,34 +56,59 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import EventBooking from "./pages/EventBooking/EventBooking";
 import BookingHistory from "./pages/BookingHistory/BookingHistory";
 
+
 // =====================================================
 // ADMIN
 // =====================================================
 
 import AdminLogin from "./pages/Admin/AdminLogin";
 
-import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
+import AdminDashboard
+  from "./pages/Admin/Dashboard/AdminDashboard";
 
-import CommitteeManagement from "./pages/Admin/Committees/CommitteeManagement";
+import CommitteeManagement
+  from "./pages/Admin/Committees/CommitteeManagement";
 
-import EventManagement from "./pages/Admin/Events/EventManagement";
+import EventManagement
+  from "./pages/Admin/Events/EventManagement";
 
-import BookingManagement from "./pages/Admin/Bookings/BookingManagement";
+import BookingManagement
+  from "./pages/Admin/Bookings/BookingManagement";
 
-import UserManagement from "./pages/Admin/Users/UserManagement";
+import UserManagement
+  from "./pages/Admin/Users/UserManagement";
 
-import MembershipManagement from "./pages/Admin/Membership/MembershipManagement";
+import MembershipManagement
+  from "./pages/Admin/Membership/MembershipManagement";
 
-import SliderManagement from "./pages/Admin/Slider/SliderManagement";
+import SliderManagement
+  from "./pages/Admin/Slider/SliderManagement";
 
+
+// =====================================================
 // PAYMENT MANAGEMENT
-import PaymentManagement from "./pages/Admin/Payments/PaymentManagement";
-import AdminProfile from "./pages/Admin/Profile/AdminProfile";
+// =====================================================
+
+import PaymentManagement
+  from "./pages/Admin/Payments/PaymentManagement";
+
+import AdminProfile
+  from "./pages/Admin/Profile/AdminProfile";
+
+
+// =====================================================
+// APP
+// =====================================================
 
 function App() {
+
   return (
+
     <BrowserRouter>
-<ScrollToTop />
+
+      <ScrollToTop />
+
+
       {/* =====================================================
           NAVBAR
       ===================================================== */}
@@ -86,6 +117,7 @@ function App() {
 
 
       <Routes>
+
 
         {/* =====================================================
             PUBLIC ROUTES
@@ -96,39 +128,48 @@ function App() {
           element={<Home />}
         />
 
+
         <Route
-  path="/members"
-  element={<Members />}
-/>
-<Route
-  path="/committees/placement"
-  element={<PlacementCommittee />}
-/>
+          path="/members"
+          element={<Members />}
+        />
 
-<Route
-  path="/committees/academic"
-  element={<AcademicCommittee />}
-/>
 
-<Route
-  path="/committees/compliance"
-  element={<ComplianceCommittee />}
-/>
+        <Route
+          path="/committees/placement"
+          element={<PlacementCommittee />}
+        />
 
-<Route
-  path="/committees/working"
-  element={<WorkingCommittee />}
-/>
+
+        <Route
+          path="/committees/academic"
+          element={<AcademicCommittee />}
+        />
+
+
+        <Route
+          path="/committees/compliance"
+          element={<ComplianceCommittee />}
+        />
+
+
+        <Route
+          path="/committees/working"
+          element={<WorkingCommittee />}
+        />
+
 
         <Route
           path="/about"
           element={<About />}
         />
 
+
         <Route
           path="/team"
           element={<Team />}
         />
+
 
         <Route
           path="/committees"
@@ -144,6 +185,7 @@ function App() {
           path="/events"
           element={<Events />}
         />
+
 
         <Route
           path="/events/:id"
@@ -180,10 +222,12 @@ function App() {
           element={<Login />}
         />
 
+
         <Route
           path="/signup"
           element={<Signup />}
         />
+
 
         <Route
           path="/forgot-password"
@@ -204,6 +248,7 @@ function App() {
           }
         />
 
+
         <Route
           path="/profile"
           element={
@@ -212,6 +257,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
 
         <Route
           path="/change-password"
@@ -235,6 +281,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
 
         <Route
           path="/booking-history"
@@ -305,10 +352,16 @@ function App() {
           element={<UserManagement />}
         />
 
-<Route
-  path="/admin/profile"
-  element={<AdminProfile />}
-/>
+
+        {/* =====================================================
+            ADMIN PROFILE
+        ===================================================== */}
+
+        <Route
+          path="/admin/profile"
+          element={<AdminProfile />}
+        />
+
 
         {/* =====================================================
             ADMIN MEMBERSHIP MANAGEMENT
@@ -320,10 +373,15 @@ function App() {
         />
 
 
-<Route
-  path="/admin/sliders"
-  element={<SliderManagement />}
-/>
+        {/* =====================================================
+            ADMIN SLIDER MANAGEMENT
+        ===================================================== */}
+
+        <Route
+          path="/admin/sliders"
+          element={<SliderManagement />}
+        />
+
 
         {/* =====================================================
             ADMIN PAYMENT MANAGEMENT
@@ -346,5 +404,6 @@ function App() {
     </BrowserRouter>
   );
 }
+
 
 export default App;

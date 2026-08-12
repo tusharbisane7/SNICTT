@@ -82,17 +82,15 @@ const adminLogin = async (req, res) => {
 
     // =====================================================
     // SET ADMIN COOKIE
-    //
-    // Netlify frontend + Render backend are different
-    // sites, so production requires:
-    // secure: true
-    // sameSite: "none"
     // =====================================================
 
     res.cookie("snict_admin_token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production"
+          ? "none"
+          : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -108,19 +106,12 @@ const adminLogin = async (req, res) => {
 
       admin: {
         id: admin.id,
-
         username: admin.username,
-
         name: admin.name || "Administrator",
-
         email: admin.email || "",
-
         mobile: admin.mobile || "",
-
         role: admin.role || "admin",
-
         createdAt: admin.created_at,
-
         updatedAt: admin.updated_at,
       },
     });
@@ -142,8 +133,11 @@ const adminLogin = async (req, res) => {
 const adminLogout = (req, res) => {
   res.clearCookie("snict_admin_token", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
+    sameSite:
+      process.env.NODE_ENV === "production"
+        ? "none"
+        : "lax",
     path: "/",
   });
 
@@ -192,19 +186,12 @@ const getAdminProfile = async (req, res) => {
 
       admin: {
         id: admin.id,
-
         username: admin.username,
-
         name: admin.name || "Administrator",
-
         email: admin.email || "",
-
         mobile: admin.mobile || "",
-
         role: admin.role || "admin",
-
         createdAt: admin.created_at,
-
         updatedAt: admin.updated_at,
       },
     });
@@ -282,7 +269,7 @@ const updateAdminProfile = async (req, res) => {
     }
 
     // =====================================================
-    // CHECK USERNAME ALREADY EXISTS
+    // CHECK USERNAME
     // =====================================================
 
     const existingUsername = await pool.query(
@@ -311,13 +298,16 @@ const updateAdminProfile = async (req, res) => {
     const result = await pool.query(
       `
       UPDATE admins
+
       SET
         name = $1,
         username = $2,
         email = $3,
         mobile = $4,
         updated_at = CURRENT_TIMESTAMP
+
       WHERE id = $5
+
       RETURNING
         id,
         username,
@@ -354,19 +344,12 @@ const updateAdminProfile = async (req, res) => {
 
       admin: {
         id: admin.id,
-
         username: admin.username,
-
         name: admin.name || "Administrator",
-
         email: admin.email || "",
-
         mobile: admin.mobile || "",
-
         role: admin.role || "admin",
-
         createdAt: admin.created_at,
-
         updatedAt: admin.updated_at,
       },
     });
@@ -378,7 +361,6 @@ const updateAdminProfile = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-
       message:
         "Unable to update admin profile",
 
@@ -515,9 +497,11 @@ const changeAdminPassword = async (req, res) => {
     await pool.query(
       `
       UPDATE admins
+
       SET
         password_hash = $1,
         updated_at = CURRENT_TIMESTAMP
+
       WHERE id = $2
       `,
       [
@@ -525,10 +509,6 @@ const changeAdminPassword = async (req, res) => {
         adminId,
       ]
     );
-
-    // =====================================================
-    // RESPONSE
-    // =====================================================
 
     return res.json({
       success: true,
@@ -543,9 +523,191 @@ const changeAdminPassword = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-
       message:
         "Unable to change admin password",
+
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : undefined,
+    });
+  }
+};
+
+// =========================================================
+// RESET USER PASSWORD
+// PUT /api/admin/members/:id/reset-password
+// =========================================================
+//
+// ADMIN ONLY
+//
+// Admin can create a NEW password for any user.
+//
+// IMPORTANT:
+// We NEVER return the existing password/hash.
+// Password is stored securely using bcrypt.
+//
+// =========================================================
+
+const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      newPassword,
+    } = req.body;
+
+    // =====================================================
+    // VALIDATE USER ID
+    // =====================================================
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required.",
+      });
+    }
+
+    // =====================================================
+    // VALIDATE PASSWORD
+    // =====================================================
+
+    if (!newPassword) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "New password is required.",
+      });
+    }
+
+    if (
+      typeof newPassword !== "string"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password must be a valid string.",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password must be at least 8 characters.",
+      });
+    }
+
+    // =====================================================
+    // FIND USER
+    // =====================================================
+
+    const userResult = await pool.query(
+      `
+      SELECT
+        id,
+        full_name,
+        username,
+        email,
+        password_hash
+      FROM users
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [id]
+    );
+
+    if (
+      userResult.rows.length === 0
+    ) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "User not found.",
+      });
+    }
+
+    const user =
+      userResult.rows[0];
+
+    // =====================================================
+    // CHECK IF NEW PASSWORD IS SAME
+    // =====================================================
+
+    const samePassword =
+      await bcrypt.compare(
+        newPassword,
+        user.password_hash
+      );
+
+    if (samePassword) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "New password must be different from the current password.",
+      });
+    }
+
+    // =====================================================
+    // HASH NEW PASSWORD
+    // =====================================================
+
+    const passwordHash =
+      await bcrypt.hash(
+        newPassword,
+        12
+      );
+
+    // =====================================================
+    // UPDATE USER PASSWORD
+    // =====================================================
+
+    await pool.query(
+      `
+      UPDATE users
+
+      SET
+        password_hash = $1,
+        reset_otp_hash = NULL,
+        reset_otp_expires = NULL,
+        updated_at = CURRENT_TIMESTAMP
+
+      WHERE id = $2
+      `,
+      [
+        passwordHash,
+        id,
+      ]
+    );
+
+    // =====================================================
+    // RESPONSE
+    // =====================================================
+
+    return res.json({
+      success: true,
+
+      message:
+        "User password reset successfully.",
+
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Reset user password error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+
+      message:
+        "Unable to reset user password",
 
       error:
         process.env.NODE_ENV === "development"
@@ -565,4 +727,7 @@ module.exports = {
   getAdminProfile,
   updateAdminProfile,
   changeAdminPassword,
+
+  // NEW
+  resetUserPassword,
 };

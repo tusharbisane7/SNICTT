@@ -1128,7 +1128,7 @@
 
 /* =========================================================
    NEW GENERATION / EXCELLENCE / OPPORTUNITY / TECHNOLOGY
-   ROTATING HERO CARDS AROUND HEART
+   COMPACT ROTATING HERO CARDS AROUND HEART
    ========================================================= */
 
 .medical-orbit {
@@ -1136,69 +1136,155 @@
   inset: 0;
   z-index: 8;
   pointer-events: none;
-  animation: medicalOrbitRotate 18s linear infinite;
+  animation: medicalOrbitRotate 20s linear infinite;
   transform-origin: center center;
 }
 
 .medical-orbit .medical-card {
+  position: absolute;
   pointer-events: auto;
+
+  width: 175px;
+  max-width: 175px;
+  min-width: 0;
+  min-height: 58px;
+
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  overflow: hidden;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(110, 213, 223, 0.18);
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(10, 43, 53, 0.94),
+      rgba(4, 25, 32, 0.92)
+    );
+
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.22);
+
+  backdrop-filter: blur(12px);
+
+  animation: medicalCardCounterRotate 20s linear infinite;
+
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    scale 0.3s ease;
 }
 
-/* Keep each card upright while the orbit rotates */
-.medical-orbit .medical-card-one,
-.medical-orbit .medical-card-two,
-.medical-orbit .medical-card-three,
-.medical-orbit .medical-card-four {
-  animation: medicalCardCounterRotate 18s linear infinite;
+/* =========================================================
+   CARD CONTENT
+   ========================================================= */
+
+.medical-orbit .medical-card > div:last-child {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
-/* Four balanced positions around the heart */
+.medical-orbit .medical-card strong {
+  display: block;
+  margin: 0;
+
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 700;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.medical-orbit .medical-card span {
+  display: -webkit-box;
+  margin-top: 3px;
+
+  color: #8faeb4;
+  font-size: 8px;
+  line-height: 1.3;
+
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* =========================================================
+   CARD ICON
+   ========================================================= */
+
+.medical-orbit .medical-card-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+  color: var(--snict-cyan);
+  background: rgba(110, 213, 223, 0.07);
+
+  animation: medicalIconPulse 2.8s ease-in-out infinite;
+}
+
+/* =========================================================
+   CARD POSITIONS
+   ========================================================= */
+
 .medical-orbit .medical-card-one {
   left: 50%;
-  top: 2%;
+  top: 5%;
   transform: translateX(-50%);
 }
 
 .medical-orbit .medical-card-two {
-  right: 1%;
+  right: 2%;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .medical-orbit .medical-card-three {
   left: 50%;
-  bottom: 2%;
+  bottom: 5%;
   transform: translateX(-50%);
 }
 
 .medical-orbit .medical-card-four {
-  left: 1%;
+  left: 2%;
   top: 50%;
   transform: translateY(-50%);
 }
 
-/* Override the old floating animations inside the rotating orbit */
-.medical-orbit .medical-card-one,
-.medical-orbit .medical-card-two,
-.medical-orbit .medical-card-three,
-.medical-orbit .medical-card-four {
-  min-width: 155px;
-}
+/* =========================================================
+   HOVER
+   ========================================================= */
 
 .medical-orbit .medical-card:hover {
   animation-play-state: paused;
-  transform: translate(-50%, -50%) scale(1.045);
+
+  border-color: rgba(110, 213, 223, 0.45);
+
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.30),
+    0 0 25px rgba(110, 213, 223, 0.10);
+
+  scale: 1.04;
 }
 
-.medical-orbit .medical-card-one:hover,
-.medical-orbit .medical-card-three:hover {
-  transform: translateX(-50%) scale(1.045);
-}
-
-.medical-orbit .medical-card-two:hover,
-.medical-orbit .medical-card-four:hover {
-  transform: translateY(-50%) scale(1.045);
-}
+/* =========================================================
+   ORBIT ROTATION
+   ========================================================= */
 
 @keyframes medicalOrbitRotate {
   from {
@@ -1220,10 +1306,9 @@
   }
 }
 
-/* Subtle icon pulse for the four new cards */
-.medical-orbit .medical-card-icon {
-  animation: medicalIconPulse 2.8s ease-in-out infinite;
-}
+/* =========================================================
+   ICON PULSE
+   ========================================================= */
 
 @keyframes medicalIconPulse {
   0%,
@@ -1232,17 +1317,17 @@
   }
 
   50% {
-    box-shadow: 0 0 18px rgba(110, 213, 223, 0.16);
+    box-shadow: 0 0 14px rgba(110, 213, 223, 0.14);
   }
 }
 
-/* Respect accessibility preferences */
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
   .medical-orbit,
-  .medical-orbit .medical-card-one,
-  .medical-orbit .medical-card-two,
-  .medical-orbit .medical-card-three,
-  .medical-orbit .medical-card-four,
+  .medical-orbit .medical-card,
   .medical-orbit .medical-card-icon {
     animation: none !important;
   }
@@ -1254,72 +1339,84 @@
 
 @media (max-width: 900px) {
   .medical-orbit .medical-card {
-    min-width: 135px;
-    padding: 11px 12px;
-    gap: 8px;
-  }
-
-  .medical-orbit .medical-card strong {
-    font-size: 11px;
-  }
-
-  .medical-orbit .medical-card span {
-    font-size: 9px;
+    width: 145px;
+    max-width: 145px;
+    min-height: 52px;
+    padding: 8px 10px;
+    gap: 7px;
   }
 
   .medical-orbit .medical-card-icon {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+  }
+
+  .medical-orbit .medical-card strong {
+    font-size: 10px;
+  }
+
+  .medical-orbit .medical-card span {
+    font-size: 7px;
   }
 
   .medical-orbit .medical-card-one {
-    top: 4%;
+    top: 6%;
   }
 
   .medical-orbit .medical-card-three {
-    bottom: 4%;
+    bottom: 6%;
   }
 
   .medical-orbit .medical-card-two {
-    right: -1%;
+    right: 0;
   }
 
   .medical-orbit .medical-card-four {
-    left: -1%;
+    left: 0;
   }
 }
 
 @media (max-width: 600px) {
   .hero-visual {
-    width: min(100%, 420px);
+    width: min(100%, 360px);
   }
 
   .medical-core {
-    width: 155px;
-    height: 155px;
+    width: 150px;
+    height: 150px;
   }
 
   .medical-orbit .medical-card {
-    min-width: 116px;
-    max-width: 132px;
-    padding: 9px 10px;
-    gap: 7px;
-    border-radius: 11px;
+    width: 112px;
+    max-width: 112px;
+    min-height: 46px;
+    padding: 7px 8px;
+    gap: 6px;
+    border-radius: 9px;
+  }
+
+  .medical-orbit .medical-card-icon {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 6px;
+  }
+
+  .medical-orbit .medical-card-icon svg {
+    width: 14px;
+    height: 14px;
   }
 
   .medical-orbit .medical-card strong {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .medical-orbit .medical-card span {
     margin-top: 2px;
-    font-size: 7px;
-  }
-
-  .medical-orbit .medical-card-icon {
-    width: 27px;
-    height: 27px;
-    border-radius: 7px;
+    font-size: 6px;
+    line-height: 1.2;
+    -webkit-line-clamp: 2;
   }
 
   .medical-orbit .medical-card-one {
@@ -1331,11 +1428,11 @@
   }
 
   .medical-orbit .medical-card-two {
-    right: -2%;
+    right: -1%;
   }
 
   .medical-orbit .medical-card-four {
-    left: -2%;
+    left: -1%;
   }
 }
 

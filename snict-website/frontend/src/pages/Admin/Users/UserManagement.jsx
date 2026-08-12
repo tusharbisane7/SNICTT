@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   AlertCircle,
   CheckCircle2,
+  KeyRound,
 } from "lucide-react";
 
 import api from "../../../services/api";
@@ -53,6 +54,22 @@ function UserManagement() {
     useState(null);
 
   const [actionLoading, setActionLoading] =
+    useState(false);
+
+  // =========================================================
+  // RESET USER PASSWORD
+  // =========================================================
+
+  const [resetPasswordMember, setResetPasswordMember] =
+    useState(null);
+
+  const [resetPassword, setResetPassword] =
+    useState("");
+
+  const [resetPasswordConfirm, setResetPasswordConfirm] =
+    useState("");
+
+  const [showResetPassword, setShowResetPassword] =
     useState(false);
 
   // =========================================================
@@ -679,6 +696,100 @@ function UserManagement() {
     };
 
   // =========================================================
+  // RESET USER PASSWORD
+  // =========================================================
+
+  const openResetPassword = (member) => {
+    const id = getMemberId(member);
+
+    if (!id) {
+      setError("Invalid member ID.");
+      return;
+    }
+
+    setSelectedMember(null);
+    setEditingMember(null);
+    setResetPasswordMember(member);
+    setResetPassword("");
+    setResetPasswordConfirm("");
+    setShowResetPassword(false);
+    setError("");
+  };
+
+  const closeResetPassword = () => {
+    if (!actionLoading) {
+      setResetPasswordMember(null);
+      setResetPassword("");
+      setResetPasswordConfirm("");
+      setShowResetPassword(false);
+    }
+  };
+
+  const handleResetPassword = async (event) => {
+    event.preventDefault();
+
+    if (actionLoading || !resetPasswordMember) {
+      return;
+    }
+
+    if (resetPassword.length < 8) {
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+
+    if (resetPassword !== resetPasswordConfirm) {
+      setError("New password and confirm password do not match.");
+      return;
+    }
+
+    const id = getMemberId(resetPasswordMember);
+
+    if (!id) {
+      setError("Invalid member ID.");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      setError("");
+
+      const response = await api.put(
+        `/admin/members/${id}/reset-password`,
+        { newPassword: resetPassword }
+      );
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message ||
+            "Unable to reset user password."
+        );
+      }
+
+      setSuccess(
+        `Password reset successfully for ${getName(resetPasswordMember)}.`
+      );
+
+      setResetPasswordMember(null);
+      setResetPassword("");
+      setResetPasswordConfirm("");
+      setShowResetPassword(false);
+    } catch (error) {
+      console.error(
+        "Reset user password error:",
+        error
+      );
+
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          "Unable to reset user password."
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // =========================================================
   // CLOSE MODALS
   // =========================================================
 
@@ -1281,6 +1392,23 @@ function UserManagement() {
                               </button>
 
 
+                              {/* RESET PASSWORD */}
+
+                              <button
+                                type="button"
+                                className="user-reset-password-btn"
+                                onClick={() =>
+                                  openResetPassword(member)
+                                }
+                                disabled={
+                                  actionLoading
+                                }
+                                title="Reset password"
+                              >
+                                <KeyRound size={15} />
+                              </button>
+
+
                               {/* DELETE */}
 
                               <button
@@ -1720,6 +1848,23 @@ function UserManagement() {
 
                 <button
                   type="button"
+                  className="user-modal-reset-password"
+                  onClick={() =>
+                    openResetPassword(
+                      selectedMember
+                    )
+                  }
+                  disabled={
+                    actionLoading
+                  }
+                >
+                  <KeyRound size={16} />
+                  Reset Password
+                </button>
+
+
+                <button
+                  type="button"
                   className="user-modal-delete"
                   onClick={() =>
                     deleteMember(
@@ -2095,6 +2240,162 @@ function UserManagement() {
 
         </div>
 
+      )}
+
+      {/* =====================================================
+          RESET USER PASSWORD MODAL
+      ===================================================== */}
+
+      {resetPasswordMember && (
+        <div
+          className="user-modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeResetPassword();
+            }
+          }}
+        >
+          <section
+            className="user-reset-password-modal"
+            role="dialog"
+            aria-modal="true"
+          >
+            <header className="user-modal-header">
+              <div>
+                <span>SECURITY MANAGEMENT</span>
+                <h2>Reset User Password</h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeResetPassword}
+                disabled={actionLoading}
+              >
+                <X size={19} />
+              </button>
+            </header>
+
+            <form
+              className="user-reset-password-form"
+              onSubmit={handleResetPassword}
+            >
+              <div className="reset-password-user-card">
+                <div className="user-member-avatar">
+                  {getProfileImage(resetPasswordMember) ? (
+                    <img
+                      src={getProfileImage(resetPasswordMember)}
+                      alt={getName(resetPasswordMember)}
+                    />
+                  ) : (
+                    <User size={20} />
+                  )}
+                </div>
+
+                <div>
+                  <strong>
+                    {getName(resetPasswordMember)}
+                  </strong>
+                  <span>
+                    @{getUsername(resetPasswordMember)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="reset-password-warning">
+                <ShieldCheck size={18} />
+                <p>
+                  The existing password cannot be viewed.
+                  Enter a new password to replace it.
+                </p>
+              </div>
+
+              <div className="user-form-group">
+                <label>New Password</label>
+
+                <div className="reset-password-input-wrap">
+                  <input
+                    type={
+                      showResetPassword
+                        ? "text"
+                        : "password"
+                    }
+                    value={resetPassword}
+                    onChange={(event) =>
+                      setResetPassword(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Enter new password"
+                    minLength={8}
+                    autoComplete="new-password"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="reset-password-toggle"
+                    onClick={() =>
+                      setShowResetPassword(
+                        (previous) => !previous
+                      )
+                    }
+                    tabIndex={-1}
+                  >
+                    {showResetPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+
+                <small>
+                  Minimum 8 characters.
+                </small>
+              </div>
+
+              <div className="user-form-group">
+                <label>Confirm New Password</label>
+
+                <input
+                  type={
+                    showResetPassword
+                      ? "text"
+                      : "password"
+                  }
+                  value={resetPasswordConfirm}
+                  onChange={(event) =>
+                    setResetPasswordConfirm(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Re-enter new password"
+                  minLength={8}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
+              <div className="user-edit-actions">
+                <button
+                  type="button"
+                  className="user-form-cancel"
+                  onClick={closeResetPassword}
+                  disabled={actionLoading}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="user-reset-submit"
+                  disabled={actionLoading}
+                >
+                  <KeyRound size={16} />
+                  {actionLoading
+                    ? "Resetting..."
+                    : "Reset Password"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
       )}
 
     </main>

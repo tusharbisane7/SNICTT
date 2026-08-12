@@ -1,227 +1,237 @@
 /* =========================================================
    MEMBERSHIP MANAGEMENT
-========================================================= */
+   SNICT ADMIN UI
+   Matching mm-* JSX classes
+   LARGE / READABLE TYPOGRAPHY VERSION
+   ========================================================= */
 
-.membership-management-page {
-  min-height: 100vh;
+.membership-management {
+  --mm-primary: #0d7377;
+  --mm-primary-dark: #095b5e;
+  --mm-primary-light: #e9f7f7;
+  --mm-secondary: #155e75;
+
+  --mm-bg: #f5f9fa;
+  --mm-card: #ffffff;
+
+  --mm-text: #183b50;
+  --mm-heading: #102a43;
+  --mm-muted: #728792;
+  --mm-soft: #8a9ba3;
+
+  --mm-border: #dce8ea;
+  --mm-border-light: #edf2f3;
+
+  --mm-success: #16804b;
+  --mm-success-bg: #edf9f2;
+
+  --mm-warning: #a66a08;
+  --mm-warning-bg: #fff8e8;
+
+  --mm-danger: #b42318;
+  --mm-danger-bg: #fff5f4;
+
+  width: 100%;
+  min-height: calc(100vh - 80px);
+
+  padding: 32px;
+
   background:
     radial-gradient(
-      circle at 10% 0%,
-      rgba(8, 126, 164, 0.08),
+      circle at 92% 0%,
+      rgba(13, 115, 119, 0.08),
       transparent 28%
     ),
     radial-gradient(
-      circle at 90% 10%,
-      rgba(15, 118, 110, 0.06),
+      circle at 0% 45%,
+      rgba(88, 183, 181, 0.06),
       transparent 25%
     ),
-    #f6f9fc;
+    linear-gradient(
+      180deg,
+      #f8fbfc 0%,
+      #eef5f6 100%
+    );
 
-  padding: 32px 24px 60px;
-
-  color: #14202b;
+  color: var(--mm-text);
 
   box-sizing: border-box;
-}
-
-.membership-management-container {
-  width: 100%;
-  max-width: 1450px;
-  margin: 0 auto;
-}
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.membership-management-loading {
-  min-height: 70vh;
-
-  display: flex;
-  flex-direction: column;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 16px;
-
-  color: #607080;
-}
-
-.membership-loading-spinner {
-  width: 42px;
-  height: 42px;
-
-  border-radius: 50%;
-
-  border: 3px solid #dce7ee;
-  border-top-color: #087ea4;
-
-  animation: membershipSpin 0.8s linear infinite;
-}
-
-@keyframes membershipSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.membership-spin {
-  animation: membershipSpin 0.8s linear infinite;
 }
 
 
 /* =========================================================
    HEADER
-========================================================= */
+   ========================================================= */
 
-.membership-management-header {
+.mm-header {
+  width: 100%;
+
   display: flex;
-
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
 
-  gap: 24px;
+  gap: 25px;
 
   margin-bottom: 28px;
 }
 
-.membership-management-label {
-  display: inline-flex;
-
+.mm-header-left {
+  display: flex;
   align-items: center;
 
-  padding: 6px 11px;
-
-  border-radius: 999px;
-
-  background: rgba(8, 126, 164, 0.08);
-
-  border: 1px solid rgba(8, 126, 164, 0.14);
-
-  color: #087ea4;
-
-  font-size: 11px;
-  font-weight: 800;
-
-  letter-spacing: 0.12em;
+  gap: 17px;
 }
 
-.membership-management-header h1 {
-  margin: 11px 0 7px;
+.mm-header-icon {
+  width: 60px;
+  height: 60px;
 
-  color: #10212d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  font-size: clamp(28px, 3vw, 40px);
+  flex-shrink: 0;
 
-  line-height: 1.1;
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      var(--mm-primary),
+      var(--mm-secondary)
+    );
+
+  color: white;
+
+  box-shadow:
+    0 10px 25px
+    rgba(13, 115, 119, 0.18);
+}
+
+.mm-eyebrow {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--mm-primary);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  letter-spacing: 0.13em;
+}
+
+.mm-header h1 {
+  margin: 0;
+
+  color: var(--mm-heading);
+
+  font-size: clamp(30px, 3vw, 40px);
+
+  line-height: 1.15;
 
   font-weight: 800;
 
   letter-spacing: -0.035em;
 }
 
-.membership-management-header p {
-  margin: 0;
+.mm-header p {
+  margin: 7px 0 0;
 
-  max-width: 680px;
+  color: var(--mm-muted);
 
-  color: #697987;
+  font-size: 15px;
 
-  font-size: 14px;
-
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 
 /* =========================================================
-   REFRESH
-========================================================= */
+   REFRESH BUTTON
+   ========================================================= */
 
-.membership-refresh-btn {
-  min-height: 42px;
+.mm-refresh-button {
+  height: 46px;
+
+  padding: 0 18px;
 
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
 
-  gap: 8px;
+  gap: 9px;
 
-  padding: 0 17px;
+  border: 1px solid var(--mm-border);
 
-  border: 1px solid #d8e4eb;
+  border-radius: 9px;
 
-  border-radius: 10px;
+  background: white;
 
-  background: #ffffff;
+  color: #536d79;
 
-  color: #29404e;
-
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 750;
 
   cursor: pointer;
 
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  transition: .2s ease;
 }
 
-.membership-refresh-btn:hover:not(:disabled) {
+.mm-refresh-button:hover {
+  color: var(--mm-primary);
+
+  border-color: #bcdadd;
+
+  background: #f4fbfb;
+
   transform: translateY(-1px);
 
-  border-color: #087ea4;
-
-  background: #f8fdff;
-
   box-shadow:
-    0 8px 22px rgba(8, 126, 164, 0.08);
+    0 6px 18px
+    rgba(16, 42, 67, 0.07);
 }
 
-.membership-refresh-btn:disabled {
-  opacity: 0.65;
+.mm-refresh-button:disabled {
+  opacity: .55;
 
   cursor: not-allowed;
+
+  transform: none;
 }
 
 
 /* =========================================================
    ALERTS
-========================================================= */
+   ========================================================= */
 
-.membership-alert {
-  min-height: 48px;
+.mm-alert {
+  min-height: 52px;
 
   display: flex;
-
   align-items: center;
 
   gap: 11px;
 
-  padding: 11px 14px;
+  padding: 11px 15px;
 
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 
-  border-radius: 11px;
+  border-radius: 10px;
 
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 650;
+
+  animation:
+    mmAlertIn .3s ease both;
 }
 
-.membership-alert span {
-  flex: 1;
-}
+.mm-alert button {
+  width: 32px;
+  height: 32px;
 
-.membership-alert button {
-  width: 30px;
-  height: 30px;
+  margin-left: auto;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
@@ -231,603 +241,954 @@
 
   background: transparent;
 
-  cursor: pointer;
-
   color: inherit;
+
+  cursor: pointer;
 }
 
-.membership-alert.error {
-  background: #fff4f4;
+.mm-alert-error {
+  background: var(--mm-danger-bg);
 
-  border: 1px solid #f2d1d1;
+  border: 1px solid #f1d0cc;
 
-  color: #b42318;
+  color: var(--mm-danger);
 }
 
-.membership-alert.success {
-  background: #effcf5;
+.mm-alert-success {
+  background: var(--mm-success-bg);
 
   border: 1px solid #ccebd9;
 
-  color: #147a4a;
+  color: var(--mm-success);
 }
 
 
 /* =========================================================
    STATISTICS
-========================================================= */
+   ========================================================= */
 
-.membership-stats {
+.mm-stats {
   display: grid;
 
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(5, minmax(0, 1fr));
 
-  gap: 16px;
+  gap: 15px;
 
-  margin-bottom: 22px;
+  margin-bottom: 27px;
 }
 
-.membership-stat-card {
-  min-height: 92px;
+.mm-stat-card {
+  min-height: 108px;
+
+  position: relative;
 
   display: flex;
-
   align-items: center;
 
-  gap: 14px;
+  gap: 15px;
 
   padding: 18px;
 
-  border: 1px solid #e2ebf0;
+  background: white;
 
-  border-radius: 14px;
+  border: 1px solid var(--mm-border);
 
-  background: #ffffff;
+  border-radius: 15px;
 
   box-shadow:
-    0 8px 25px rgba(18, 44, 61, 0.04);
+    0 7px 22px
+    rgba(16, 42, 67, 0.045);
+
+  overflow: hidden;
 
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform .25s ease,
+    box-shadow .25s ease,
+    border-color .25s ease;
 }
 
-.membership-stat-card:hover {
-  transform: translateY(-2px);
+.mm-stat-card::after {
+  content: "";
+
+  position: absolute;
+
+  right: -35px;
+  top: -35px;
+
+  width: 110px;
+  height: 110px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(13, 115, 119, 0.045);
+
+  pointer-events: none;
+}
+
+.mm-stat-card:hover {
+  transform: translateY(-4px);
+
+  border-color:
+    rgba(13, 115, 119, .22);
 
   box-shadow:
-    0 14px 32px rgba(18, 44, 61, 0.07);
+    0 15px 32px
+    rgba(16, 42, 67, .08);
 }
 
-.membership-stat-icon {
-  width: 44px;
-  height: 44px;
+.mm-stat-icon {
+  width: 48px;
+  height: 48px;
 
-  flex: 0 0 44px;
+  flex: 0 0 48px;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
-  border-radius: 11px;
+  border-radius: 12px;
 
-  background: #edf9fd;
+  background: var(--mm-primary-light);
 
-  color: #087ea4;
+  color: var(--mm-primary);
+
+  transition:
+    transform .25s ease;
 }
 
-.membership-stat-card.pending
-  .membership-stat-icon {
-  background: #fff8e8;
-  color: #b77900;
+.mm-stat-card:hover .mm-stat-icon {
+  transform:
+    scale(1.08)
+    rotate(-3deg);
 }
 
-.membership-stat-card.approved
-  .membership-stat-icon {
-  background: #edf9f2;
-  color: #16804f;
+.mm-stat-card > div:last-child {
+  min-width: 0;
 }
 
-.membership-stat-card.rejected
-  .membership-stat-icon {
-  background: #fff1f1;
-  color: #c43d3d;
-}
-
-.membership-stat-card span {
+.mm-stat-card span {
   display: block;
 
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 
-  color: #748391;
+  color: #7d9199;
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+  text-transform: uppercase;
+
+  letter-spacing: .055em;
+}
+
+.mm-stat-card strong {
+  display: block;
+
+  color: var(--mm-text);
+
+  font-size: 25px;
+
+  font-weight: 800;
+}
+
+.mm-stat-pending .mm-stat-icon {
+  background: var(--mm-warning-bg);
+
+  color: var(--mm-warning);
+}
+
+.mm-stat-active .mm-stat-icon {
+  background: var(--mm-success-bg);
+
+  color: var(--mm-success);
+}
+
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.mm-tabs {
+  width: fit-content;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 6px;
+
+  margin-bottom: 18px;
+
+  background: #edf4f5;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 10px;
+}
+
+.mm-tabs button {
+  min-height: 43px;
+
+  padding: 0 17px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: 0;
+
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #718792;
+
+  font-size: 14px;
+
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    color .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+.mm-tabs button:hover {
+  color: var(--mm-primary);
+
+  background: #e3f2f2;
+}
+
+.mm-tabs button.active {
+  color: var(--mm-primary);
+
+  background: white;
+
+  box-shadow:
+    0 4px 12px
+    rgba(16, 42, 67, .07);
+}
+
+
+/* =========================================================
+   SECTION
+   ========================================================= */
+
+.mm-section {
+  background: rgba(255,255,255,.97);
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 17px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 10px 32px
+    rgba(16, 42, 67, .055);
+
+  animation:
+    mmSectionIn .4s ease both;
+}
+
+.mm-section-header {
+  min-height: 92px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 22px 25px;
+
+  border-bottom: 1px solid var(--mm-border-light);
+}
+
+.mm-section-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--mm-primary);
 
   font-size: 11px;
 
-  font-weight: 700;
+  font-weight: 800;
 
-  letter-spacing: 0.03em;
+  letter-spacing: .12em;
 }
 
-.membership-stat-card strong {
-  display: block;
+.mm-section-header h2 {
+  margin: 0;
 
-  color: #14232f;
+  color: var(--mm-heading);
 
-  font-size: 23px;
+  font-size: 25px;
 
-  line-height: 1.1;
+  font-weight: 800;
+
+  letter-spacing: -.02em;
+}
+
+.mm-section-header p {
+  margin: 6px 0 0;
+
+  color: var(--mm-muted);
+
+  font-size: 14px;
+}
+
+.mm-section-count {
+  padding: 8px 12px;
+
+  border-radius: 7px;
+
+  background: #f1f7f7;
+
+  color: var(--mm-primary);
+
+  font-size: 12px;
+
+  font-weight: 750;
 }
 
 
 /* =========================================================
    TOOLBAR
-========================================================= */
+   ========================================================= */
 
-.membership-toolbar {
+.mm-toolbar {
   display: flex;
 
   align-items: center;
 
-  gap: 13px;
+  gap: 12px;
 
-  padding: 14px;
+  padding: 17px 24px;
 
-  margin-bottom: 16px;
+  background: #fbfdfd;
 
-  border: 1px solid #e2ebf0;
-
-  border-radius: 14px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 8px 25px rgba(18, 44, 61, 0.035);
+  border-bottom: 1px solid var(--mm-border-light);
 }
 
-.membership-search {
-  min-height: 42px;
+.mm-search {
+  position: relative;
 
   flex: 1;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 9px;
-
-  padding: 0 13px;
-
-  border: 1px solid #dce6ec;
-
-  border-radius: 9px;
-
-  background: #fbfdfe;
-
-  color: #78909e;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
-.membership-search:focus-within {
-  border-color: #087ea4;
+.mm-search svg {
+  position: absolute;
 
-  box-shadow:
-    0 0 0 3px rgba(8, 126, 164, 0.09);
+  left: 13px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #91a2aa;
+
+  pointer-events: none;
 }
 
-.membership-search input {
+.mm-search input {
   width: 100%;
 
-  border: 0;
-  outline: 0;
+  height: 45px;
 
-  background: transparent;
+  padding: 0 13px 0 40px;
 
-  color: #243744;
+  box-sizing: border-box;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background: white;
+
+  color: var(--mm-text);
 
   font-family: inherit;
 
-  font-size: 13px;
+  font-size: 14px;
+
+  transition: .2s ease;
 }
 
-.membership-search input::placeholder {
-  color: #94a2ad;
+.mm-search input::placeholder {
+  color: #9aaab0;
 }
 
-.membership-toolbar select {
-  height: 42px;
+.mm-search input:focus {
+  border-color: #8cc8c9;
 
-  min-width: 150px;
+  box-shadow:
+    0 0 0 3px
+    rgba(13,115,119,.07);
+}
+
+.mm-filter {
+  width: 180px;
+
+  position: relative;
+
+  flex-shrink: 0;
+}
+
+.mm-filter select {
+  width: 100%;
+
+  height: 45px;
 
   padding: 0 35px 0 12px;
 
-  border: 1px solid #dce6ec;
+  appearance: none;
 
-  border-radius: 9px;
+  border: 1px solid var(--mm-border);
 
-  background: #ffffff;
+  border-radius: 8px;
 
-  color: #344b59;
+  outline: none;
+
+  background: white;
+
+  color: #607987;
 
   font-family: inherit;
 
-  font-size: 13px;
-  font-weight: 600;
-
-  outline: none;
+  font-size: 14px;
 
   cursor: pointer;
 }
 
-.membership-toolbar select:focus {
-  border-color: #087ea4;
+.mm-filter svg {
+  position: absolute;
 
-  box-shadow:
-    0 0 0 3px rgba(8, 126, 164, 0.08);
+  right: 10px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #8ca0a8;
+
+  pointer-events: none;
 }
 
 
 /* =========================================================
    TABLE
-========================================================= */
+   ========================================================= */
 
-.membership-table-wrapper {
-  overflow: hidden;
-
-  border: 1px solid #e0e9ee;
-
-  border-radius: 15px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 10px 32px rgba(18, 44, 61, 0.045);
-}
-
-.membership-table-scroll {
+.mm-table-wrapper {
   width: 100%;
 
   overflow-x: auto;
 }
 
-.membership-table {
+.mm-table {
   width: 100%;
 
-  min-width: 980px;
+  min-width: 1100px;
 
   border-collapse: collapse;
+}
+
+.mm-table thead {
+  background: #f7fafb;
+}
+
+.mm-table th {
+  padding: 15px 16px;
 
   text-align: left;
-}
 
-.membership-table thead {
-  background: #f7fafc;
-}
+  color: #7d9099;
 
-.membership-table th {
-  padding: 14px 17px;
-
-  border-bottom: 1px solid #e4ebef;
-
-  color: #71818d;
-
-  font-size: 10px;
+  font-size: 11px;
 
   font-weight: 800;
 
-  letter-spacing: 0.08em;
-
   text-transform: uppercase;
 
+  letter-spacing: .065em;
+
   white-space: nowrap;
+
+  border-bottom:
+    1px solid #e5edef;
 }
 
-.membership-table td {
-  padding: 16px 17px;
+.mm-table td {
+  padding: 16px;
 
-  border-bottom: 1px solid #edf2f5;
+  color: #607987;
+
+  font-size: 13px;
 
   vertical-align: middle;
+
+  border-bottom:
+    1px solid #edf2f3;
 }
 
-.membership-table tbody tr {
+.mm-table tbody tr {
   transition:
-    background 0.18s ease;
+    background .2s ease;
 }
 
-.membership-table tbody tr:hover {
-  background: #fbfdfe;
+.mm-table tbody tr:hover {
+  background:
+    rgba(13,115,119,.025);
 }
 
-.membership-table tbody tr:last-child td {
+.mm-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
 
 /* =========================================================
    MEMBER
-========================================================= */
+   ========================================================= */
 
-.membership-member {
+.mm-member-cell {
+  min-width: 205px;
+
   display: flex;
-
   align-items: center;
 
   gap: 11px;
-
-  min-width: 190px;
 }
 
-.membership-avatar {
-  width: 38px;
-  height: 38px;
+.mm-avatar {
+  width: 42px;
+  height: 42px;
 
-  flex: 0 0 38px;
+  flex: 0 0 42px;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
-  border-radius: 10px;
+  border-radius: 11px;
 
   background:
     linear-gradient(
-      135deg,
-      #087ea4,
-      #0c9cc8
+      145deg,
+      var(--mm-primary),
+      var(--mm-secondary)
     );
 
-  color: #ffffff;
+  color: white;
 
   font-size: 14px;
+
   font-weight: 800;
+
+  box-shadow:
+    0 5px 13px
+    rgba(13,115,119,.14);
 }
 
-.membership-member strong {
+.mm-member-cell strong {
   display: block;
 
-  margin-bottom: 3px;
+  max-width: 180px;
 
-  color: #263944;
+  overflow: hidden;
 
-  font-size: 13px;
+  color: #27485a;
+
+  font-size: 14px;
+
+  font-weight: 750;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
 }
 
-.membership-member span {
+.mm-member-cell span {
   display: block;
 
-  color: #84939d;
+  margin-top: 4px;
+
+  color: #8799a1;
 
   font-size: 11px;
 }
 
 
 /* =========================================================
-   CONTACT
-========================================================= */
+   PLAN CELL
+   ========================================================= */
 
-.membership-contact {
-  display: flex;
+.mm-plan-cell strong {
+  display: block;
 
-  flex-direction: column;
+  color: #294a5b;
 
-  gap: 5px;
+  font-size: 14px;
 
-  min-width: 190px;
+  font-weight: 750;
 }
 
-.membership-contact span {
-  display: flex;
+.mm-plan-cell span {
+  display: block;
 
+  margin-top: 4px;
+
+  color: #8a9ca4;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   AMOUNT / UTR / DATE
+   ========================================================= */
+
+.mm-amount {
+  color: var(--mm-primary);
+
+  font-size: 15px;
+
+  font-weight: 800;
+}
+
+.mm-utr {
+  display: inline-block;
+
+  max-width: 150px;
+
+  overflow: hidden;
+
+  color: #627985;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.mm-date {
+  color: #7d9199;
+
+  font-size: 11px;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.mm-status-badge {
+  min-height: 29px;
+
+  display: inline-flex;
   align-items: center;
 
   gap: 6px;
 
-  color: #60727f;
+  padding: 0 10px;
+
+  border-radius: 20px;
 
   font-size: 11px;
 
-  white-space: nowrap;
-}
-
-.membership-contact svg {
-  color: #087ea4;
-
-  flex-shrink: 0;
-}
-
-
-/* =========================================================
-   MEMBERSHIP NUMBER
-========================================================= */
-
-.membership-number-cell {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 4px;
-}
-
-.membership-number-cell strong {
-  color: #263944;
-
-  font-size: 12px;
-
-  white-space: nowrap;
-}
-
-.membership-number-cell span {
-  color: #8997a0;
-
-  font-size: 10px;
-
-  text-transform: capitalize;
-}
-
-
-/* =========================================================
-   DATE
-========================================================= */
-
-.membership-date {
-  color: #61727e;
-
-  font-size: 12px;
-
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-.membership-status {
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  min-width: 78px;
-
-  padding: 6px 10px;
-
-  border-radius: 999px;
-
-  font-size: 10px;
-
   font-weight: 800;
 
-  text-transform: capitalize;
+  white-space: nowrap;
 }
 
-.membership-status.pending {
-  background: #fff7df;
+.mm-status-approved {
+  background: var(--mm-success-bg);
 
-  color: #a66b00;
-
-  border: 1px solid #f4dfaa;
+  color: var(--mm-success);
 }
 
-.membership-status.approved {
-  background: #eaf8f0;
+.mm-status-pending {
+  background: var(--mm-warning-bg);
 
-  color: #167849;
-
-  border: 1px solid #c8e9d7;
+  color: var(--mm-warning);
 }
 
-.membership-status.rejected {
-  background: #fff0f0;
+.mm-status-rejected {
+  background: var(--mm-danger-bg);
 
-  color: #b73737;
+  color: var(--mm-danger);
+}
 
-  border: 1px solid #efcccc;
+.mm-status-expired {
+  background: #f1efff;
+
+  color: #6941c6;
+}
+
+.mm-status-not_submitted {
+  background: #f2f5f6;
+
+  color: #697d86;
+}
+
+.mm-status-submitted {
+  background: #edf7f7;
+
+  color: var(--mm-primary);
 }
 
 
 /* =========================================================
    ACTIONS
-========================================================= */
+   ========================================================= */
 
-.membership-actions {
+.mm-actions {
   display: flex;
 
   align-items: center;
 
   gap: 6px;
+
+  min-width: 185px;
 }
 
-.membership-actions button {
-  width: 32px;
-  height: 32px;
+.mm-icon-button {
+  width: 35px;
+  height: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 7px;
+
+  background: white;
+
+  color: #718792;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.mm-icon-button:hover {
+  color: var(--mm-primary);
+
+  background: #edf8f8;
+
+  border-color: #bcdadd;
+
+  transform: translateY(-1px);
+}
+
+.mm-action-approve,
+.mm-action-reject {
+  min-height: 35px;
+
+  padding: 0 11px;
 
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border-radius: 7px;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.mm-action-approve {
+  color: var(--mm-success);
+
+  background: var(--mm-success-bg);
+
+  border: 1px solid #ccebd9;
+}
+
+.mm-action-approve:hover {
+  background: #e2f5e9;
+
+  border-color: #a8ddbd;
+
+  transform: translateY(-1px);
+}
+
+.mm-action-reject {
+  color: var(--mm-danger);
+
+  background: var(--mm-danger-bg);
+
+  border: 1px solid #f1d0cc;
+}
+
+.mm-action-reject:hover {
+  background: #ffeceb;
+
+  border-color: #e4aaa4;
+
+  transform: translateY(-1px);
+}
+
+.mm-action-approve:disabled,
+.mm-action-reject:disabled {
+  opacity: .5;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+.mm-action-approve.large,
+.mm-action-reject.large {
+  min-height: 44px;
+
+  padding: 0 17px;
+
+  font-size: 13px;
+
+  border-radius: 8px;
+}
+
+
+/* =========================================================
+   PRIMARY / SECONDARY BUTTON
+   ========================================================= */
+
+.mm-primary-button,
+.mm-secondary-button {
+  min-height: 44px;
+
+  padding: 0 17px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border-radius: 8px;
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.mm-primary-button {
+  color: white;
+
+  border: 1px solid var(--mm-primary);
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--mm-primary),
+      var(--mm-secondary)
+    );
+
+  box-shadow:
+    0 7px 17px
+    rgba(13,115,119,.15);
+}
+
+.mm-primary-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 23px
+    rgba(13,115,119,.21);
+}
+
+.mm-primary-button:disabled {
+  opacity: .55;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+.mm-secondary-button {
+  color: #5d7480;
+
+  background: white;
+
+  border: 1px solid var(--mm-border);
+}
+
+.mm-secondary-button:hover {
+  color: var(--mm-primary);
+
+  border-color: #bcdadd;
+
+  background: #f4fbfb;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.mm-loading {
+  min-height: 300px;
+
+  display: flex;
+  flex-direction: column;
 
   align-items: center;
   justify-content: center;
 
-  border-radius: 8px;
+  gap: 13px;
 
-  cursor: pointer;
+  color: #70858f;
 
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+  font-size: 14px;
 }
 
-.membership-actions button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.membership-actions button:disabled {
-  opacity: 0.5;
-
-  cursor: not-allowed;
-}
-
-.membership-view-btn {
-  border: 1px solid #d9e5eb;
-
-  background: #ffffff;
-
-  color: #087ea4;
-}
-
-.membership-view-btn:hover:not(:disabled) {
-  background: #eefaff;
-
-  box-shadow:
-    0 5px 14px rgba(8, 126, 164, 0.1);
-}
-
-.membership-approve-btn {
-  border: 1px solid #cce8d8;
-
-  background: #effaf4;
-
-  color: #16804f;
-}
-
-.membership-approve-btn:hover:not(:disabled) {
-  background: #dff5e9;
-
-  box-shadow:
-    0 5px 14px rgba(22, 128, 79, 0.1);
-}
-
-.membership-reject-btn {
-  border: 1px solid #f0d1d1;
-
-  background: #fff5f5;
-
-  color: #c13d3d;
-}
-
-.membership-reject-btn:hover:not(:disabled) {
-  background: #ffebeb;
-
-  box-shadow:
-    0 5px 14px rgba(193, 61, 61, 0.1);
+.mm-spin {
+  animation:
+    mmSpin .8s linear infinite;
 }
 
 
 /* =========================================================
    EMPTY
-========================================================= */
+   ========================================================= */
 
-.membership-empty {
-  min-height: 300px;
+.mm-empty {
+  min-height: 310px;
 
   display: flex;
-
   flex-direction: column;
 
   align-items: center;
@@ -835,930 +1196,1234 @@
 
   padding: 40px;
 
-  border: 1px solid #e2ebf0;
-
-  border-radius: 15px;
-
-  background: #ffffff;
-
   text-align: center;
 
-  box-shadow:
-    0 10px 30px rgba(18, 44, 61, 0.04);
+  color: #9aacb3;
 }
 
-.membership-empty svg {
-  margin-bottom: 14px;
+.mm-empty > svg {
+  margin-bottom: 10px;
 
-  color: #087ea4;
+  color: #9db3b9;
 }
 
-.membership-empty h2 {
-  margin: 0 0 7px;
+.mm-empty h3 {
+  margin: 5px 0 7px;
 
-  color: #263944;
+  color: #294a5b;
 
-  font-size: 20px;
+  font-size: 19px;
+
+  font-weight: 800;
 }
 
-.membership-empty p {
-  margin: 0;
+.mm-empty p {
+  max-width: 450px;
 
-  color: #788894;
+  margin: 0 0 19px;
+
+  color: #7d9199;
 
   font-size: 13px;
+
+  line-height: 1.6;
 }
 
 
 /* =========================================================
-   MODAL OVERLAY
-========================================================= */
+   MEMBERSHIP PLANS
+   ========================================================= */
 
-.membership-modal-overlay {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 1000;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  padding: 24px;
-
-  background:
-    rgba(9, 24, 34, 0.58);
-
-  backdrop-filter: blur(7px);
-
-  animation: membershipFadeIn 0.18s ease;
-}
-
-@keyframes membershipFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-
-/* =========================================================
-   DETAILS MODAL
-========================================================= */
-
-.membership-details-modal {
-  width: 100%;
-
-  max-width: 720px;
-
-  max-height: 90vh;
-
-  overflow: hidden;
-
-  border: 1px solid rgba(255, 255, 255, 0.55);
-
-  border-radius: 18px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.22);
-
-  animation: membershipModalIn 0.22s ease;
-}
-
-@keyframes membershipModalIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.membership-modal-header {
-  min-height: 72px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 20px;
-
-  padding: 17px 20px;
-
-  border-bottom: 1px solid #e8eef2;
-
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff,
-      #fbfdfe
-    );
-}
-
-.membership-modal-header span {
-  display: block;
-
-  margin-bottom: 4px;
-
-  color: #087ea4;
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  letter-spacing: 0.1em;
-}
-
-.membership-modal-header h2 {
-  margin: 0;
-
-  color: #172b37;
-
-  font-size: 21px;
-
-  font-weight: 800;
-}
-
-.membership-modal-header button {
-  width: 34px;
-  height: 34px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid #dfe8ed;
-
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #627580;
-
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.membership-modal-header button:hover {
-  background: #f1f6f8;
-
-  color: #263944;
-}
-
-.membership-modal-body {
-  max-height: calc(90vh - 72px);
-
-  overflow-y: auto;
-
-  padding: 22px;
-}
-
-
-/* =========================================================
-   PROFILE BLOCK
-========================================================= */
-
-.membership-profile-block {
-  display: flex;
-
-  align-items: center;
-
-  gap: 13px;
-
-  padding: 15px;
-
-  margin-bottom: 20px;
-
-  border: 1px solid #e4edf1;
-
-  border-radius: 12px;
-
-  background: #f8fbfc;
-}
-
-.membership-large-avatar {
-  width: 48px;
-  height: 48px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  flex: 0 0 48px;
-
-  border-radius: 12px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #087ea4,
-      #0c9cc8
-    );
-
-  color: #ffffff;
-
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.membership-profile-block strong {
-  display: block;
-
-  margin-bottom: 3px;
-
-  color: #243844;
-
-  font-size: 15px;
-}
-
-.membership-profile-block span {
-  color: #7b8a94;
-
-  font-size: 12px;
-}
-
-
-/* =========================================================
-   DETAIL GRID
-========================================================= */
-
-.membership-detail-grid {
+.mm-plans-grid {
   display: grid;
 
   grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+    repeat(3, minmax(0, 1fr));
 
-  gap: 1px;
+  gap: 17px;
+
+  padding: 25px;
+}
+
+.mm-plan-card {
+  position: relative;
+
+  min-height: 235px;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 21px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fafdfe
+    );
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 14px;
 
   overflow: hidden;
 
-  margin-bottom: 17px;
+  box-shadow:
+    0 6px 20px
+    rgba(16,42,67,.045);
 
-  border: 1px solid #e4ebef;
-
-  border-radius: 12px;
-
-  background: #e4ebef;
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    border-color .25s ease;
 }
 
-.membership-detail-grid > div {
-  min-height: 70px;
+.mm-plan-card::before {
+  content: "";
 
-  display: flex;
+  position: absolute;
 
-  flex-direction: column;
+  top: 0;
+  left: 0;
 
-  justify-content: center;
+  width: 100%;
+  height: 3px;
 
-  gap: 5px;
-
-  padding: 12px 14px;
-
-  background: #ffffff;
+  background:
+    linear-gradient(
+      90deg,
+      var(--mm-primary),
+      #58b7b5
+    );
 }
 
-.membership-detail-grid span {
-  color: #84929b;
+.mm-plan-card:hover {
+  transform: translateY(-5px);
 
-  font-size: 10px;
+  border-color:
+    rgba(13,115,119,.25);
 
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.04em;
+  box-shadow:
+    0 17px 35px
+    rgba(16,42,67,.09);
 }
 
-.membership-detail-grid strong {
-  color: #263944;
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  word-break: break-word;
+.mm-plan-card.disabled {
+  opacity: .62;
 }
 
-
-/* =========================================================
-   ADDRESS
-========================================================= */
-
-.membership-address {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 6px;
-
-  padding: 14px;
-
-  margin-bottom: 16px;
-
-  border: 1px solid #e4ebef;
-
-  border-radius: 11px;
-
-  background: #fbfdfe;
-}
-
-.membership-address span {
-  color: #84929b;
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.05em;
-}
-
-.membership-address strong {
-  color: #344954;
-
-  font-size: 13px;
-
-  line-height: 1.55;
-
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   DETAIL STATUS
-========================================================= */
-
-.membership-detail-status {
+.mm-plan-card-top {
   display: flex;
 
   align-items: center;
   justify-content: space-between;
 
-  gap: 15px;
-
-  padding: 13px 14px;
-
-  margin-bottom: 16px;
-
-  border: 1px solid #e3ebef;
-
-  border-radius: 11px;
-
-  background: #ffffff;
+  margin-bottom: 20px;
 }
 
-.membership-detail-status > span {
-  color: #697b86;
+.mm-plan-card-icon {
+  width: 49px;
+  height: 49px;
 
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  font-weight: 700;
+  border-radius: 12px;
+
+  background: var(--mm-primary-light);
+
+  color: var(--mm-primary);
 }
 
+.mm-plan-active,
+.mm-plan-disabled {
+  padding: 6px 9px;
 
-/* =========================================================
-   REJECTION BOX
-========================================================= */
+  border-radius: 20px;
 
-.membership-rejection-box {
-  padding: 14px;
+  font-size: 10px;
 
-  margin-bottom: 16px;
+  font-weight: 800;
 
-  border: 1px solid #efd0d0;
-
-  border-radius: 11px;
-
-  background: #fff7f7;
+  letter-spacing: .06em;
 }
 
-.membership-rejection-box span {
+.mm-plan-active {
+  background: var(--mm-success-bg);
+
+  color: var(--mm-success);
+}
+
+.mm-plan-disabled {
+  background: #f1f4f5;
+
+  color: #71828a;
+}
+
+.mm-plan-card-content {
+  flex: 1;
+}
+
+.mm-plan-card-content > span {
   display: block;
 
   margin-bottom: 6px;
 
-  color: #b73737;
+  color: #82959d;
 
-  font-size: 10px;
+  font-size: 11px;
 
-  font-weight: 800;
+  font-weight: 750;
 
   text-transform: uppercase;
 }
 
-.membership-rejection-box p {
-  margin: 0;
+.mm-plan-card-content h3 {
+  margin: 0 0 9px;
 
-  color: #744747;
+  color: #294a5b;
 
-  font-size: 13px;
+  font-size: 20px;
 
-  line-height: 1.55;
+  font-weight: 800;
+}
+
+.mm-plan-card-content > strong {
+  display: block;
+
+  color: var(--mm-primary);
+
+  font-size: 30px;
+
+  font-weight: 850;
+}
+
+.mm-plan-card-actions {
+  display: flex;
+
+  gap: 8px;
+
+  padding-top: 15px;
+
+  margin-top: 17px;
+
+  border-top:
+    1px solid var(--mm-border-light);
+}
+
+.mm-plan-card-actions button {
+  flex: 1;
+
+  min-height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 7px;
+
+  background: white;
+
+  color: #607987;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.mm-plan-card-actions button:hover {
+  color: var(--mm-primary);
+
+  background: #edf8f8;
+
+  border-color: #bcdadd;
+}
+
+.mm-plan-card-actions button.danger {
+  color: var(--mm-danger);
+
+  background: #fff9f8;
+
+  border-color: #f1d0cc;
+}
+
+.mm-plan-card-actions button.danger:hover {
+  background: #fff0ee;
 }
 
 
 /* =========================================================
-   QR BOX
-========================================================= */
+   PAYMENT SETTINGS
+   ========================================================= */
 
-.membership-qr-box {
+.mm-payment-layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(340px, .8fr);
+
+  gap: 20px;
+
+  padding: 25px;
+}
+
+.mm-payment-form-card {
   display: flex;
-
   flex-direction: column;
 
-  align-items: center;
+  gap: 18px;
 
-  padding: 18px;
+  padding: 22px;
 
-  margin-bottom: 18px;
+  background: #fbfdfd;
 
-  border: 1px solid #cfe6ef;
+  border: 1px solid var(--mm-border);
 
-  border-radius: 13px;
+  border-radius: 14px;
+}
+
+.mm-form-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.mm-form-field label {
+  color: #4d6875;
+
+  font-size: 12px;
+
+  font-weight: 750;
+}
+
+.mm-form-field input,
+.mm-form-field select,
+.mm-form-field textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  outline: none;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 8px;
+
+  background: white;
+
+  color: var(--mm-text);
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+.mm-form-field input,
+.mm-form-field select {
+  height: 45px;
+
+  padding: 0 12px;
+}
+
+.mm-form-field textarea {
+  min-height: 110px;
+
+  padding: 12px;
+
+  resize: vertical;
+}
+
+.mm-form-field input::placeholder,
+.mm-form-field textarea::placeholder {
+  color: #a0afb5;
+}
+
+.mm-form-field input:focus,
+.mm-form-field select:focus,
+.mm-form-field textarea:focus {
+  border-color: #8cc8c9;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(13,115,119,.07);
+}
+
+.mm-form-field small {
+  color: #899ba2;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.mm-form-row {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0,1fr));
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   INPUT WITH ICON
+   ========================================================= */
+
+.mm-input-with-icon {
+  position: relative;
+}
+
+.mm-input-with-icon svg {
+  position: absolute;
+
+  left: 12px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: var(--mm-primary);
+
+  pointer-events: none;
+}
+
+.mm-input-with-icon input {
+  padding-left: 35px;
+}
+
+
+/* =========================================================
+   PAYMENT PREVIEW
+   ========================================================= */
+
+.mm-payment-preview {
+  padding: 22px;
 
   background:
     linear-gradient(
-      180deg,
-      #f4fcff,
-      #ffffff
+      145deg,
+      white,
+      #f8fcfc
     );
 
-  text-align: center;
+  border: 1px solid var(--mm-border);
+
+  border-radius: 14px;
 }
 
-.membership-qr-box > span {
-  margin-bottom: 12px;
+.mm-payment-preview-header {
+  display: flex;
+  align-items: center;
 
-  color: #087ea4;
+  gap: 9px;
 
-  font-size: 10px;
+  margin-bottom: 17px;
+
+  color: var(--mm-primary);
+
+  font-size: 12px;
 
   font-weight: 800;
 
-  letter-spacing: 0.1em;
+  letter-spacing: .08em;
 }
 
-.membership-qr-box img {
-  width: 160px;
-  height: 160px;
+.mm-qr-preview {
+  min-height: 285px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  border: 1px dashed #cbdcdf;
+
+  border-radius: 11px;
+
+  background: #f8fbfb;
+}
+
+.mm-qr-preview img {
+  width: 230px;
+  height: 230px;
+
+  max-width: 100%;
 
   object-fit: contain;
 
   padding: 8px;
 
-  border: 1px solid #e0e8ed;
+  box-sizing: border-box;
 
-  border-radius: 10px;
+  background: white;
 
-  background: #ffffff;
+  border-radius: 8px;
+
+  box-shadow:
+    0 7px 22px
+    rgba(16,42,67,.08);
 }
 
-.membership-qr-box strong {
-  margin-top: 10px;
+.mm-qr-empty {
+  display: flex;
+  flex-direction: column;
 
-  color: #1e4555;
+  align-items: center;
 
-  font-size: 14px;
+  gap: 9px;
 
-  letter-spacing: 0.04em;
+  color: #91a3aa;
+
+  font-size: 12px;
+}
+
+.mm-qr-empty svg {
+  color: #a2b5ba;
+}
+
+.mm-qr-error {
+  color: var(--mm-danger);
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+.mm-payment-preview-details {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0,1fr));
+
+  gap: 9px;
+
+  margin-top: 14px;
+}
+
+.mm-payment-preview-details > div {
+  padding: 11px;
+
+  border: 1px solid var(--mm-border-light);
+
+  border-radius: 8px;
+
+  background: #fbfdfd;
+}
+
+.mm-payment-preview-details span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #879aa2;
+
+  font-size: 10px;
+
+  font-weight: 750;
+
+  text-transform: uppercase;
+}
+
+.mm-payment-preview-details strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #294a5b;
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
 }
 
 
 /* =========================================================
-   MODAL ACTIONS
-========================================================= */
+   MODAL
+   ========================================================= */
 
-.membership-modal-actions {
+.mm-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 9999;
+
   display: flex;
-
-  gap: 10px;
-
-  padding-top: 4px;
-}
-
-.membership-modal-actions button {
-  min-height: 43px;
-
-  flex: 1;
-
-  display: inline-flex;
 
   align-items: center;
   justify-content: center;
 
-  gap: 8px;
+  padding: 20px;
 
-  border-radius: 9px;
+  box-sizing: border-box;
 
-  font-family: inherit;
+  background:
+    rgba(16,42,67,.42);
 
-  font-size: 12px;
+  backdrop-filter:
+    blur(6px);
+
+  animation:
+    mmFadeIn .18s ease;
+}
+
+.mm-modal {
+  width: min(720px, 100%);
+
+  max-height:
+    calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  background: white;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 17px;
+
+  box-shadow:
+    0 30px 80px
+    rgba(16,42,67,.2);
+
+  animation:
+    mmModalIn .25s
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.mm-small-modal {
+  width: min(520px, 100%);
+}
+
+.mm-details-modal {
+  width: min(800px, 100%);
+}
+
+.mm-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 22px 24px;
+
+  border-bottom:
+    1px solid var(--mm-border-light);
+}
+
+.mm-modal-header > div:first-child > span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--mm-primary);
+
+  font-size: 11px;
 
   font-weight: 800;
 
+  letter-spacing: .11em;
+}
+
+.mm-modal-header h2 {
+  margin: 0;
+
+  color: var(--mm-heading);
+
+  font-size: 23px;
+
+  font-weight: 800;
+}
+
+.mm-modal-header > button {
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--mm-border);
+
+  border-radius: 7px;
+
+  background: white;
+
+  color: #718792;
+
   cursor: pointer;
 
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+  transition: .2s ease;
 }
 
-.membership-modal-actions button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
+.mm-modal-header > button:hover {
+  color: var(--mm-danger);
 
-.membership-modal-actions button:disabled {
-  opacity: 0.55;
+  background: var(--mm-danger-bg);
 
-  cursor: not-allowed;
-}
-
-.membership-modal-approve {
-  border: 1px solid #bfe3cf;
-
-  background: #edf9f2;
-
-  color: #167849;
-}
-
-.membership-modal-approve:hover:not(:disabled) {
-  background: #ddf4e7;
-
-  box-shadow:
-    0 8px 20px rgba(22, 120, 73, 0.1);
-}
-
-.membership-modal-reject {
-  border: 1px solid #edcaca;
-
-  background: #fff3f3;
-
-  color: #b73737;
-}
-
-.membership-modal-reject:hover:not(:disabled) {
-  background: #ffe9e9;
-
-  box-shadow:
-    0 8px 20px rgba(183, 55, 55, 0.1);
+  border-color: #efc8c4;
 }
 
 
 /* =========================================================
-   REJECT MODAL
-========================================================= */
+   MODAL DESCRIPTION
+   ========================================================= */
 
-.membership-reject-modal {
-  width: 100%;
+.mm-modal-description {
+  margin: 21px 24px 0;
 
-  max-width: 520px;
-
-  overflow: hidden;
-
-  border-radius: 17px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.22);
-
-  animation: membershipModalIn 0.22s ease;
-}
-
-.membership-reject-body {
-  padding: 21px;
-}
-
-.membership-reject-body label {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: #344954;
-
-  font-size: 12px;
-
-  font-weight: 800;
-}
-
-.membership-reject-body textarea {
-  width: 100%;
-
-  min-height: 120px;
-
-  display: block;
-
-  resize: vertical;
-
-  box-sizing: border-box;
-
-  padding: 12px;
-
-  border: 1px solid #d8e4ea;
-
-  border-radius: 9px;
-
-  outline: none;
-
-  background: #fbfdfe;
-
-  color: #293e4a;
-
-  font-family: inherit;
+  color: #6d818b;
 
   font-size: 13px;
 
-  line-height: 1.55;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  line-height: 1.65;
 }
 
-.membership-reject-body textarea:focus {
-  border-color: #087ea4;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 0 0 3px rgba(8, 126, 164, 0.08);
+.mm-modal-description strong {
+  color: #294a5b;
 }
 
-.membership-reject-body textarea::placeholder {
-  color: #9aa7b0;
+
+/* =========================================================
+   DETAIL GRID
+   ========================================================= */
+
+.mm-detail-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0,1fr));
+
+  gap: 10px;
+
+  padding: 22px 24px;
 }
 
-.membership-character-count {
-  margin-top: 5px;
+.mm-detail-card {
+  min-width: 0;
 
-  text-align: right;
+  padding: 14px;
 
-  color: #8c9aa3;
+  background: #fbfdfd;
+
+  border: 1px solid var(--mm-border-light);
+
+  border-radius: 9px;
+}
+
+.mm-detail-card.mm-detail-full {
+  grid-column: 1 / -1;
+}
+
+.mm-detail-card > span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #879aa2;
 
   font-size: 10px;
+
+  font-weight: 750;
+
+  text-transform: uppercase;
+
+  letter-spacing: .055em;
 }
 
-.membership-reject-actions {
-  display: flex;
+.mm-detail-card > strong {
+  display: block;
 
+  color: #294a5b;
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   MODAL FOOTER
+   ========================================================= */
+
+.mm-modal-footer {
+  min-height: 70px;
+
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
 
   gap: 9px;
 
-  margin-top: 18px;
+  padding: 14px 24px;
+
+  box-sizing: border-box;
+
+  border-top:
+    1px solid var(--mm-border-light);
+
+  background: #fbfdfd;
 }
 
-.membership-reject-actions button {
-  min-height: 40px;
 
-  display: inline-flex;
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
 
+.mm-checkbox {
+  display: flex;
   align-items: center;
-  justify-content: center;
 
-  gap: 7px;
+  gap: 10px;
 
-  padding: 0 15px;
+  padding: 12px;
+
+  margin: 3px 24px 0;
+
+  border: 1px solid var(--mm-border-light);
 
   border-radius: 8px;
 
-  font-family: inherit;
+  background: #fbfdfd;
 
-  font-size: 12px;
+  color: #607987;
 
-  font-weight: 800;
+  font-size: 13px;
+
+  font-weight: 650;
 
   cursor: pointer;
 }
 
-.membership-reject-actions
-  button:first-child {
-  border: 1px solid #dbe5ea;
+.mm-checkbox input {
+  width: 17px;
+  height: 17px;
 
-  background: #ffffff;
+  accent-color: var(--mm-primary);
 
-  color: #536772;
-}
-
-.membership-confirm-reject {
-  border: 1px solid #d94c4c;
-
-  background: #c63d3d;
-
-  color: #ffffff;
-}
-
-.membership-confirm-reject:hover:not(:disabled) {
-  background: #b83232;
-
-  box-shadow:
-    0 7px 18px rgba(198, 61, 61, 0.18);
-}
-
-.membership-reject-actions button:disabled {
-  opacity: 0.55;
-
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 
 /* =========================================================
    SCROLLBAR
-========================================================= */
+   ========================================================= */
 
-.membership-table-scroll::-webkit-scrollbar,
-.membership-modal-body::-webkit-scrollbar {
+.membership-management ::-webkit-scrollbar,
+.mm-modal::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 
-.membership-table-scroll::-webkit-scrollbar-track,
-.membership-modal-body::-webkit-scrollbar-track {
-  background: #f1f5f7;
+.membership-management ::-webkit-scrollbar-track,
+.mm-modal::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.membership-table-scroll::-webkit-scrollbar-thumb,
-.membership-modal-body::-webkit-scrollbar-thumb {
-  border-radius: 10px;
+.membership-management ::-webkit-scrollbar-thumb,
+.mm-modal::-webkit-scrollbar-thumb {
+  background: #c7d9dc;
 
-  background: #c9d7de;
+  border-radius: 20px;
 }
 
-.membership-table-scroll::-webkit-scrollbar-thumb:hover,
-.membership-modal-body::-webkit-scrollbar-thumb:hover {
-  background: #aebfc8;
+.membership-management ::-webkit-scrollbar-thumb:hover,
+.mm-modal::-webkit-scrollbar-thumb:hover {
+  background: #9ebdc1;
 }
 
 
 /* =========================================================
-   TABLET
-========================================================= */
+   ANIMATIONS
+   ========================================================= */
 
-@media (max-width: 1050px) {
-  .membership-stats {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+@keyframes mmSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mmFadeIn {
+  from {
+    opacity: 0;
   }
 
-  .membership-management-header {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mmModalIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(14px)
+      scale(.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes mmSectionIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes mmAlertIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE — 1200px
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .mm-stats {
+    grid-template-columns:
+      repeat(3, minmax(0,1fr));
+  }
+
+  .mm-plans-grid {
+    grid-template-columns:
+      repeat(2, minmax(0,1fr));
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — 1000px
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  .mm-payment-layout {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — 800px
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+  .membership-management {
+    padding: 24px 18px 45px;
+  }
+
+  .mm-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .mm-refresh-button {
+    align-self: flex-start;
+  }
+
+  .mm-stats {
+    grid-template-columns:
+      repeat(2, minmax(0,1fr));
+  }
+
+  .mm-section-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .mm-section-count {
+    align-self: flex-start;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE — 650px
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+  .membership-management {
+    padding:
+      20px 13px 40px;
+  }
+
+  .mm-header-left {
     align-items: flex-start;
   }
-}
 
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 700px) {
-  .membership-management-page {
-    padding: 22px 14px 45px;
+  .mm-header-icon {
+    width: 50px;
+    height: 50px;
   }
 
-  .membership-management-header {
-    flex-direction: column;
+  .mm-eyebrow {
+    font-size: 10px;
+  }
 
+  .mm-header h1 {
+    font-size: 27px;
+  }
+
+  .mm-header p {
+    font-size: 13px;
+  }
+
+  .mm-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .mm-tabs {
+    width: 100%;
+
+    overflow-x: auto;
+  }
+
+  .mm-tabs button {
+    flex: 1;
+
+    min-width: 145px;
+
+    white-space: nowrap;
+
+    font-size: 13px;
+  }
+
+  .mm-toolbar {
     align-items: stretch;
 
-    gap: 17px;
-  }
-
-  .membership-management-header h1 {
-    font-size: 28px;
-  }
-
-  .membership-refresh-btn {
-    width: 100%;
-  }
-
-  .membership-stats {
-    grid-template-columns: 1fr;
-
-    gap: 11px;
-  }
-
-  .membership-stat-card {
-    min-height: 78px;
+    flex-direction: column;
 
     padding: 14px;
   }
 
-  .membership-toolbar {
-    flex-direction: column;
-
-    align-items: stretch;
-
-    padding: 11px;
-  }
-
-  .membership-search {
-    width: 100%;
-
-    box-sizing: border-box;
-  }
-
-  .membership-toolbar select {
+  .mm-filter {
     width: 100%;
   }
 
-  .membership-modal-overlay {
-    align-items: flex-end;
+  .mm-plans-grid {
+    grid-template-columns: 1fr;
 
-    padding: 0;
+    padding: 16px;
   }
 
-  .membership-details-modal,
-  .membership-reject-modal {
-    max-height: 92vh;
-
-    border-radius: 18px 18px 0 0;
+  .mm-payment-layout {
+    padding: 16px;
   }
 
-  .membership-modal-body {
-    max-height: calc(92vh - 72px);
-
-    padding: 17px;
-  }
-
-  .membership-detail-grid {
+  .mm-form-row {
     grid-template-columns: 1fr;
   }
 
-  .membership-modal-actions {
-    flex-direction: column;
+  .mm-payment-preview-details {
+    grid-template-columns: 1fr;
   }
 
-  .membership-reject-actions {
+  .mm-detail-grid {
+    grid-template-columns: 1fr;
+
+    padding:
+      16px;
+  }
+
+  .mm-detail-card.mm-detail-full {
+    grid-column: auto;
+  }
+
+  .mm-modal-overlay {
+    padding: 10px;
+  }
+
+  .mm-modal {
+    max-height:
+      calc(100vh - 20px);
+
+    border-radius: 14px;
+  }
+
+  .mm-modal-header {
+    padding:
+      18px;
+  }
+
+  .mm-modal-footer {
+    align-items: stretch;
+
     flex-direction: column-reverse;
+
+    padding:
+      13px 18px;
   }
 
-  .membership-reject-actions button {
+  .mm-modal-footer button {
     width: 100%;
   }
+
+  .mm-action-approve.large,
+  .mm-action-reject.large {
+    width: 100%;
+  }
+
 }
 
 
 /* =========================================================
    SMALL MOBILE
-========================================================= */
+   ========================================================= */
 
-@media (max-width: 430px) {
-  .membership-management-page {
-    padding-left: 10px;
-    padding-right: 10px;
+@media (max-width: 420px) {
+
+  .membership-management {
+    padding: 17px 11px 35px;
   }
 
-  .membership-management-header h1 {
-    font-size: 25px;
+  .mm-header-left {
+    gap: 11px;
   }
 
-  .membership-management-header p {
-    font-size: 12px;
+  .mm-header-icon {
+    width: 44px;
+    height: 44px;
   }
 
-  .membership-stat-card strong {
-    font-size: 21px;
+  .mm-header h1 {
+    font-size: 24px;
   }
 
-  .membership-modal-header {
+  .mm-stat-card {
+    min-height: 90px;
+
     padding: 15px;
   }
 
-  .membership-modal-body {
-    padding: 14px;
+  .mm-stat-icon {
+    width: 41px;
+    height: 41px;
+
+    flex-basis: 41px;
   }
 
-  .membership-profile-block {
-    padding: 12px;
+  .mm-stat-card span {
+    font-size: 10px;
   }
 
-  .membership-large-avatar {
-    width: 43px;
-    height: 43px;
-
-    flex-basis: 43px;
+  .mm-stat-card strong {
+    font-size: 21px;
   }
 
-  .membership-qr-box img {
-    width: 140px;
-    height: 140px;
+  .mm-plan-card {
+    padding: 18px;
   }
+
+  .mm-plan-card-content h3 {
+    font-size: 18px;
+  }
+
+  .mm-plan-card-content > strong {
+    font-size: 27px;
+  }
+
+  .mm-payment-form-card,
+  .mm-payment-preview {
+    padding: 17px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.membership-management button:focus-visible,
+.membership-management input:focus-visible,
+.membership-management select:focus-visible,
+.membership-management textarea:focus-visible {
+  outline:
+    3px solid
+    rgba(13,115,119,.17);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .membership-management *,
+  .membership-management *::before,
+  .membership-management *::after {
+    animation: none !important;
+
+    transition: none !important;
+  }
+
 }

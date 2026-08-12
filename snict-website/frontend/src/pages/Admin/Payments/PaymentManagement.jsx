@@ -53,6 +53,10 @@ function PaymentManagement() {
   const [statusFilter, setStatusFilter] =
     useState("all");
 
+  // Payment view: all payments, event payments, or membership payments.
+  const [paymentTypeFilter, setPaymentTypeFilter] =
+    useState("all");
+
   const [selectedPayment, setSelectedPayment] =
     useState(null);
 
@@ -127,6 +131,80 @@ function PaymentManagement() {
     loadPayments();
 
   }, []);
+
+
+  // =========================================================
+  // PAYMENT TYPE HELPERS
+  // =========================================================
+
+  const getPaymentType = (payment) => {
+    const explicitType = String(
+      payment?.payment_type ||
+      payment?.paymentType ||
+      payment?.type ||
+      payment?.category ||
+      payment?.payment_category ||
+      ""
+    ).toLowerCase().trim();
+
+    if (
+      explicitType.includes("membership") ||
+      explicitType.includes("member")
+    ) {
+      return "membership";
+    }
+
+    if (
+      explicitType.includes("event") ||
+      explicitType.includes("booking")
+    ) {
+      return "event";
+    }
+
+    // Support membership records even when the backend does not
+    // provide an explicit payment_type field.
+    const hasMembershipData =
+      payment?.membership_id ||
+      payment?.membershipId ||
+      payment?.membership_plan ||
+      payment?.membershipPlan ||
+      payment?.plan_name ||
+      payment?.planName ||
+      payment?.membership_name ||
+      payment?.membershipName;
+
+    if (hasMembershipData) {
+      return "membership";
+    }
+
+    return "event";
+  };
+
+  const isMembershipPayment = (payment) =>
+    getPaymentType(payment) === "membership";
+
+  const isEventPayment = (payment) =>
+    getPaymentType(payment) === "event";
+
+  const getPaymentTypeLabel = (payment) =>
+    isMembershipPayment(payment) ? "Membership" : "Event";
+
+  const getMembershipPlan = (payment) =>
+    payment?.membership_plan ||
+    payment?.membershipPlan ||
+    payment?.plan_name ||
+    payment?.planName ||
+    payment?.membership_name ||
+    payment?.membershipName ||
+    payment?.plan ||
+    "Membership";
+
+  const getMembershipId = (payment) =>
+    payment?.membership_id ||
+    payment?.membershipId ||
+    payment?.membership_code ||
+    payment?.membershipCode ||
+    "—";
 
 
   // =========================================================
@@ -345,6 +423,13 @@ function PaymentManagement() {
           return false;
         }
 
+        if (
+          paymentTypeFilter !== "all" &&
+          getPaymentType(payment) !== paymentTypeFilter
+        ) {
+          return false;
+        }
+
         if (!keyword) {
           return true;
         }
@@ -357,7 +442,15 @@ function PaymentManagement() {
           payment.transaction_id,
           payment.booking_code,
           payment.event_title,
+          payment.event_type,
           payment.payment_method,
+          payment.payment_type,
+          payment.membership_id,
+          payment.membershipId,
+          payment.membership_plan,
+          payment.membershipPlan,
+          payment.plan_name,
+          payment.planName,
         ]
           .filter(Boolean)
           .join(" ")
@@ -372,6 +465,7 @@ function PaymentManagement() {
     payments,
     search,
     statusFilter,
+    paymentTypeFilter,
   ]);
 
 
@@ -682,9 +776,9 @@ function PaymentManagement() {
             </h1>
 
             <p>
-              Monitor payments, verify
-              transactions and review
-              member payment activity.
+              Monitor event and membership
+              payments, verify transactions
+              and review payment activity.
             </p>
 
           </div>
@@ -1078,7 +1172,11 @@ function PaymentManagement() {
               </span>
 
               <h2>
-                Payment Transactions
+                {paymentTypeFilter === "event"
+                  ? "Event Payments"
+                  : paymentTypeFilter === "membership"
+                    ? "Membership Payments"
+                    : "All Payment Transactions"}
               </h2>
 
             </div>
@@ -1098,11 +1196,32 @@ function PaymentManagement() {
                       event.target.value
                     )
                   }
-                  placeholder="Search member, UTR, event..."
+                  placeholder="Search member, UTR, event, booking or membership..."
                 />
 
               </div>
 
+
+              <select
+                value={paymentTypeFilter}
+                onChange={(event) =>
+                  setPaymentTypeFilter(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">
+                  All Payments
+                </option>
+
+                <option value="event">
+                  Event Payments
+                </option>
+
+                <option value="membership">
+                  Membership Payments
+                </option>
+              </select>
 
               <select
                 value={statusFilter}
@@ -1168,11 +1287,11 @@ function PaymentManagement() {
                     </th>
 
                     <th>
-                      Booking
+                      Payment Type
                     </th>
 
                     <th>
-                      Event
+                      Event / Membership
                     </th>
 
                     <th>
@@ -1248,37 +1367,36 @@ function PaymentManagement() {
 
 
                         <td>
-
-                          <strong>
-                            {
-                              payment.booking_code ||
-                              "—"
-                            }
-                          </strong>
-
+                          <span
+                            className={`payment-type-badge payment-type-${getPaymentType(payment)}`}
+                          >
+                            {getPaymentTypeLabel(payment)}
+                          </span>
                         </td>
 
 
                         <td>
-
-                          <div className="payment-event-cell">
-
-                            <strong>
-                              {
-                                payment.event_title ||
-                                "—"
-                              }
-                            </strong>
-
-                            <span>
-                              {
-                                payment.event_type ||
-                                ""
-                              }
-                            </span>
-
-                          </div>
-
+                          {isMembershipPayment(payment) ? (
+                            <div className="payment-event-cell">
+                              <strong>
+                                {getMembershipPlan(payment)}
+                              </strong>
+                              <span>
+                                ID: {getMembershipId(payment)}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="payment-event-cell">
+                              <strong>
+                                {payment.event_title || "—"}
+                              </strong>
+                              <span>
+                                {payment.booking_code
+                                  ? `Booking: ${payment.booking_code}`
+                                  : payment.event_type || ""}
+                              </span>
+                            </div>
+                          )}
                         </td>
 
 
@@ -1399,7 +1517,8 @@ function PaymentManagement() {
                 </span>
 
                 <h2>
-                  Transaction Information
+                  {getPaymentTypeLabel(selectedPayment)} Payment
+                  Information
                 </h2>
 
               </div>
@@ -1568,6 +1687,19 @@ function PaymentManagement() {
                   <div>
 
                     <span>
+                      Payment Type
+                    </span>
+
+                    <strong>
+                      {getPaymentTypeLabel(selectedPayment)}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
                       Payment Method
                     </span>
 
@@ -1620,91 +1752,163 @@ function PaymentManagement() {
 
 
               {/* =================================================
-                  EVENT
+                  EVENT / MEMBERSHIP INFORMATION
               ================================================= */}
 
-              <div className="payment-detail-section">
+              {isMembershipPayment(selectedPayment) ? (
 
-                <div className="payment-detail-title">
+                <div className="payment-detail-section">
 
-                  <CalendarDays size={17} />
+                  <div className="payment-detail-title">
 
-                  <span>
-                    EVENT INFORMATION
-                  </span>
-
-                </div>
-
-
-                <div className="payment-detail-grid">
-
-                  <div>
+                    <CreditCard size={17} />
 
                     <span>
-                      Event
+                      MEMBERSHIP INFORMATION
                     </span>
-
-                    <strong>
-                      {
-                        selectedPayment.event_title ||
-                        "—"
-                      }
-                    </strong>
 
                   </div>
 
+                  <div className="payment-detail-grid">
 
-                  <div>
+                    <div>
 
-                    <span>
-                      Event Date
-                    </span>
+                      <span>
+                        Membership Plan
+                      </span>
 
-                    <strong>
+                      <strong>
+                        {getMembershipPlan(selectedPayment)}
+                      </strong>
 
-                      {formatDate(
-                        selectedPayment.event_date
-                      )}
+                    </div>
 
-                    </strong>
+                    <div>
 
-                  </div>
+                      <span>
+                        Membership ID
+                      </span>
 
+                      <strong>
+                        {getMembershipId(selectedPayment)}
+                      </strong>
 
-                  <div>
+                    </div>
 
-                    <span>
-                      Venue
-                    </span>
+                    <div>
 
-                    <strong>
-                      {
-                        selectedPayment.venue ||
-                        "—"
-                      }
-                    </strong>
+                      <span>
+                        Membership Type
+                      </span>
 
-                  </div>
+                      <strong>
+                        {selectedPayment.membership_type ||
+                          selectedPayment.membershipType ||
+                          "—"}
+                      </strong>
 
+                    </div>
 
-                  <div>
+                    <div>
 
-                    <span>
-                      Event Mode
-                    </span>
+                      <span>
+                        Validity
+                      </span>
 
-                    <strong>
-                      {
-                        selectedPayment.event_mode ||
-                        "—"
-                      }
-                    </strong>
+                      <strong>
+                        {selectedPayment.membership_validity ||
+                          selectedPayment.membershipValidity ||
+                          selectedPayment.validity ||
+                          "—"}
+                      </strong>
+
+                    </div>
 
                   </div>
 
                 </div>
 
-              </div>
+              ) : (
+
+                <div className="payment-detail-section">
+
+                  <div className="payment-detail-title">
+
+                    <CalendarDays size={17} />
+
+                    <span>
+                      EVENT INFORMATION
+                    </span>
+
+                  </div>
+
+                  <div className="payment-detail-grid">
+
+                    <div>
+
+                      <span>
+                        Event
+                      </span>
+
+                      <strong>
+                        {selectedPayment.event_title || "—"}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        Booking ID
+                      </span>
+
+                      <strong>
+                        {selectedPayment.booking_code || "—"}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        Event Date
+                      </span>
+
+                      <strong>
+                        {formatDate(selectedPayment.event_date)}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        Venue
+                      </span>
+
+                      <strong>
+                        {selectedPayment.venue || "—"}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        Event Mode
+                      </span>
+
+                      <strong>
+                        {selectedPayment.event_mode || "—"}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              )}
 
 
               {/* =================================================

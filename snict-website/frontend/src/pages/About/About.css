@@ -2487,3 +2487,227 @@
   }
 }
 
+
+
+/* =========================================================
+   FINAL HERO FLOATING-CARD FIX
+   Compact cards with controlled text width.
+   Prevents long descriptions from creating oversized cards
+   or unwanted spacing around the hero visual.
+   ========================================================= */
+
+.about-hero-visual {
+  overflow: visible;
+  isolation: isolate;
+}
+
+.about-floating-card {
+  box-sizing: border-box;
+  width: min(250px, calc(100% - 24px));
+  min-width: 0;
+  max-width: 250px;
+  padding: 11px 13px;
+  gap: 9px;
+  border-radius: 13px;
+  overflow: hidden;
+  transform-origin: center;
+}
+
+.about-floating-card > div:last-child {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.about-floating-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.about-floating-card span {
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.about-card-one {
+  left: 0;
+  top: 70px;
+}
+
+.about-card-two {
+  right: 0;
+  bottom: 80px;
+}
+
+.about-card-three {
+  right: 35px;
+  top: 25px;
+}
+
+.about-card-four {
+  left: 35px;
+  bottom: 28px;
+  padding: 10px 13px;
+  animation-delay: 1.8s;
+}
+
+.about-card-four span {
+  margin-top: 2px;
+  color: #8a9b9f;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Tablet */
+@media (max-width: 1050px) {
+  .about-floating-card {
+    width: min(225px, calc(100% - 20px));
+    max-width: 225px;
+  }
+
+  .about-card-one {
+    left: 4px;
+  }
+
+  .about-card-two {
+    right: 4px;
+  }
+
+  .about-card-three {
+    right: 25px;
+  }
+
+  .about-card-four {
+    left: 25px;
+    bottom: 24px;
+  }
+}
+
+/* Tablet / mobile */
+@media (max-width: 800px) {
+  .about-hero-visual {
+    min-height: 370px;
+  }
+
+  .about-floating-card {
+    width: 210px;
+    max-width: 210px;
+    padding: 10px 12px;
+  }
+
+  .about-floating-card strong {
+    font-size: 12px;
+  }
+
+  .about-floating-card span {
+    font-size: 9px;
+  }
+
+  .about-card-one {
+    left: 0;
+    top: 55px;
+  }
+
+  .about-card-two {
+    right: 0;
+    bottom: 55px;
+  }
+
+  .about-card-three {
+    right: 15px;
+    top: 10px;
+  }
+
+  .about-card-four {
+    left: 15px;
+    bottom: 10px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 560px) {
+  .about-hero-visual {
+    min-height: 315px;
+    transform: scale(0.68);
+    margin-top: -25px;
+    margin-bottom: -20px;
+  }
+
+  .about-floating-card {
+    width: 195px;
+    max-width: 195px;
+    padding: 9px 11px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .about-floating-card svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .about-floating-card strong {
+    font-size: 11px;
+  }
+
+  .about-floating-card span {
+    font-size: 8.5px;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .about-card-one {
+    left: -5px;
+    top: 48px;
+  }
+
+  .about-card-two {
+    right: -5px;
+    bottom: 48px;
+  }
+
+  .about-card-three {
+    right: 5px;
+    top: 4px;
+  }
+
+  .about-card-four {
+    left: 5px;
+    bottom: 4px;
+  }
+}
+
+/* Very small devices */
+@media (max-width: 360px) {
+  .about-floating-card {
+    width: 175px;
+    max-width: 175px;
+    padding: 8px 10px;
+  }
+
+  .about-card-one {
+    left: -10px;
+  }
+
+  .about-card-two {
+    right: -10px;
+  }
+
+  .about-card-three {
+    right: 0;
+  }
+
+  .about-card-four {
+    left: 0;
+  }
+}

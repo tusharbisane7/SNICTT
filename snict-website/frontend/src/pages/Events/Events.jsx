@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import LoginRequiredModal from "../../components/LoginRequiredModal";
 
 import api from "../../services/api";
 
@@ -186,6 +187,65 @@ function Events() {
 
   const [typeFilter, setTypeFilter] =
     useState("all");
+
+  // =========================================================
+  // AUTHENTICATION / LOGIN REQUIRED MODAL
+  // Events require the user to be logged in.
+  // =========================================================
+
+  const [user, setUser] =
+    useState(null);
+
+  const [authChecked, setAuthChecked] =
+    useState(false);
+
+  const [showLoginModal, setShowLoginModal] =
+    useState(false);
+
+  useEffect(() => {
+    checkUserAuthentication();
+  }, []);
+
+  const checkUserAuthentication = async () => {
+    try {
+      const response =
+        await api.get("/auth/profile");
+
+      if (response.data?.success) {
+        setUser(
+          response.data.user ||
+          response.data.member ||
+          response.data.data ||
+          null
+        );
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setAuthChecked(true);
+    }
+  };
+
+  // =========================================================
+  // OPEN EVENT
+  // Login is compulsory for event access.
+  // =========================================================
+
+  const handleEventClick = (event) => {
+    if (!authChecked) {
+      return;
+    }
+
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    window.location.href =
+      `/events/${event.id}`;
+  };
 
 
   // =========================================================
@@ -1017,9 +1077,13 @@ function Events() {
 
                       {/* VIEW */}
 
-                      <Link
-                        to={`/events/${event.id}`}
+                      <button
+                        type="button"
                         className="event-view-btn"
+                        onClick={() =>
+                          handleEventClick(event)
+                        }
+                        disabled={!authChecked}
                       >
 
                         View Event
@@ -1028,7 +1092,7 @@ function Events() {
                           size={16}
                         />
 
-                      </Link>
+                      </button>
 
                     </div>
 
@@ -1042,6 +1106,18 @@ function Events() {
         </div>
 
       </section>
+
+      {/* =====================================================
+          LOGIN REQUIRED MODAL
+          Events require login before viewing/booking.
+      ===================================================== */}
+
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() =>
+          setShowLoginModal(false)
+        }
+      />
 
     </main>
   );

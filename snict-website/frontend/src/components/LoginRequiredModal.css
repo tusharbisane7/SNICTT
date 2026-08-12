@@ -1,0 +1,857 @@
+/* =========================================================
+   SNICT - LOGIN REQUIRED MODAL
+   PREMIUM EVENT BOOKING UI
+   ========================================================= */
+
+
+/* =========================================================
+   OVERLAY
+   ========================================================= */
+
+.login-required-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 99999;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.58);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  animation: loginRequiredOverlayIn 0.28s ease-out both;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.login-required-modal {
+  position: relative;
+
+  width: min(420px, 100%);
+
+  padding: 32px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fbfcff 100%
+    );
+
+  text-align: center;
+
+  box-shadow:
+    0 35px 100px rgba(15, 23, 42, 0.25),
+    0 10px 35px rgba(15, 23, 42, 0.08);
+
+  animation: loginRequiredModalIn 0.42s cubic-bezier(
+    0.16,
+    1,
+    0.3,
+    1
+  ) both;
+}
+
+
+/* =========================================================
+   TOP DECORATIVE GLOW
+   ========================================================= */
+
+.login-required-modal::before {
+  content: "";
+
+  position: absolute;
+
+  top: -90px;
+  left: 50%;
+
+  width: 210px;
+  height: 210px;
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+
+  background: rgba(99, 102, 241, 0.10);
+
+  filter: blur(35px);
+
+  pointer-events: none;
+
+  animation: loginRequiredGlow 4s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   BOTTOM DECORATIVE LINE
+   ========================================================= */
+
+.login-required-modal::after {
+  content: "";
+
+  position: absolute;
+
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+
+  height: 2px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #6366f1,
+      transparent
+    );
+
+  opacity: 0.55;
+
+  animation: loginRequiredLine 2.5s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+   ========================================================= */
+
+.login-required-close {
+  position: absolute;
+
+  top: 14px;
+  right: 14px;
+
+  z-index: 5;
+
+  width: 35px;
+  height: 35px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #edf0f5;
+  border-radius: 9px;
+
+  background: rgba(248, 250, 252, 0.9);
+  color: #64748b;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.25s ease;
+}
+
+.login-required-close:hover {
+  border-color: #dbe1ea;
+
+  background: #f1f5f9;
+
+  color: #172033;
+
+  transform: rotate(90deg) scale(1.04);
+}
+
+.login-required-close:active {
+  transform: rotate(90deg) scale(0.94);
+}
+
+
+/* =========================================================
+   ICON WRAPPER
+   ========================================================= */
+
+.login-required-icon {
+  position: relative;
+
+  z-index: 2;
+
+  width: 68px;
+  height: 68px;
+
+  margin: 2px auto 17px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #e0e7ff;
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #eef2ff,
+      #e0e7ff
+    );
+
+  color: #4f46e5;
+
+  box-shadow:
+    0 12px 28px rgba(79, 70, 229, 0.12);
+
+  animation:
+    loginRequiredIconIn 0.55s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    0.12s both;
+}
+
+
+/* =========================================================
+   ICON GLOW
+   ========================================================= */
+
+.login-required-icon::before {
+  content: "";
+
+  position: absolute;
+  inset: -6px;
+
+  border: 1px solid rgba(99, 102, 241, 0.14);
+
+  border-radius: 21px;
+
+  animation:
+    loginRequiredIconPulse 2.4s
+    ease-in-out
+    infinite;
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.login-required-label {
+  position: relative;
+
+  z-index: 2;
+
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 850;
+
+  letter-spacing: 0.16em;
+
+  animation:
+    loginRequiredContentIn 0.35s
+    ease-out
+    0.12s both;
+}
+
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.login-required-modal h2 {
+  position: relative;
+
+  z-index: 2;
+
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 26px;
+  line-height: 1.2;
+
+  font-weight: 850;
+
+  letter-spacing: -0.035em;
+
+  animation:
+    loginRequiredContentIn 0.38s
+    ease-out
+    0.16s both;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.login-required-modal p {
+  position: relative;
+
+  z-index: 2;
+
+  margin: 10px auto 23px;
+
+  max-width: 315px;
+
+  color: #718096;
+
+  font-size: 12px;
+  line-height: 1.65;
+
+  animation:
+    loginRequiredContentIn 0.38s
+    ease-out
+    0.21s both;
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.login-required-actions {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+
+  animation:
+    loginRequiredContentIn 0.4s
+    ease-out
+    0.26s both;
+}
+
+
+/* =========================================================
+   BUTTON BASE
+   ========================================================= */
+
+.login-required-actions button {
+  position: relative;
+
+  min-height: 46px;
+
+  padding: 0 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  overflow: hidden;
+
+  border-radius: 10px;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+
+/* =========================================================
+   BUTTON SHINE
+   ========================================================= */
+
+.login-required-actions button::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 80%;
+  height: 100%;
+
+  transform: skewX(-20deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.25),
+      transparent
+    );
+
+  transition: left 0.55s ease;
+}
+
+.login-required-actions button:hover::before {
+  left: 140%;
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+   ========================================================= */
+
+.login-required-login {
+  border: 1px solid #4f46e5;
+
+  background:
+    linear-gradient(
+      135deg,
+      #5b54eb,
+      #4f46e5
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 8px 20px rgba(79, 70, 229, 0.18);
+}
+
+.login-required-login:hover {
+  border-color: #4338ca;
+
+  background:
+    linear-gradient(
+      135deg,
+      #5148df,
+      #4338ca
+    );
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 27px rgba(79, 70, 229, 0.25);
+}
+
+.login-required-login:active {
+  transform: translateY(0) scale(0.98);
+}
+
+
+/* =========================================================
+   SIGNUP BUTTON
+   ========================================================= */
+
+.login-required-signup {
+  border: 1px solid #dbeafe;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f5f8ff,
+      #eff6ff
+    );
+
+  color: #2563eb;
+}
+
+.login-required-signup:hover {
+  border-color: #93c5fd;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eff6ff,
+      #dbeafe
+    );
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 22px rgba(37, 99, 235, 0.10);
+}
+
+.login-required-signup:active {
+  transform: translateY(0) scale(0.98);
+}
+
+
+/* =========================================================
+   MAYBE LATER
+   ========================================================= */
+
+.login-required-later {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+
+  margin-top: 14px;
+
+  padding: 8px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #94a3b8;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.login-required-later:hover {
+  color: #475569;
+
+  transform: translateY(-1px);
+}
+
+.login-required-later:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   OVERLAY ANIMATION
+   ========================================================= */
+
+@keyframes loginRequiredOverlayIn {
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
+}
+
+
+/* =========================================================
+   MODAL ANIMATION
+   ========================================================= */
+
+@keyframes loginRequiredModalIn {
+
+  0% {
+    opacity: 0;
+
+    transform:
+      translateY(30px)
+      scale(0.92)
+      rotateX(4deg);
+  }
+
+  55% {
+    opacity: 1;
+
+    transform:
+      translateY(-4px)
+      scale(1.015)
+      rotateX(0);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1)
+      rotateX(0);
+  }
+
+}
+
+
+/* =========================================================
+   ICON ENTRANCE
+   ========================================================= */
+
+@keyframes loginRequiredIconIn {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px)
+      scale(0.7)
+      rotate(-8deg);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1)
+      rotate(0);
+  }
+
+}
+
+
+/* =========================================================
+   ICON PULSE
+   ========================================================= */
+
+@keyframes loginRequiredIconPulse {
+
+  0%,
+  100% {
+    opacity: 0.25;
+
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.65;
+
+    transform: scale(1.08);
+  }
+
+}
+
+
+/* =========================================================
+   CONTENT ENTRANCE
+   ========================================================= */
+
+@keyframes loginRequiredContentIn {
+
+  from {
+    opacity: 0;
+
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+
+}
+
+
+/* =========================================================
+   GLOW ANIMATION
+   ========================================================= */
+
+@keyframes loginRequiredGlow {
+
+  0%,
+  100% {
+    opacity: 0.55;
+
+    transform:
+      translateX(-50%)
+      scale(1);
+  }
+
+  50% {
+    opacity: 0.9;
+
+    transform:
+      translateX(-50%)
+      scale(1.18);
+  }
+
+}
+
+
+/* =========================================================
+   BOTTOM LINE ANIMATION
+   ========================================================= */
+
+@keyframes loginRequiredLine {
+
+  0%,
+  100% {
+    opacity: 0.25;
+
+    transform: scaleX(0.75);
+  }
+
+  50% {
+    opacity: 0.7;
+
+    transform: scaleX(1);
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+  .login-required-overlay {
+    padding: 12px;
+  }
+
+
+  .login-required-modal {
+    width: min(390px, 100%);
+
+    padding: 27px 19px 22px;
+
+    border-radius: 16px;
+  }
+
+
+  .login-required-close {
+    top: 11px;
+    right: 11px;
+
+    width: 33px;
+    height: 33px;
+  }
+
+
+  .login-required-icon {
+    width: 58px;
+    height: 58px;
+
+    margin-bottom: 15px;
+
+    border-radius: 15px;
+  }
+
+
+  .login-required-modal h2 {
+    font-size: 23px;
+  }
+
+
+  .login-required-modal p {
+    margin-bottom: 20px;
+
+    font-size: 11px;
+  }
+
+
+  .login-required-actions {
+    gap: 8px;
+  }
+
+
+  .login-required-actions button {
+    min-height: 44px;
+
+    font-size: 10px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .login-required-overlay {
+    padding: 9px;
+  }
+
+
+  .login-required-modal {
+    padding: 25px 15px 20px;
+
+    border-radius: 14px;
+  }
+
+
+  .login-required-icon {
+    width: 54px;
+    height: 54px;
+  }
+
+
+  .login-required-modal h2 {
+    font-size: 21px;
+  }
+
+
+  .login-required-modal p {
+    max-width: 270px;
+
+    font-size: 10px;
+  }
+
+
+  .login-required-actions {
+    grid-template-columns: 1fr;
+
+    gap: 7px;
+  }
+
+
+  .login-required-actions button {
+    width: 100%;
+  }
+
+
+  .login-required-later {
+    margin-top: 9px;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .login-required-overlay,
+  .login-required-modal,
+  .login-required-icon,
+  .login-required-label,
+  .login-required-modal h2,
+  .login-required-modal p,
+  .login-required-actions {
+    animation: none !important;
+  }
+
+
+  .login-required-modal::before,
+  .login-required-modal::after,
+  .login-required-icon::before {
+    animation: none !important;
+  }
+
+
+  .login-required-actions button,
+  .login-required-close,
+  .login-required-later {
+    transition: none !important;
+  }
+
+}
