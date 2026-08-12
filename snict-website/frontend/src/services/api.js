@@ -3,7 +3,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     import.meta.env.VITE_API_URL ||
-    "https://snict-backend.onrender.com/api",
+    "https://backend.snict.net/api",
 
   // Required for HTTP-only authentication cookie
   withCredentials: true,

@@ -407,7 +407,7 @@ const getCommitteeImage = (member) => {
   // Your API URL
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://snict-backend.onrender.com/api";
+    "https://backend.snict.net/api";
 
   // Safely remove /api from the backend URL.
   // No regex required.
@@ -528,7 +528,7 @@ const getEventImage = (event) => {
   // https://your-backend.onrender.com/uploads/...
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://snict-backend.onrender.com/api";
+    "https://backend.snict.net/api";
 
   let backendOrigin = apiUrl.trim();
 
