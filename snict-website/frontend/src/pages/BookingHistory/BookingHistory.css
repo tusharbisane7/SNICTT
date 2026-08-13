@@ -3143,3 +3143,653 @@
     transform: none !important;
   }
 }
+
+/* =========================================================
+   SNICT BOOKING HISTORY — ATTENDANCE + PASS UI UPGRADE
+   Compatible with the updated BookingHistory.jsx
+========================================================= */
+
+/* =========================================================
+   TOOLBAR / REFRESH
+========================================================= */
+
+.booking-history-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+.booking-history-toolbar > div > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #087ea4;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.booking-history-toolbar h2 {
+  margin: 0;
+  color: #103b48;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: -.7px;
+}
+
+.booking-history-refresh {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid #cfe3e8;
+  border-radius: 12px;
+  background: rgba(255,255,255,.9);
+  color: #087ea4;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(5,57,72,.06);
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.booking-history-refresh:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #edf8fb;
+  box-shadow: 0 12px 28px rgba(8,126,164,.11);
+}
+
+.booking-history-refresh:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.booking-refresh-spin {
+  animation: bookingRefreshSpin .8s linear infinite;
+}
+
+@keyframes bookingRefreshSpin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* =========================================================
+   SUMMARY — 5 CARDS
+========================================================= */
+
+.booking-history-summary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+
+/* =========================================================
+   INLINE ATTENDANCE
+========================================================= */
+
+.booking-attendance-inline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.booking-attendance-inline::after {
+  content: "";
+  position: absolute;
+  top: -70%;
+  right: -40px;
+  width: 100px;
+  height: 220%;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.45),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.booking-attendance-inline.present {
+  border-color: #a9dfbd;
+  background: linear-gradient(135deg, #f1fbf5, #eaf8ef);
+  color: #217845;
+}
+
+.booking-attendance-inline.not-present {
+  border-color: #b9dfe7;
+  background: linear-gradient(135deg, #effbfd, #e7f7fa);
+  color: #08657b;
+}
+
+.booking-attendance-inline > svg {
+  flex-shrink: 0;
+}
+
+.booking-attendance-inline > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booking-attendance-inline strong {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .35px;
+}
+
+.booking-attendance-inline span {
+  color: inherit;
+  opacity: .82;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   ATTENDANCE BADGE — RIGHT PANEL
+========================================================= */
+
+.booking-attendance-badge {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid;
+  border-radius: 14px;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.booking-attendance-badge:hover {
+  transform: translateY(-2px);
+}
+
+.booking-attendance-badge > svg {
+  flex-shrink: 0;
+}
+
+.booking-attendance-badge > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booking-attendance-badge strong {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .45px;
+}
+
+.booking-attendance-badge span {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.booking-attendance-badge.present {
+  border-color: #9bdab5;
+  background: linear-gradient(135deg, #f0fbf4, #e9f8ef);
+  color: #207a46;
+  box-shadow: 0 7px 22px rgba(32,122,70,.07);
+}
+
+.booking-attendance-badge.not-present {
+  border-color: #8ed3df;
+  background: linear-gradient(135deg, #effcff, #e5f8fb);
+  color: #05647b;
+  box-shadow: 0 7px 22px rgba(8,126,164,.07);
+}
+
+
+/* =========================================================
+   PASS ACTIONS
+========================================================= */
+
+.booking-pass-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+}
+
+.booking-pass-actions .booking-history-view {
+  width: 100%;
+}
+
+.booking-pass-print-button {
+  color: #075d72;
+  background: #eef8fa;
+  border: 1px solid #c3e0e6;
+}
+
+.booking-pass-print-button:hover {
+  color: #ffffff;
+  background: #075d72;
+}
+
+.booking-pass-print-button:disabled {
+  opacity: .65;
+  cursor: wait;
+  transform: none;
+}
+
+
+/* =========================================================
+   PASS QR SECTION
+========================================================= */
+
+.booking-pass-qr-section {
+  margin-top: 25px;
+  padding: 22px;
+  border: 1px solid #d7e8ec;
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(8,126,164,.07),
+      transparent 55%
+    ),
+    linear-gradient(135deg, #fbfeff, #f4fafb);
+  box-shadow: 0 12px 34px rgba(5,57,72,.055);
+}
+
+.booking-pass-qr-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 17px;
+  color: #087ea4;
+}
+
+.booking-pass-qr-heading > svg {
+  flex-shrink: 0;
+}
+
+.booking-pass-qr-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booking-pass-qr-heading strong {
+  color: #103b48;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .8px;
+}
+
+.booking-pass-qr-heading span {
+  color: #728991;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.booking-pass-qr-box {
+  width: 100%;
+  min-height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border: 1px dashed #b9dbe3;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.booking-pass-qr-image {
+  display: block;
+  width: min(270px, 100%);
+  aspect-ratio: 1;
+  object-fit: contain;
+  padding: 10px;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow:
+    0 12px 30px rgba(5,57,72,.09),
+    0 0 0 1px #edf4f6;
+}
+
+.booking-pass-qr-error {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #9a4d4d;
+  text-align: center;
+}
+
+.booking-pass-qr-error span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   ATTENDANCE CODE
+========================================================= */
+
+.booking-pass-attendance-code {
+  margin-top: 15px;
+  padding: 16px;
+  border: 1px solid #c9e2e8;
+  border-radius: 16px;
+  background: #eef9fb;
+}
+
+.booking-pass-attendance-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.booking-pass-attendance-code-header > span {
+  color: #08657b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+}
+
+.booking-pass-attendance-code-header button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #b8dce4;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #087ea4;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease;
+}
+
+.booking-pass-attendance-code-header button:hover {
+  transform: translateY(-1px);
+  background: #e8f7fa;
+}
+
+.booking-pass-attendance-code > strong {
+  display: block;
+  color: #073d4e;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 950;
+  letter-spacing: 1.8px;
+  word-break: break-all;
+}
+
+.booking-pass-attendance-code > small {
+  display: block;
+  margin-top: 7px;
+  color: #6e858d;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   PASS ATTENDANCE STATUS
+========================================================= */
+
+.booking-pass-attendance-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 15px;
+  padding: 16px 17px;
+  border: 1px solid;
+  border-radius: 15px;
+}
+
+.booking-pass-attendance-status > svg {
+  flex-shrink: 0;
+}
+
+.booking-pass-attendance-status > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booking-pass-attendance-status strong {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .5px;
+}
+
+.booking-pass-attendance-status span {
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.booking-pass-attendance-status.present {
+  border-color: #a8dcba;
+  background: linear-gradient(135deg, #f0fbf4, #e8f7ed);
+  color: #207a46;
+}
+
+.booking-pass-attendance-status.not-present {
+  border-color: #a9dbe4;
+  background: linear-gradient(135deg, #effbfd, #e5f8fb);
+  color: #08657b;
+}
+
+
+/* =========================================================
+   PASS VALIDITY — KEEP ABOVE QR / STATUS DECORATION
+========================================================= */
+
+.booking-pass-validity {
+  z-index: 1;
+}
+
+
+/* =========================================================
+   MODAL SCROLLBAR
+========================================================= */
+
+.booking-pass-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.booking-pass-card::-webkit-scrollbar-track {
+  background: #f0f6f8;
+}
+
+.booking-pass-card::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #b8d9e0;
+}
+
+.booking-pass-card::-webkit-scrollbar-thumb:hover {
+  background: #087ea4;
+}
+
+
+/* =========================================================
+   MOBILE — TOOLBAR
+========================================================= */
+
+@media (max-width: 900px) {
+  .booking-history-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-history-toolbar {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 700px) {
+  .booking-history-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 22px;
+  }
+
+  .booking-history-toolbar h2 {
+    font-size: 28px;
+  }
+
+  .booking-history-refresh {
+    width: 100%;
+  }
+
+  .booking-history-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-pass-qr-section {
+    padding: 17px;
+    border-radius: 17px;
+  }
+
+  .booking-pass-qr-box {
+    min-height: 235px;
+    padding: 13px;
+  }
+
+  .booking-pass-qr-image {
+    width: min(235px, 100%);
+  }
+
+  .booking-pass-attendance-code > strong {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .booking-history-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-history-toolbar h2 {
+    font-size: 25px;
+  }
+
+  .booking-attendance-inline {
+    align-items: flex-start;
+  }
+
+  .booking-pass-qr-heading {
+    align-items: flex-start;
+  }
+
+  .booking-pass-qr-box {
+    min-height: 210px;
+  }
+
+  .booking-pass-qr-image {
+    width: min(205px, 100%);
+  }
+
+  .booking-pass-attendance-code-header {
+    align-items: flex-start;
+  }
+
+  .booking-pass-attendance-code-header button {
+    flex-shrink: 0;
+  }
+
+  .booking-pass-attendance-status {
+    align-items: flex-start;
+  }
+}
+
+
+/* =========================================================
+   PRINT — QR + ATTENDANCE CODE
+========================================================= */
+
+@media print {
+  .booking-pass-qr-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #d5e2e6 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  .booking-pass-qr-box {
+    min-height: auto !important;
+    border: 1px solid #d5e2e6 !important;
+  }
+
+  .booking-pass-qr-image {
+    width: 230px !important;
+    height: 230px !important;
+    box-shadow: none !important;
+  }
+
+  .booking-pass-attendance-code,
+  .booking-pass-attendance-status,
+  .booking-pass-validity,
+  .booking-pass-field {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .booking-pass-attendance-code-header button {
+    display: none !important;
+  }
+
+  .booking-pass-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY — NEW CONTROLS
+========================================================= */
+
+.booking-history-refresh:focus-visible,
+.booking-pass-attendance-code-header button:focus-visible,
+.booking-pass-print-button:focus-visible {
+  outline: 3px solid rgba(8,126,164,.32);
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION — NEW ELEMENTS
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-refresh-spin,
+  .booking-pass-qr-image {
+    animation: none !important;
+  }
+
+  .booking-history-refresh,
+  .booking-attendance-badge,
+  .booking-pass-attendance-code-header button {
+    transition: none !important;
+  }
+}

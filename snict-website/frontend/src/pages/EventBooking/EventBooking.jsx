@@ -36,8 +36,7 @@ function EventBooking() {
   // STATE
   // =========================================================
 
-  const [booking, setBooking] =
-    useState(null);
+  const [booking, setBooking] = useState(null);
 
   const [transactionId, setTransactionId] =
     useState("");
@@ -225,7 +224,8 @@ function EventBooking() {
         ? "PM"
         : "AM";
 
-    hour = hour % 12 || 12;
+    hour =
+      hour % 12 || 12;
 
     return `${hour}:${minute} ${suffix}`;
   };
@@ -272,7 +272,34 @@ function EventBooking() {
 
   // =========================================================
   // SUBMIT PAYMENT
-  // POST /api/payment/:bookingId
+  // POST /api/payments/:bookingId
+  // =========================================================
+  //
+  // IMPORTANT:
+  //
+  // server.js:
+  //
+  // app.use(
+  //   "/api/payments",
+  //   paymentRoutes
+  // );
+  //
+  // paymentRoutes:
+  //
+  // router.post(
+  //   "/:bookingId",
+  //   authMiddleware,
+  //   submitPayment
+  // );
+  //
+  // Therefore frontend must call:
+  //
+  // /payments/:bookingId
+  //
+  // NOT:
+  //
+  // /payment/:bookingId
+  //
   // =========================================================
 
   const handlePayment = async (
@@ -299,6 +326,68 @@ function EventBooking() {
     }
 
     // =====================================================
+    // CHECK BOOKING ID
+    // =====================================================
+
+    const bookingId =
+      booking?.id ||
+      booking?.booking_id ||
+      id;
+
+    if (!bookingId) {
+      setError(
+        "Invalid booking ID."
+      );
+
+      return;
+    }
+
+    // =====================================================
+    // CHECK BOOKING STATUS
+    // =====================================================
+
+    const bookingStatus =
+      booking?.booking_status;
+
+    if (
+      bookingStatus &&
+      ![
+        "payment_pending",
+      ].includes(
+        bookingStatus
+      )
+    ) {
+      // If already confirmed/completed,
+      // payment should not be submitted.
+
+      if (
+        [
+          "confirmed",
+          "completed",
+        ].includes(
+          bookingStatus
+        )
+      ) {
+        setError(
+          "This booking is already confirmed. Payment submission is not required."
+        );
+
+        return;
+      }
+
+      if (
+        bookingStatus ===
+        "rejected"
+      ) {
+        setError(
+          "This booking has been rejected. Please contact SNICT administration."
+        );
+
+        return;
+      }
+    }
+
+    // =====================================================
     // CHECK PAYMENT STATUS
     // =====================================================
 
@@ -306,9 +395,12 @@ function EventBooking() {
       booking.payment_status;
 
     if (
-      paymentStatus === "submitted" ||
-      paymentStatus === "verified" ||
-      paymentStatus === "paid"
+      paymentStatus ===
+        "submitted" ||
+      paymentStatus ===
+        "verified" ||
+      paymentStatus ===
+        "paid"
     ) {
       setError(
         "Payment has already been submitted for this booking."
@@ -345,29 +437,41 @@ function EventBooking() {
 
       // ===================================================
       // SUBMIT PAYMENT
+      // ===================================================
       //
-      // IMPORTANT:
+      // CORRECT BACKEND ENDPOINT:
       //
-      // Backend route:
-      // POST /api/payment/:bookingId
+      // POST /api/payments/:bookingId
       //
-      // NOT:
-      // /api/payments/:bookingId
+      // api.js baseURL:
+      //
+      // https://snict-backend.onrender.com/api
+      //
+      // Therefore:
+      //
+      // /payments/${bookingId}
+      //
+      // becomes:
+      //
+      // https://snict-backend.onrender.com/api/payments/16
+      //
       // ===================================================
 
       const response =
         await api.post(
-          `/payment/${id}`,
+          `/payments/${bookingId}`,
           {
             transactionId: utr,
           }
         );
 
+      // ===================================================
+      // SUCCESS
+      // ===================================================
+
       if (
         response.data?.success
       ) {
-        setSuccess(true);
-
         setBooking(
           (previous) => ({
             ...previous,
@@ -375,12 +479,8 @@ function EventBooking() {
             payment_status:
               "submitted",
 
-            /*
-             * Backend booking status
-             * is payment_pending.
-             */
-
             booking_status:
+              previous?.booking_status ||
               "payment_pending",
 
             transaction_id:
@@ -388,8 +488,14 @@ function EventBooking() {
           })
         );
 
+        setSuccess(true);
+
         return;
       }
+
+      // ===================================================
+      // BACKEND RETURNED SUCCESS FALSE
+      // ===================================================
 
       setError(
         response.data?.message ||
@@ -411,7 +517,7 @@ function EventBooking() {
         navigate("/login", {
           state: {
             from:
-              `/events/booking/${id}`,
+              `/events/booking/${bookingId}`,
           },
         });
 
@@ -435,6 +541,11 @@ function EventBooking() {
 
       // ===================================================
       // CONFLICT
+      // ===================================================
+      //
+      // Backend returns 409 when payment has already
+      // been submitted.
+      //
       // ===================================================
 
       if (
@@ -538,7 +649,9 @@ function EventBooking() {
             </span>
 
             <strong>
-              #{booking?.id}
+              #{booking?.id ||
+                booking?.booking_id ||
+                id}
             </strong>
           </div>
 
@@ -729,6 +842,7 @@ function EventBooking() {
 
             <h2>
               {booking?.title ||
+                booking?.event_title ||
                 "SNICT Event"}
             </h2>
 

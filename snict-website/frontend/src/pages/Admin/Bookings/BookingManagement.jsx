@@ -17,6 +17,12 @@ import {
   Smartphone,
   IndianRupee,
   AlertCircle,
+  QrCode,
+  Copy,
+  Check,
+  ShieldCheck,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 
 import api from "../../../services/api";
@@ -56,6 +62,12 @@ function BookingManagement() {
     useState(null);
 
   const [actionLoading, setActionLoading] =
+    useState(false);
+
+  const [copiedCode, setCopiedCode] =
+    useState("");
+
+  const [qrLoading, setQrLoading] =
     useState(false);
 
   // =========================================================
@@ -266,6 +278,118 @@ function BookingManagement() {
       "UPI"
     );
   };
+
+  // =========================================================
+  // ATTENDANCE / VERIFICATION HELPERS
+  // =========================================================
+
+  const getAttendanceStatus = (booking) => {
+    const value =
+      booking.attendance_status ||
+      booking.attendanceStatus ||
+      booking.attendance ||
+      booking.check_in_status ||
+      "";
+
+    const normalized = String(value).toLowerCase();
+
+    return (
+      normalized === "present" ||
+      normalized === "checked_in" ||
+      normalized === "checked-in" ||
+      normalized === "attended"
+    )
+      ? "present"
+      : "not_present";
+  };
+
+  const getAttendanceCode = (booking) => {
+    return (
+      booking.attendance_code ||
+      booking.attendanceCode ||
+      booking.check_in_code ||
+      booking.checkInCode ||
+      booking.verification_code ||
+      booking.verificationCode ||
+      getBookingId(booking)
+    );
+  };
+
+  const getQrCodeUrl = (booking) => {
+    return (
+      booking.qr_code_url ||
+      booking.qrCodeUrl ||
+      booking.qr_code ||
+      booking.qrCode ||
+      booking.attendance_qr_url ||
+      booking.attendanceQrUrl ||
+      ""
+    );
+  };
+
+  const getVerificationStatus = (booking) => {
+    const value =
+      booking.verification_status ||
+      booking.verificationStatus ||
+      "";
+
+    const normalized = String(value).toLowerCase();
+
+    if (
+      normalized === "verified" ||
+      getPaymentStatus(booking) === "verified"
+    ) {
+      return "verified";
+    }
+
+    return "pending";
+  };
+
+  const copyAttendanceCode = async (booking) => {
+    const code = getAttendanceCode(booking);
+
+    if (!code) return;
+
+    try {
+      await navigator.clipboard.writeText(
+        String(code)
+      );
+
+      setCopiedCode(String(code));
+
+      setTimeout(() => {
+        setCopiedCode("");
+      }, 1800);
+    } catch (error) {
+      console.error(
+        "Copy attendance code error:",
+        error
+      );
+
+      setError(
+        "Unable to copy attendance code."
+      );
+    }
+  };
+
+  const buildQrUrl = (booking) => {
+    const existing = getQrCodeUrl(booking);
+
+    if (existing) return existing;
+
+    const code = getAttendanceCode(booking);
+
+    if (!code) return "";
+
+    return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
+      String(code)
+    )}`;
+  };
+
+  const handlePrintPass = () => {
+    window.print();
+  };
+
 
   // =========================================================
   // FORMAT DATE
@@ -557,12 +681,24 @@ function BookingManagement() {
           0
         );
 
+    const attended =
+      bookings.filter(
+        (booking) =>
+          getAttendanceStatus(booking) ===
+          "present"
+      ).length;
+
+    const notAttended =
+      total - attended;
+
     return {
       total,
       confirmed,
       pending,
       paid,
       revenue,
+      attended,
+      notAttended,
     };
   }, [bookings]);
 
@@ -984,6 +1120,24 @@ function BookingManagement() {
 
           </div>
 
+          <div className="booking-stat-card">
+
+            <div className="booking-stat-icon">
+              <UserCheck size={20} />
+            </div>
+
+            <div>
+              <span>
+                Attended
+              </span>
+
+              <strong>
+                {stats.attended}
+              </strong>
+            </div>
+
+          </div>
+
         </section>
 
 
@@ -1234,6 +1388,10 @@ function BookingManagement() {
                     </th>
 
                     <th>
+                      Attendance
+                    </th>
+
+                    <th>
                       Actions
                     </th>
 
@@ -1424,6 +1582,25 @@ function BookingManagement() {
 
                             </span>
 
+                          </td>
+
+
+                          {/* ATTENDANCE */}
+
+                          <td>
+                            {getAttendanceStatus(
+                              booking
+                            ) === "present" ? (
+                              <span className="booking-status attendance-present">
+                                <UserCheck size={13} />
+                                Present
+                              </span>
+                            ) : (
+                              <span className="booking-status attendance-not-present">
+                                <UserX size={13} />
+                                Not Present
+                              </span>
+                            )}
                           </td>
 
 
@@ -1840,6 +2017,202 @@ function BookingManagement() {
               </div>
 
 
+              {/* ATTENDANCE INFORMATION */}
+
+              <div className="booking-detail-section">
+
+                <div className="booking-detail-section-title">
+                  <ShieldCheck size={17} />
+
+                  <span>
+                    ATTENDANCE & VERIFICATION
+                  </span>
+                </div>
+
+                <div
+                  className={`booking-attendance-badge ${getAttendanceStatus(
+                    selectedBooking
+                  )}`}
+                >
+                  {getAttendanceStatus(
+                    selectedBooking
+                  ) === "present" ? (
+                    <>
+                      <UserCheck size={18} />
+
+                      <div>
+                        <strong>
+                          Attendance Marked Present
+                        </strong>
+
+                        <span>
+                          This booking has been checked in.
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <UserX size={18} />
+
+                      <div>
+                        <strong>
+                          Not Checked In
+                        </strong>
+
+                        <span>
+                          Attendance has not been marked.
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="booking-detail-grid">
+
+                  <div>
+                    <span>
+                      Verification
+                    </span>
+
+                    <strong
+                      className={`modal-status ${getVerificationStatus(
+                        selectedBooking
+                      )}`}
+                    >
+                      {getVerificationStatus(
+                        selectedBooking
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Attendance Code
+                    </span>
+
+                    <strong className="transaction-id">
+                      {getAttendanceCode(
+                        selectedBooking
+                      )}
+                    </strong>
+                  </div>
+
+                </div>
+
+                <div className="booking-pass-qr-section">
+
+                  <div className="booking-pass-qr-heading">
+                    <QrCode size={19} />
+
+                    <div>
+                      <strong>
+                        EVENT ENTRY QR
+                      </strong>
+
+                      <span>
+                        Scan this code to identify the booking at entry.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="booking-pass-qr-box">
+
+                    {buildQrUrl(
+                      selectedBooking
+                    ) ? (
+                      <img
+                        src={buildQrUrl(
+                          selectedBooking
+                        )}
+                        alt={`QR code for ${getBookingId(
+                          selectedBooking
+                        )}`}
+                        className="booking-pass-qr-image"
+                        onLoad={() =>
+                          setQrLoading(false)
+                        }
+                        onError={(event) => {
+                          setQrLoading(false);
+                          event.currentTarget.style.display =
+                            "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="booking-pass-qr-error">
+                        <QrCode size={32} />
+
+                        <span>
+                          QR code is not available.
+                        </span>
+                      </div>
+                    )}
+
+                    {qrLoading && (
+                      <div className="booking-pass-qr-error">
+                        <span>
+                          Loading QR...
+                        </span>
+                      </div>
+                    )}
+
+                  </div>
+
+                  <div className="booking-pass-attendance-code">
+
+                    <div className="booking-pass-attendance-code-header">
+
+                      <span>
+                        ENTRY / ATTENDANCE CODE
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          copyAttendanceCode(
+                            selectedBooking
+                          )
+                        }
+                      >
+                        {copiedCode ===
+                        String(
+                          getAttendanceCode(
+                            selectedBooking
+                          )
+                        ) ? (
+                          <Check size={13} />
+                        ) : (
+                          <Copy size={13} />
+                        )}
+
+                        {copiedCode ===
+                        String(
+                          getAttendanceCode(
+                            selectedBooking
+                          )
+                        )
+                          ? "Copied"
+                          : "Copy"}
+                      </button>
+
+                    </div>
+
+                    <strong>
+                      {getAttendanceCode(
+                        selectedBooking
+                      )}
+                    </strong>
+
+                    <small>
+                      Use this code as a fallback if QR scanning is unavailable.
+                    </small>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
               {/* PAYMENT INFORMATION */}
 
               <div className="booking-detail-section">
@@ -2161,6 +2534,17 @@ function BookingManagement() {
                   </button>
 
                 )}
+
+
+                <button
+                  type="button"
+                  className="booking-pass-print-button booking-modal-print"
+                  onClick={handlePrintPass}
+                  disabled={actionLoading}
+                >
+                  <TicketCheck size={16} />
+                  Print Pass
+                </button>
 
 
                 <button
