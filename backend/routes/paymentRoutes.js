@@ -33,16 +33,6 @@ const router = express.Router();
 //
 // POST /api/payments/:bookingId
 //
-// Body:
-//
-// {
-//   "transactionId": "XXXXXXXXXXXX",
-//   "paymentProofUrl": "https://..."
-// }
-//
-// Authentication:
-// snict_token
-//
 // =========================================================
 
 router.post(
@@ -56,9 +46,6 @@ router.post(
 // =========================================================
 //
 // GET /api/payments/admin
-//
-// Authentication:
-// snict_admin_token
 //
 // =========================================================
 
@@ -89,6 +76,12 @@ router.get(
 // PUT /api/payments/admin/:id/verify
 //
 // Body:
+//
+// {
+//   "status": "confirmed"
+// }
+//
+// OR
 //
 // {
 //   "status": "verified"
