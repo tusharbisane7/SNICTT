@@ -15,13 +15,12 @@ const adminMiddleware =
 
 const router = express.Router();
 
-
 // =========================================================
 // USER PAYMENT
 // =========================================================
 
-// Submit UPI payment
 // POST /api/payments/:bookingId
+// User submits UPI payment
 
 router.post(
   "/:bookingId",
@@ -29,19 +28,21 @@ router.post(
   submitPayment
 );
 
-
 // =========================================================
 // ADMIN PAYMENT MANAGEMENT
 // =========================================================
 
 // IMPORTANT:
-// Admin routes use adminMiddleware.
-// Do NOT use authMiddleware here if your admin login
-// has a separate admin session/cookie.
+// Admin uses separate authentication:
+// snict_admin_token
+//
+// Therefore admin routes use ONLY adminMiddleware.
+// Do NOT add authMiddleware here.
 
-
-// Get all payments
+// =========================================================
+// GET ALL PAYMENTS
 // GET /api/payments/admin
+// =========================================================
 
 router.get(
   "/admin",
@@ -49,9 +50,10 @@ router.get(
   getAllPayments
 );
 
-
-// Get single payment
+// =========================================================
+// GET SINGLE PAYMENT
 // GET /api/payments/admin/:id
+// =========================================================
 
 router.get(
   "/admin/:id",
@@ -59,9 +61,22 @@ router.get(
   getPaymentById
 );
 
-
-// Verify / reject payment
+// =========================================================
+// VERIFY / REJECT PAYMENT
 // PUT /api/payments/admin/:id/verify
+//
+// Body:
+// {
+//   "status": "confirmed"
+// }
+//
+// OR
+//
+// {
+//   "status": "rejected"
+// }
+//
+// =========================================================
 
 router.put(
   "/admin/:id/verify",
@@ -69,5 +84,8 @@ router.put(
   verifyPayment
 );
 
+// =========================================================
+// EXPORT
+// =========================================================
 
 module.exports = router;
