@@ -685,6 +685,47 @@ function PaymentManagement() {
 
 
   // =======================================================
+  // PAYMENT AMOUNT
+  // =======================================================
+
+  const getPaymentAmount = (
+    payment
+  ) => {
+
+    const candidates = [
+      payment?.payment_amount,
+      payment?.amount,
+      payment?.booking_amount,
+      payment?.membership_amount,
+      payment?.paymentAmount,
+      payment?.plan_amount,
+    ];
+
+    for (const value of candidates) {
+
+      if (
+        value !== null &&
+        value !== undefined &&
+        value !== ""
+      ) {
+
+        const numericValue =
+          Number(value);
+
+        if (
+          Number.isFinite(numericValue) &&
+          numericValue > 0
+        ) {
+          return numericValue;
+        }
+      }
+    }
+
+    return 0;
+  };
+
+
+  // =======================================================
   // DATE
   // =======================================================
 
@@ -919,10 +960,8 @@ function PaymentManagement() {
           ) =>
 
             total +
-            Number(
-              payment.payment_amount ||
-              payment.amount ||
-              0
+            getPaymentAmount(
+              payment
             ),
 
           0
@@ -1166,19 +1205,21 @@ function PaymentManagement() {
         );
 
 
-      if (
-        currentStatus !==
-          "submitted" &&
-        currentStatus !==
-          "pending"
-      ) {
+      // Membership payments may use pending/submitted states.
+      // Event payments MUST be submitted before admin confirmation.
+      const canProcess =
+        isMembershipPayment(payment)
+          ? currentStatus === "submitted" ||
+            currentStatus === "pending"
+          : currentStatus === "submitted";
 
+      if (!canProcess) {
         setError(
-          `This payment cannot be processed because its current status is "${currentStatus}". Only pending payments can be processed.`
+          isMembershipPayment(payment)
+            ? `This membership payment cannot be processed because its current status is "${currentStatus}".`
+            : `This event payment cannot be processed because its current status is "${currentStatus}". The user must submit the UPI transaction/UTR first.`
         );
-
         return;
-
       }
 
 
@@ -1274,19 +1315,18 @@ function PaymentManagement() {
           // EVENT PAYMENT
           // ===============================================
 
-          // Backend uses `verified` for a successful event payment.
-          // The UI action remains `confirmed` for readability.
-          const backendStatus =
-            status === "confirmed"
-              ? "verified"
-              : "rejected";
-
+          // IMPORTANT: use `confirmed` here.
+          // The backend converts confirmed -> verified internally.
+          // This keeps the frontend compatible with both the current
+          // controller and the older deployed controller.
           response =
             await api.put(
               `/payments/admin/${payment.id}/verify`,
               {
                 status:
-                  backendStatus,
+                  status === "confirmed"
+                    ? "confirmed"
+                    : "rejected",
               }
             );
 
@@ -1423,7 +1463,9 @@ function PaymentManagement() {
 
       if (
         normalized ===
-        "rejected"
+          "rejected" ||
+        normalized ===
+          "failed"
       ) {
 
         return (
@@ -2532,7 +2574,9 @@ function PaymentManagement() {
 
                             {
                               formatAmount(
-                                payment.payment_amount
+                                getPaymentAmount(
+                                  payment
+                                )
                               )
                             }
 
@@ -2608,25 +2652,67 @@ function PaymentManagement() {
 
                         <td>
 
-                          <button
-                            type="button"
-                            className="
-                              payment-view-button
-                            "
-                            onClick={() =>
-                              setSelectedPayment(
-                                payment
-                              )
-                            }
+                          <div
+                            className="payment-table-actions"
                           >
+
+                            {(
+                              isMembershipPayment(payment)
+                                ? (getStatus(payment) === "submitted" ||
+                                   getStatus(payment) === "pending")
+                                : getStatus(payment) === "submitted"
+                            ) && (
+                              <button
+                                type="button"
+                                className="payment-confirm-button payment-confirm-table-button"
+                                disabled={
+                                  processingId ===
+                                  payment.id
+                                }
+                                onClick={() =>
+                                  handlePaymentAction(
+                                    payment,
+                                    "confirmed"
+                                  )
+                                }
+                                title="Confirm payment"
+                              >
+
+                                <CheckCircle2
+                                  size={15}
+                                />
+
+                                {
+                                  processingId ===
+                                  payment.id
+                                    ? "Processing..."
+                                    : "Confirm"
+                                }
+
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              className="
+                                payment-view-button
+                              "
+                              onClick={() =>
+                                setSelectedPayment(
+                                  payment
+                                )
+                              }
+                            >
 
                             <Eye
                               size={15}
                             />
 
-                            View
+                              View
 
-                          </button>
+                            </button>
+
+                          </div>
 
                         </td>
 
@@ -2748,7 +2834,9 @@ function PaymentManagement() {
                 <strong>
                   {
                     formatAmount(
-                      selectedPayment.payment_amount
+                      getPaymentAmount(
+                        selectedPayment
+                      )
                     )
                   }
                 </strong>
@@ -2951,7 +3039,9 @@ function PaymentManagement() {
                     <strong>
                       {
                         formatAmount(
-                          selectedPayment.payment_amount
+                          getPaymentAmount(
+                            selectedPayment
+                          )
                         )
                       }
                     </strong>
@@ -3296,10 +3386,10 @@ function PaymentManagement() {
               ) &&
 
                 (
-                  selectedPayment.payment_status ===
-                    "submitted" ||
-                  selectedPayment.payment_status ===
-                    "pending"
+                  isMembershipPayment(selectedPayment)
+                    ? (selectedPayment.payment_status === "submitted" ||
+                       selectedPayment.payment_status === "pending")
+                    : selectedPayment.payment_status === "submitted"
                 ) && (
 
                   <div
@@ -3386,8 +3476,12 @@ function PaymentManagement() {
                 selectedPayment
               ) &&
 
-                selectedPayment.payment_status ===
-                  "submitted" && (
+                (
+                  selectedPayment.payment_status ===
+                    "submitted" ||
+                  selectedPayment.payment_status ===
+                    "pending"
+                ) && (
 
                   <div
                     className="
