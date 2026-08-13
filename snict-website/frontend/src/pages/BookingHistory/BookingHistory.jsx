@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   CalendarDays,
@@ -19,6 +24,8 @@ import {
   X,
   Printer,
   QrCode,
+  UserCheck,
+  Circle,
 } from "lucide-react";
 
 import {
@@ -33,7 +40,7 @@ import "./BookingHistory.css";
 
 
 // =========================================================
-// BOOKING HISTORY
+// COMPONENT
 // =========================================================
 
 function BookingHistory() {
@@ -41,137 +48,168 @@ function BookingHistory() {
 
   const { user } = useAuth();
 
-  // =======================================================
+  // =========================================================
   // STATE
-  // =======================================================
+  // =========================================================
 
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] =
+    useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
 
-  const [selectedPass, setSelectedPass] = useState(null);
+  const [selectedPass, setSelectedPass] =
+    useState(null);
 
-  const [printingPass, setPrintingPass] = useState(false);
+  const [printingPass, setPrintingPass] =
+    useState(false);
+
+  const [refreshing, setRefreshing] =
+    useState(false);
 
 
-  // =======================================================
+  // =========================================================
   // LOAD BOOKINGS
-  // =======================================================
+  // =========================================================
 
-  useEffect(() => {
-    let mounted = true;
+  const loadBookings = useCallback(
+    async (
+      showFullLoader = true
+    ) => {
+      try {
+        if (showFullLoader) {
+          setLoading(true);
+        }
 
-    const load = async () => {
-      if (!mounted) return;
+        setError("");
 
-      await loadBookings();
-    };
+        const response =
+          await api.get(
+            "/bookings"
+          );
 
-    load();
+        if (
+          response.data?.success
+        ) {
+          setBookings(
+            response.data.bookings ||
+              []
+          );
+        } else {
+          setBookings([]);
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-
-  // =======================================================
-  // GET USER BOOKINGS
-  // GET /api/bookings
-  // =======================================================
-
-  const loadBookings = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await api.get("/bookings");
-
-      const data = response?.data;
-
-      if (data?.success) {
-        const bookingList = Array.isArray(data.bookings)
-          ? data.bookings
-          : [];
-
-        setBookings(bookingList);
-        return;
-      }
-
-      setBookings([]);
-
-      setError(
-        data?.message ||
-        "Unable to load your bookings."
-      );
-
-    } catch (err) {
-      console.error(
-        "Booking history error:",
-        err
-      );
-
-      if (err?.response?.status === 401) {
-        navigate("/login", {
-          state: {
-            from: "/booking-history",
-          },
-        });
-
-        return;
-      }
-
-      if (err?.response?.status === 403) {
-        setError(
-          err?.response?.data?.message ||
-          "You are not authorized to view your bookings."
+          setError(
+            response.data?.message ||
+              "Unable to load bookings."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Booking history error:",
+          error
         );
 
-        return;
+        // ===================================================
+        // LOGIN REQUIRED
+        // ===================================================
+
+        if (
+          error.response?.status ===
+          401
+        ) {
+          navigate(
+            "/login",
+            {
+              state: {
+                from:
+                  "/booking-history",
+              },
+            }
+          );
+
+          return;
+        }
+
+        setError(
+          error.response?.data?.message ||
+            "Unable to load booking history."
+        );
+      } finally {
+        if (showFullLoader) {
+          setLoading(false);
+        }
       }
-
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unable to load booking history."
-      );
-
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [navigate]
+  );
 
 
-  // =======================================================
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
+
+  useEffect(() => {
+    loadBookings(true);
+  }, [loadBookings]);
+
+
+  // =========================================================
+  // REFRESH
+  // =========================================================
+
+  const handleRefresh =
+    async () => {
+      try {
+        setRefreshing(true);
+
+        await loadBookings(false);
+      } finally {
+        setRefreshing(false);
+      }
+    };
+
+
+  // =========================================================
   // FORMAT DATE
-  // =======================================================
+  // =========================================================
 
-  const formatDate = (date) => {
+  const formatDate = (
+    date
+  ) => {
     if (!date) {
       return "-";
     }
 
-    const value = String(date).slice(0, 10);
+    const value =
+      String(date).slice(
+        0,
+        10
+      );
 
-    const parts = value.split("-");
+    const parts =
+      value.split("-");
 
-    if (parts.length !== 3) {
+    if (
+      parts.length !== 3
+    ) {
       return value;
     }
 
-    const [year, month, day] = parts;
+    const [
+      year,
+      month,
+      day,
+    ] = parts;
 
-    const dateObject = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day)
-    );
-
-    if (Number.isNaN(dateObject.getTime())) {
-      return value;
-    }
+    const dateObject =
+      new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day)
+      );
 
     return dateObject.toLocaleDateString(
       "en-IN",
@@ -184,214 +222,325 @@ function BookingHistory() {
   };
 
 
-  // =======================================================
+  // =========================================================
   // FORMAT TIME
-  // =======================================================
+  // =========================================================
 
-  const formatTime = (time) => {
+  const formatTime = (
+    time
+  ) => {
     if (!time) {
       return "-";
     }
 
-    const value = String(time).slice(0, 5);
+    const value =
+      String(time).slice(
+        0,
+        5
+      );
 
-    const parts = value.split(":");
+    const parts =
+      value.split(":");
 
-    if (parts.length < 2) {
+    if (
+      parts.length < 2
+    ) {
       return value;
     }
 
-    let hour = Number(parts[0]);
+    let hour =
+      Number(parts[0]);
 
-    const minute = parts[1];
+    const minute =
+      parts[1];
 
-    if (Number.isNaN(hour)) {
+    if (
+      Number.isNaN(hour)
+    ) {
       return value;
     }
 
-    const suffix = hour >= 12 ? "PM" : "AM";
+    const suffix =
+      hour >= 12
+        ? "PM"
+        : "AM";
 
-    hour = hour % 12 || 12;
+    hour =
+      hour % 12 || 12;
 
     return `${hour}:${minute} ${suffix}`;
   };
 
 
-  // =======================================================
-  // FORMAT STATUS
-  // =======================================================
+  // =========================================================
+  // FORMAT DATETIME
+  // =========================================================
 
-  const formatStatus = (status) => {
+  const formatDateTime = (
+    value
+  ) => {
+    if (!value) {
+      return "-";
+    }
+
+    try {
+      return new Date(
+        value
+      ).toLocaleString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      );
+    } catch {
+      return String(value);
+    }
+  };
+
+
+  // =========================================================
+  // FORMAT STATUS
+  // =========================================================
+
+  const formatStatus = (
+    status
+  ) => {
     if (!status) {
       return "Unknown";
     }
 
     return String(status)
-      .replaceAll("_", " ")
-      .replace(/\b\w/g, (letter) =>
-        letter.toUpperCase()
+      .replaceAll(
+        "_",
+        " "
+      )
+      .replace(
+        /\b\w/g,
+        (letter) =>
+          letter.toUpperCase()
       );
   };
 
 
-  // =======================================================
+  // =========================================================
   // EVENT STATUS
-  // =======================================================
+  // =========================================================
 
-  const getEventStatus = (booking) => {
-    if (booking?.event_status) {
-      return String(
-        booking.event_status
-      ).toLowerCase();
-    }
-
-    if (!booking?.event_date) {
-      return null;
-    }
-
-    try {
-      const date = String(
-        booking.event_date
-      ).slice(0, 10);
-
-      const start =
-        String(
-          booking.start_time || "00:00:00"
-        ).slice(0, 8);
-
-      const end =
-        String(
-          booking.end_time || "23:59:59"
-        ).slice(0, 8);
-
-      const eventStart = new Date(
-        `${date}T${start}+05:30`
-      );
-
-      const eventEnd = new Date(
-        `${date}T${end}+05:30`
-      );
-
-      const now = new Date();
-
-      if (Number.isNaN(eventStart.getTime())) {
-        return null;
-      }
-
-      if (Number.isNaN(eventEnd.getTime())) {
-        return null;
-      }
-
-      if (now < eventStart) {
-        return "upcoming";
+  const getEventStatus =
+    (booking) => {
+      if (
+        booking?.event_status
+      ) {
+        return booking.event_status;
       }
 
       if (
-        now >= eventStart &&
-        now <= eventEnd
+        !booking?.event_date
       ) {
-        return "ongoing";
+        return null;
       }
 
-      return "past";
+      try {
+        const date =
+          String(
+            booking.event_date
+          ).slice(
+            0,
+            10
+          );
 
-    } catch (err) {
-      console.error(
-        "Event status error:",
-        err
-      );
+        const start =
+          String(
+            booking.start_time ||
+              "00:00:00"
+          ).slice(
+            0,
+            8
+          );
 
-      return null;
-    }
-  };
+        const end =
+          String(
+            booking.end_time ||
+              "23:59:59"
+          ).slice(
+            0,
+            8
+          );
+
+        const eventStart =
+          new Date(
+            `${date}T${start}+05:30`
+          );
+
+        const eventEnd =
+          new Date(
+            `${date}T${end}+05:30`
+          );
+
+        const now =
+          new Date();
+
+        if (
+          now < eventStart
+        ) {
+          return "upcoming";
+        }
+
+        if (
+          now >= eventStart &&
+          now <= eventEnd
+        ) {
+          return "ongoing";
+        }
+
+        return "past";
+      } catch {
+        return null;
+      }
+    };
 
 
-  // =======================================================
+  // =========================================================
   // PAYMENT STATE
-  // =======================================================
+  // =========================================================
 
-  const getPaymentState = (booking) => {
-    const paymentStatus = String(
-      booking?.payment_status || "pending"
-    ).toLowerCase();
+  const getPaymentState =
+    (booking) => {
+      const paymentStatus =
+        String(
+          booking?.payment_status ||
+            "pending"
+        ).toLowerCase();
 
-    const bookingStatus = String(
-      booking?.booking_status || ""
-    ).toLowerCase();
+      const bookingStatus =
+        String(
+          booking?.booking_status ||
+            ""
+        ).toLowerCase();
 
+      // VERIFIED
+      if (
+        paymentStatus ===
+          "verified" ||
+        paymentStatus ===
+          "paid" ||
+        bookingStatus ===
+          "confirmed"
+      ) {
+        return "verified";
+      }
 
-    // -----------------------------------------------------
-    // REJECTED
-    // -----------------------------------------------------
+      // SUBMITTED
+      if (
+        paymentStatus ===
+        "submitted"
+      ) {
+        return "verification";
+      }
 
-    if (
-      paymentStatus === "rejected" ||
-      bookingStatus === "rejected"
-    ) {
-      return "rejected";
-    }
+      // REJECTED
+      if (
+        paymentStatus ===
+          "rejected" ||
+        bookingStatus ===
+          "rejected"
+      ) {
+        return "rejected";
+      }
 
-
-    // -----------------------------------------------------
-    // VERIFIED
-    // -----------------------------------------------------
-
-    if (
-      paymentStatus === "verified" ||
-      paymentStatus === "paid" ||
-      bookingStatus === "confirmed"
-    ) {
-      return "verified";
-    }
-
-
-    // -----------------------------------------------------
-    // SUBMITTED / WAITING
-    // -----------------------------------------------------
-
-    if (
-      paymentStatus === "submitted" ||
-      paymentStatus === "pending_verification"
-    ) {
-      return "verification";
-    }
-
-
-    // -----------------------------------------------------
-    // PENDING
-    // -----------------------------------------------------
-
-    return "pending";
-  };
+      return "pending";
+    };
 
 
-  // =======================================================
+  // =========================================================
   // PAYMENT COMPLETED
-  // =======================================================
+  // =========================================================
 
-  const isPaymentCompleted = (booking) => {
-    const paymentStatus = String(
-      booking?.payment_status || ""
-    ).toLowerCase();
+  const isPaymentCompleted =
+    (booking) => {
+      const state =
+        getPaymentState(
+          booking
+        );
 
-    const bookingStatus = String(
-      booking?.booking_status || ""
-    ).toLowerCase();
+      return (
+        state ===
+        "verified"
+      );
+    };
 
+
+  // =========================================================
+  // ATTENDANCE STATE
+  // =========================================================
+
+  const getAttendanceStatus =
+    (booking) => {
+      const status =
+        String(
+          booking?.attendance_status ||
+            booking?.attendanceStatus ||
+            booking?.attendance?.status ||
+            "not_present"
+        ).toLowerCase();
+
+      if (
+        status ===
+          "present" ||
+        status ===
+          "marked_present"
+      ) {
+        return "present";
+      }
+
+      return "not_present";
+    };
+
+
+  // =========================================================
+  // ATTENDANCE CODE
+  // =========================================================
+
+  const getAttendanceCode =
+    (booking) => {
+      return (
+        booking?.attendance_code ||
+        booking?.attendanceCode ||
+        booking?.attendance?.code ||
+        ""
+      );
+    };
+
+
+  // =========================================================
+  // ATTENDANCE MARKED TIME
+  // =========================================================
+
+  const getAttendanceMarkedAt =
+    (booking) => {
+      return (
+        booking?.attendance_marked_at ||
+        booking?.attendanceMarkedAt ||
+        booking?.attendance?.markedAt ||
+        null
+      );
+    };
+
+
+  // =========================================================
+  // GET PROFILE IMAGE
+  // =========================================================
+
+  const getProfileImage = (
+    pass = null
+  ) => {
     return (
-      paymentStatus === "paid" ||
-      paymentStatus === "verified" ||
-      bookingStatus === "confirmed"
-    );
-  };
-
-
-  // =======================================================
-  // PROFILE IMAGE
-  // =======================================================
-
-  const getProfileImage = () => {
-    return (
+      pass?.profile_image_url ||
+      pass?.profileImageUrl ||
       user?.profileImageUrl ||
       user?.profile_image_url ||
       user?.photoUrl ||
@@ -402,309 +551,383 @@ function BookingHistory() {
   };
 
 
-  // =======================================================
+  // =========================================================
   // PASS VALIDITY
-  // =======================================================
+  // =========================================================
 
-  const getPassValidity = (booking) => {
-    if (!booking?.event_date) {
-      return "Valid for registered event";
-    }
+  const getPassValidity =
+    (booking) => {
+      if (
+        !booking?.event_date
+      ) {
+        return "Valid for registered event";
+      }
 
-    return `Valid only on ${formatDate(
-      booking.event_date
-    )}`;
-  };
+      return `Valid only on ${formatDate(
+        booking.event_date
+      )}`;
+    };
 
 
-  // =======================================================
+  // =========================================================
   // QR PAYLOAD
-  // =======================================================
+  // =========================================================
 
-  const getQrPayload = (pass) => {
-    if (!pass) {
-      return "";
-    }
-
-
-    // Backend-generated QR payload
-
-    if (pass.qr_payload) {
-      return String(pass.qr_payload);
-    }
-
-
-    // Backend-generated QR data
-
-    if (pass.qr_data) {
-      try {
-        return typeof pass.qr_data === "string"
-          ? pass.qr_data
-          : JSON.stringify(pass.qr_data);
-      } catch {
+  const getQrPayload =
+    (pass) => {
+      if (!pass) {
         return "";
       }
-    }
+
+      // =====================================================
+      // BACKEND QR PAYLOAD
+      // =====================================================
+
+      if (
+        pass.qr_payload
+      ) {
+        return pass.qr_payload;
+      }
 
 
-    // Fallback
+      // =====================================================
+      // BACKEND QR OBJECT
+      // =====================================================
 
-    const fallback = {
-      type: "SNICT_EVENT_PASS",
+      if (
+        pass.qr_data
+      ) {
+        try {
+          return JSON.stringify(
+            pass.qr_data
+          );
+        } catch {
+          return "";
+        }
+      }
 
-      passId:
-        pass.pass_id ||
-        pass.passId ||
-        "",
 
-      passCode:
-        pass.pass_code ||
-        pass.passCode ||
-        "",
+      // =====================================================
+      // FALLBACK
+      // =====================================================
 
-      passToken:
-        pass.pass_token ||
-        pass.passToken ||
-        "",
-
-      bookingId:
-        pass.booking_id ||
-        pass.bookingId ||
-        pass.id ||
-        "",
-
-      bookingCode:
-        pass.booking_code ||
-        "",
-
-      userName:
-        pass.full_name ||
-        pass.fullName ||
-        user?.fullName ||
-        "",
-
-      eventId:
-        pass.event_id ||
-        pass.eventId ||
-        "",
-
-      eventName:
-        pass.event_name ||
-        pass.event_title ||
-        pass.title ||
-        "",
-
-      eventDate:
-        pass.event_date ||
-        "",
-
-      startTime:
-        pass.start_time ||
-        "",
-
-      endTime:
-        pass.end_time ||
-        "",
-
-      venue:
-        pass.venue ||
-        "",
-
-      validFrom:
-        pass.valid_from ||
-        "",
-
-      validUntil:
-        pass.valid_until ||
-        "",
-
-      attendanceCode:
+      const attendanceCode =
         pass.attendance_code ||
         pass.attendanceCode ||
-        "",
+        pass.attendance?.code ||
+        "";
+
+      const fallback = {
+        type:
+          "SNICT_EVENT_PASS",
+
+        passId:
+          pass.pass_id ||
+          pass.passId ||
+          pass.id ||
+          "",
+
+        passCode:
+          pass.pass_code ||
+          pass.passCode ||
+          "",
+
+        passToken:
+          pass.pass_token ||
+          pass.passToken ||
+          "",
+
+        bookingId:
+          pass.booking_id ||
+          pass.bookingId ||
+          pass.id ||
+          "",
+
+        bookingCode:
+          pass.booking_code ||
+          "",
+
+        userId:
+          pass.user_id ||
+          pass.userId ||
+          user?.id ||
+          "",
+
+        userName:
+          pass.full_name ||
+          pass.fullName ||
+          user?.fullName ||
+          "",
+
+        eventId:
+          pass.event_id ||
+          pass.eventId ||
+          "",
+
+        eventName:
+          pass.event_name ||
+          pass.event_title ||
+          pass.title ||
+          "",
+
+        eventDate:
+          pass.event_date ||
+          "",
+
+        startTime:
+          pass.start_time ||
+          "",
+
+        endTime:
+          pass.end_time ||
+          "",
+
+        venue:
+          pass.venue ||
+          "",
+
+        validFrom:
+          pass.valid_from ||
+          "",
+
+        validUntil:
+          pass.valid_until ||
+          "",
+
+        attendanceCode,
+      };
+
+      return JSON.stringify(
+        fallback
+      );
     };
 
-    return JSON.stringify(fallback);
-  };
 
+  // =========================================================
+  // QR IMAGE
+  // =========================================================
 
-  // =======================================================
-  // QR IMAGE URL
-  // =======================================================
+  const getQrImageUrl =
+    (pass) => {
+      const payload =
+        getQrPayload(
+          pass
+        );
 
-  const getQrImageUrl = (pass) => {
-    const payload = getQrPayload(pass);
+      if (!payload) {
+        return "";
+      }
 
-    if (!payload) {
-      return "";
-    }
-
-    return (
-      "https://api.qrserver.com/v1/create-qr-code/" +
-      "?size=260x260" +
-      "&margin=10" +
-      "&data=" +
-      encodeURIComponent(payload)
-    );
-  };
-
-
-  // =======================================================
-  // FETCH EVENT PASS
-  // GET /api/bookings/:id/pass
-  // =======================================================
-
-  const fetchPass = async (booking) => {
-    if (!booking?.id) {
-      throw new Error(
-        "Booking ID is missing."
+      return (
+        "https://api.qrserver.com/v1/create-qr-code/" +
+        "?size=280x280" +
+        "&margin=10" +
+        "&data=" +
+        encodeURIComponent(
+          payload
+        )
       );
-    }
-
-    const response = await api.get(
-      `/bookings/${booking.id}/pass`
-    );
-
-    if (
-      !response?.data?.success ||
-      !response?.data?.pass
-    ) {
-      throw new Error(
-        response?.data?.message ||
-        "Unable to load event pass."
-      );
-    }
-
-    return {
-      ...booking,
-      ...response.data.pass,
     };
-  };
 
 
-  // =======================================================
+  // =========================================================
+  // FETCH LATEST PASS
+  // =========================================================
+
+  const fetchPass =
+    async (booking) => {
+      if (!booking?.id) {
+        throw new Error(
+          "Booking ID is missing."
+        );
+      }
+
+      const response =
+        await api.get(
+          `/bookings/${booking.id}/pass`
+        );
+
+      if (
+        !response.data?.success ||
+        !response.data?.pass
+      ) {
+        throw new Error(
+          response.data?.message ||
+            "Unable to load event pass."
+        );
+      }
+
+      return {
+        ...booking,
+        ...response.data.pass,
+      };
+    };
+
+
+  // =========================================================
   // VIEW PASS
-  // =======================================================
+  // =========================================================
 
-  const handleViewPass = async (booking) => {
-    if (!isPaymentCompleted(booking)) {
-      return;
-    }
-
-    try {
-      setError("");
-
-      const pass = await fetchPass(
-        booking
-      );
-
-      setSelectedPass(pass);
-
-    } catch (err) {
-      console.error(
-        "View pass error:",
-        err
-      );
-
+  const handleViewPass =
+    async (booking) => {
       if (
-        err?.response?.status === 401
+        !isPaymentCompleted(
+          booking
+        )
       ) {
-        navigate("/login", {
-          state: {
-            from: "/booking-history",
-          },
-        });
-
         return;
       }
 
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unable to load event pass."
-      );
-    }
-  };
+      try {
+        setError("");
+
+        const pass =
+          await fetchPass(
+            booking
+          );
+
+        setSelectedPass(
+          pass
+        );
+      } catch (error) {
+        console.error(
+          "View pass error:",
+          error
+        );
+
+        if (
+          error.response?.status ===
+          401
+        ) {
+          navigate(
+            "/login",
+            {
+              state: {
+                from:
+                  "/booking-history",
+              },
+            }
+          );
+
+          return;
+        }
+
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            "Unable to load event pass."
+        );
+      }
+    };
 
 
-  // =======================================================
+  // =========================================================
   // PRINT PASS
-  // =======================================================
+  // =========================================================
 
-  const handlePrintPass = async (booking) => {
-    if (!isPaymentCompleted(booking)) {
-      return;
-    }
-
-    try {
-      setPrintingPass(true);
-      setError("");
-
-      const pass = await fetchPass(
-        booking
-      );
-
-      setSelectedPass(pass);
-
-      setTimeout(() => {
-        window.print();
-        setPrintingPass(false);
-      }, 500);
-
-    } catch (err) {
-      console.error(
-        "Print pass error:",
-        err
-      );
-
-      setPrintingPass(false);
-
+  const handlePrintPass =
+    async (booking) => {
       if (
-        err?.response?.status === 401
+        !isPaymentCompleted(
+          booking
+        )
       ) {
-        navigate("/login", {
-          state: {
-            from: "/booking-history",
-          },
-        });
-
         return;
       }
 
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unable to print event pass."
-      );
-    }
-  };
+      try {
+        setPrintingPass(
+          true
+        );
+
+        setError("");
+
+        const pass =
+          await fetchPass(
+            booking
+          );
+
+        setSelectedPass(
+          pass
+        );
+
+        setTimeout(() => {
+          window.print();
+
+          setPrintingPass(
+            false
+          );
+        }, 500);
+
+      } catch (error) {
+        console.error(
+          "Print pass error:",
+          error
+        );
+
+        setPrintingPass(
+          false
+        );
+
+        if (
+          error.response?.status ===
+          401
+        ) {
+          navigate(
+            "/login",
+            {
+              state: {
+                from:
+                  "/booking-history",
+              },
+            }
+          );
+
+          return;
+        }
+
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            "Unable to print event pass."
+        );
+      }
+    };
 
 
-  // =======================================================
+  // =========================================================
   // CLOSE PASS
-  // =======================================================
+  // =========================================================
 
   const closePass = () => {
-    setSelectedPass(null);
+    setSelectedPass(
+      null
+    );
   };
 
 
-  // =======================================================
+  // =========================================================
   // PAYMENT BADGE
-  // =======================================================
+  // =========================================================
 
-  const PaymentBadge = ({ booking }) => {
-    const state = getPaymentState(
-      booking
-    );
-
+  const PaymentBadge = ({
+    booking,
+  }) => {
+    const state =
+      getPaymentState(
+        booking
+      );
 
     // VERIFIED
-
-    if (state === "verified") {
+    if (
+      state ===
+      "verified"
+    ) {
       return (
         <div className="booking-payment-badge verified">
-          <CheckCircle2 size={15} />
+          <CheckCircle2
+            size={15}
+          />
 
           <div>
             <strong>
@@ -721,11 +944,15 @@ function BookingHistory() {
 
 
     // WAITING
-
-    if (state === "verification") {
+    if (
+      state ===
+      "verification"
+    ) {
       return (
         <div className="booking-payment-badge verification">
-          <Hourglass size={15} />
+          <Hourglass
+            size={15}
+          />
 
           <div>
             <strong>
@@ -742,11 +969,15 @@ function BookingHistory() {
 
 
     // REJECTED
-
-    if (state === "rejected") {
+    if (
+      state ===
+      "rejected"
+    ) {
       return (
         <div className="booking-payment-badge rejected">
-          <XCircle size={15} />
+          <XCircle
+            size={15}
+          />
 
           <div>
             <strong>
@@ -763,10 +994,11 @@ function BookingHistory() {
 
 
     // PENDING
-
     return (
       <div className="booking-payment-badge pending">
-        <CreditCard size={15} />
+        <CreditCard
+          size={15}
+        />
 
         <div>
           <strong>
@@ -782,67 +1014,122 @@ function BookingHistory() {
   };
 
 
-  // =======================================================
-  // ACTION LABEL
-  // =======================================================
+  // =========================================================
+  // ATTENDANCE BADGE
+  // =========================================================
 
-  const getActionLabel = (booking) => {
-    const state = getPaymentState(
-      booking
+  const AttendanceBadge = ({
+    booking,
+  }) => {
+    const paymentVerified =
+      isPaymentCompleted(
+        booking
+      );
+
+    if (
+      !paymentVerified
+    ) {
+      return null;
+    }
+
+    const status =
+      getAttendanceStatus(
+        booking
+      );
+
+    if (
+      status ===
+      "present"
+    ) {
+      return (
+        <div className="booking-attendance-badge present">
+          <UserCheck
+            size={15}
+          />
+
+          <div>
+            <strong>
+              ATTENDANCE MARKED
+            </strong>
+
+            <span>
+              Present at event
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="booking-attendance-badge not-present">
+        <Circle
+          size={14}
+        />
+
+        <div>
+          <strong>
+            ATTENDANCE PENDING
+          </strong>
+
+          <span>
+            Scan your QR at event entrance
+          </span>
+        </div>
+      </div>
     );
-
-    if (state === "pending") {
-      return "Complete Payment";
-    }
-
-    if (state === "verification") {
-      return "View Payment";
-    }
-
-    if (state === "verified") {
-      return "View Event Pass";
-    }
-
-    if (state === "rejected") {
-      return "View Payment";
-    }
-
-    return "View Details";
   };
 
 
-  // =======================================================
-  // ACTION CLASS
-  // =======================================================
+  // =========================================================
+  // SUMMARY COUNTS
+  // =========================================================
 
-  const getActionClass = (booking) => {
-    const state = getPaymentState(
-      booking
-    );
+  const summary =
+    useMemo(() => {
+      const confirmed =
+        bookings.filter(
+          (booking) =>
+            getPaymentState(
+              booking
+            ) === "verified"
+        ).length;
 
-    if (state === "pending") {
-      return "booking-history-view payment-required";
-    }
+      const waiting =
+        bookings.filter(
+          (booking) =>
+            getPaymentState(
+              booking
+            ) === "verification"
+        ).length;
 
-    if (state === "verification") {
-      return "booking-history-view payment-submitted";
-    }
+      const pending =
+        bookings.filter(
+          (booking) =>
+            getPaymentState(
+              booking
+            ) === "pending"
+        ).length;
 
-    if (state === "verified") {
-      return "booking-history-view payment-verified";
-    }
+      const present =
+        bookings.filter(
+          (booking) =>
+            getAttendanceStatus(
+              booking
+            ) === "present"
+        ).length;
 
-    if (state === "rejected") {
-      return "booking-history-view payment-rejected";
-    }
+      return {
+        confirmed,
+        waiting,
+        pending,
+        present,
+      };
+    }, [bookings]);
 
-    return "booking-history-view";
-  };
 
-
-  // =======================================================
+  // =========================================================
   // LOADING
-  // =======================================================
+  // =========================================================
 
   if (loading) {
     return (
@@ -864,8 +1151,8 @@ function BookingHistory() {
 
             <p>
               View your event registrations,
-              payment details and booking
-              status in one place.
+              payment details, passes and
+              attendance status in one place.
             </p>
 
           </div>
@@ -891,16 +1178,16 @@ function BookingHistory() {
   }
 
 
-  // =======================================================
+  // =========================================================
   // MAIN
-  // =======================================================
+  // =========================================================
 
   return (
     <main className="booking-history-page">
 
-      {/* =================================================
+      {/* =====================================================
           HERO
-      ================================================= */}
+      ===================================================== */}
 
       <section className="booking-history-hero">
 
@@ -918,8 +1205,8 @@ function BookingHistory() {
 
           <p>
             View your event registrations,
-            payment details and booking
-            status in one place.
+            payment details, event passes
+            and attendance status in one place.
           </p>
 
         </div>
@@ -927,20 +1214,65 @@ function BookingHistory() {
       </section>
 
 
-      {/* =================================================
+      {/* =====================================================
           CONTENT
-      ================================================= */}
+      ===================================================== */}
 
       <section className="booking-history-container">
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
+        {/* ===================================================
+            TOP ACTION BAR
+        =================================================== */}
 
-        {!loading && error && (
+        <div className="booking-history-toolbar">
+
+          <div>
+            <span>
+              EVENT REGISTRATIONS
+            </span>
+
+            <h2>
+              Booking History
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            className="booking-history-refresh"
+            onClick={
+              handleRefresh
+            }
+            disabled={
+              refreshing
+            }
+          >
+            <RefreshCw
+              size={16}
+              className={
+                refreshing
+                  ? "booking-refresh-spin"
+                  : ""
+              }
+            />
+
+            {refreshing
+              ? "Refreshing..."
+              : "Refresh"}
+          </button>
+
+        </div>
+
+
+        {/* ===================================================
+            ERROR
+        =================================================== */}
+
+        {error && (
           <div className="booking-history-state error">
 
-            <AlertCircle size={32} />
+            <AlertCircle
+              size={32}
+            />
 
             <h3>
               Unable to Load Bookings
@@ -952,9 +1284,13 @@ function BookingHistory() {
 
             <button
               type="button"
-              onClick={loadBookings}
+              onClick={() =>
+                loadBookings(true)
+              }
             >
-              <RefreshCw size={16} />
+              <RefreshCw
+                size={16}
+              />
 
               Try Again
             </button>
@@ -963,18 +1299,21 @@ function BookingHistory() {
         )}
 
 
-        {/* =================================================
+        {/* ===================================================
             EMPTY
-        ================================================= */}
+        =================================================== */}
 
-        {!loading &&
-          !error &&
-          bookings.length === 0 && (
-
+        {!error &&
+          bookings.length ===
+            0 && (
             <div className="booking-history-empty">
 
               <div className="booking-empty-icon">
-                <CalendarDays size={40} />
+
+                <CalendarDays
+                  size={40}
+                />
+
               </div>
 
               <span>
@@ -996,26 +1335,27 @@ function BookingHistory() {
               >
                 Explore Events
 
-                <ArrowRight size={16} />
+                <ArrowRight
+                  size={16}
+                />
               </Link>
 
             </div>
           )}
 
 
-        {/* =================================================
+        {/* ===================================================
             BOOKING LIST
-        ================================================= */}
+        =================================================== */}
 
-        {!loading &&
-          !error &&
-          bookings.length > 0 && (
-
+        {!error &&
+          bookings.length >
+            0 && (
             <div className="booking-history-list">
 
-              {/* =============================================
+              {/* =================================================
                   SUMMARY
-              ============================================= */}
+              ================================================= */}
 
               <div className="booking-history-summary">
 
@@ -1036,14 +1376,7 @@ function BookingHistory() {
                   </span>
 
                   <strong>
-                    {
-                      bookings.filter(
-                        (booking) =>
-                          getPaymentState(
-                            booking
-                          ) === "verified"
-                      ).length
-                    }
+                    {summary.confirmed}
                   </strong>
                 </div>
 
@@ -1054,14 +1387,7 @@ function BookingHistory() {
                   </span>
 
                   <strong>
-                    {
-                      bookings.filter(
-                        (booking) =>
-                          getPaymentState(
-                            booking
-                          ) === "verification"
-                      ).length
-                    }
+                    {summary.waiting}
                   </strong>
                 </div>
 
@@ -1072,287 +1398,424 @@ function BookingHistory() {
                   </span>
 
                   <strong>
-                    {
-                      bookings.filter(
-                        (booking) =>
-                          getPaymentState(
-                            booking
-                          ) === "pending"
-                      ).length
-                    }
+                    {summary.pending}
+                  </strong>
+                </div>
+
+
+                <div>
+                  <span>
+                    PRESENT
+                  </span>
+
+                  <strong>
+                    {summary.present}
                   </strong>
                 </div>
 
               </div>
 
 
-              {/* =============================================
+              {/* =================================================
                   BOOKING CARDS
-              ============================================= */}
+              ================================================= */}
 
-              {bookings.map((booking) => {
+              {bookings.map(
+                (booking) => {
 
-                const eventStatus =
-                  getEventStatus(
-                    booking
-                  );
+                  const eventStatus =
+                    getEventStatus(
+                      booking
+                    );
 
-                const amount =
-                  Number(
-                    booking.amount || 0
-                  );
+                  const amount =
+                    Number(
+                      booking.amount ||
+                        0
+                    );
 
-                const paymentState =
-                  getPaymentState(
-                    booking
-                  );
+                  const paymentState =
+                    getPaymentState(
+                      booking
+                    );
 
+                  const attendanceStatus =
+                    getAttendanceStatus(
+                      booking
+                    );
 
-                return (
-                  <article
-                    className={`booking-history-card ${paymentState}`}
-                    key={booking.id}
-                  >
+                  const attendanceCode =
+                    getAttendanceCode(
+                      booking
+                    );
 
-                    {/* =====================================
-                        EVENT ICON
-                    ===================================== */}
-
-                    <div className="booking-history-event-icon">
-                      <CalendarDays size={26} />
-                    </div>
-
-
-                    {/* =====================================
-                        MAIN
-                    ===================================== */}
-
-                    <div className="booking-history-main">
-
-                      <div className="booking-history-top">
-
-                        <span className="booking-code">
-                          {booking.booking_code ||
-                            `BOOKING #${booking.id}`}
-                        </span>
+                  const attendanceMarkedAt =
+                    getAttendanceMarkedAt(
+                      booking
+                    );
 
 
-                        {eventStatus && (
-                          <span
-                            className={`booking-event-status ${eventStatus}`}
-                          >
-                            {formatStatus(
-                              eventStatus
-                            )}
-                          </span>
-                        )}
+                  return (
+                    <article
+                      className={`booking-history-card ${paymentState}`}
+                      key={
+                        booking.id
+                      }
+                    >
+
+                      {/* =========================================
+                          EVENT ICON
+                      ========================================= */}
+
+                      <div className="booking-history-event-icon">
+
+                        <CalendarDays
+                          size={26}
+                        />
 
                       </div>
 
 
-                      <h2>
-                        {booking.title ||
-                          booking.event_title ||
-                          "SNICT Event"}
-                      </h2>
+                      {/* =========================================
+                          MAIN
+                      ========================================= */}
 
+                      <div className="booking-history-main">
 
-                      {booking.doctor_name && (
-                        <p className="booking-doctor">
-                          {booking.doctor_name}
+                        <div className="booking-history-top">
 
-                          {booking.specialization &&
-                            ` • ${booking.specialization}`}
-                        </p>
-                      )}
-
-
-                      {/* EVENT DETAILS */}
-
-                      <div className="booking-history-meta">
-
-                        {booking.event_date && (
-                          <span>
-                            <CalendarDays size={15} />
-
-                            {formatDate(
-                              booking.event_date
-                            )}
-                          </span>
-                        )}
-
-
-                        {booking.start_time && (
-                          <span>
-                            <Clock3 size={15} />
-
-                            {formatTime(
-                              booking.start_time
-                            )}
-                          </span>
-                        )}
-
-
-                        {booking.venue && (
-                          <span>
-                            <MapPin size={15} />
-
-                            {booking.venue}
-                          </span>
-                        )}
-
-                      </div>
-
-
-                      {/* SECURITY NOTE */}
-
-                      {paymentState === "verification" && (
-                        <div className="verification-note">
-
-                          <ShieldCheck size={15} />
-
-                          <span>
-                            Your payment has been
-                            received and is waiting
-                            for admin verification.
+                          <span className="booking-code">
+                            {booking.booking_code ||
+                              `BOOKING #${booking.id}`}
                           </span>
 
-                        </div>
-                      )}
 
-                    </div>
-
-
-                    {/* =====================================
-                        RIGHT SIDE
-                    ===================================== */}
-
-                    <div className="booking-history-payment">
-
-                      {/* AMOUNT */}
-
-                      <div className="booking-history-price">
-
-                        <IndianRupee size={16} />
-
-                        <strong>
-                          {amount.toLocaleString(
-                            "en-IN"
+                          {eventStatus && (
+                            <span
+                              className={`booking-event-status ${eventStatus}`}
+                            >
+                              {formatStatus(
+                                eventStatus
+                              )}
+                            </span>
                           )}
-                        </strong>
 
-                      </div>
+                        </div>
 
 
-                      {/* BOOKING STATUS */}
+                        <h2>
+                          {booking.title ||
+                            booking.event_title ||
+                            booking.event_name ||
+                            "SNICT Event"}
+                        </h2>
 
-                      <div
-                        className={`booking-status ${
-                          booking.booking_status ||
-                          "payment_pending"
-                        }`}
-                      >
 
-                        <TicketCheck size={14} />
+                        {booking.doctor_name && (
+                          <p className="booking-doctor">
 
-                        {formatStatus(
-                          booking.booking_status ||
-                          "payment_pending"
+                            {booking.doctor_name}
+
+                            {booking.specialization &&
+                              ` • ${booking.specialization}`}
+
+                          </p>
+                        )}
+
+
+                        {/* EVENT DETAILS */}
+
+                        <div className="booking-history-meta">
+
+                          {booking.event_date && (
+                            <span>
+                              <CalendarDays
+                                size={15}
+                              />
+
+                              {formatDate(
+                                booking.event_date
+                              )}
+                            </span>
+                          )}
+
+
+                          {booking.start_time && (
+                            <span>
+                              <Clock3
+                                size={15}
+                              />
+
+                              {formatTime(
+                                booking.start_time
+                              )}
+
+                              {booking.end_time &&
+                                ` - ${formatTime(
+                                  booking.end_time
+                                )}`}
+                            </span>
+                          )}
+
+
+                          {booking.venue && (
+                            <span>
+                              <MapPin
+                                size={15}
+                              />
+
+                              {booking.venue}
+                            </span>
+                          )}
+
+                        </div>
+
+
+                        {/* =================================================
+                            PAYMENT WAITING
+                        ================================================= */}
+
+                        {paymentState ===
+                          "verification" && (
+                          <div className="verification-note">
+
+                            <ShieldCheck
+                              size={15}
+                            />
+
+                            <span>
+                              Your payment has been
+                              received and is waiting
+                              for admin verification.
+                            </span>
+
+                          </div>
+                        )}
+
+
+                        {/* =================================================
+                            ATTENDANCE INFORMATION
+                        ================================================= */}
+
+                        {isPaymentCompleted(
+                          booking
+                        ) && (
+                          <div
+                            className={`booking-attendance-inline ${
+                              attendanceStatus ===
+                              "present"
+                                ? "present"
+                                : "not-present"
+                            }`}
+                          >
+
+                            {attendanceStatus ===
+                            "present" ? (
+                              <UserCheck
+                                size={16}
+                              />
+                            ) : (
+                              <QrCode
+                                size={16}
+                              />
+                            )}
+
+                            <div>
+
+                              <strong>
+                                {attendanceStatus ===
+                                "present"
+                                  ? "Attendance Marked — Present"
+                                  : "Attendance Not Marked"}
+                              </strong>
+
+                              <span>
+                                {attendanceStatus ===
+                                "present"
+                                  ? attendanceMarkedAt
+                                    ? `Marked on ${formatDateTime(
+                                        attendanceMarkedAt
+                                      )}`
+                                    : "You are marked present."
+                                  : attendanceCode
+                                    ? `Attendance Code: ${attendanceCode}`
+                                    : "Show your event QR at the entrance."}
+                              </span>
+
+                            </div>
+
+                          </div>
                         )}
 
                       </div>
 
 
-                      {/* PAYMENT BADGE */}
+                      {/* =========================================
+                          RIGHT SIDE
+                      ========================================= */}
 
-                      <PaymentBadge
-                        booking={booking}
-                      />
+                      <div className="booking-history-payment">
 
+                        {/* AMOUNT */}
 
-                      {/* ACTIONS */}
+                        <div className="booking-history-price">
 
-                      {isPaymentCompleted(
-                        booking
-                      ) ? (
+                          <IndianRupee
+                            size={16}
+                          />
 
-                        <div className="booking-pass-actions">
-
-                          {/* VIEW PASS */}
-
-                          <button
-                            type="button"
-                            className="booking-history-view booking-pass-button"
-                            onClick={() =>
-                              handleViewPass(
-                                booking
-                              )
-                            }
-                          >
-
-                            <Ticket size={16} />
-
-                            <span>
-                              View Event Pass
-                            </span>
-
-                            <ArrowRight size={15} />
-
-                          </button>
-
-
-                          {/* PRINT PASS */}
-
-                          <button
-                            type="button"
-                            className="booking-history-view booking-pass-print-button"
-                            onClick={() =>
-                              handlePrintPass(
-                                booking
-                              )
-                            }
-                            disabled={
-                              printingPass
-                            }
-                          >
-
-                            <Printer size={16} />
-
-                            <span>
-                              {printingPass
-                                ? "Preparing..."
-                                : "Print Pass"}
-                            </span>
-
-                          </button>
+                          <strong>
+                            {amount.toLocaleString(
+                              "en-IN"
+                            )}
+                          </strong>
 
                         </div>
 
-                      ) : (
 
-                        <Link
-                          to={`/events/booking/${booking.id}`}
-                          className={
-                            getActionClass(
-                              booking
-                            )
-                          }
+                        {/* BOOKING STATUS */}
+
+                        <div
+                          className={`booking-status ${
+                            booking.booking_status ||
+                            "payment_pending"
+                          }`}
                         >
 
-                          {getActionLabel(
-                            booking
+                          <TicketCheck
+                            size={14}
+                          />
+
+                          {formatStatus(
+                            booking.booking_status ||
+                              "payment_pending"
                           )}
 
-                          <ArrowRight size={15} />
+                        </div>
 
-                        </Link>
-                      )}
 
-                    </div>
+                        {/* PAYMENT */}
 
-                  </article>
-                );
-              })}
+                        <PaymentBadge
+                          booking={
+                            booking
+                          }
+                        />
+
+
+                        {/* ATTENDANCE */}
+
+                        <AttendanceBadge
+                          booking={
+                            booking
+                          }
+                        />
+
+
+                        {/* =================================================
+                            ACTIONS
+                        ================================================= */}
+
+                        {isPaymentCompleted(
+                          booking
+                        ) ? (
+
+                          <div className="booking-pass-actions">
+
+                            {/* VIEW PASS */}
+
+                            <button
+                              type="button"
+                              className="booking-history-view booking-pass-button"
+                              onClick={() =>
+                                handleViewPass(
+                                  booking
+                                )
+                              }
+                            >
+
+                              <Ticket
+                                size={16}
+                              />
+
+                              <span>
+                                View Event Pass
+                              </span>
+
+                              <ArrowRight
+                                size={15}
+                              />
+
+                            </button>
+
+
+                            {/* PRINT PASS */}
+
+                            <button
+                              type="button"
+                              className="booking-history-view booking-pass-print-button"
+                              onClick={() =>
+                                handlePrintPass(
+                                  booking
+                                )
+                              }
+                              disabled={
+                                printingPass
+                              }
+                            >
+
+                              <Printer
+                                size={16}
+                              />
+
+                              <span>
+                                {printingPass
+                                  ? "Preparing..."
+                                  : "Print Pass"}
+                              </span>
+
+                            </button>
+
+                          </div>
+
+                        ) : (
+
+                          <Link
+                            to={`/events/booking/${booking.id}`}
+                            className={
+                              getPaymentState(
+                                booking
+                              ) ===
+                              "rejected"
+                                ? "booking-history-view payment-rejected"
+                                : "booking-history-view"
+                            }
+                          >
+
+                            {getPaymentState(
+                              booking
+                            ) === "pending"
+                              ? "Complete Payment"
+                              : getPaymentState(
+                                  booking
+                                ) ===
+                                "verification"
+                                ? "View Payment"
+                                : "View Details"}
+
+                            <ArrowRight
+                              size={15}
+                            />
+
+                          </Link>
+                        )}
+
+                      </div>
+
+                    </article>
+                  );
+                }
+              )}
 
             </div>
           )}
@@ -1360,18 +1823,19 @@ function BookingHistory() {
       </section>
 
 
-      {/* =================================================
+      {/* =====================================================
           EVENT PASS MODAL
-      ================================================= */}
+      ===================================================== */}
 
       {selectedPass && (
-
         <div
           className="booking-pass-modal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="event-pass-title"
-          onClick={closePass}
+          onClick={
+            closePass
+          }
         >
 
           <div
@@ -1381,9 +1845,9 @@ function BookingHistory() {
             }
           >
 
-            {/* ===========================================
+            {/* =================================================
                 PASS HEADER
-            =========================================== */}
+            ================================================= */}
 
             <div className="booking-pass-header">
 
@@ -1395,7 +1859,9 @@ function BookingHistory() {
                     SNICT EVENT PASS
                   </span>
 
-                  <h2 id="event-pass-title">
+                  <h2
+                    id="event-pass-title"
+                  >
                     {selectedPass.event_name ||
                       selectedPass.event_title ||
                       selectedPass.title ||
@@ -1408,10 +1874,16 @@ function BookingHistory() {
                 <button
                   type="button"
                   className="booking-pass-close"
-                  onClick={closePass}
+                  onClick={
+                    closePass
+                  }
                   aria-label="Close event pass"
                 >
-                  <X size={20} />
+
+                  <X
+                    size={20}
+                  />
+
                 </button>
 
               </div>
@@ -1419,22 +1891,29 @@ function BookingHistory() {
             </div>
 
 
-            {/* ===========================================
+            {/* =================================================
                 PASS BODY
-            =========================================== */}
+            ================================================= */}
 
             <div className="booking-pass-body">
 
-              {/* USER */}
+              {/* =================================================
+                  USER
+              ================================================= */}
 
               <div className="booking-pass-user">
 
-                {getProfileImage() ? (
+                {getProfileImage(
+                  selectedPass
+                ) ? (
 
                   <img
-                    src={getProfileImage()}
+                    src={getProfileImage(
+                      selectedPass
+                    )}
                     alt={
                       user?.fullName ||
+                      selectedPass.full_name ||
                       "Member"
                     }
                     className="booking-pass-user-image"
@@ -1443,7 +1922,11 @@ function BookingHistory() {
                 ) : (
 
                   <div className="booking-pass-user-placeholder">
-                    <UserCircle size={42} />
+
+                    <UserCircle
+                      size={42}
+                    />
+
                   </div>
 
                 )}
@@ -1456,16 +1939,24 @@ function BookingHistory() {
                   </span>
 
                   <strong className="booking-pass-user-name">
-                    {user?.fullName ||
-                      selectedPass.full_name ||
+
+                    {selectedPass.full_name ||
                       selectedPass.fullName ||
+                      user?.fullName ||
                       "SNICT Member"}
+
                   </strong>
 
 
-                  {user?.username && (
+                  {(selectedPass.username ||
+                    user?.username) && (
+
                     <span className="booking-pass-username">
-                      @{user.username}
+
+                      @
+                      {selectedPass.username ||
+                        user?.username}
+
                     </span>
                   )}
 
@@ -1474,7 +1965,9 @@ function BookingHistory() {
               </div>
 
 
-              {/* EVENT INFORMATION */}
+              {/* =================================================
+                  EVENT INFORMATION
+              ================================================= */}
 
               <div className="booking-pass-grid">
 
@@ -1505,11 +1998,8 @@ function BookingHistory() {
 
                   <strong>
                     {selectedPass.booking_code ||
-                      `#${
-                        selectedPass.booking_id ||
-                        selectedPass.id ||
-                        "-"
-                      }`}
+                      `#${selectedPass.booking_id ||
+                        selectedPass.id}`}
                   </strong>
 
                 </div>
@@ -1541,6 +2031,7 @@ function BookingHistory() {
                   </span>
 
                   <strong>
+
                     {formatTime(
                       selectedPass.start_time
                     )}
@@ -1549,6 +2040,7 @@ function BookingHistory() {
                       ` - ${formatTime(
                         selectedPass.end_time
                       )}`}
+
                   </strong>
 
                 </div>
@@ -1563,12 +2055,16 @@ function BookingHistory() {
                   </span>
 
                   <strong>
+
                     ₹
                     {Number(
-                      selectedPass.amount || 0
+                      selectedPass.payment_amount ||
+                        selectedPass.amount ||
+                        0
                     ).toLocaleString(
                       "en-IN"
                     )}
+
                   </strong>
 
                 </div>
@@ -1592,15 +2088,17 @@ function BookingHistory() {
               </div>
 
 
-              {/* =========================================
+              {/* =================================================
                   QR CODE
-              ========================================= */}
+              ================================================= */}
 
               <div className="booking-pass-qr-section">
 
                 <div className="booking-pass-qr-heading">
 
-                  <QrCode size={20} />
+                  <QrCode
+                    size={20}
+                  />
 
                   <div>
 
@@ -1609,8 +2107,7 @@ function BookingHistory() {
                     </strong>
 
                     <span>
-                      Scan this QR code at
-                      the event entrance
+                      Scan this QR code at the event entrance
                     </span>
 
                   </div>
@@ -1636,7 +2133,9 @@ function BookingHistory() {
 
                     <div className="booking-pass-qr-error">
 
-                      <QrCode size={70} />
+                      <QrCode
+                        size={70}
+                      />
 
                       <span>
                         QR unavailable
@@ -1648,7 +2147,9 @@ function BookingHistory() {
                 </div>
 
 
-                {/* ATTENDANCE CODE */}
+                {/* =================================================
+                    ATTENDANCE CODE
+                ================================================= */}
 
                 <div className="booking-pass-attendance-code">
 
@@ -1659,27 +2160,100 @@ function BookingHistory() {
                   <strong>
                     {selectedPass.attendance_code ||
                       selectedPass.attendanceCode ||
+                      selectedPass.attendance?.code ||
                       "Not generated"}
                   </strong>
 
                   <small>
                     If QR scanning is unavailable,
-                    provide this code to the event
-                    administrator.
+                    provide this code to the event administrator.
                   </small>
+
+                </div>
+
+
+                {/* =================================================
+                    ATTENDANCE STATUS
+                ================================================= */}
+
+                <div
+                  className={`booking-pass-attendance-status ${
+                    getAttendanceStatus(
+                      selectedPass
+                    ) ===
+                    "present"
+                      ? "present"
+                      : "not-present"
+                  }`}
+                >
+
+                  {getAttendanceStatus(
+                    selectedPass
+                  ) ===
+                  "present" ? (
+
+                    <UserCheck
+                      size={20}
+                    />
+
+                  ) : (
+
+                    <QrCode
+                      size={20}
+                    />
+
+                  )}
+
+
+                  <div>
+
+                    <strong>
+
+                      {getAttendanceStatus(
+                        selectedPass
+                      ) ===
+                      "present"
+                        ? "ATTENDANCE MARKED"
+                        : "ATTENDANCE NOT MARKED"}
+
+                    </strong>
+
+
+                    <span>
+
+                      {getAttendanceStatus(
+                        selectedPass
+                      ) ===
+                      "present"
+                        ? getAttendanceMarkedAt(
+                            selectedPass
+                          )
+                          ? `Present — ${formatDateTime(
+                              getAttendanceMarkedAt(
+                                selectedPass
+                              )
+                            )}`
+                          : "You are marked present."
+                        : "Show this QR code at the event entrance to mark your attendance."}
+
+                    </span>
+
+                  </div>
 
                 </div>
 
               </div>
 
 
-              {/* =========================================
+              {/* =================================================
                   VALIDITY
-              ========================================= */}
+              ================================================= */}
 
               <div className="booking-pass-validity">
 
-                <CheckCircle2 size={20} />
+                <CheckCircle2
+                  size={20}
+                />
 
                 <div>
 
@@ -1690,23 +2264,16 @@ function BookingHistory() {
                   <span>
 
                     {selectedPass.valid_from &&
-                      selectedPass.valid_until
-                      ? (
-                        <>
-                          Valid from{" "}
-                          {new Date(
-                            selectedPass.valid_from
-                          ).toLocaleString(
-                            "en-IN"
-                          )}{" "}
-                          to{" "}
-                          {new Date(
-                            selectedPass.valid_until
-                          ).toLocaleString(
-                            "en-IN"
-                          )}
-                        </>
-                      )
+                    selectedPass.valid_until
+                      ? `Valid from ${new Date(
+                          selectedPass.valid_from
+                        ).toLocaleString(
+                          "en-IN"
+                        )} to ${new Date(
+                          selectedPass.valid_until
+                        ).toLocaleString(
+                          "en-IN"
+                        )}`
                       : getPassValidity(
                           selectedPass
                         )}
@@ -1718,9 +2285,9 @@ function BookingHistory() {
               </div>
 
 
-              {/* =========================================
+              {/* =================================================
                   PASS FOOTER
-              ========================================= */}
+              ================================================= */}
 
               <div className="booking-pass-footer">
 
@@ -1745,7 +2312,9 @@ function BookingHistory() {
                   }
                 >
 
-                  <Printer size={15} />
+                  <Printer
+                    size={15}
+                  />
 
                   Print / Save Pass
 
@@ -1764,5 +2333,9 @@ function BookingHistory() {
   );
 }
 
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 export default BookingHistory;

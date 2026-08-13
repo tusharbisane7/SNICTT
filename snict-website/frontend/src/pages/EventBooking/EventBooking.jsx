@@ -23,7 +23,6 @@ import api from "../../services/api";
 
 import "./EventBooking.css";
 
-
 // =========================================================
 // EVENT BOOKING PAGE
 // =========================================================
@@ -33,12 +32,12 @@ function EventBooking() {
 
   const navigate = useNavigate();
 
-
   // =========================================================
   // STATE
   // =========================================================
 
-  const [booking, setBooking] = useState(null);
+  const [booking, setBooking] =
+    useState(null);
 
   const [transactionId, setTransactionId] =
     useState("");
@@ -58,7 +57,6 @@ function EventBooking() {
   const [copied, setCopied] =
     useState(false);
 
-
   // =========================================================
   // LOAD BOOKING ON PAGE LOAD
   // =========================================================
@@ -72,7 +70,6 @@ function EventBooking() {
 
     loadBooking();
   }, [id]);
-
 
   // =========================================================
   // LOAD BOOKING
@@ -103,13 +100,11 @@ function EventBooking() {
         response.data?.message ||
           "Booking not found."
       );
-
     } catch (error) {
       console.error(
         "Booking loading error:",
         error
       );
-
 
       // =====================================================
       // LOGIN REQUIRED
@@ -128,7 +123,6 @@ function EventBooking() {
         return;
       }
 
-
       // =====================================================
       // NOT FOUND
       // =====================================================
@@ -144,7 +138,6 @@ function EventBooking() {
         return;
       }
 
-
       // =====================================================
       // OTHER ERROR
       // =====================================================
@@ -153,12 +146,10 @@ function EventBooking() {
         error.response?.data?.message ||
           "Unable to load booking."
       );
-
     } finally {
       setLoading(false);
     }
   };
-
 
   // =========================================================
   // FORMAT DATE
@@ -202,7 +193,6 @@ function EventBooking() {
     );
   };
 
-
   // =========================================================
   // FORMAT TIME
   // =========================================================
@@ -240,7 +230,6 @@ function EventBooking() {
     return `${hour}:${minute} ${suffix}`;
   };
 
-
   // =========================================================
   // COPY UPI ID
   // =========================================================
@@ -269,7 +258,6 @@ function EventBooking() {
       setTimeout(() => {
         setCopied(false);
       }, 2000);
-
     } catch (error) {
       console.error(
         "Copy UPI error:",
@@ -282,10 +270,9 @@ function EventBooking() {
     }
   };
 
-
   // =========================================================
   // SUBMIT PAYMENT
-  // POST /api/payments/:bookingId
+  // POST /api/payment/:bookingId
   // =========================================================
 
   const handlePayment = async (
@@ -299,7 +286,6 @@ function EventBooking() {
 
     setError("");
 
-
     // =====================================================
     // CHECK BOOKING
     // =====================================================
@@ -312,14 +298,12 @@ function EventBooking() {
       return;
     }
 
-
     // =====================================================
     // CHECK PAYMENT STATUS
     // =====================================================
 
     const paymentStatus =
       booking.payment_status;
-
 
     if (
       paymentStatus === "submitted" ||
@@ -332,7 +316,6 @@ function EventBooking() {
 
       return;
     }
-
 
     // =====================================================
     // VALIDATE TRANSACTION ID
@@ -357,23 +340,28 @@ function EventBooking() {
       return;
     }
 
-
     try {
       setSubmitting(true);
 
-
       // ===================================================
       // SUBMIT PAYMENT
+      //
+      // IMPORTANT:
+      //
+      // Backend route:
+      // POST /api/payment/:bookingId
+      //
+      // NOT:
+      // /api/payments/:bookingId
       // ===================================================
 
       const response =
         await api.post(
-          `/payments/${id}`,
+          `/payment/${id}`,
           {
             transactionId: utr,
           }
         );
-
 
       if (
         response.data?.success
@@ -388,9 +376,8 @@ function EventBooking() {
               "submitted",
 
             /*
-             * IMPORTANT:
-             * Your backend booking status
-             * is payment_pending, not pending.
+             * Backend booking status
+             * is payment_pending.
              */
 
             booking_status:
@@ -404,18 +391,15 @@ function EventBooking() {
         return;
       }
 
-
       setError(
         response.data?.message ||
           "Unable to submit payment."
       );
-
     } catch (error) {
       console.error(
         "Payment submission error:",
         error
       );
-
 
       // ===================================================
       // LOGIN REQUIRED
@@ -434,9 +418,8 @@ function EventBooking() {
         return;
       }
 
-
       // ===================================================
-      // BOOKING NOT FOUND
+      // BOOKING / PAYMENT NOT FOUND
       // ===================================================
 
       if (
@@ -449,7 +432,6 @@ function EventBooking() {
 
         return;
       }
-
 
       // ===================================================
       // CONFLICT
@@ -468,7 +450,6 @@ function EventBooking() {
         return;
       }
 
-
       // ===================================================
       // BAD REQUEST
       // ===================================================
@@ -486,21 +467,18 @@ function EventBooking() {
         return;
       }
 
-
       // ===================================================
       // SERVER ERROR
-      // =====================================================
+      // ===================================================
 
       setError(
         error.response?.data?.message ||
           "Unable to submit payment. Please try again."
       );
-
     } finally {
       setSubmitting(false);
     }
   };
-
 
   // =========================================================
   // LOADING
@@ -509,21 +487,16 @@ function EventBooking() {
   if (loading) {
     return (
       <main className="event-booking-page">
-
         <div className="booking-loading">
-
           <div className="booking-spinner" />
 
           <p>
             Loading booking...
           </p>
-
         </div>
-
       </main>
     );
   }
-
 
   // =========================================================
   // SUCCESS
@@ -532,27 +505,20 @@ function EventBooking() {
   if (success) {
     return (
       <main className="event-booking-page">
-
         <div className="booking-success">
-
           <div className="booking-success-icon">
-
             <CheckCircle2
               size={58}
             />
-
           </div>
-
 
           <span className="booking-success-label">
             PAYMENT SUBMITTED
           </span>
 
-
           <h1>
             Booking Under Verification
           </h1>
-
 
           <p>
             Your payment details have
@@ -566,9 +532,7 @@ function EventBooking() {
             booking status.
           </p>
 
-
           <div className="booking-reference">
-
             <span>
               BOOKING ID
             </span>
@@ -576,12 +540,9 @@ function EventBooking() {
             <strong>
               #{booking?.id}
             </strong>
-
           </div>
 
-
           <div className="booking-success-actions">
-
             <Link
               to="/booking-history"
               className="booking-primary-btn"
@@ -589,22 +550,17 @@ function EventBooking() {
               View Booking History
             </Link>
 
-
             <Link
               to="/events"
               className="booking-secondary-btn"
             >
               Explore More Events
             </Link>
-
           </div>
-
         </div>
-
       </main>
     );
   }
-
 
   // =========================================================
   // BOOKING ERROR
@@ -616,9 +572,7 @@ function EventBooking() {
   ) {
     return (
       <main className="event-booking-page">
-
         <div className="booking-error-page">
-
           <AlertCircle
             size={42}
           />
@@ -631,20 +585,16 @@ function EventBooking() {
             {error}
           </p>
 
-
           <Link
             to="/booking-history"
             className="booking-primary-btn"
           >
             Booking History
           </Link>
-
         </div>
-
       </main>
     );
   }
-
 
   // =========================================================
   // BOOKING DATA
@@ -656,7 +606,6 @@ function EventBooking() {
       0
   );
 
-
   // =========================================================
   // UPI ID
   // =========================================================
@@ -665,7 +614,6 @@ function EventBooking() {
     booking?.upi_id ||
     booking?.payment_upi_id ||
     "";
-
 
   // =========================================================
   // QR CODE
@@ -677,7 +625,6 @@ function EventBooking() {
     booking?.payment_qr_url ||
     "";
 
-
   // =========================================================
   // PAYMENT STATUS
   // =========================================================
@@ -685,7 +632,6 @@ function EventBooking() {
   const paymentStatus =
     booking?.payment_status ||
     "pending";
-
 
   const isSubmitted =
     paymentStatus ===
@@ -695,11 +641,9 @@ function EventBooking() {
     paymentStatus ===
       "paid";
 
-
   const isRejected =
     paymentStatus ===
     "rejected";
-
 
   // =========================================================
   // BOOKING STATUS
@@ -709,16 +653,13 @@ function EventBooking() {
     booking?.booking_status ||
     "payment_pending";
 
-
   // =========================================================
   // RENDER
   // =========================================================
 
   return (
     <main className="event-booking-page">
-
       <div className="booking-container">
-
 
         {/* ===================================================
             BACK
@@ -728,49 +669,39 @@ function EventBooking() {
           to={`/events/${booking?.event_id}`}
           className="booking-back"
         >
-
           <ArrowLeft
             size={16}
           />
 
           Back to Event
-
         </Link>
-
 
         {/* ===================================================
             HEADER
         =================================================== */}
 
         <header className="booking-header">
-
           <span>
             EVENT REGISTRATION
           </span>
 
-
           <h1>
             Complete Your Booking
           </h1>
-
 
           <p>
             Pay the registration fee
             using UPI and submit your
             transaction ID for verification.
           </p>
-
         </header>
-
 
         {/* ===================================================
             ERROR
         =================================================== */}
 
         {error && (
-
           <div className="booking-error">
-
             <AlertCircle
               size={18}
             />
@@ -778,11 +709,8 @@ function EventBooking() {
             <span>
               {error}
             </span>
-
           </div>
-
         )}
-
 
         {/* ===================================================
             BOOKING GRID
@@ -790,59 +718,45 @@ function EventBooking() {
 
         <div className="booking-grid">
 
-
           {/* =================================================
               EVENT SUMMARY
           ================================================= */}
 
           <section className="booking-event-card">
-
             <span className="booking-card-label">
               EVENT
             </span>
-
 
             <h2>
               {booking?.title ||
                 "SNICT Event"}
             </h2>
 
-
             {/* DOCTOR */}
 
             {booking?.doctor_name && (
-
               <div className="booking-doctor">
-
                 <UserRound
                   size={16}
                 />
 
                 <span>
-
                   {booking.doctor_name}
 
                   {booking?.specialization &&
                     ` • ${booking.specialization}`}
-
                 </span>
-
               </div>
-
             )}
-
 
             {/* EVENT DETAILS */}
 
             <div className="booking-event-details">
 
-
               {/* DATE */}
 
               {booking?.event_date && (
-
                 <div>
-
                   <CalendarDays
                     size={17}
                   />
@@ -852,24 +766,18 @@ function EventBooking() {
                       booking.event_date
                     )}
                   </span>
-
                 </div>
-
               )}
-
 
               {/* TIME */}
 
               {booking?.start_time && (
-
                 <div>
-
                   <Clock3
                     size={17}
                   />
 
                   <span>
-
                     {formatTime(
                       booking.start_time
                     )}
@@ -878,20 +786,14 @@ function EventBooking() {
                       ` - ${formatTime(
                         booking.end_time
                       )}`}
-
                   </span>
-
                 </div>
-
               )}
-
 
               {/* VENUE */}
 
               {booking?.venue && (
-
                 <div>
-
                   <MapPin
                     size={17}
                   />
@@ -899,27 +801,21 @@ function EventBooking() {
                   <span>
                     {booking.venue}
                   </span>
-
                 </div>
-
               )}
 
             </div>
-
 
             {/* =================================================
                 AMOUNT
             ================================================= */}
 
             <div className="booking-amount">
-
               <span>
                 REGISTRATION FEE
               </span>
 
-
               <strong>
-
                 <IndianRupee
                   size={23}
                 />
@@ -927,18 +823,14 @@ function EventBooking() {
                 {amount.toLocaleString(
                   "en-IN"
                 )}
-
               </strong>
-
             </div>
-
 
             {/* =================================================
                 BOOKING STATUS
             ================================================= */}
 
             <div className="booking-status">
-
               <span>
                 Booking Status
               </span>
@@ -946,16 +838,13 @@ function EventBooking() {
               <strong>
                 {bookingStatus}
               </strong>
-
             </div>
-
 
             {/* =================================================
                 PAYMENT STATUS
             ================================================= */}
 
             <div className="booking-status">
-
               <span>
                 Payment Status
               </span>
@@ -963,11 +852,9 @@ function EventBooking() {
               <strong>
                 {paymentStatus}
               </strong>
-
             </div>
 
           </section>
-
 
           {/* =================================================
               PAYMENT CARD
@@ -975,24 +862,18 @@ function EventBooking() {
 
           <section className="upi-payment-card">
 
-
             {/* =================================================
                 PAYMENT HEADER
             ================================================= */}
 
             <div className="upi-heading">
-
               <div className="upi-heading-icon">
-
                 <Smartphone
                   size={22}
                 />
-
               </div>
 
-
               <div>
-
                 <span>
                   UPI PAYMENT
                 </span>
@@ -1000,30 +881,22 @@ function EventBooking() {
                 <h2>
                   Pay Registration Fee
                 </h2>
-
               </div>
-
             </div>
-
 
             {/* =================================================
                 QR CODE
             ================================================= */}
 
             <div className="upi-box">
-
               {qrCode ? (
-
                 <img
                   src={qrCode}
                   alt="SNICT UPI QR Code"
                   className="upi-qr-image"
                 />
-
               ) : (
-
                 <div className="upi-placeholder">
-
                   <Smartphone
                     size={36}
                   />
@@ -1035,16 +908,12 @@ function EventBooking() {
                   <small>
                     QR code unavailable
                   </small>
-
                 </div>
-
               )}
-
 
               <strong>
                 SNICT Registration
               </strong>
-
 
               <span>
                 Pay ₹
@@ -1053,25 +922,19 @@ function EventBooking() {
                 )}
               </span>
 
-
               <small>
                 Google Pay • PhonePe •
                 Paytm • BHIM
               </small>
-
             </div>
-
 
             {/* =================================================
                 UPI ID
             ================================================= */}
 
             {upiId && (
-
               <div className="upi-id-box">
-
                 <div>
-
                   <span>
                     UPI ID
                   </span>
@@ -1079,9 +942,7 @@ function EventBooking() {
                   <strong>
                     {upiId}
                   </strong>
-
                 </div>
-
 
                 <button
                   type="button"
@@ -1089,7 +950,6 @@ function EventBooking() {
                     copyUpiId
                   }
                 >
-
                   <Copy
                     size={15}
                   />
@@ -1097,27 +957,20 @@ function EventBooking() {
                   {copied
                     ? "Copied"
                     : "Copy"}
-
                 </button>
-
               </div>
-
             )}
-
 
             {/* =================================================
                 PAYMENT INSTRUCTIONS
             ================================================= */}
 
             <div className="payment-instruction">
-
               <strong>
                 How to complete payment
               </strong>
 
-
               <ol>
-
                 <li>
                   Pay the exact
                   registration amount.
@@ -1141,20 +994,15 @@ function EventBooking() {
                   Submit it for
                   verification.
                 </li>
-
               </ol>
-
             </div>
-
 
             {/* =================================================
                 REJECTED PAYMENT
             ================================================= */}
 
             {isRejected ? (
-
               <div className="booking-error">
-
                 <AlertCircle
                   size={20}
                 />
@@ -1166,9 +1014,7 @@ function EventBooking() {
                   before submitting another
                   payment.
                 </span>
-
               </div>
-
             ) : isSubmitted ? (
 
               /* =================================================
@@ -1176,13 +1022,11 @@ function EventBooking() {
               ================================================= */
 
               <div className="payment-already-submitted">
-
                 <CheckCircle2
                   size={20}
                 />
 
                 <div>
-
                   <strong>
                     Payment Submitted
                   </strong>
@@ -1192,9 +1036,7 @@ function EventBooking() {
                     already under
                     verification.
                   </span>
-
                 </div>
-
               </div>
 
             ) : (
@@ -1208,14 +1050,12 @@ function EventBooking() {
                   handlePayment
                 }
               >
-
                 <label
                   htmlFor="transactionId"
                 >
                   UPI Transaction ID /
                   UTR
                 </label>
-
 
                 <input
                   id="transactionId"
@@ -1236,7 +1076,6 @@ function EventBooking() {
                   }
                 />
 
-
                 <button
                   type="submit"
                   className="payment-submit-btn"
@@ -1244,28 +1083,22 @@ function EventBooking() {
                     submitting
                   }
                 >
-
                   {submitting
                     ? "Submitting..."
                     : "Submit Payment"}
-
                 </button>
-
               </form>
-
             )}
 
           </section>
 
         </div>
 
-
         {/* ===================================================
             SECURITY NOTE
         =================================================== */}
 
         <div className="booking-security-note">
-
           <CheckCircle2
             size={16}
           />
@@ -1275,14 +1108,11 @@ function EventBooking() {
             submitted securely to SNICT
             administration for verification.
           </span>
-
         </div>
 
       </div>
-
     </main>
   );
 }
-
 
 export default EventBooking;

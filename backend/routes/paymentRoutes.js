@@ -15,6 +15,9 @@ const {
 // MIDDLEWARE
 // =========================================================
 
+const authMiddleware =
+  require("../middleware/authMiddleware");
+
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
@@ -38,12 +41,13 @@ const router = express.Router();
 // }
 //
 // Authentication:
-// Normal user authentication
+// snict_token
 //
 // =========================================================
 
 router.post(
   "/:bookingId",
+  authMiddleware,
   submitPayment
 );
 
@@ -53,12 +57,8 @@ router.post(
 //
 // GET /api/payments/admin
 //
-// Returns:
-// - payment details
-// - booking details
-// - user details
-// - event details
-// - attendance details
+// Authentication:
+// snict_admin_token
 //
 // =========================================================
 
