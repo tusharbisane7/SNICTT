@@ -91,7 +91,7 @@ router.get(
 // Body:
 //
 // {
-//   "status": "confirmed"
+//   "status": "verified"
 // }
 //
 // OR
