@@ -1,4 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   CalendarDays,
@@ -29,19 +33,28 @@ import api from "../../../services/api";
 
 import "./BookingManagement.css";
 
+
+// =========================================================
+// BOOKING MANAGEMENT
+// =========================================================
+
 function BookingManagement() {
-  // =========================================================
+
+  // =======================================================
   // STATE
-  // =========================================================
+  // =======================================================
 
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] =
+    useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
   const [refreshing, setRefreshing] =
     useState(false);
 
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
 
   const [success, setSuccess] =
     useState("");
@@ -58,6 +71,9 @@ function BookingManagement() {
   const [statusFilter, setStatusFilter] =
     useState("all");
 
+  const [attendanceFilter, setAttendanceFilter] =
+    useState("all");
+
   const [selectedBooking, setSelectedBooking] =
     useState(null);
 
@@ -70,14 +86,17 @@ function BookingManagement() {
   const [qrLoading, setQrLoading] =
     useState(false);
 
-  // =========================================================
+
+  // =======================================================
   // LOAD BOOKINGS
-  // =========================================================
+  // =======================================================
 
   const loadBookings = async (
     showRefresh = false
   ) => {
+
     try {
+
       if (showRefresh) {
         setRefreshing(true);
       } else {
@@ -87,74 +106,101 @@ function BookingManagement() {
       setError("");
 
       const response =
-        await api.get("/bookings/admin");
+        await api.get(
+          "/bookings/admin"
+        );
 
-      if (response.data?.success) {
+      if (
+        response.data?.success
+      ) {
+
         setBookings(
           response.data.bookings || []
         );
+
       } else {
+
         setBookings([]);
 
         setError(
           response.data?.message ||
-            "Unable to load bookings."
+          "Unable to load bookings."
         );
       }
+
     } catch (error) {
+
       console.error(
         "Load bookings error:",
         error
       );
 
       if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
+        error.response?.status ===
+          401 ||
+        error.response?.status ===
+          403
       ) {
+
         setError(
           "Admin authentication expired. Please login again."
         );
+
       } else {
+
         setError(
           error.response?.data?.message ||
-            "Unable to load bookings."
+          "Unable to load bookings."
         );
       }
+
     } finally {
+
       setLoading(false);
       setRefreshing(false);
+
     }
   };
 
-  // =========================================================
+
+  // =======================================================
   // INITIAL LOAD
-  // =========================================================
+  // =======================================================
 
   useEffect(() => {
     loadBookings();
   }, []);
 
-  // =========================================================
-  // SUCCESS MESSAGE AUTO CLEAR
-  // =========================================================
+
+  // =======================================================
+  // SUCCESS AUTO CLEAR
+  // =======================================================
 
   useEffect(() => {
+
     if (!success) {
       return;
     }
 
-    const timer = setTimeout(() => {
-      setSuccess("");
-    }, 3500);
+    const timer =
+      setTimeout(() => {
+        setSuccess("");
+      }, 3500);
 
-    return () => clearTimeout(timer);
+    return () =>
+      clearTimeout(timer);
+
   }, [success]);
 
-  // =========================================================
-  // HELPERS
-  // =========================================================
 
-  const getBookingId = (booking) => {
+  // =======================================================
+  // HELPERS
+  // =======================================================
+
+  const getBookingId = (
+    booking
+  ) => {
+
     return (
       booking.booking_code ||
       booking.booking_id ||
@@ -163,9 +209,11 @@ function BookingManagement() {
     );
   };
 
+
   const getDatabaseBookingId = (
     booking
   ) => {
+
     return (
       booking.id ||
       booking.booking_id ||
@@ -173,7 +221,11 @@ function BookingManagement() {
     );
   };
 
-  const getUserName = (booking) => {
+
+  const getUserName = (
+    booking
+  ) => {
+
     return (
       booking.user_name ||
       booking.full_name ||
@@ -184,7 +236,11 @@ function BookingManagement() {
     );
   };
 
-  const getEmail = (booking) => {
+
+  const getEmail = (
+    booking
+  ) => {
+
     return (
       booking.email ||
       booking.user_email ||
@@ -193,7 +249,11 @@ function BookingManagement() {
     );
   };
 
-  const getPhone = (booking) => {
+
+  const getPhone = (
+    booking
+  ) => {
+
     return (
       booking.phone ||
       booking.mobile ||
@@ -204,7 +264,11 @@ function BookingManagement() {
     );
   };
 
-  const getEventId = (booking) => {
+
+  const getEventId = (
+    booking
+  ) => {
+
     return (
       booking.event_id ||
       booking.eventId ||
@@ -213,7 +277,11 @@ function BookingManagement() {
     );
   };
 
-  const getEventName = (booking) => {
+
+  const getEventName = (
+    booking
+  ) => {
+
     return (
       booking.event_title ||
       booking.event_name ||
@@ -224,7 +292,11 @@ function BookingManagement() {
     );
   };
 
-  const getEventType = (booking) => {
+
+  const getEventType = (
+    booking
+  ) => {
+
     return (
       booking.event_type ||
       booking.event?.event_type ||
@@ -232,35 +304,49 @@ function BookingManagement() {
     );
   };
 
-  const getPaymentStatus = (booking) => {
+
+  const getPaymentStatus = (
+    booking
+  ) => {
+
     return String(
       booking.payment_status ||
-        booking.paymentStatus ||
-        "pending"
+      booking.paymentStatus ||
+      "pending"
     ).toLowerCase();
   };
 
-  const getBookingStatus = (booking) => {
+
+  const getBookingStatus = (
+    booking
+  ) => {
+
     return String(
       booking.booking_status ||
-        booking.status ||
-        "pending"
+      booking.status ||
+      "pending"
     ).toLowerCase();
   };
 
-  const getAmount = (booking) => {
+
+  const getAmount = (
+    booking
+  ) => {
+
     return Number(
       booking.amount ||
-        booking.payment_amount ||
-        booking.price ||
-        booking.event_price ||
-        0
+      booking.payment_amount ||
+      booking.price ||
+      booking.event_price ||
+      0
     );
   };
+
 
   const getTransactionId = (
     booking
   ) => {
+
     return (
       booking.transaction_id ||
       booking.transactionId ||
@@ -269,9 +355,11 @@ function BookingManagement() {
     );
   };
 
+
   const getPaymentMethod = (
     booking
   ) => {
+
     return (
       booking.payment_method ||
       booking.paymentMethod ||
@@ -279,31 +367,44 @@ function BookingManagement() {
     );
   };
 
-  // =========================================================
-  // ATTENDANCE / VERIFICATION HELPERS
-  // =========================================================
 
-  const getAttendanceStatus = (booking) => {
+  // =======================================================
+  // ATTENDANCE HELPERS
+  // =======================================================
+
+  const getAttendanceStatus = (
+    booking
+  ) => {
+
     const value =
       booking.attendance_status ||
       booking.attendanceStatus ||
       booking.attendance ||
       booking.check_in_status ||
+      booking.status_attendance ||
       "";
 
-    const normalized = String(value).toLowerCase();
+    const normalized =
+      String(value).toLowerCase();
 
-    return (
+    if (
       normalized === "present" ||
       normalized === "checked_in" ||
       normalized === "checked-in" ||
       normalized === "attended"
-    )
-      ? "present"
-      : "not_present";
+    ) {
+
+      return "present";
+    }
+
+    return "not_present";
   };
 
-  const getAttendanceCode = (booking) => {
+
+  const getAttendanceCode = (
+    booking
+  ) => {
+
     return (
       booking.attendance_code ||
       booking.attendanceCode ||
@@ -311,11 +412,15 @@ function BookingManagement() {
       booking.checkInCode ||
       booking.verification_code ||
       booking.verificationCode ||
-      getBookingId(booking)
+      "N/A"
     );
   };
 
-  const getQrCodeUrl = (booking) => {
+
+  const getQrCodeUrl = (
+    booking
+  ) => {
+
     return (
       booking.qr_code_url ||
       booking.qrCodeUrl ||
@@ -327,82 +432,180 @@ function BookingManagement() {
     );
   };
 
-  const getVerificationStatus = (booking) => {
+
+  const getAttendanceMarkedAt = (
+    booking
+  ) => {
+
+    return (
+      booking.attendance_marked_at ||
+      booking.marked_at ||
+      booking.attendanceMarkedAt ||
+      booking.check_in_at ||
+      null
+    );
+  };
+
+
+  const getAttendanceMarkedBy = (
+    booking
+  ) => {
+
+    return (
+      booking.attendance_marked_by ||
+      booking.marked_by ||
+      booking.attendanceMarkedBy ||
+      null
+    );
+  };
+
+
+  const getVerificationStatus = (
+    booking
+  ) => {
+
     const value =
       booking.verification_status ||
       booking.verificationStatus ||
       "";
 
-    const normalized = String(value).toLowerCase();
+    const normalized =
+      String(value).toLowerCase();
 
     if (
       normalized === "verified" ||
-      getPaymentStatus(booking) === "verified"
+      getPaymentStatus(
+        booking
+      ) === "verified"
     ) {
+
       return "verified";
     }
 
     return "pending";
   };
 
-  const copyAttendanceCode = async (booking) => {
-    const code = getAttendanceCode(booking);
 
-    if (!code) return;
+  // =======================================================
+  // COPY ATTENDANCE CODE
+  // =======================================================
 
-    try {
-      await navigator.clipboard.writeText(
-        String(code)
+  const copyAttendanceCode =
+    async (
+      booking
+    ) => {
+
+      const code =
+        getAttendanceCode(
+          booking
+        );
+
+      if (
+        !code ||
+        code === "N/A"
+      ) {
+        return;
+      }
+
+      try {
+
+        await navigator.clipboard.writeText(
+          String(code)
+        );
+
+        setCopiedCode(
+          String(code)
+        );
+
+        setTimeout(() => {
+          setCopiedCode("");
+        }, 1800);
+
+      } catch (error) {
+
+        console.error(
+          "Copy attendance code error:",
+          error
+        );
+
+        setError(
+          "Unable to copy attendance code."
+        );
+      }
+    };
+
+
+  // =======================================================
+  // QR URL
+  // =======================================================
+
+  const buildQrUrl = (
+    booking
+  ) => {
+
+    const existing =
+      getQrCodeUrl(
+        booking
       );
 
-      setCopiedCode(String(code));
-
-      setTimeout(() => {
-        setCopiedCode("");
-      }, 1800);
-    } catch (error) {
-      console.error(
-        "Copy attendance code error:",
-        error
-      );
-
-      setError(
-        "Unable to copy attendance code."
-      );
+    if (existing) {
+      return existing;
     }
+
+    const attendanceCode =
+      getAttendanceCode(
+        booking
+      );
+
+    if (
+      !attendanceCode ||
+      attendanceCode === "N/A"
+    ) {
+
+      return "";
+    }
+
+    return (
+      "https://api.qrserver.com/v1/create-qr-code/" +
+      `?size=320x320&data=${encodeURIComponent(
+        String(
+          attendanceCode
+        )
+      )}`
+    );
   };
 
-  const buildQrUrl = (booking) => {
-    const existing = getQrCodeUrl(booking);
 
-    if (existing) return existing;
-
-    const code = getAttendanceCode(booking);
-
-    if (!code) return "";
-
-    return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
-      String(code)
-    )}`;
-  };
+  // =======================================================
+  // PRINT
+  // =======================================================
 
   const handlePrintPass = () => {
     window.print();
   };
 
 
-  // =========================================================
-  // FORMAT DATE
-  // =========================================================
+  // =======================================================
+  // DATE FORMAT
+  // =======================================================
 
-  const formatDate = (value) => {
+  const formatDate = (
+    value
+  ) => {
+
     if (!value) {
       return "—";
     }
 
-    const date = new Date(value);
+    const date =
+      new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
       return String(value);
     }
 
@@ -416,18 +619,28 @@ function BookingManagement() {
     );
   };
 
-  // =========================================================
-  // FORMAT DATE + TIME
-  // =========================================================
 
-  const formatDateTime = (value) => {
+  // =======================================================
+  // DATE TIME FORMAT
+  // =======================================================
+
+  const formatDateTime = (
+    value
+  ) => {
+
     if (!value) {
       return "—";
     }
 
-    const date = new Date(value);
+    const date =
+      new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
       return String(value);
     }
 
@@ -443,23 +656,35 @@ function BookingManagement() {
     );
   };
 
-  // =========================================================
-  // FORMAT EVENT DATE
-  // =========================================================
 
-  const formatEventDate = (value) => {
+  // =======================================================
+  // EVENT DATE
+  // =======================================================
+
+  const formatEventDate = (
+    value
+  ) => {
+
     if (!value) {
       return "—";
     }
 
-    const date = new Date(
-      `${String(value).slice(
-        0,
-        10
-      )}T00:00:00`
-    );
+    const date =
+      new Date(
+        `${String(
+          value
+        ).slice(
+          0,
+          10
+        )}T00:00:00`
+      );
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
       return String(value);
     }
 
@@ -473,244 +698,325 @@ function BookingManagement() {
     );
   };
 
-  // =========================================================
-  // FORMAT TIME
-  // =========================================================
 
-  const formatTime = (value) => {
+  // =======================================================
+  // TIME
+  // =======================================================
+
+  const formatTime = (
+    value
+  ) => {
+
     if (!value) {
       return "";
     }
 
-    return String(value).slice(0, 5);
+    return String(
+      value
+    ).slice(
+      0,
+      5
+    );
   };
 
-  // =========================================================
+
+  // =======================================================
   // EVENT LIST
-  // =========================================================
+  // =======================================================
 
   const events = useMemo(() => {
-    const eventMap = new Map();
 
-    bookings.forEach((booking) => {
-      const id = getEventId(booking);
+    const eventMap =
+      new Map();
 
-      const name = getEventName(
-        booking
-      );
+    bookings.forEach(
+      (booking) => {
 
-      if (
-        id !== undefined &&
-        id !== null &&
-        id !== ""
-      ) {
-        eventMap.set(
-          String(id),
-          name
-        );
+        const id =
+          getEventId(
+            booking
+          );
+
+        const name =
+          getEventName(
+            booking
+          );
+
+        if (
+          id !== undefined &&
+          id !== null &&
+          id !== ""
+        ) {
+
+          eventMap.set(
+            String(id),
+            name
+          );
+        }
       }
-    });
+    );
 
     return Array.from(
       eventMap.entries()
     );
+
   }, [bookings]);
 
-  // =========================================================
+
+  // =======================================================
   // FILTER BOOKINGS
-  // =========================================================
+  // =======================================================
 
-  const filteredBookings = useMemo(() => {
-    const query = search
-      .trim()
-      .toLowerCase();
+  const filteredBookings =
+    useMemo(() => {
 
-    return bookings.filter(
-      (booking) => {
-        const bookingId =
-          String(
-            getBookingId(booking)
-          ).toLowerCase();
+      const query =
+        search
+          .trim()
+          .toLowerCase();
 
-        const databaseId =
-          String(
-            getDatabaseBookingId(
-              booking
-            ) || ""
-          ).toLowerCase();
-
-        const name =
-          String(
-            getUserName(booking)
-          ).toLowerCase();
-
-        const email =
-          String(
-            getEmail(booking)
-          ).toLowerCase();
-
-        const eventName =
-          String(
-            getEventName(booking)
-          ).toLowerCase();
-
-        const eventId = String(
-          getEventId(booking)
-        );
-
-        const paymentStatus =
-          getPaymentStatus(
-            booking
-          );
-
-        const bookingStatus =
-          getBookingStatus(
-            booking
-          );
-
-        const matchesSearch =
-          !query ||
-          bookingId.includes(
-            query
-          ) ||
-          databaseId.includes(
-            query
-          ) ||
-          name.includes(query) ||
-          email.includes(query) ||
-          eventName.includes(
-            query
-          );
-
-        const matchesEvent =
-          eventFilter === "all" ||
-          eventId === eventFilter;
-
-        const matchesPayment =
-          paymentFilter === "all" ||
-          paymentStatus ===
-            paymentFilter;
-
-        const matchesStatus =
-          statusFilter === "all" ||
-          bookingStatus ===
-            statusFilter;
-
-        return (
-          matchesSearch &&
-          matchesEvent &&
-          matchesPayment &&
-          matchesStatus
-        );
-      }
-    );
-  }, [
-    bookings,
-    search,
-    eventFilter,
-    paymentFilter,
-    statusFilter,
-  ]);
-
-  // =========================================================
-  // STATISTICS
-  // =========================================================
-
-  const stats = useMemo(() => {
-    const total = bookings.length;
-
-    const confirmed =
-      bookings.filter(
-        (booking) =>
-          getBookingStatus(
-            booking
-          ) === "confirmed"
-      ).length;
-
-    const pending =
-      bookings.filter(
+      return bookings.filter(
         (booking) => {
-          const status =
+
+          const bookingId =
+            String(
+              getBookingId(
+                booking
+              )
+            ).toLowerCase();
+
+          const databaseId =
+            String(
+              getDatabaseBookingId(
+                booking
+              ) || ""
+            ).toLowerCase();
+
+          const name =
+            String(
+              getUserName(
+                booking
+              )
+            ).toLowerCase();
+
+          const email =
+            String(
+              getEmail(
+                booking
+              )
+            ).toLowerCase();
+
+          const eventName =
+            String(
+              getEventName(
+                booking
+              )
+            ).toLowerCase();
+
+          const eventId =
+            String(
+              getEventId(
+                booking
+              )
+            );
+
+          const paymentStatus =
+            getPaymentStatus(
+              booking
+            );
+
+          const bookingStatus =
             getBookingStatus(
               booking
             );
 
-          return (
-            status === "pending" ||
-            status ===
-              "payment_pending"
-          );
-        }
-      ).length;
-
-    const paid =
-      bookings.filter(
-        (booking) => {
-          const status =
-            getPaymentStatus(
+          const attendanceStatus =
+            getAttendanceStatus(
               booking
             );
 
-          return (
-            status === "paid" ||
-            status === "verified"
-          );
-        }
-      ).length;
-
-    const revenue =
-      bookings
-        .filter((booking) => {
-          const status =
-            getPaymentStatus(
-              booking
+          const matchesSearch =
+            !query ||
+            bookingId.includes(
+              query
+            ) ||
+            databaseId.includes(
+              query
+            ) ||
+            name.includes(
+              query
+            ) ||
+            email.includes(
+              query
+            ) ||
+            eventName.includes(
+              query
             );
 
+          const matchesEvent =
+            eventFilter ===
+              "all" ||
+            eventId ===
+              eventFilter;
+
+          const matchesPayment =
+            paymentFilter ===
+              "all" ||
+            paymentStatus ===
+              paymentFilter;
+
+          const matchesStatus =
+            statusFilter ===
+              "all" ||
+            bookingStatus ===
+              statusFilter;
+
+          const matchesAttendance =
+            attendanceFilter ===
+              "all" ||
+            attendanceStatus ===
+              attendanceFilter;
+
           return (
-            status === "paid" ||
-            status === "verified"
+            matchesSearch &&
+            matchesEvent &&
+            matchesPayment &&
+            matchesStatus &&
+            matchesAttendance
           );
-        })
-        .reduce(
-          (
-            totalAmount,
-            booking
-          ) =>
-            totalAmount +
-            getAmount(booking),
-          0
-        );
+        }
+      );
 
-    const attended =
-      bookings.filter(
-        (booking) =>
-          getAttendanceStatus(booking) ===
-          "present"
-      ).length;
+    }, [
+      bookings,
+      search,
+      eventFilter,
+      paymentFilter,
+      statusFilter,
+      attendanceFilter,
+    ]);
 
-    const notAttended =
-      total - attended;
 
-    return {
-      total,
-      confirmed,
-      pending,
-      paid,
-      revenue,
-      attended,
-      notAttended,
-    };
-  }, [bookings]);
+  // =======================================================
+  // STATISTICS
+  // =======================================================
 
-  // =========================================================
+  const stats =
+    useMemo(() => {
+
+      const total =
+        bookings.length;
+
+      const confirmed =
+        bookings.filter(
+          (booking) =>
+            getBookingStatus(
+              booking
+            ) ===
+            "confirmed"
+        ).length;
+
+      const pending =
+        bookings.filter(
+          (booking) => {
+
+            const status =
+              getBookingStatus(
+                booking
+              );
+
+            return (
+              status ===
+                "pending" ||
+              status ===
+                "payment_pending"
+            );
+          }
+        ).length;
+
+      const paid =
+        bookings.filter(
+          (booking) => {
+
+            const status =
+              getPaymentStatus(
+                booking
+              );
+
+            return (
+              status === "paid" ||
+              status ===
+                "verified"
+            );
+          }
+        ).length;
+
+      const revenue =
+        bookings
+          .filter(
+            (booking) => {
+
+              const status =
+                getPaymentStatus(
+                  booking
+                );
+
+              return (
+                status ===
+                  "paid" ||
+                status ===
+                  "verified"
+              );
+            }
+          )
+          .reduce(
+            (
+              totalAmount,
+              booking
+            ) =>
+              totalAmount +
+              getAmount(
+                booking
+              ),
+            0
+          );
+
+      const attended =
+        bookings.filter(
+          (booking) =>
+            getAttendanceStatus(
+              booking
+            ) ===
+            "present"
+        ).length;
+
+      const notAttended =
+        total -
+        attended;
+
+      return {
+        total,
+        confirmed,
+        pending,
+        paid,
+        revenue,
+        attended,
+        notAttended,
+      };
+
+    }, [bookings]);
+
+
+  // =======================================================
   // UPDATE BOOKING STATUS
-  // =========================================================
+  // =======================================================
 
   const updateBookingStatus =
     async (
       booking,
       status
     ) => {
+
       if (actionLoading) {
         return;
       }
@@ -721,6 +1027,7 @@ function BookingManagement() {
         );
 
       if (!bookingId) {
+
         setError(
           "Invalid booking ID."
         );
@@ -729,6 +1036,7 @@ function BookingManagement() {
       }
 
       try {
+
         setActionLoading(true);
 
         setError("");
@@ -744,14 +1052,17 @@ function BookingManagement() {
         if (
           !response.data?.success
         ) {
+
           throw new Error(
             response.data
               ?.message ||
-              "Unable to update booking."
+            "Unable to update booking."
           );
         }
 
-        await loadBookings(true);
+        await loadBookings(
+          true
+        );
 
         setSelectedBooking(
           (previous) =>
@@ -760,6 +1071,7 @@ function BookingManagement() {
                   ...previous,
                   booking_status:
                     status,
+                  status,
                 }
               : null
         );
@@ -770,7 +1082,9 @@ function BookingManagement() {
             " "
           )} successfully.`
         );
+
       } catch (error) {
+
         console.error(
           "Update booking status error:",
           error
@@ -779,122 +1093,164 @@ function BookingManagement() {
         setError(
           error.response?.data
             ?.message ||
-            error.message ||
-            "Unable to update booking status."
+          error.message ||
+          "Unable to update booking status."
         );
+
       } finally {
-        setActionLoading(false);
+
+        setActionLoading(
+          false
+        );
       }
     };
 
-  // =========================================================
+
+  // =======================================================
   // DELETE BOOKING
-  // =========================================================
+  // =======================================================
 
-  const deleteBooking = async (
-    booking
-  ) => {
-    if (actionLoading) {
-      return;
-    }
+  const deleteBooking =
+    async (
+      booking
+    ) => {
 
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to permanently delete this booking?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const bookingId =
-      getDatabaseBookingId(
-        booking
-      );
-
-    if (!bookingId) {
-      setError(
-        "Invalid booking ID."
-      );
-
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-
-      setError("");
-
-      const response =
-        await api.delete(
-          `/bookings/admin/${bookingId}`
-        );
-
-      if (
-        !response.data?.success
-      ) {
-        throw new Error(
-          response.data
-            ?.message ||
-            "Unable to delete booking."
-        );
+      if (actionLoading) {
+        return;
       }
 
-      setBookings(
-        (previous) =>
-          previous.filter(
-            (item) => {
-              const itemId =
-                getDatabaseBookingId(
-                  item
+      const confirmed =
+        window.confirm(
+          "Are you sure you want to permanently delete this booking?"
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const bookingId =
+        getDatabaseBookingId(
+          booking
+        );
+
+      if (!bookingId) {
+
+        setError(
+          "Invalid booking ID."
+        );
+
+        return;
+      }
+
+      try {
+
+        setActionLoading(
+          true
+        );
+
+        setError("");
+
+        const response =
+          await api.delete(
+            `/bookings/admin/${bookingId}`
+          );
+
+        if (
+          !response.data?.success
+        ) {
+
+          throw new Error(
+            response.data
+              ?.message ||
+            "Unable to delete booking."
+          );
+        }
+
+        setBookings(
+          (previous) =>
+            previous.filter(
+              (item) => {
+
+                const itemId =
+                  getDatabaseBookingId(
+                    item
+                  );
+
+                return (
+                  String(
+                    itemId
+                  ) !==
+                  String(
+                    bookingId
+                  )
                 );
+              }
+            )
+        );
 
-              return (
-                String(itemId) !==
-                String(bookingId)
-              );
-            }
-          )
-      );
+        setSelectedBooking(
+          null
+        );
 
-      setSelectedBooking(null);
+        setSuccess(
+          "Booking deleted successfully."
+        );
 
-      setSuccess(
-        "Booking deleted successfully."
-      );
-    } catch (error) {
-      console.error(
-        "Delete booking error:",
-        error
-      );
+      } catch (error) {
 
-      setError(
-        error.response?.data
-          ?.message ||
+        console.error(
+          "Delete booking error:",
+          error
+        );
+
+        setError(
+          error.response?.data
+            ?.message ||
           error.message ||
           "Unable to delete booking."
-      );
-    } finally {
-      setActionLoading(false);
-    }
-  };
+        );
 
-  // =========================================================
+      } finally {
+
+        setActionLoading(
+          false
+        );
+      }
+    };
+
+
+  // =======================================================
   // CLEAR FILTERS
-  // =========================================================
+  // =======================================================
 
   const clearFilters = () => {
+
     setSearch("");
-    setEventFilter("all");
-    setPaymentFilter("all");
-    setStatusFilter("all");
+
+    setEventFilter(
+      "all"
+    );
+
+    setPaymentFilter(
+      "all"
+    );
+
+    setStatusFilter(
+      "all"
+    );
+
+    setAttendanceFilter(
+      "all"
+    );
   };
 
-  // =========================================================
+
+  // =======================================================
   // LOADING
-  // =========================================================
+  // =======================================================
 
   if (loading) {
+
     return (
       <main className="booking-management-page">
 
@@ -912,9 +1268,10 @@ function BookingManagement() {
     );
   }
 
-  // =========================================================
+
+  // =======================================================
   // UI
-  // =========================================================
+  // =======================================================
 
   return (
     <main className="booking-management-page">
@@ -939,12 +1296,11 @@ function BookingManagement() {
 
             <p>
               Manage event registrations,
-              payments and booking
-              status from one place.
+              payments, booking status and
+              attendance information.
             </p>
 
           </div>
-
 
           <button
             type="button"
@@ -978,6 +1334,7 @@ function BookingManagement() {
         ================================================= */}
 
         {error && (
+
           <div className="booking-management-alert error">
 
             <AlertCircle
@@ -998,6 +1355,7 @@ function BookingManagement() {
             </button>
 
           </div>
+
         )}
 
 
@@ -1006,6 +1364,7 @@ function BookingManagement() {
         ================================================= */}
 
         {success && (
+
           <div className="booking-management-alert success">
 
             <CheckCircle2
@@ -1017,6 +1376,7 @@ function BookingManagement() {
             </span>
 
           </div>
+
         )}
 
 
@@ -1120,13 +1480,17 @@ function BookingManagement() {
 
           </div>
 
+
           <div className="booking-stat-card">
 
             <div className="booking-stat-icon">
-              <UserCheck size={20} />
+              <UserCheck
+                size={20}
+              />
             </div>
 
             <div>
+
               <span>
                 Attended
               </span>
@@ -1134,6 +1498,30 @@ function BookingManagement() {
               <strong>
                 {stats.attended}
               </strong>
+
+            </div>
+
+          </div>
+
+
+          <div className="booking-stat-card">
+
+            <div className="booking-stat-icon">
+              <UserX
+                size={20}
+              />
+            </div>
+
+            <div>
+
+              <span>
+                Not Attended
+              </span>
+
+              <strong>
+                {stats.notAttended}
+              </strong>
+
             </div>
 
           </div>
@@ -1149,7 +1537,9 @@ function BookingManagement() {
 
           <div className="booking-search">
 
-            <Search size={17} />
+            <Search
+              size={17}
+            />
 
             <input
               type="text"
@@ -1182,12 +1572,14 @@ function BookingManagement() {
 
               {events.map(
                 ([id, name]) => (
+
                   <option
                     key={id}
                     value={id}
                   >
                     {name}
                   </option>
+
                 )
               )}
 
@@ -1265,6 +1657,32 @@ function BookingManagement() {
 
             </select>
 
+
+            <select
+              value={
+                attendanceFilter
+              }
+              onChange={(event) =>
+                setAttendanceFilter(
+                  event.target.value
+                )
+              }
+            >
+
+              <option value="all">
+                All Attendance
+              </option>
+
+              <option value="present">
+                Present
+              </option>
+
+              <option value="not_present">
+                Not Present
+              </option>
+
+            </select>
+
           </div>
 
         </section>
@@ -1275,24 +1693,35 @@ function BookingManagement() {
         ================================================= */}
 
         {(search ||
-          eventFilter !== "all" ||
-          paymentFilter !== "all" ||
-          statusFilter !== "all") && (
+          eventFilter !==
+            "all" ||
+          paymentFilter !==
+            "all" ||
+          statusFilter !==
+            "all" ||
+          attendanceFilter !==
+            "all") && (
 
           <div className="booking-filter-summary">
 
             <span>
+
               Showing{" "}
+
               <strong>
                 {
                   filteredBookings.length
                 }
               </strong>{" "}
+
               of{" "}
+
               <strong>
                 {bookings.length}
               </strong>{" "}
+
               bookings
+
             </span>
 
             <button
@@ -1415,7 +1844,13 @@ function BookingManagement() {
                           booking
                         );
 
+                      const attendanceStatus =
+                        getAttendanceStatus(
+                          booking
+                        );
+
                       return (
+
                         <tr
                           key={
                             booking.id ||
@@ -1588,19 +2023,34 @@ function BookingManagement() {
                           {/* ATTENDANCE */}
 
                           <td>
-                            {getAttendanceStatus(
-                              booking
-                            ) === "present" ? (
+
+                            {attendanceStatus ===
+                            "present" ? (
+
                               <span className="booking-status attendance-present">
-                                <UserCheck size={13} />
+
+                                <UserCheck
+                                  size={13}
+                                />
+
                                 Present
+
                               </span>
+
                             ) : (
+
                               <span className="booking-status attendance-not-present">
-                                <UserX size={13} />
+
+                                <UserX
+                                  size={13}
+                                />
+
                                 Not Present
+
                               </span>
+
                             )}
+
                           </td>
 
 
@@ -1622,9 +2072,11 @@ function BookingManagement() {
                                 }
                                 title="View booking"
                               >
+
                                 <Eye
                                   size={15}
                                 />
+
                               </button>
 
 
@@ -1692,6 +2144,7 @@ function BookingManagement() {
 
                               {bookingStatus !==
                                 "cancelled" && (
+
                                 <button
                                   type="button"
                                   className="booking-cancel-btn"
@@ -1712,6 +2165,7 @@ function BookingManagement() {
                                   />
 
                                 </button>
+
                               )}
 
 
@@ -1742,6 +2196,7 @@ function BookingManagement() {
                           </td>
 
                         </tr>
+
                       );
                     }
                   )}
@@ -1753,6 +2208,7 @@ function BookingManagement() {
             </div>
 
           </section>
+
         )}
 
       </div>
@@ -1772,6 +2228,7 @@ function BookingManagement() {
               event.target ===
               event.currentTarget
             ) {
+
               setSelectedBooking(
                 null
               );
@@ -1805,7 +2262,6 @@ function BookingManagement() {
                 </h2>
 
               </div>
-
 
               <button
                 type="button"
@@ -1868,7 +2324,7 @@ function BookingManagement() {
               </div>
 
 
-              {/* EVENT INFO */}
+              {/* EVENT INFORMATION */}
 
               <div className="booking-detail-event-info">
 
@@ -2017,30 +2473,48 @@ function BookingManagement() {
               </div>
 
 
-              {/* ATTENDANCE INFORMATION */}
+              {/* =================================================
+                  ATTENDANCE INFORMATION
+              ================================================= */}
 
               <div className="booking-detail-section">
 
                 <div className="booking-detail-section-title">
-                  <ShieldCheck size={17} />
+
+                  <ShieldCheck
+                    size={17}
+                  />
 
                   <span>
                     ATTENDANCE & VERIFICATION
                   </span>
+
                 </div>
 
+
+                {/* ATTENDANCE STATUS */}
+
                 <div
-                  className={`booking-attendance-badge ${getAttendanceStatus(
-                    selectedBooking
-                  )}`}
+                  className={`booking-attendance-badge ${
+                    getAttendanceStatus(
+                      selectedBooking
+                    )
+                  }`}
                 >
+
                   {getAttendanceStatus(
                     selectedBooking
-                  ) === "present" ? (
+                  ) ===
+                  "present" ? (
+
                     <>
-                      <UserCheck size={18} />
+
+                      <UserCheck
+                        size={18}
+                      />
 
                       <div>
+
                         <strong>
                           Attendance Marked Present
                         </strong>
@@ -2048,13 +2522,21 @@ function BookingManagement() {
                         <span>
                           This booking has been checked in.
                         </span>
+
                       </div>
+
                     </>
+
                   ) : (
+
                     <>
-                      <UserX size={18} />
+
+                      <UserX
+                        size={18}
+                      />
 
                       <div>
+
                         <strong>
                           Not Checked In
                         </strong>
@@ -2062,64 +2544,143 @@ function BookingManagement() {
                         <span>
                           Attendance has not been marked.
                         </span>
+
                       </div>
+
                     </>
+
                   )}
+
                 </div>
+
+
+                {/* ATTENDANCE DETAILS */}
 
                 <div className="booking-detail-grid">
 
                   <div>
+
+                    <span>
+                      Attendance Status
+                    </span>
+
+                    <strong
+                      className={`modal-status ${
+                        getAttendanceStatus(
+                          selectedBooking
+                        )
+                      }`}
+                    >
+                      {
+                        getAttendanceStatus(
+                          selectedBooking
+                        )
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
                     <span>
                       Verification
                     </span>
 
                     <strong
-                      className={`modal-status ${getVerificationStatus(
-                        selectedBooking
-                      )}`}
+                      className={`modal-status ${
+                        getVerificationStatus(
+                          selectedBooking
+                        )
+                      }`}
                     >
-                      {getVerificationStatus(
-                        selectedBooking
-                      )}
+                      {
+                        getVerificationStatus(
+                          selectedBooking
+                        )
+                      }
                     </strong>
+
                   </div>
 
+
                   <div>
+
                     <span>
                       Attendance Code
                     </span>
 
                     <strong className="transaction-id">
-                      {getAttendanceCode(
-                        selectedBooking
-                      )}
+
+                      {
+                        getAttendanceCode(
+                          selectedBooking
+                        )
+                      }
+
                     </strong>
+
                   </div>
 
+
+                  {getAttendanceMarkedAt(
+                    selectedBooking
+                  ) && (
+
+                    <div>
+
+                      <span>
+                        Marked At
+                      </span>
+
+                      <strong>
+                        {
+                          formatDateTime(
+                            getAttendanceMarkedAt(
+                              selectedBooking
+                            )
+                          )
+                        }
+                      </strong>
+
+                    </div>
+
+                  )}
+
                 </div>
+
+
+                {/* QR */}
 
                 <div className="booking-pass-qr-section">
 
                   <div className="booking-pass-qr-heading">
-                    <QrCode size={19} />
+
+                    <QrCode
+                      size={19}
+                    />
 
                     <div>
+
                       <strong>
                         EVENT ENTRY QR
                       </strong>
 
                       <span>
-                        Scan this code to identify the booking at entry.
+                        QR generated for event attendance.
                       </span>
+
                     </div>
+
                   </div>
+
 
                   <div className="booking-pass-qr-box">
 
                     {buildQrUrl(
                       selectedBooking
                     ) ? (
+
                       <img
                         src={buildQrUrl(
                           selectedBooking
@@ -2129,33 +2690,55 @@ function BookingManagement() {
                         )}`}
                         className="booking-pass-qr-image"
                         onLoad={() =>
-                          setQrLoading(false)
+                          setQrLoading(
+                            false
+                          )
                         }
-                        onError={(event) => {
-                          setQrLoading(false);
+                        onError={(
+                          event
+                        ) => {
+
+                          setQrLoading(
+                            false
+                          );
+
                           event.currentTarget.style.display =
                             "none";
                         }}
                       />
+
                     ) : (
+
                       <div className="booking-pass-qr-error">
-                        <QrCode size={32} />
+
+                        <QrCode
+                          size={32}
+                        />
 
                         <span>
                           QR code is not available.
                         </span>
+
                       </div>
+
                     )}
 
                     {qrLoading && (
+
                       <div className="booking-pass-qr-error">
+
                         <span>
                           Loading QR...
                         </span>
+
                       </div>
+
                     )}
 
                   </div>
+
+
+                  {/* ATTENDANCE CODE */}
 
                   <div className="booking-pass-attendance-code">
 
@@ -2173,15 +2756,24 @@ function BookingManagement() {
                           )
                         }
                       >
+
                         {copiedCode ===
                         String(
                           getAttendanceCode(
                             selectedBooking
                           )
                         ) ? (
-                          <Check size={13} />
+
+                          <Check
+                            size={13}
+                          />
+
                         ) : (
-                          <Copy size={13} />
+
+                          <Copy
+                            size={13}
+                          />
+
                         )}
 
                         {copiedCode ===
@@ -2192,14 +2784,18 @@ function BookingManagement() {
                         )
                           ? "Copied"
                           : "Copy"}
+
                       </button>
 
                     </div>
 
+
                     <strong>
-                      {getAttendanceCode(
-                        selectedBooking
-                      )}
+                      {
+                        getAttendanceCode(
+                          selectedBooking
+                        )
+                      }
                     </strong>
 
                     <small>
@@ -2210,10 +2806,41 @@ function BookingManagement() {
 
                 </div>
 
+
+                {/* ATTENDANCE MARKED BY */}
+
+                {getAttendanceMarkedBy(
+                  selectedBooking
+                ) && (
+
+                  <div className="booking-detail-grid">
+
+                    <div>
+
+                      <span>
+                        Marked By
+                      </span>
+
+                      <strong>
+                        {
+                          getAttendanceMarkedBy(
+                            selectedBooking
+                          )
+                        }
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                )}
+
               </div>
 
 
-              {/* PAYMENT INFORMATION */}
+              {/* =================================================
+                  PAYMENT INFORMATION
+              ================================================= */}
 
               <div className="booking-detail-section">
 
@@ -2239,12 +2866,14 @@ function BookingManagement() {
                     </span>
 
                     <strong>
+
                       ₹
                       {getAmount(
                         selectedBooking
                       ).toLocaleString(
                         "en-IN"
                       )}
+
                     </strong>
 
                   </div>
@@ -2317,7 +2946,9 @@ function BookingManagement() {
               </div>
 
 
-              {/* BOOKING INFORMATION */}
+              {/* =================================================
+                  BOOKING INFORMATION
+              ================================================= */}
 
               <div className="booking-detail-section">
 
@@ -2438,7 +3069,9 @@ function BookingManagement() {
               )}
 
 
-              {/* MODAL ACTIONS */}
+              {/* =================================================
+                  MODAL ACTIONS
+              ================================================= */}
 
               <div className="booking-modal-actions">
 
@@ -2539,11 +3172,20 @@ function BookingManagement() {
                 <button
                   type="button"
                   className="booking-pass-print-button booking-modal-print"
-                  onClick={handlePrintPass}
-                  disabled={actionLoading}
+                  onClick={
+                    handlePrintPass
+                  }
+                  disabled={
+                    actionLoading
+                  }
                 >
-                  <TicketCheck size={16} />
+
+                  <TicketCheck
+                    size={16}
+                  />
+
                   Print Pass
+
                 </button>
 
 
@@ -2581,5 +3223,6 @@ function BookingManagement() {
     </main>
   );
 }
+
 
 export default BookingManagement;

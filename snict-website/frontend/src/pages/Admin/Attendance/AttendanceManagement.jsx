@@ -1,43 +1,48 @@
-import React, {
+import {
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 
+import {
+  QrCode,
+  ScanLine,
+  Search,
+  RefreshCw,
+  Users,
+  UserCheck,
+  UserX,
+  Percent,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  Copy,
+  Check,
+  CalendarDays,
+  MapPin,
+  Mail,
+  Phone,
+  TicketCheck,
+  Keyboard,
+  Camera,
+  CameraOff,
+  ShieldCheck,
+} from "lucide-react";
+
 import api from "../../../services/api";
+
 import "./AttendanceManagement.css";
 
-// =========================================================
-// OPTIONAL QR SCANNER
-// =========================================================
-//
-// Install:
-//
-// npm install html5-qrcode
-//
-// This component uses Html5Qrcode when available.
-//
-// =========================================================
-
-let Html5Qrcode = null;
-
-try {
-  // eslint-disable-next-line global-require
-  Html5Qrcode =
-    require("html5-qrcode").Html5Qrcode;
-} catch (error) {
-  Html5Qrcode = null;
-}
-
 
 // =========================================================
-// COMPONENT
+// ATTENDANCE MANAGEMENT
 // =========================================================
 
-const AttendanceManagement = () => {
+function AttendanceManagement() {
 
   // =======================================================
-  // EVENTS
+  // STATE
   // =======================================================
 
   const [events, setEvents] =
@@ -46,21 +51,8 @@ const AttendanceManagement = () => {
   const [selectedEventId, setSelectedEventId] =
     useState("");
 
-
-  const [eventsLoading, setEventsLoading] =
-    useState(false);
-
-
-  // =======================================================
-  // ATTENDANCE
-  // =======================================================
-
   const [attendance, setAttendance] =
     useState([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
 
   const [stats, setStats] =
     useState({
@@ -68,13 +60,19 @@ const AttendanceManagement = () => {
       present: 0,
       notPresent: 0,
       attendancePercentage: 0,
-      attendanceRecords: 0,
     });
 
+  const [loading, setLoading] =
+    useState(true);
 
-  // =======================================================
-  // SEARCH / FILTER
-  // =======================================================
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  const [scanning, setScanning] =
+    useState(false);
+
+  const [manualCode, setManualCode] =
+    useState("");
 
   const [search, setSearch] =
     useState("");
@@ -82,48 +80,8 @@ const AttendanceManagement = () => {
   const [statusFilter, setStatusFilter] =
     useState("all");
 
-
-  // =======================================================
-  // QR SCANNER
-  // =======================================================
-
-  const [scannerOpen, setScannerOpen] =
-    useState(false);
-
-  const [scannerLoading, setScannerLoading] =
-    useState(false);
-
-
-  const [scanResult, setScanResult] =
+  const [selectedAttendance, setSelectedAttendance] =
     useState(null);
-
-
-  const [scanError, setScanError] =
-    useState("");
-
-
-  const scannerRef =
-    useRef(null);
-
-
-  const scannerStartedRef =
-    useRef(false);
-
-
-  // =======================================================
-  // MANUAL CODE
-  // =======================================================
-
-  const [attendanceCode, setAttendanceCode] =
-    useState("");
-
-  const [codeLoading, setCodeLoading] =
-    useState(false);
-
-
-  // =======================================================
-  // GENERAL MESSAGE
-  // =======================================================
 
   const [error, setError] =
     useState("");
@@ -131,13 +89,32 @@ const AttendanceManagement = () => {
   const [success, setSuccess] =
     useState("");
 
+  const [scanMessage, setScanMessage] =
+    useState("");
+
+  const [copiedCode, setCopiedCode] =
+    useState("");
+
+  const scannerRef =
+    useRef(null);
+
+  const scannerInstanceRef =
+    useRef(null);
+
 
   // =======================================================
-  // SELECTED ATTENDEE
+  // CLEANUP SCANNER
   // =======================================================
 
-  const [selectedAttendance, setSelectedAttendance] =
-    useState(null);
+  useEffect(() => {
+
+    return () => {
+
+      stopScanner();
+
+    };
+
+  }, []);
 
 
   // =======================================================
@@ -148,67 +125,57 @@ const AttendanceManagement = () => {
 
     try {
 
-      setEventsLoading(true);
-      setError("");
-
       const response =
-        await api.get("/events");
-
-      const data =
-        response.data;
-
-      let eventList = [];
+        await api.get(
+          "/events/admin/all"
+        );
 
       if (
-        Array.isArray(
-          data?.events
-        )
-      ) {
-        eventList =
-          data.events;
-      } else if (
-        Array.isArray(
-          data?.data
-        )
-      ) {
-        eventList =
-          data.data;
-      } else if (
-        Array.isArray(data)
-      ) {
-        eventList =
-          data;
-      }
-
-      setEvents(eventList);
-
-      if (
-        eventList.length > 0 &&
-        !selectedEventId
+        response.data?.success
       ) {
 
-        setSelectedEventId(
-          String(
-            eventList[0].id
-          )
+        const eventList =
+          response.data.events ||
+          response.data.data ||
+          [];
+
+        setEvents(
+          eventList
+        );
+
+        if (
+          eventList.length > 0 &&
+          !selectedEventId
+        ) {
+
+          setSelectedEventId(
+            String(
+              eventList[0].id
+            )
+          );
+        }
+
+      } else {
+
+        setEvents([]);
+
+        setError(
+          response.data?.message ||
+          "Unable to load events."
         );
       }
 
-    } catch (err) {
+    } catch (error) {
 
       console.error(
         "Load events error:",
-        err
+        error
       );
 
       setError(
-        err.response?.data?.message ||
-        "Unable to load events"
+        error.response?.data?.message ||
+        "Unable to load events."
       );
-
-    } finally {
-
-      setEventsLoading(false);
 
     }
   };
@@ -218,69 +185,79 @@ const AttendanceManagement = () => {
   // LOAD ATTENDANCE
   // =======================================================
 
-  const loadAttendance = async () => {
+  const loadAttendance = async (
+    showRefresh = false
+  ) => {
 
     if (!selectedEventId) {
+
       setAttendance([]);
+
+      setStats({
+        total: 0,
+        present: 0,
+        notPresent: 0,
+        attendancePercentage: 0,
+      });
+
+      setLoading(false);
+
       return;
     }
 
     try {
 
-      setLoading(true);
+      if (showRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
       setError("");
-
-      const params = {};
-
-      if (
-        search.trim()
-      ) {
-        params.search =
-          search.trim();
-      }
-
-      if (
-        statusFilter !== "all"
-      ) {
-        params.status =
-          statusFilter;
-      }
 
       const response =
         await api.get(
-          `/attendance/event/${selectedEventId}`,
-          {
-            params,
-          }
+          `/attendance/event/${selectedEventId}`
         );
 
-      const data =
-        response.data;
+      if (
+        response.data?.success
+      ) {
 
-      setAttendance(
-        Array.isArray(
-          data?.attendance
-        )
-          ? data.attendance
-          : []
-      );
+        setAttendance(
+          response.data.attendance ||
+          []
+        );
 
-    } catch (err) {
+      } else {
+
+        setAttendance([]);
+
+        setError(
+          response.data?.message ||
+          "Unable to load attendance."
+        );
+      }
+
+    } catch (error) {
 
       console.error(
         "Load attendance error:",
-        err
+        error
       );
 
       setError(
-        err.response?.data?.message ||
-        "Unable to load attendance"
+        error.response?.data?.message ||
+        "Unable to load attendance."
       );
+
+      setAttendance([]);
 
     } finally {
 
       setLoading(false);
 
+      setRefreshing(false);
     }
   };
 
@@ -302,51 +279,25 @@ const AttendanceManagement = () => {
           `/attendance/event/${selectedEventId}/stats`
         );
 
-      const data =
-        response.data;
-
       if (
-        data?.stats
+        response.data?.success
       ) {
 
-        setStats({
-          total:
-            Number(
-              data.stats.total || 0
-            ),
-
-          present:
-            Number(
-              data.stats.present || 0
-            ),
-
-          notPresent:
-            Number(
-              data.stats.notPresent || 0
-            ),
-
-          attendancePercentage:
-            Number(
-              data.stats
-                .attendancePercentage ||
-              0
-            ),
-
-          attendanceRecords:
-            Number(
-              data.stats
-                .attendanceRecords ||
-              0
-            ),
-        });
-
+        setStats(
+          response.data.stats || {
+            total: 0,
+            present: 0,
+            notPresent: 0,
+            attendancePercentage: 0,
+          }
+        );
       }
 
-    } catch (err) {
+    } catch (error) {
 
       console.error(
         "Load attendance stats error:",
-        err
+        error
       );
 
     }
@@ -354,7 +305,7 @@ const AttendanceManagement = () => {
 
 
   // =======================================================
-  // INITIAL EVENTS
+  // INITIAL LOAD
   // =======================================================
 
   useEffect(() => {
@@ -365,7 +316,7 @@ const AttendanceManagement = () => {
 
 
   // =======================================================
-  // LOAD ATTENDANCE WHEN EVENT CHANGES
+  // EVENT CHANGE
   // =======================================================
 
   useEffect(() => {
@@ -375,342 +326,515 @@ const AttendanceManagement = () => {
     }
 
     loadAttendance();
+
     loadStats();
 
-  }, [
-    selectedEventId,
-    statusFilter,
-  ]);
+  }, [selectedEventId]);
 
 
   // =======================================================
-  // SEARCH DEBOUNCE
+  // SUCCESS MESSAGE AUTO CLEAR
   // =======================================================
 
   useEffect(() => {
 
-    if (!selectedEventId) {
+    if (!success) {
       return;
     }
 
     const timer =
       setTimeout(() => {
-        loadAttendance();
-      }, 400);
+        setSuccess("");
+      }, 4000);
 
-    return () => {
+    return () =>
       clearTimeout(timer);
-    };
 
-  }, [search]);
+  }, [success]);
+
+
+  // =======================================================
+  // ERROR MESSAGE AUTO CLEAR
+  // =======================================================
+
+  useEffect(() => {
+
+    if (!error) {
+      return;
+    }
+
+    const timer =
+      setTimeout(() => {
+        setError("");
+      }, 6000);
+
+    return () =>
+      clearTimeout(timer);
+
+  }, [error]);
 
 
   // =======================================================
   // REFRESH
   // =======================================================
 
-  const refreshAttendance = async () => {
+  const refreshAll = async () => {
 
-    setSuccess("");
-
-    await Promise.all([
-      loadAttendance(),
-      loadStats(),
-    ]);
-
-  };
-
-
-  // =======================================================
-  // STOP QR SCANNER
-  // =======================================================
-
-  const stopScanner = async () => {
+    setRefreshing(true);
 
     try {
 
-      if (
-        scannerRef.current &&
-        scannerStartedRef.current
-      ) {
+      await loadEvents();
 
-        await scannerRef.current.stop();
+      if (selectedEventId) {
 
-        try {
-          await scannerRef.current.clear();
-        } catch (clearError) {
-          // Ignore clear errors.
-        }
+        await Promise.all([
+          loadAttendance(true),
+          loadStats(),
+        ]);
 
       }
 
-    } catch (err) {
-
-      console.error(
-        "Stop scanner error:",
-        err
-      );
-
     } finally {
 
-      scannerStartedRef.current =
-        false;
-
-      scannerRef.current =
-        null;
+      setRefreshing(false);
 
     }
   };
 
 
   // =======================================================
-  // CLOSE SCANNER
+  // NORMALIZE ATTENDANCE
   // =======================================================
 
-  const closeScanner = async () => {
+  const normalizeAttendance =
+    (item) => {
 
-    await stopScanner();
+      return {
 
-    setScannerOpen(false);
+        ...item,
 
-    setScannerLoading(false);
+        attendanceId:
+          item.attendance_id ||
+          item.id,
 
+        bookingId:
+          item.booking_id,
+
+        eventId:
+          item.event_id,
+
+        attendanceCode:
+          item.attendance_code ||
+          item.attendanceCode ||
+          "N/A",
+
+        attendanceStatus:
+          String(
+            item.attendance_status ||
+            item.attendanceStatus ||
+            "not_present"
+          ).toLowerCase(),
+
+        markedAt:
+          item.marked_at ||
+          item.markedAt ||
+          null,
+
+        markedBy:
+          item.marked_by ||
+          item.markedBy ||
+          null,
+
+        bookingCode:
+          item.booking_code ||
+          item.bookingCode ||
+          "N/A",
+
+        bookingStatus:
+          item.booking_status ||
+          item.bookingStatus ||
+          "pending",
+
+        fullName:
+          item.full_name ||
+          item.fullName ||
+          item.username ||
+          "Unknown User",
+
+        username:
+          item.username ||
+          "",
+
+        email:
+          item.email ||
+          "",
+
+        mobile:
+          item.mobile ||
+          item.phone ||
+          "",
+
+        profileImageUrl:
+          item.profile_image_url ||
+          item.profileImageUrl ||
+          "",
+
+        eventName:
+          item.event_name ||
+          item.eventName ||
+          "Event",
+
+        eventDate:
+          item.event_date ||
+          item.eventDate ||
+          null,
+
+        startTime:
+          item.start_time ||
+          item.startTime ||
+          null,
+
+        endTime:
+          item.end_time ||
+          item.endTime ||
+          null,
+
+        venue:
+          item.venue ||
+          "",
+
+        eventMode:
+          item.event_mode ||
+          item.eventMode ||
+          "",
+      };
+
+    };
+
+
+  // =======================================================
+  // NORMALIZED DATA
+  // =======================================================
+
+  const normalizedAttendance =
+    useMemo(
+      () =>
+        attendance.map(
+          normalizeAttendance
+        ),
+      [attendance]
+    );
+
+
+  // =======================================================
+  // FILTER
+  // =======================================================
+
+  const filteredAttendance =
+    useMemo(() => {
+
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      return normalizedAttendance.filter(
+        (item) => {
+
+          const matchesSearch =
+            !query ||
+            String(
+              item.fullName
+            )
+              .toLowerCase()
+              .includes(query) ||
+
+            String(
+              item.username
+            )
+              .toLowerCase()
+              .includes(query) ||
+
+            String(
+              item.email
+            )
+              .toLowerCase()
+              .includes(query) ||
+
+            String(
+              item.mobile
+            )
+              .toLowerCase()
+              .includes(query) ||
+
+            String(
+              item.bookingCode
+            )
+              .toLowerCase()
+              .includes(query) ||
+
+            String(
+              item.attendanceCode
+            )
+              .toLowerCase()
+              .includes(query);
+
+          const matchesStatus =
+            statusFilter ===
+              "all" ||
+            item.attendanceStatus ===
+              statusFilter;
+
+          return (
+            matchesSearch &&
+            matchesStatus
+          );
+        }
+      );
+
+    }, [
+      normalizedAttendance,
+      search,
+      statusFilter,
+    ]);
+
+
+  // =======================================================
+  // SELECTED EVENT
+  // =======================================================
+
+  const selectedEvent =
+    useMemo(() => {
+
+      return events.find(
+        (event) =>
+          String(
+            event.id
+          ) ===
+          String(
+            selectedEventId
+          )
+      );
+
+    }, [
+      events,
+      selectedEventId,
+    ]);
+
+
+  // =======================================================
+  // FORMAT DATE
+  // =======================================================
+
+  const formatDate = (
+    value
+  ) => {
+
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return String(value);
+    }
+
+    return date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }
+    );
   };
 
 
   // =======================================================
-  // PROCESS QR DATA
+  // FORMAT DATE TIME
   // =======================================================
 
-  const processQrCode = async (
-    decodedText
+  const formatDateTime = (
+    value
+  ) => {
+
+    if (!value) {
+      return "—";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return String(value);
+    }
+
+    return date.toLocaleString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  };
+
+
+  // =======================================================
+  // FORMAT TIME
+  // =======================================================
+
+  const formatTime = (
+    value
+  ) => {
+
+    if (!value) {
+      return "";
+    }
+
+    return String(
+      value
+    ).slice(
+      0,
+      5
+    );
+  };
+
+
+  // =======================================================
+  // COPY ATTENDANCE CODE
+  // =======================================================
+
+  const copyCode = async (
+    code
   ) => {
 
     if (
-      !decodedText ||
-      scannerLoading
+      !code ||
+      code === "N/A"
     ) {
       return;
     }
 
     try {
 
-      setScannerLoading(true);
-      setScanError("");
-      setSuccess("");
+      await navigator.clipboard.writeText(
+        String(code)
+      );
 
-      const response =
-        await api.post(
-          "/attendance/verify-qr",
-          {
-            qrData:
-              decodedText,
+      setCopiedCode(
+        String(code)
+      );
 
-            eventId:
-              Number(
-                selectedEventId
-              ),
-          }
-        );
+      setTimeout(() => {
+        setCopiedCode("");
+      }, 1800);
 
-      const data =
-        response.data;
+    } catch (error) {
+
+      console.error(
+        "Copy code error:",
+        error
+      );
+
+      setError(
+        "Unable to copy attendance code."
+      );
+    }
+  };
+
+
+  // =======================================================
+  // HANDLE ATTENDANCE SUCCESS
+  // =======================================================
+
+  const handleAttendanceSuccess = async (
+    response
+  ) => {
+
+    const data =
+      response?.data || {};
+
+    if (
+      data.success
+    ) {
 
       if (
-        data?.success
+        data.alreadyPresent
       ) {
 
-        setScanResult(
-          data
+        setSuccess(
+          "This attendee is already marked present."
         );
+
+      } else {
 
         setSuccess(
           data.message ||
-          "Attendance marked successfully"
+          "Attendance marked present successfully."
         );
-
-        await stopScanner();
-
-        setScannerOpen(false);
-
-        await Promise.all([
-          loadAttendance(),
-          loadStats(),
-        ]);
-
-      } else {
-
-        setScanError(
-          data?.message ||
-          "QR verification failed"
-        );
-
       }
 
-    } catch (err) {
+      setScanMessage("");
 
-      console.error(
-        "QR verification error:",
-        err
-      );
-
-      const responseData =
-        err.response?.data;
+      await Promise.all([
+        loadAttendance(true),
+        loadStats(),
+      ]);
 
       if (
-        responseData?.alreadyPresent
+        data.attendance
       ) {
 
-        setScanResult(
-          responseData
+        setSelectedAttendance(
+          data.attendance
         );
-
-        setScanError(
-          responseData.message ||
-          "Attendance already marked"
-        );
-
-      } else {
-
-        setScanError(
-          responseData?.message ||
-          "Unable to verify QR code"
-        );
-
       }
 
-    } finally {
-
-      setScannerLoading(false);
-
-    }
-  };
-
-
-  // =======================================================
-  // START QR SCANNER
-  // =======================================================
-
-  const startScanner = async () => {
-
-    setScanError("");
-    setScanResult(null);
-    setSuccess("");
-
-    if (!selectedEventId) {
-
-      setScanError(
-        "Please select an event first."
-      );
-
-      return;
+      return true;
     }
 
-    if (!Html5Qrcode) {
-
-      setScanError(
-        "QR scanner package is not installed. Run: npm install html5-qrcode"
-      );
-
-      return;
-    }
-
-    setScannerOpen(true);
-
-    // Give DOM time to render scanner container.
-    setTimeout(
-      async () => {
-
-        try {
-
-          const scanner =
-            new Html5Qrcode(
-              "snict-attendance-qr-reader"
-            );
-
-          scannerRef.current =
-            scanner;
-
-          await scanner.start(
-
-            {
-              facingMode:
-                "environment",
-            },
-
-            {
-              fps: 10,
-
-              qrbox: {
-                width: 280,
-                height: 280,
-              },
-
-              aspectRatio:
-                1,
-            },
-
-            async (
-              decodedText
-            ) => {
-
-              await processQrCode(
-                decodedText
-              );
-
-            },
-
-            () => {
-              // Ignore continuous QR scan errors.
-            }
-
-          );
-
-          scannerStartedRef.current =
-            true;
-
-        } catch (err) {
-
-          console.error(
-            "Start scanner error:",
-            err
-          );
-
-          setScanError(
-            "Unable to start camera. Please allow camera permission and try again."
-          );
-
-          setScannerOpen(false);
-
-        }
-
-      },
-      150
+    setError(
+      data.message ||
+      "Unable to process attendance."
     );
+
+    return false;
   };
 
 
   // =======================================================
-  // MANUAL ATTENDANCE CODE
+  // MANUAL CODE VERIFY
   // =======================================================
 
   const verifyManualCode =
-    async () => {
+    async (
+      event
+    ) => {
 
-      if (
-        !selectedEventId
-      ) {
-
-        setError(
-          "Please select an event first."
-        );
-
-        return;
+      if (event) {
+        event.preventDefault();
       }
 
-      if (
-        !attendanceCode.trim()
-      ) {
+      const code =
+        manualCode.trim();
+
+      if (!code) {
 
         setError(
           "Please enter attendance code."
@@ -719,22 +843,29 @@ const AttendanceManagement = () => {
         return;
       }
 
+      if (!selectedEventId) {
+
+        setError(
+          "Please select an event first."
+        );
+
+        return;
+      }
+
       try {
 
-        setCodeLoading(true);
+        setScanMessage(
+          "Verifying attendance code..."
+        );
 
         setError("");
-        setSuccess("");
-        setScanResult(null);
 
         const response =
           await api.post(
             "/attendance/verify-code",
             {
               attendanceCode:
-                attendanceCode
-                  .trim()
-                  .toUpperCase(),
+                code,
 
               eventId:
                 Number(
@@ -743,60 +874,349 @@ const AttendanceManagement = () => {
             }
           );
 
-        const data =
-          response.data;
+        const successResult =
+          await handleAttendanceSuccess(
+            response
+          );
 
         if (
-          data?.success
+          successResult
         ) {
 
-          setScanResult(
-            data
-          );
+          setManualCode("");
 
-          setSuccess(
-            data.message ||
-            "Attendance marked successfully"
-          );
-
-          setAttendanceCode("");
-
-          await Promise.all([
-            loadAttendance(),
-            loadStats(),
-          ]);
-
+          stopScanner();
         }
 
-      } catch (err) {
+      } catch (error) {
 
         console.error(
           "Verify attendance code error:",
-          err
+          error
         );
 
-        const responseData =
-          err.response?.data;
+        setScanMessage("");
+
+        setError(
+          error.response?.data
+            ?.message ||
+          "Invalid or expired attendance code."
+        );
+      }
+    };
+
+
+  // =======================================================
+  // START QR SCANNER
+  // =======================================================
+
+  const startScanner =
+    async () => {
+
+      if (scanning) {
+        return;
+      }
+
+      if (!selectedEventId) {
+
+        setError(
+          "Please select an event before scanning."
+        );
+
+        return;
+      }
+
+      try {
+
+        setError("");
+
+        setScanMessage(
+          "Starting camera..."
+        );
+
+        /*
+        -----------------------------------------------------
+        DYNAMIC IMPORT
+        -----------------------------------------------------
+
+        Install:
+
+        npm install html5-qrcode
+
+        -----------------------------------------------------
+        */
+
+        const module =
+          await import(
+            "html5-qrcode"
+          );
+
+        const Html5Qrcode =
+          module.Html5Qrcode ||
+          module.default;
 
         if (
-          responseData?.alreadyPresent
+          !Html5Qrcode
         ) {
 
-          setScanResult(
-            responseData
+          throw new Error(
+            "QR scanner library is unavailable."
           );
+        }
+
+        if (
+          !scannerRef.current
+        ) {
+
+          throw new Error(
+            "QR scanner container not found."
+          );
+        }
+
+        const scanner =
+          new Html5Qrcode(
+            "attendance-qr-reader"
+          );
+
+        scannerInstanceRef.current =
+          scanner;
+
+        setScanning(true);
+
+        setScanMessage(
+          "Point the camera at the attendee QR code."
+        );
+
+
+        await scanner.start(
+
+          {
+            facingMode:
+              "environment",
+          },
+
+          {
+            fps: 10,
+
+            qrbox: {
+              width: 250,
+              height: 250,
+            },
+
+            aspectRatio:
+              1.0,
+          },
+
+          async (
+            decodedText
+          ) => {
+
+            /*
+            -------------------------------------------------
+            QR DETECTED
+            -------------------------------------------------
+            */
+
+            await handleQrResult(
+              decodedText
+            );
+
+          },
+
+          () => {
+            /*
+            QR scan frame errors are ignored.
+            */
+          }
+
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Start QR scanner error:",
+          error
+        );
+
+        setScanning(false);
+
+        scannerInstanceRef.current =
+          null;
+
+        setScanMessage("");
+
+        setError(
+          error.message ||
+          "Unable to start QR scanner. Please allow camera access."
+        );
+      }
+    };
+
+
+  // =======================================================
+  // STOP QR SCANNER
+  // =======================================================
+
+  const stopScanner =
+    async () => {
+
+      const scanner =
+        scannerInstanceRef.current;
+
+      if (!scanner) {
+
+        setScanning(false);
+
+        return;
+      }
+
+      try {
+
+        await scanner.stop();
+
+      } catch (error) {
+
+        console.warn(
+          "QR scanner stop warning:",
+          error
+        );
+
+      }
+
+      try {
+
+        await scanner.clear();
+
+      } catch (error) {
+
+        console.warn(
+          "QR scanner clear warning:",
+          error
+        );
+      }
+
+      scannerInstanceRef.current =
+        null;
+
+      setScanning(false);
+
+      setScanMessage("");
+    };
+
+
+  // =======================================================
+  // HANDLE QR RESULT
+  // =======================================================
+
+  const handleQrResult =
+    async (
+      decodedText
+    ) => {
+
+      if (!decodedText) {
+        return;
+      }
+
+      /*
+      Prevent repeated QR callback
+      while request is processing.
+      */
+
+      if (
+        scanMessage ===
+        "Verifying QR..."
+      ) {
+        return;
+      }
+
+      try {
+
+        setScanMessage(
+          "Verifying QR..."
+        );
+
+        setError("");
+
+        let qrData =
+          decodedText;
+
+        /*
+        -----------------------------------------------------
+        TRY PARSE JSON
+        -----------------------------------------------------
+        */
+
+        try {
+
+          qrData =
+            JSON.parse(
+              decodedText
+            );
+
+        } catch (
+          parseError
+        ) {
+
+          /*
+          QR may contain direct
+          attendance code.
+          */
+
+          qrData = {
+            attendanceCode:
+              decodedText,
+          };
+        }
+
+
+        /*
+        -----------------------------------------------------
+        SEND TO BACKEND
+        -----------------------------------------------------
+        */
+
+        const response =
+          await api.post(
+            "/attendance/verify-qr",
+            {
+              qrData,
+
+              eventId:
+                Number(
+                  selectedEventId
+                ),
+            }
+          );
+
+
+        const successResult =
+          await handleAttendanceSuccess(
+            response
+          );
+
+
+        if (
+          successResult
+        ) {
+
+          await stopScanner();
 
         }
 
-        setError(
-          responseData?.message ||
-          "Unable to verify attendance code"
+      } catch (error) {
+
+        console.error(
+          "QR verification error:",
+          error
         );
 
-      } finally {
+        setScanMessage("");
 
-        setCodeLoading(false);
-
+        setError(
+          error.response?.data
+            ?.message ||
+          "Unable to verify QR code."
+        );
       }
     };
 
@@ -807,32 +1227,38 @@ const AttendanceManagement = () => {
 
   const markPresent =
     async (
-      bookingId
+      item
     ) => {
 
-      if (
-        !selectedEventId
-      ) {
+      if (!item.bookingId) {
+
+        setError(
+          "Booking ID is missing."
+        );
+
         return;
       }
 
-      const confirmed =
-        window.confirm(
-          "Mark this attendee as present?"
+      if (!selectedEventId) {
+
+        setError(
+          "Please select an event."
         );
 
-      if (!confirmed) {
         return;
       }
 
       try {
 
         setError("");
-        setSuccess("");
+
+        setScanMessage(
+          "Marking attendance..."
+        );
 
         const response =
           await api.post(
-            `/attendance/${bookingId}/mark-present`,
+            `/attendance/${item.bookingId}/mark-present`,
             {
               eventId:
                 Number(
@@ -841,350 +1267,615 @@ const AttendanceManagement = () => {
             }
           );
 
-        const data =
-          response.data;
+        await handleAttendanceSuccess(
+          response
+        );
 
-        if (
-          data?.success
-        ) {
-
-          setSuccess(
-            data.message ||
-            "Attendance marked successfully"
-          );
-
-          await Promise.all([
-            loadAttendance(),
-            loadStats(),
-          ]);
-
-        }
-
-      } catch (err) {
+      } catch (error) {
 
         console.error(
-          "Mark present error:",
-          err
+          "Mark attendance error:",
+          error
         );
+
+        setScanMessage("");
 
         setError(
-          err.response?.data?.message ||
-          "Unable to mark attendance"
+          error.response?.data
+            ?.message ||
+          "Unable to mark attendance."
         );
-
       }
     };
 
 
   // =======================================================
-  // CLEANUP
+  // CLOSE DETAILS
   // =======================================================
 
-  useEffect(() => {
+  const closeDetails = () => {
 
-    return () => {
-
-      stopScanner();
-
-    };
-
-  }, []);
-
-
-  // =======================================================
-  // SELECTED EVENT
-  // =======================================================
-
-  const selectedEvent =
-    events.find(
-      (event) =>
-        String(event.id) ===
-        String(selectedEventId)
+    setSelectedAttendance(
+      null
     );
-
-
-  // =======================================================
-  // FORMAT DATE
-  // =======================================================
-
-  const formatDate = (
-    date
-  ) => {
-
-    if (!date) {
-      return "-";
-    }
-
-    try {
-
-      return new Date(
-        date
-      ).toLocaleDateString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }
-      );
-
-    } catch {
-      return date;
-    }
   };
 
 
   // =======================================================
-  // FORMAT DATE TIME
+  // LOADING
   // =======================================================
 
-  const formatDateTime = (
-    date
-  ) => {
-
-    if (!date) {
-      return "-";
-    }
-
-    try {
-
-      return new Date(
-        date
-      ).toLocaleString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }
-      );
-
-    } catch {
-      return date;
-    }
-  };
-
-
-  // =======================================================
-  // GET USER IMAGE
-  // =======================================================
-
-  const getUserImage = (
-    item
-  ) => {
+  if (
+    loading &&
+    !selectedEventId
+  ) {
 
     return (
-      item?.user?.profileImageUrl ||
-      ""
-    );
-  };
+      <main className="attendance-management-page">
 
+        <div className="attendance-loading">
 
-  // =======================================================
-  // RENDER
-  // =======================================================
-
-  return (
-    <div className="attendance-management">
-
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      <div className="attendance-header">
-
-        <div>
-
-          <h1>
-            Attendance Management
-          </h1>
+          <div className="attendance-loading-spinner" />
 
           <p>
-            Scan event passes, verify attendance
-            codes and manage event attendance.
+            Loading attendance management...
           </p>
 
         </div>
 
-
-        <button
-          type="button"
-          className="attendance-refresh-btn"
-          onClick={
-            refreshAttendance
-          }
-          disabled={
-            loading
-          }
-        >
-          {loading
-            ? "Refreshing..."
-            : "Refresh"}
-        </button>
-
-      </div>
+      </main>
+    );
+  }
 
 
-      {/* =================================================
-          ALERTS
-      ================================================= */}
+  // =======================================================
+  // UI
+  // =======================================================
 
-      {error && (
-        <div className="attendance-alert attendance-alert-error">
+  return (
+    <main className="attendance-management-page">
 
-          <span>
-            {error}
-          </span>
+      <div className="attendance-management-container">
 
-          <button
-            type="button"
-            onClick={() =>
-              setError("")
-            }
-          >
-            ×
-          </button>
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
-        </div>
-      )}
-
-
-      {success && (
-        <div className="attendance-alert attendance-alert-success">
-
-          <span>
-            {success}
-          </span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setSuccess("")
-            }
-          >
-            ×
-          </button>
-
-        </div>
-      )}
-
-
-      {/* =================================================
-          EVENT SELECTOR
-      ================================================= */}
-
-      <div className="attendance-card">
-
-        <div className="attendance-card-header">
+        <header className="attendance-header">
 
           <div>
 
-            <h2>
-              Select Event
-            </h2>
+            <span className="attendance-eyebrow">
+              SNICT ADMINISTRATION
+            </span>
+
+            <h1>
+              Attendance Management
+            </h1>
 
             <p>
-              Choose an event to manage its
-              attendance.
+              Scan event passes, verify
+              attendance codes and manage
+              event attendance.
             </p>
 
           </div>
 
-        </div>
+
+          <button
+            type="button"
+            className="attendance-refresh-btn"
+            onClick={
+              refreshAll
+            }
+            disabled={
+              refreshing
+            }
+          >
+
+            <RefreshCw
+              size={16}
+              className={
+                refreshing
+                  ? "attendance-spin"
+                  : ""
+              }
+            />
+
+            {refreshing
+              ? "Refreshing..."
+              : "Refresh"}
+
+          </button>
+
+        </header>
 
 
-        <select
-          value={
-            selectedEventId
-          }
-          onChange={(e) => {
+        {/* =================================================
+            ALERTS
+        ================================================= */}
 
-            setSelectedEventId(
-              e.target.value
-            );
+        {error && (
 
-            setAttendance([]);
-            setScanResult(null);
-            setSuccess("");
-            setError("");
+          <div className="attendance-alert attendance-alert-error">
 
-          }}
-          disabled={
-            eventsLoading
-          }
-          className="attendance-event-select"
-        >
-
-          <option value="">
-            {eventsLoading
-              ? "Loading events..."
-              : "Select Event"}
-          </option>
-
-          {events.map(
-            (event) => (
-
-              <option
-                key={event.id}
-                value={event.id}
-              >
-                {event.title}
-                {" - "}
-                {formatDate(
-                  event.event_date ||
-                  event.eventDate
-                )}
-              </option>
-
-            )
-          )}
-
-        </select>
-
-
-        {selectedEvent && (
-          <div className="selected-event-info">
-
-            <strong>
-              {selectedEvent.title}
-            </strong>
+            <AlertCircle
+              size={17}
+            />
 
             <span>
-              {formatDate(
-                selectedEvent.event_date ||
-                selectedEvent.eventDate
-              )}
+              {error}
             </span>
 
-            {(
-              selectedEvent.venue
-            ) && (
-              <span>
-                {selectedEvent.venue}
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={() =>
+                setError("")
+              }
+            >
+
+              <X
+                size={15}
+              />
+
+            </button>
 
           </div>
+
         )}
 
-      </div>
+
+        {success && (
+
+          <div className="attendance-alert attendance-alert-success">
+
+            <CheckCircle2
+              size={17}
+            />
+
+            <span>
+              {success}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSuccess("")
+              }
+            >
+
+              <X
+                size={15}
+              />
+
+            </button>
+
+          </div>
+
+        )}
 
 
-      {selectedEventId && (
-        <>
+        {/* =================================================
+            EVENT SELECTOR
+        ================================================= */}
 
-          {/* ===============================================
-              STATISTICS
-          =============================================== */}
+        <section className="attendance-event-selector">
 
-          <div className="attendance-stats-grid">
+          <div className="attendance-event-selector-icon">
 
-            <div className="attendance-stat-card">
+            <CalendarDays
+              size={20}
+            />
+
+          </div>
+
+          <div className="attendance-event-selector-content">
+
+            <label htmlFor="attendance-event">
+              Select Event
+            </label>
+
+            <select
+              id="attendance-event"
+              value={
+                selectedEventId
+              }
+              onChange={(event) => {
+
+                stopScanner();
+
+                setSelectedEventId(
+                  event.target.value
+                );
+
+                setSearch("");
+
+                setStatusFilter(
+                  "all"
+                );
+
+                setSelectedAttendance(
+                  null
+                );
+
+              }}
+            >
+
+              <option value="">
+                Select an event
+              </option>
+
+              {events.map(
+                (event) => (
+
+                  <option
+                    key={
+                      event.id
+                    }
+                    value={
+                      event.id
+                    }
+                  >
+                    {
+                      event.title ||
+                      event.name
+                    }
+                  </option>
+
+                )
+              )}
+
+            </select>
+
+          </div>
+
+
+          {selectedEvent && (
+
+            <div className="attendance-selected-event-info">
+
+              <strong>
+                {
+                  selectedEvent.title ||
+                  selectedEvent.name
+                }
+              </strong>
+
+              {selectedEvent.event_date && (
+
+                <span>
+
+                  <CalendarDays
+                    size={13}
+                  />
+
+                  {formatDate(
+                    selectedEvent.event_date
+                  )}
+
+                </span>
+
+              )}
+
+              {selectedEvent.venue && (
+
+                <span>
+
+                  <MapPin
+                    size={13}
+                  />
+
+                  {
+                    selectedEvent.venue
+                  }
+
+                </span>
+
+              )}
+
+            </div>
+
+          )}
+
+        </section>
+
+
+        {/* =================================================
+            SCANNER SECTION
+        ================================================= */}
+
+        <section className="attendance-scanner-section">
+
+          <div className="attendance-scanner-heading">
+
+            <div>
+
+              <span className="attendance-section-label">
+                EVENT CHECK-IN
+              </span>
+
+              <h2>
+                Scan Attendee QR
+              </h2>
+
+              <p>
+                Scan the QR code displayed
+                on the attendee's event pass.
+              </p>
+
+            </div>
+
+            <div className="attendance-scanner-status">
+
+              <ShieldCheck
+                size={17}
+              />
+
+              Admin verified
+
+            </div>
+
+          </div>
+
+
+          <div className="attendance-scanner-content">
+
+            {/* QR CAMERA */}
+
+            <div className="attendance-camera-wrapper">
+
+              <div
+                id="attendance-qr-reader"
+                ref={scannerRef}
+                className={
+                  scanning
+                    ? "attendance-camera attendance-camera-active"
+                    : "attendance-camera"
+                }
+              />
+
+              {!scanning && (
+
+                <div className="attendance-camera-placeholder">
+
+                  <div className="attendance-camera-icon">
+
+                    <QrCode
+                      size={42}
+                    />
+
+                  </div>
+
+                  <h3>
+                    QR Scanner Ready
+                  </h3>
+
+                  <p>
+                    Start the camera and
+                    point it at an event pass QR.
+                  </p>
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            {/* SCANNER CONTROLS */}
+
+            <div className="attendance-scanner-controls">
+
+              <div className="attendance-scanner-control-title">
+
+                {scanning ? (
+
+                  <>
+
+                    <Camera
+                      size={19}
+                    />
+
+                    <strong>
+                      Camera is active
+                    </strong>
+
+                  </>
+
+                ) : (
+
+                  <>
+
+                    <CameraOff
+                      size={19}
+                    />
+
+                    <strong>
+                      Camera is inactive
+                    </strong>
+
+                  </>
+
+                )}
+
+              </div>
+
+
+              {scanMessage && (
+
+                <div className="attendance-scan-message">
+
+                  <ScanLine
+                    size={16}
+                  />
+
+                  {scanMessage}
+
+                </div>
+
+              )}
+
+
+              {!scanning ? (
+
+                <button
+                  type="button"
+                  className="attendance-start-scan-btn"
+                  onClick={
+                    startScanner
+                  }
+                  disabled={
+                    !selectedEventId
+                  }
+                >
+
+                  <ScanLine
+                    size={19}
+                  />
+
+                  Start QR Scanner
+
+                </button>
+
+              ) : (
+
+                <button
+                  type="button"
+                  className="attendance-stop-scan-btn"
+                  onClick={
+                    stopScanner
+                  }
+                >
+
+                  <CameraOff
+                    size={19}
+                  />
+
+                  Stop Scanner
+
+                </button>
+
+              )}
+
+
+              <div className="attendance-scanner-divider">
+
+                <span>
+                  OR
+                </span>
+
+              </div>
+
+
+              {/* MANUAL CODE */}
+
+              <form
+                className="attendance-manual-form"
+                onSubmit={
+                  verifyManualCode
+                }
+              >
+
+                <div className="attendance-manual-heading">
+
+                  <Keyboard
+                    size={17}
+                  />
+
+                  <div>
+
+                    <strong>
+                      Manual Attendance
+                    </strong>
+
+                    <span>
+                      Use the unique code below the QR.
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <div className="attendance-manual-input-row">
+
+                  <input
+                    type="text"
+                    placeholder="SNICT-ATT-XXXXXXXXXX"
+                    value={
+                      manualCode
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setManualCode(
+                        event.target.value
+                      )
+                    }
+                    autoComplete="off"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={
+                      !selectedEventId ||
+                      !manualCode.trim()
+                    }
+                  >
+
+                    <CheckCircle2
+                      size={17}
+                    />
+
+                    Verify
+
+                  </button>
+
+                </div>
+
+              </form>
+
+
+              <div className="attendance-scanner-note">
+
+                <AlertCircle
+                  size={15}
+                />
+
+                <span>
+                  Only confirmed bookings
+                  can be marked present.
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =================================================
+            STATISTICS
+        ================================================= */}
+
+        <section className="attendance-stats-grid">
+
+          <div className="attendance-stat-card">
+
+            <div className="attendance-stat-icon">
+
+              <Users
+                size={21}
+              />
+
+            </div>
+
+            <div>
 
               <span>
-                Total Bookings
+                Total
               </span>
 
               <strong>
@@ -1193,8 +1884,20 @@ const AttendanceManagement = () => {
 
             </div>
 
+          </div>
 
-            <div className="attendance-stat-card">
+
+          <div className="attendance-stat-card attendance-stat-present">
+
+            <div className="attendance-stat-icon">
+
+              <UserCheck
+                size={21}
+              />
+
+            </div>
+
+            <div>
 
               <span>
                 Present
@@ -1206,8 +1909,20 @@ const AttendanceManagement = () => {
 
             </div>
 
+          </div>
 
-            <div className="attendance-stat-card">
+
+          <div className="attendance-stat-card attendance-stat-absent">
+
+            <div className="attendance-stat-icon">
+
+              <UserX
+                size={21}
+              />
+
+            </div>
+
+            <div>
 
               <span>
                 Not Present
@@ -1219,421 +1934,158 @@ const AttendanceManagement = () => {
 
             </div>
 
+          </div>
 
-            <div className="attendance-stat-card">
+
+          <div className="attendance-stat-card attendance-stat-percentage">
+
+            <div className="attendance-stat-icon">
+
+              <Percent
+                size={21}
+              />
+
+            </div>
+
+            <div>
 
               <span>
                 Attendance
               </span>
 
               <strong>
-                {stats.attendancePercentage}%
+                {Number(
+                  stats.attendancePercentage ||
+                  0
+                ).toFixed(2)}
+                %
               </strong>
 
             </div>
 
           </div>
 
-
-          {/* ===============================================
-              SCAN + MANUAL CODE
-          =============================================== */}
-
-          <div className="attendance-actions-grid">
-
-            {/* QR SCANNER */}
-
-            <div className="attendance-card">
-
-              <div className="attendance-card-header">
-
-                <div>
-
-                  <h2>
-                    Scan QR Pass
-                  </h2>
-
-                  <p>
-                    Scan the QR code shown on
-                    the user's event pass.
-                  </p>
-
-                </div>
-
-              </div>
+        </section>
 
 
-              <button
-                type="button"
-                className="attendance-primary-btn"
-                onClick={
-                  startScanner
-                }
-                disabled={
-                  scannerOpen ||
-                  scannerLoading
-                }
-              >
-                {scannerOpen
-                  ? "Scanner Open"
-                  : "Open QR Scanner"}
-              </button>
+        {/* =================================================
+            ATTENDANCE TABLE
+        ================================================= */}
+
+        <section className="attendance-list-section">
+
+          <div className="attendance-list-header">
+
+            <div>
+
+              <span className="attendance-section-label">
+                ATTENDANCE RECORDS
+              </span>
+
+              <h2>
+                Event Attendees
+              </h2>
 
             </div>
 
 
-            {/* MANUAL CODE */}
+            <div className="attendance-list-count">
 
-            <div className="attendance-card">
+              {filteredAttendance.length}
 
-              <div className="attendance-card-header">
+              {" "}
 
-                <div>
-
-                  <h2>
-                    Manual Attendance
-                  </h2>
-
-                  <p>
-                    Use the unique code below
-                    the QR when scanning is not
-                    possible.
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              <div className="attendance-code-row">
-
-                <input
-                  type="text"
-                  value={
-                    attendanceCode
-                  }
-                  onChange={(e) =>
-                    setAttendanceCode(
-                      e.target.value
-                        .toUpperCase()
-                    )
-                  }
-                  onKeyDown={(e) => {
-
-                    if (
-                      e.key ===
-                      "Enter"
-                    ) {
-                      verifyManualCode();
-                    }
-
-                  }}
-                  placeholder="SNICT-ATT-XXXXXXXXXX"
-                  className="attendance-code-input"
-                />
-
-
-                <button
-                  type="button"
-                  className="attendance-secondary-btn"
-                  onClick={
-                    verifyManualCode
-                  }
-                  disabled={
-                    codeLoading ||
-                    !attendanceCode.trim()
-                  }
-                >
-                  {codeLoading
-                    ? "Checking..."
-                    : "Verify Code"}
-                </button>
-
-              </div>
+              records
 
             </div>
 
           </div>
 
 
-          {/* ===============================================
-              SCAN RESULT
-          =============================================== */}
+          {/* FILTERS */}
 
-          {scanResult && (
-            <div className="attendance-card attendance-scan-result">
+          <div className="attendance-list-toolbar">
 
-              <div className="attendance-card-header">
+            <div className="attendance-search">
 
-                <div>
+              <Search
+                size={17}
+              />
 
-                  <h2>
-                    Verification Result
-                  </h2>
-
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScanResult(null)
-                  }
-                >
-                  ×
-                </button>
-
-              </div>
-
-
-              <div className="scan-result-content">
-
-                {scanResult.user && (
-
-                  <div className="scan-user">
-
-                    {getUserImage(
-                      scanResult
-                    ) ? (
-
-                      <img
-                        src={getUserImage(
-                          scanResult
-                        )}
-                        alt={
-                          scanResult.user
-                            .fullName
-                        }
-                      />
-
-                    ) : (
-
-                      <div className="scan-user-placeholder">
-                        {(
-                          scanResult.user
-                            .fullName ||
-                          "U"
-                        )
-                          .charAt(0)
-                          .toUpperCase()}
-                      </div>
-
-                    )}
-
-
-                    <div>
-
-                      <h3>
-                        {
-                          scanResult.user
-                            .fullName
-                        }
-                      </h3>
-
-                      <p>
-                        {
-                          scanResult.user
-                            .email
-                        }
-                      </p>
-
-                      <p>
-                        {
-                          scanResult.user
-                            .mobile
-                        }
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-
-                {scanResult.attendance && (
-
-                  <div className="scan-attendance-info">
-
-                    <div>
-
-                      <span>
-                        Status
-                      </span>
-
-                      <strong>
-                        {
-                          scanResult
-                            .attendance
-                            .attendance_status ||
-                          scanResult
-                            .attendance
-                            .attendanceStatus ||
-                          "Present"
-                        }
-                      </strong>
-
-                    </div>
-
-
-                    <div>
-
-                      <span>
-                        Attendance Code
-                      </span>
-
-                      <strong>
-                        {
-                          scanResult
-                            .attendance
-                            .attendance_code ||
-                          scanResult
-                            .attendance
-                            .attendanceCode ||
-                          "-"
-                        }
-                      </strong>
-
-                    </div>
-
-
-                    <div>
-
-                      <span>
-                        Marked At
-                      </span>
-
-                      <strong>
-                        {formatDateTime(
-                          scanResult
-                            .attendance
-                            .marked_at ||
-                          scanResult
-                            .attendance
-                            .markedAt
-                        )}
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
-          )}
-
-
-          {/* ===============================================
-              FILTERS
-          =============================================== */}
-
-          <div className="attendance-card">
-
-            <div className="attendance-filters">
-
-              <div className="attendance-search">
-
-                <input
-                  type="text"
-                  value={
-                    search
-                  }
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Search name, email, mobile, booking code..."
-                />
-
-              </div>
-
-
-              <select
+              <input
+                type="text"
+                placeholder="Search name, email, booking or attendance code..."
                 value={
-                  statusFilter
+                  search
                 }
-                onChange={(e) =>
-                  setStatusFilter(
-                    e.target.value
+                onChange={(
+                  event
+                ) =>
+                  setSearch(
+                    event.target.value
                   )
                 }
-              >
-
-                <option value="all">
-                  All
-                </option>
-
-                <option value="present">
-                  Present
-                </option>
-
-                <option value="not_present">
-                  Not Present
-                </option>
-
-              </select>
+              />
 
             </div>
+
+
+            <select
+              value={
+                statusFilter
+              }
+              onChange={(
+                event
+              ) =>
+                setStatusFilter(
+                  event.target.value
+                )
+              }
+            >
+
+              <option value="all">
+                All Attendance
+              </option>
+
+              <option value="present">
+                Present
+              </option>
+
+              <option value="not_present">
+                Not Present
+              </option>
+
+            </select>
 
           </div>
 
 
-          {/* ===============================================
-              ATTENDANCE TABLE
-          =============================================== */}
+          {filteredAttendance.length ===
+          0 ? (
 
-          <div className="attendance-card">
+            <div className="attendance-empty">
 
-            <div className="attendance-card-header">
+              <UserCheck
+                size={38}
+              />
 
-              <div>
+              <h3>
+                No attendance records
+              </h3>
 
-                <h2>
-                  Attendance Records
-                </h2>
-
-                <p>
-                  {attendance.length}
-                  {" "}
-                  attendance records
-                </p>
-
-              </div>
+              <p>
+                No attendance records
+                match the selected event
+                and filters.
+              </p>
 
             </div>
 
+          ) : (
 
-            {loading ? (
+            <div className="attendance-table-wrapper">
 
-              <div className="attendance-loading">
-                Loading attendance...
-              </div>
-
-            ) : attendance.length === 0 ? (
-
-              <div className="attendance-empty">
-
-                <div className="attendance-empty-icon">
-                  ✓
-                </div>
-
-                <h3>
-                  No attendance records
-                </h3>
-
-                <p>
-                  No attendance data was found
-                  for this event.
-                </p>
-
-              </div>
-
-            ) : (
-
-              <div className="attendance-table-wrapper">
+              <div className="attendance-table-scroll">
 
                 <table className="attendance-table">
 
@@ -1672,192 +2124,240 @@ const AttendanceManagement = () => {
 
                   <tbody>
 
-                    {attendance.map(
-                      (item) => {
+                    {filteredAttendance.map(
+                      (item) => (
 
-                        const isPresent =
-                          item.attendanceStatus ===
-                          "present";
+                        <tr
+                          key={
+                            item.attendanceId ||
+                            `${item.bookingId}-${item.attendanceCode}`
+                          }
+                        >
 
+                          {/* ATTENDEE */}
 
-                        return (
+                          <td>
 
-                          <tr
-                            key={
-                              item.id ||
-                              item.bookingId
-                            }
-                          >
+                            <div className="attendance-user-cell">
 
-                            <td>
+                              <div className="attendance-user-avatar">
 
-                              <div className="attendee-cell">
-
-                                {item.user
-                                  ?.profileImageUrl ? (
+                                {item.profileImageUrl ? (
 
                                   <img
                                     src={
-                                      item.user
-                                        .profileImageUrl
+                                      item.profileImageUrl
                                     }
                                     alt={
-                                      item.user
-                                        .fullName
+                                      item.fullName
                                     }
                                   />
 
                                 ) : (
 
-                                  <div className="attendee-avatar">
-                                    {(
-                                      item.user
-                                        ?.fullName ||
-                                      "U"
-                                    )
-                                      .charAt(0)
-                                      .toUpperCase()}
-                                  </div>
+                                  <UserCheck
+                                    size={16}
+                                  />
 
                                 )}
 
+                              </div>
 
-                                <div>
+                              <div>
 
-                                  <strong>
-                                    {
-                                      item.user
-                                        ?.fullName ||
-                                      "-"
-                                    }
-                                  </strong>
+                                <strong>
+                                  {
+                                    item.fullName
+                                  }
+                                </strong>
 
-                                  <span>
-                                    {
-                                      item.user
-                                        ?.email ||
-                                      "-"
-                                    }
-                                  </span>
-
-                                  <span>
-                                    {
-                                      item.user
-                                        ?.mobile ||
-                                      "-"
-                                    }
-                                  </span>
-
-                                </div>
+                                <span>
+                                  {
+                                    item.email ||
+                                    item.username ||
+                                    "—"
+                                  }
+                                </span>
 
                               </div>
 
-                            </td>
+                            </div>
+
+                          </td>
 
 
-                            <td>
+                          {/* BOOKING */}
+
+                          <td>
+
+                            <div className="attendance-booking-cell">
 
                               <strong>
                                 {
-                                  item.booking
-                                    ?.bookingCode ||
-                                  "-"
+                                  item.bookingCode
                                 }
                               </strong>
 
-                              <small>
-                                ₹
-                                {Number(
-                                  item.booking
-                                    ?.amount ||
-                                  0
-                                ).toFixed(2)}
-                              </small>
+                              <span>
+                                {
+                                  item.bookingStatus
+                                }
+                              </span>
 
-                            </td>
+                            </div>
+
+                          </td>
 
 
-                            <td>
+                          {/* CODE */}
+
+                          <td>
+
+                            <div className="attendance-code-cell">
 
                               <code>
                                 {
-                                  item.attendanceCode ||
-                                  "-"
+                                  item.attendanceCode
                                 }
                               </code>
 
-                            </td>
-
-
-                            <td>
-
-                              <span
-                                className={
-                                  isPresent
-                                    ? "attendance-status attendance-status-present"
-                                    : "attendance-status attendance-status-not-present"
-                                }
-                              >
-
-                                {isPresent
-                                  ? "Present"
-                                  : "Not Present"}
-
-                              </span>
-
-                            </td>
-
-
-                            <td>
-
-                              {formatDateTime(
-                                item.markedAt
-                              )}
-
-                            </td>
-
-
-                            <td>
-
-                              <div className="attendance-actions">
+                              {item.attendanceCode !==
+                                "N/A" && (
 
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setSelectedAttendance(
+                                    copyCode(
+                                      item.attendanceCode
+                                    )
+                                  }
+                                  title="Copy attendance code"
+                                >
+
+                                  {copiedCode ===
+                                  item.attendanceCode ? (
+
+                                    <Check
+                                      size={14}
+                                    />
+
+                                  ) : (
+
+                                    <Copy
+                                      size={14}
+                                    />
+
+                                  )}
+
+                                </button>
+
+                              )}
+
+                            </div>
+
+                          </td>
+
+
+                          {/* STATUS */}
+
+                          <td>
+
+                            {item.attendanceStatus ===
+                            "present" ? (
+
+                              <span className="attendance-status-badge attendance-status-present">
+
+                                <UserCheck
+                                  size={13}
+                                />
+
+                                Present
+
+                              </span>
+
+                            ) : (
+
+                              <span className="attendance-status-badge attendance-status-absent">
+
+                                <UserX
+                                  size={13}
+                                />
+
+                                Not Present
+
+                              </span>
+
+                            )}
+
+                          </td>
+
+
+                          {/* MARKED */}
+
+                          <td>
+
+                            <span className="attendance-marked-time">
+
+                              {item.markedAt
+                                ? formatDateTime(
+                                    item.markedAt
+                                  )
+                                : "—"}
+
+                            </span>
+
+                          </td>
+
+
+                          {/* ACTION */}
+
+                          <td>
+
+                            <div className="attendance-row-actions">
+
+                              <button
+                                type="button"
+                                className="attendance-view-btn"
+                                onClick={() =>
+                                  setSelectedAttendance(
+                                    item
+                                  )
+                                }
+                              >
+                                View
+                              </button>
+
+
+                              {item.attendanceStatus !==
+                                "present" && (
+
+                                <button
+                                  type="button"
+                                  className="attendance-mark-btn"
+                                  onClick={() =>
+                                    markPresent(
                                       item
                                     )
                                   }
                                 >
-                                  View
+
+                                  <UserCheck
+                                    size={14}
+                                  />
+
+                                  Mark Present
+
                                 </button>
 
+                              )}
 
-                                {!isPresent && (
+                            </div>
 
-                                  <button
-                                    type="button"
-                                    className="mark-present-btn"
-                                    onClick={() =>
-                                      markPresent(
-                                        item.bookingId
-                                      )
-                                    }
-                                  >
-                                    Mark Present
-                                  </button>
+                          </td>
 
-                                )}
+                        </tr>
 
-                              </div>
-
-                            </td>
-
-                          </tr>
-
-                        );
-
-                      }
+                      )
                     )}
 
                   </tbody>
@@ -1866,353 +2366,561 @@ const AttendanceManagement = () => {
 
               </div>
 
-            )}
+            </div>
 
-          </div>
+          )}
 
-        </>
-      )}
+        </section>
+
+      </div>
 
 
-      {/* =================================================
-          QR SCANNER MODAL
-      ================================================= */}
+      {/* =====================================================
+          ATTENDANCE DETAILS MODAL
+      ===================================================== */}
 
-      {scannerOpen && (
+      {selectedAttendance && (
 
-        <div className="attendance-modal-overlay">
+        <div
+          className="attendance-modal-overlay"
+          onMouseDown={(
+            event
+          ) => {
 
-          <div className="attendance-modal">
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
 
-            <div className="attendance-modal-header">
+              closeDetails();
+
+            }
+
+          }}
+        >
+
+          <section
+            className="attendance-details-modal"
+            role="dialog"
+            aria-modal="true"
+          >
+
+            {/* HEADER */}
+
+            <header className="attendance-modal-header">
 
               <div>
 
+                <span>
+                  ATTENDANCE DETAILS
+                </span>
+
                 <h2>
-                  Scan Event Pass
+                  {
+                    selectedAttendance.fullName ||
+                    selectedAttendance.full_name ||
+                    "Attendee"
+                  }
                 </h2>
 
-                <p>
-                  Point the camera at the
-                  user's QR code.
-                </p>
-
               </div>
-
 
               <button
                 type="button"
                 onClick={
-                  closeScanner
+                  closeDetails
                 }
               >
-                ×
+
+                <X
+                  size={19}
+                />
+
               </button>
 
-            </div>
+            </header>
 
 
-            <div
-              id="snict-attendance-qr-reader"
-              className="attendance-qr-reader"
-            />
+            {/* BODY */}
 
+            <div className="attendance-modal-body">
 
-            {scannerLoading && (
+              {/* STATUS */}
 
-              <div className="scanner-processing">
-                Verifying attendance...
-              </div>
-
-            )}
-
-
-            {scanError && (
-
-              <div className="attendance-alert attendance-alert-error">
-                {scanError}
-              </div>
-
-            )}
-
-
-            <button
-              type="button"
-              className="attendance-secondary-btn scanner-close-btn"
-              onClick={
-                closeScanner
-              }
-            >
-              Close Scanner
-            </button>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* =================================================
-          ATTENDEE DETAILS MODAL
-      ================================================= */}
-
-      {selectedAttendance && (
-
-        <div className="attendance-modal-overlay">
-
-          <div className="attendance-modal attendance-details-modal">
-
-            <div className="attendance-modal-header">
-
-              <div>
-
-                <h2>
-                  Attendee Details
-                </h2>
-
-              </div>
-
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedAttendance(
-                    null
-                  )
+              <div
+                className={
+                  String(
+                    selectedAttendance.attendanceStatus ||
+                    selectedAttendance.attendance_status
+                  ).toLowerCase() ===
+                  "present"
+                    ? "attendance-modal-status present"
+                    : "attendance-modal-status absent"
                 }
               >
-                ×
-              </button>
 
-            </div>
+                {String(
+                  selectedAttendance.attendanceStatus ||
+                  selectedAttendance.attendance_status
+                ).toLowerCase() ===
+                "present" ? (
 
+                  <>
 
-            <div className="attendee-details">
+                    <UserCheck
+                      size={22}
+                    />
 
-              <div className="attendee-details-profile">
+                    <div>
 
-                {selectedAttendance.user
-                  ?.profileImageUrl ? (
+                      <strong>
+                        Present
+                      </strong>
 
-                  <img
-                    src={
-                      selectedAttendance
-                        .user
-                        .profileImageUrl
-                    }
-                    alt={
-                      selectedAttendance
-                        .user
-                        .fullName
-                    }
-                  />
+                      <span>
+                        Attendance has been successfully marked.
+                      </span>
+
+                    </div>
+
+                  </>
 
                 ) : (
 
-                  <div className="large-avatar">
-                    {(
-                      selectedAttendance
-                        .user
-                        ?.fullName ||
-                      "U"
-                    )
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
+                  <>
+
+                    <UserX
+                      size={22}
+                    />
+
+                    <div>
+
+                      <strong>
+                        Not Present
+                      </strong>
+
+                      <span>
+                        This attendee has not checked in yet.
+                      </span>
+
+                    </div>
+
+                  </>
 
                 )}
 
+              </div>
 
-                <div>
 
-                  <h3>
-                    {
-                      selectedAttendance
-                        .user
-                        ?.fullName
-                  }
-                  </h3>
+              {/* USER */}
 
-                  <p>
-                    @
-                    {
-                      selectedAttendance
-                        .user
-                        ?.username ||
-                      "-"
-                    }
-                  </p>
+              <div className="attendance-modal-section">
+
+                <div className="attendance-modal-section-title">
+
+                  <Users
+                    size={17}
+                  />
+
+                  Attendee Information
+
+                </div>
+
+
+                <div className="attendance-modal-grid">
+
+                  <div>
+
+                    <span>
+                      Full Name
+                    </span>
+
+                    <strong>
+                      {
+                        selectedAttendance.fullName ||
+                        selectedAttendance.full_name ||
+                        "—"
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Username
+                    </span>
+
+                    <strong>
+                      {
+                        selectedAttendance.username ||
+                        "—"
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Email
+                    </span>
+
+                    <strong>
+
+                      <Mail
+                        size={14}
+                      />
+
+                      {
+                        selectedAttendance.email ||
+                        "—"
+                      }
+
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Mobile
+                    </span>
+
+                    <strong>
+
+                      <Phone
+                        size={14}
+                      />
+
+                      {
+                        selectedAttendance.mobile ||
+                        "—"
+                      }
+
+                    </strong>
+
+                  </div>
 
                 </div>
 
               </div>
 
 
-              <div className="details-grid">
+              {/* BOOKING */}
 
-                <div>
-                  <span>
-                    Email
-                  </span>
+              <div className="attendance-modal-section">
 
-                  <strong>
-                    {
-                      selectedAttendance
-                        .user
-                        ?.email ||
-                      "-"
-                    }
-                  </strong>
+                <div className="attendance-modal-section-title">
+
+                  <TicketCheck
+                    size={17}
+                  />
+
+                  Booking Information
+
                 </div>
 
 
-                <div>
-                  <span>
-                    Mobile
-                  </span>
+                <div className="attendance-modal-grid">
 
-                  <strong>
-                    {
-                      selectedAttendance
-                        .user
-                        ?.mobile ||
-                      "-"
-                    }
-                  </strong>
-                </div>
+                  <div>
 
+                    <span>
+                      Booking Code
+                    </span>
 
-                <div>
-                  <span>
-                    Age
-                  </span>
+                    <strong>
+                      {
+                        selectedAttendance.bookingCode ||
+                        selectedAttendance.booking_code ||
+                        "—"
+                      }
+                    </strong>
 
-                  <strong>
-                    {
-                      selectedAttendance
-                        .user
-                        ?.age ||
-                      "-"
-                    }
-                  </strong>
-                </div>
+                  </div>
 
 
-                <div>
-                  <span>
-                    Blood Group
-                  </span>
+                  <div>
 
-                  <strong>
-                    {
-                      selectedAttendance
-                        .user
-                        ?.bloodGroup ||
-                      "-"
-                    }
-                  </strong>
-                </div>
+                    <span>
+                      Booking ID
+                    </span>
 
+                    <strong>
+                      {
+                        selectedAttendance.bookingId ||
+                        selectedAttendance.booking_id ||
+                        "—"
+                      }
+                    </strong>
 
-                <div>
-                  <span>
-                    Booking Code
-                  </span>
-
-                  <strong>
-                    {
-                      selectedAttendance
-                        .booking
-                        ?.bookingCode ||
-                      "-"
-                    }
-                  </strong>
-                </div>
+                  </div>
 
 
-                <div>
-                  <span>
-                    Attendance Code
-                  </span>
+                  <div>
 
-                  <strong>
-                    {
-                      selectedAttendance
-                        .attendanceCode ||
-                      "-"
-                    }
-                  </strong>
-                </div>
+                    <span>
+                      Booking Status
+                    </span>
 
+                    <strong>
+                      {
+                        selectedAttendance.bookingStatus ||
+                        selectedAttendance.booking_status ||
+                        "—"
+                      }
+                    </strong>
 
-                <div>
-                  <span>
-                    Status
-                  </span>
+                  </div>
 
-                  <strong>
-                    {
-                      selectedAttendance
-                        .attendanceStatus ||
-                      "-"
-                    }
-                  </strong>
-                </div>
-
-
-                <div>
-                  <span>
-                    Marked At
-                  </span>
-
-                  <strong>
-                    {formatDateTime(
-                      selectedAttendance
-                        .markedAt
-                    )}
-                  </strong>
                 </div>
 
               </div>
 
 
-              {selectedAttendance
-                .attendanceStatus !==
+              {/* ATTENDANCE */}
+
+              <div className="attendance-modal-section">
+
+                <div className="attendance-modal-section-title">
+
+                  <QrCode
+                    size={17}
+                  />
+
+                  Attendance Verification
+
+                </div>
+
+
+                <div className="attendance-modal-grid">
+
+                  <div>
+
+                    <span>
+                      Attendance Code
+                    </span>
+
+                    <strong className="attendance-modal-code">
+
+                      {
+                        selectedAttendance.attendanceCode ||
+                        selectedAttendance.attendance_code ||
+                        "—"
+                      }
+
+                      {(selectedAttendance.attendanceCode ||
+                        selectedAttendance.attendance_code) && (
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            copyCode(
+                              selectedAttendance.attendanceCode ||
+                              selectedAttendance.attendance_code
+                            )
+                          }
+                        >
+
+                          {copiedCode ===
+                          String(
+                            selectedAttendance.attendanceCode ||
+                            selectedAttendance.attendance_code
+                          ) ? (
+
+                            <Check
+                              size={13}
+                            />
+
+                          ) : (
+
+                            <Copy
+                              size={13}
+                            />
+
+                          )}
+
+                        </button>
+
+                      )}
+
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Marked At
+                    </span>
+
+                    <strong>
+                      {
+                        selectedAttendance.markedAt ||
+                        selectedAttendance.marked_at
+                          ? formatDateTime(
+                              selectedAttendance.markedAt ||
+                              selectedAttendance.marked_at
+                            )
+                          : "—"
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Marked By
+                    </span>
+
+                    <strong>
+                      {
+                        selectedAttendance.markedBy ||
+                        selectedAttendance.marked_by ||
+                        "—"
+                      }
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* EVENT */}
+
+              <div className="attendance-modal-section">
+
+                <div className="attendance-modal-section-title">
+
+                  <CalendarDays
+                    size={17}
+                  />
+
+                  Event Information
+
+                </div>
+
+
+                <div className="attendance-modal-grid">
+
+                  <div>
+
+                    <span>
+                      Event
+                    </span>
+
+                    <strong>
+                      {
+                        selectedAttendance.eventName ||
+                        selectedAttendance.event_name ||
+                        "—"
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Date
+                    </span>
+
+                    <strong>
+                      {
+                        selectedAttendance.eventDate ||
+                        selectedAttendance.event_date
+                          ? formatDate(
+                              selectedAttendance.eventDate ||
+                              selectedAttendance.event_date
+                            )
+                          : "—"
+                      }
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Venue
+                    </span>
+
+                    <strong>
+
+                      <MapPin
+                        size={14}
+                      />
+
+                      {
+                        selectedAttendance.venue ||
+                        "—"
+                      }
+
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* ACTION */}
+
+              {String(
+                selectedAttendance.attendanceStatus ||
+                selectedAttendance.attendance_status
+              ).toLowerCase() !==
                 "present" && (
 
                 <button
                   type="button"
-                  className="attendance-primary-btn"
-                  onClick={() => {
+                  className="attendance-modal-mark-btn"
+                  onClick={async () => {
 
-                    setSelectedAttendance(
-                      null
+                    await markPresent(
+                      normalizeAttendance(
+                        selectedAttendance
+                      )
                     );
 
-                    markPresent(
-                      selectedAttendance
-                        .bookingId
-                    );
+                    closeDetails();
 
                   }}
                 >
+
+                  <UserCheck
+                    size={17}
+                  />
+
                   Mark Present
+
                 </button>
 
               )}
 
             </div>
 
-          </div>
+          </section>
 
         </div>
 
       )}
 
-    </div>
+    </main>
   );
-};
+}
 
 
 export default AttendanceManagement;

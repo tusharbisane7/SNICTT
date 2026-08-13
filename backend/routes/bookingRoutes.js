@@ -20,12 +20,6 @@ const {
 // MIDDLEWARE
 // =========================================================
 
-// IMPORTANT:
-// These files export the middleware function directly.
-//
-// module.exports = authMiddleware;
-// module.exports = adminMiddleware;
-
 const authMiddleware =
   require("../middleware/authMiddleware");
 
@@ -39,70 +33,9 @@ const adminMiddleware =
 const router = express.Router();
 
 // =========================================================
-// USER BOOKING ROUTES
-// =========================================================
-
-
-// =========================================================
-// CREATE BOOKING
-// POST /api/bookings/event/:eventId
-// =========================================================
-
-router.post(
-  "/event/:eventId",
-  authMiddleware,
-  createBooking
-);
-
-
-// =========================================================
-// GET MY BOOKINGS
-// GET /api/bookings
-// =========================================================
-
-router.get(
-  "/",
-  authMiddleware,
-  getMyBookings
-);
-
-
-// =========================================================
-// GET MY SINGLE BOOKING
-// GET /api/bookings/:id
-// =========================================================
-
-router.get(
-  "/:id",
-  authMiddleware,
-  getMyBookingById
-);
-
-
-// =========================================================
-// GET MY EVENT PASS
-// GET /api/bookings/:id/pass
-// =========================================================
-
-router.get(
-  "/:id/pass",
-  authMiddleware,
-  getMyPass
-);
-
-
-// =========================================================
 // ADMIN BOOKING ROUTES
-// =========================================================
-//
 // IMPORTANT:
-//
-// Keep admin routes BEFORE /:id routes.
-//
-// Admin authentication uses:
-//
-// snict_admin_token
-//
+// ALL /admin routes MUST COME BEFORE /:id
 // =========================================================
 
 
@@ -151,6 +84,63 @@ router.delete(
   "/admin/:id",
   adminMiddleware,
   deleteBooking
+);
+
+
+// =========================================================
+// USER BOOKING ROUTES
+// =========================================================
+
+
+// =========================================================
+// CREATE BOOKING
+// POST /api/bookings/event/:eventId
+// =========================================================
+
+router.post(
+  "/event/:eventId",
+  authMiddleware,
+  createBooking
+);
+
+
+// =========================================================
+// GET MY BOOKINGS
+// GET /api/bookings
+// =========================================================
+
+router.get(
+  "/",
+  authMiddleware,
+  getMyBookings
+);
+
+
+// =========================================================
+// GET MY EVENT PASS
+// GET /api/bookings/:id/pass
+// =========================================================
+//
+// IMPORTANT:
+// This MUST come before /:id
+// =========================================================
+
+router.get(
+  "/:id/pass",
+  authMiddleware,
+  getMyPass
+);
+
+
+// =========================================================
+// GET MY SINGLE BOOKING
+// GET /api/bookings/:id
+// =========================================================
+
+router.get(
+  "/:id",
+  authMiddleware,
+  getMyBookingById
 );
 
 
