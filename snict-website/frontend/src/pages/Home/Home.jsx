@@ -1351,21 +1351,17 @@ function Home() {
 
             <div className="hero-actions">
 
-              <button
-                type="button"
-                className="hero-primary-btn"
-                onClick={handleBecomeMember}
-                disabled={authLoading}
-                aria-label="Become a Member"
-              >
-
-                Become a Member
-
-                <ArrowRight
-                  size={18}
-                />
-
-              </button>
+              {!authLoading && !user && (
+                <button
+                  type="button"
+                  className="hero-primary-btn"
+                  onClick={handleBecomeMember}
+                  aria-label="Become a Member"
+                >
+                  Become a Member
+                  <ArrowRight size={18} />
+                </button>
+              )}
 
               <Link
                 to="/about"
@@ -2769,66 +2765,57 @@ function Home() {
           MEMBERSHIP CTA
       ===================================================== */}
 
-      <section className="membership-cta">
+      {!authLoading && !user && (
+        <section className="membership-cta">
 
-        <div className="section-container membership-container">
+          <div className="section-container membership-container">
 
-          <div className="membership-content">
+            <div className="membership-content">
 
-            <span className="section-label">
-              JOIN SNICT
-            </span>
-
-            <h2>
-
-              Be part of the
-
-              <span>
-                {" "}professional community.
+              <span className="section-label">
+                JOIN SNICT
               </span>
 
-            </h2>
+              <h2>
+                Be part of the
+                <span>
+                  {" "}professional community.
+                </span>
+              </h2>
 
-            <p>
+              <p>
+                Connect with cardiovascular
+                technologists and contribute to
+                a community focused on learning,
+                collaboration and advancing
+                cardiovascular care.
+              </p>
 
-              Connect with cardiovascular
-              technologists and contribute to
-              a community focused on learning,
-              collaboration and advancing
-              cardiovascular care.
+            </div>
 
-            </p>
+            <button
+              type="button"
+              className="membership-btn"
+              onClick={handleBecomeMember}
+            >
+              Become a Member
+              <ArrowRight size={18} />
+            </button>
 
           </div>
 
-          <button
-            type="button"
-            className="membership-btn"
-            onClick={handleBecomeMember}
-            disabled={authLoading}
-          >
-
-            {user
-              ? "View Membership"
-              : "Become a Member"}
-
-            <ArrowRight
-              size={18}
-            />
-
-          </button>
-
-        </div>
-
-      </section>
+        </section>
+      )}
 
       {/* =====================================================
           LOGIN REQUIRED POPUP
           ===================================================== */}
-      <LoginRequiredModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
+      {!authLoading && !user && (
+        <LoginRequiredModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
 
     </main>
 

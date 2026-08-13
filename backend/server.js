@@ -17,6 +17,8 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const membershipRoutes = require("./routes/membershipRoutes");
 const sliderRoutes = require("./routes/sliderRoutes");
+const attendanceRoutes =
+  require("./routes/attendanceRoutes");
 
 // =========================================================
 // APP
@@ -216,6 +218,11 @@ app.use(
 app.use(
   "/api/events",
   eventRoutes
+);
+
+app.use(
+  "/api/attendance",
+  attendanceRoutes
 );
 
 // =========================================================
