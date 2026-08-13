@@ -1,17 +1,20 @@
 const express = require("express");
 
+
 // =========================================================
 // CONTROLLERS
 // =========================================================
 
 const {
-  verifyQrCode,
-  verifyAttendanceCode,
-  markPresent,
+  getAllAttendance,
   getEventAttendance,
   getEventAttendanceStats,
   getBookingAttendance,
+  verifyQrCode,
+  verifyAttendanceCode,
+  markPresent,
 } = require("../controllers/attendanceController");
+
 
 // =========================================================
 // MIDDLEWARE
@@ -20,134 +23,67 @@ const {
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
+
 // =========================================================
 // ROUTER
 // =========================================================
 
 const router = express.Router();
 
+
 // =========================================================
 // ADMIN ATTENDANCE ROUTES
 // =========================================================
 //
-// All attendance routes require admin authentication.
+// All attendance routes are protected by
+// adminMiddleware.
 //
 // Admin authentication:
+//
 // snict_admin_token
 //
-// adminMiddleware:
-// verifies the admin JWT and sets:
-//
-// req.adminId
-//
 // =========================================================
 
 
 // =========================================================
-// 1. VERIFY QR CODE
+// 1. GET ALL ATTENDANCE
 // =========================================================
 //
-// POST
-// /api/attendance/verify-qr
+// GET
+// /api/attendance/admin
 //
-// Body:
+// Returns:
 //
-// {
-//   "qrData": {
-//     "type": "SNICT_EVENT_PASS",
-//     "passToken": "PASS_TOKEN"
-//   },
-//   "eventId": 123
-// }
-//
-// Also supports:
-//
-// {
-//   "qrData": "PASS_TOKEN",
-//   "eventId": 123
-// }
+// - attendee information
+// - booking information
+// - event information
+// - attendance status
+// - attendance code
+// - marked time
 //
 // =========================================================
 
-router.post(
-  "/verify-qr",
+router.get(
+  "/admin",
   adminMiddleware,
-  verifyQrCode
+  getAllAttendance
 );
 
 
 // =========================================================
-// 2. VERIFY MANUAL ATTENDANCE CODE
-// =========================================================
-//
-// POST
-// /api/attendance/verify-code
-//
-// Body:
-//
-// {
-//   "attendanceCode": "SNICT-ATT-XXXXXXXXXX",
-//   "eventId": 123
-// }
-//
-// =========================================================
-
-router.post(
-  "/verify-code",
-  adminMiddleware,
-  verifyAttendanceCode
-);
-
-
-// =========================================================
-// 3. MARK PRESENT MANUALLY
-// =========================================================
-//
-// POST
-// /api/attendance/:bookingId/mark-present
-//
-// Body:
-//
-// {
-//   "eventId": 123
-// }
-//
-// This can be used by admin when:
-//
-// - QR cannot be scanned
-// - Attendance needs to be marked manually
-//
-// =========================================================
-
-router.post(
-  "/:bookingId/mark-present",
-  adminMiddleware,
-  markPresent
-);
-
-
-// =========================================================
-// 4. GET EVENT ATTENDANCE
+// 2. GET EVENT ATTENDANCE
 // =========================================================
 //
 // GET
 // /api/attendance/event/:eventId
 //
-// Optional query:
+// Optional:
 //
 // ?search=tushar
 //
 // ?status=present
 //
 // ?status=not_present
-//
-// Examples:
-//
-// /api/attendance/event/12
-//
-// /api/attendance/event/12?status=present
-//
-// /api/attendance/event/12?search=tushar
 //
 // =========================================================
 
@@ -159,24 +95,18 @@ router.get(
 
 
 // =========================================================
-// 5. GET EVENT ATTENDANCE STATISTICS
+// 3. GET EVENT ATTENDANCE STATS
 // =========================================================
 //
 // GET
 // /api/attendance/event/:eventId/stats
 //
-// Response:
+// Returns:
 //
-// {
-//   "success": true,
-//   "eventId": 12,
-//   "stats": {
-//     "total": 100,
-//     "present": 72,
-//     "notPresent": 28,
-//     "attendancePercentage": 72
-//   }
-// }
+// total
+// present
+// notPresent
+// attendancePercentage
 //
 // =========================================================
 
@@ -188,14 +118,13 @@ router.get(
 
 
 // =========================================================
-// 6. GET SINGLE BOOKING ATTENDANCE
+// 4. GET BOOKING ATTENDANCE
 // =========================================================
 //
 // GET
 // /api/attendance/booking/:bookingId
 //
-// Used when admin wants to see attendance
-// information for one booking.
+// Returns attendance record for one booking.
 //
 // =========================================================
 
@@ -207,7 +136,97 @@ router.get(
 
 
 // =========================================================
-// EXPORT ROUTER
+// 5. VERIFY QR CODE
+// =========================================================
+//
+// POST
+// /api/attendance/verify-qr
+//
+// Body:
+//
+// {
+//   "qrData": {
+//     "type": "SNICT_EVENT_PASS",
+//     "bookingId": 16,
+//     "eventId": 5,
+//     "passCode": "SNICT-PASS-XXXX",
+//     "passToken": "XXXXXXXX"
+//   },
+//   "eventId": 5
+// }
+//
+// QR scan:
+//
+// QR
+// ↓
+// Verify pass
+// ↓
+// Find booking
+// ↓
+// Find/create attendance
+// ↓
+// Mark present
+//
+// =========================================================
+
+router.post(
+  "/verify-qr",
+  adminMiddleware,
+  verifyQrCode
+);
+
+
+// =========================================================
+// 6. VERIFY MANUAL ATTENDANCE CODE
+// =========================================================
+//
+// POST
+// /api/attendance/verify-code
+//
+// Body:
+//
+// {
+//   "attendanceCode": "SNICT-ATT-XXXXXXXXXX",
+//   "eventId": 5
+// }
+//
+// Used when QR cannot be scanned.
+//
+// =========================================================
+
+router.post(
+  "/verify-code",
+  adminMiddleware,
+  verifyAttendanceCode
+);
+
+
+// =========================================================
+// 7. MANUALLY MARK PRESENT
+// =========================================================
+//
+// POST
+// /api/attendance/:bookingId/mark-present
+//
+// Body:
+//
+// {
+//   "eventId": 5
+// }
+//
+// Used by admin for manual attendance.
+//
+// =========================================================
+
+router.post(
+  "/:bookingId/mark-present",
+  adminMiddleware,
+  markPresent
+);
+
+
+// =========================================================
+// EXPORT
 // =========================================================
 
 module.exports = router;

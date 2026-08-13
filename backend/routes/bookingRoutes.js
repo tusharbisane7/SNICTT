@@ -9,6 +9,7 @@ const {
   getMyBookings,
   getMyBookingById,
   getMyPass,
+
   getAllBookings,
   getAdminBookingById,
   updateBookingStatus,
@@ -19,11 +20,15 @@ const {
 // MIDDLEWARE
 // =========================================================
 
-// Normal user authentication
+// IMPORTANT:
+// These files export the middleware function directly.
+//
+// module.exports = authMiddleware;
+// module.exports = adminMiddleware;
+
 const authMiddleware =
   require("../middleware/authMiddleware");
 
-// Admin authentication
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
@@ -33,54 +38,15 @@ const adminMiddleware =
 
 const router = express.Router();
 
-/*
-=========================================================
-IMPORTANT ROUTE ORDER
-
-Specific routes such as:
-
-/admin
-/admin/:id
-/event/:eventId
-
-must be declared before:
-
-/:id
-
-Otherwise Express can treat "admin" as an ID.
-=========================================================
-*/
-
-
 // =========================================================
 // USER BOOKING ROUTES
 // =========================================================
 
-/*
----------------------------------------------------------
-1. CREATE EVENT BOOKING
 
-POST /api/bookings/event/:eventId
-
-Authentication:
-Normal user
-
-Example:
-
-POST /api/bookings/event/5
-
-Creates:
-
-event_booking
-+
-event_payment
-
-Initial status:
-
-booking_status = payment_pending
-payment_status = pending
----------------------------------------------------------
-*/
+// =========================================================
+// CREATE BOOKING
+// POST /api/bookings/event/:eventId
+// =========================================================
 
 router.post(
   "/event/:eventId",
@@ -90,25 +56,9 @@ router.post(
 
 
 // =========================================================
-// USER BOOKING HISTORY
+// GET MY BOOKINGS
+// GET /api/bookings
 // =========================================================
-
-/*
----------------------------------------------------------
-2. GET MY BOOKINGS
-
-GET /api/bookings
-
-Returns:
-
-- Booking
-- Event
-- Payment
-- Pass
-- Attendance
-
----------------------------------------------------------
-*/
 
 router.get(
   "/",
@@ -118,21 +68,9 @@ router.get(
 
 
 // =========================================================
-// USER SINGLE BOOKING
+// GET MY SINGLE BOOKING
+// GET /api/bookings/:id
 // =========================================================
-
-/*
----------------------------------------------------------
-3. GET MY SINGLE BOOKING
-
-GET /api/bookings/:id
-
-Example:
-
-GET /api/bookings/16
-
----------------------------------------------------------
-*/
 
 router.get(
   "/:id",
@@ -142,31 +80,9 @@ router.get(
 
 
 // =========================================================
-// USER EVENT PASS
+// GET MY EVENT PASS
+// GET /api/bookings/:id/pass
 // =========================================================
-
-/*
----------------------------------------------------------
-4. GET EVENT PASS
-
-GET /api/bookings/:id/pass
-
-Returns:
-
-- Pass
-- QR payload
-- Attendance code
-- Attendance status
-
-Only available when:
-
-booking_status = confirmed
-
-AND
-
-payment_status = verified
----------------------------------------------------------
-*/
 
 router.get(
   "/:id/pass",
@@ -178,34 +94,22 @@ router.get(
 // =========================================================
 // ADMIN BOOKING ROUTES
 // =========================================================
-
-/*
-IMPORTANT:
-
-All /admin routes are placed BEFORE /:id
-to prevent route conflicts.
-*/
+//
+// IMPORTANT:
+//
+// Keep admin routes BEFORE /:id routes.
+//
+// Admin authentication uses:
+//
+// snict_admin_token
+//
+// =========================================================
 
 
 // =========================================================
-// 5. GET ALL BOOKINGS
+// GET ALL BOOKINGS
+// GET /api/bookings/admin
 // =========================================================
-
-/*
-GET /api/bookings/admin
-
-Authentication:
-Admin
-
-Returns:
-
-- User details
-- Event details
-- Booking details
-- Payment details
-- Pass details
-- Attendance details
-*/
 
 router.get(
   "/admin",
@@ -215,19 +119,9 @@ router.get(
 
 
 // =========================================================
-// 6. GET SINGLE ADMIN BOOKING
+// GET SINGLE ADMIN BOOKING
+// GET /api/bookings/admin/:id
 // =========================================================
-
-/*
-GET /api/bookings/admin/:id
-
-Example:
-
-GET /api/bookings/admin/16
-
-Returns complete booking information
-for admin dashboard.
-*/
 
 router.get(
   "/admin/:id",
@@ -237,40 +131,9 @@ router.get(
 
 
 // =========================================================
-// 7. UPDATE BOOKING / PAYMENT STATUS
+// UPDATE BOOKING STATUS
+// PUT /api/bookings/admin/:id/status
 // =========================================================
-
-/*
-PUT /api/bookings/admin/:id/status
-
-Body examples:
-
-{
-  "status": "confirmed"
-}
-
-OR
-
-{
-  "bookingStatus": "confirmed",
-  "paymentStatus": "verified"
-}
-
-When:
-
-bookingStatus = confirmed
-AND
-paymentStatus = verified
-
-The backend automatically creates:
-
-1. Event Pass
-2. Pass Token
-3. Attendance Record
-4. Attendance Code
-
----------------------------------------------------------
-*/
 
 router.put(
   "/admin/:id/status",
@@ -280,21 +143,9 @@ router.put(
 
 
 // =========================================================
-// 8. DELETE BOOKING
+// DELETE BOOKING
+// DELETE /api/bookings/admin/:id
 // =========================================================
-
-/*
-DELETE /api/bookings/admin/:id
-
-Deletes:
-
-- Attendance
-- Event Pass
-- Payment
-- Booking
-
----------------------------------------------------------
-*/
 
 router.delete(
   "/admin/:id",
