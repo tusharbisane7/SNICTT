@@ -604,6 +604,32 @@ function BookingHistory() {
     };
 
   // =========================================================
+  // BOOKING / PAYMENT AMOUNT
+  // =========================================================
+
+  const getBookingAmount =
+    (booking) => {
+      const amount =
+        booking?.amount ??
+        booking?.payment_amount ??
+        booking?.paymentAmount ??
+        booking?.price ??
+        booking?.event_price ??
+        booking?.eventPrice ??
+        booking?.event?.price ??
+        0;
+
+      const numericAmount =
+        Number(amount);
+
+      return Number.isFinite(
+        numericAmount
+      )
+        ? numericAmount
+        : 0;
+    };
+
+  // =========================================================
   // ATTENDANCE CODE COPY
   // =========================================================
 
@@ -709,7 +735,9 @@ function BookingHistory() {
       const attendanceCode =
         getAttendanceCode(
           pass
-        );
+        ) ||
+        pass?.attendance?.attendance_code ||
+        "";
 
       const bookingId =
         getBookingId(
@@ -730,12 +758,14 @@ function BookingHistory() {
       const bookingCode =
         pass?.booking_code ||
         pass?.bookingCode ||
+        pass?.booking?.booking_code ||
         "";
 
       const eventName =
         pass?.event_name ||
         pass?.event_title ||
         pass?.title ||
+        pass?.event?.title ||
         "";
 
       // =====================================================
@@ -847,9 +877,64 @@ function BookingHistory() {
         );
       }
 
+      const pass =
+        response.data.pass || {};
+
+      const payment =
+        response.data.payment ||
+        response.data.paymentDetails ||
+        null;
+
+      const attendance =
+        response.data.attendance ||
+        response.data.attendanceDetails ||
+        null;
+
       return {
         ...booking,
-        ...response.data.pass,
+        ...response.data,
+        ...pass,
+
+        payment_status:
+          payment?.payment_status ??
+          pass?.payment_status ??
+          booking?.payment_status,
+
+        payment_amount:
+          payment?.amount ??
+          pass?.payment_amount ??
+          booking?.payment_amount,
+
+        transaction_id:
+          payment?.transaction_id ??
+          pass?.transaction_id ??
+          booking?.transaction_id,
+
+        payment_proof_url:
+          payment?.payment_proof_url ??
+          pass?.payment_proof_url ??
+          booking?.payment_proof_url,
+
+        attendance:
+          attendance ??
+          pass?.attendance ??
+          booking?.attendance ??
+          null,
+
+        attendance_code:
+          attendance?.attendance_code ??
+          pass?.attendance_code ??
+          booking?.attendance_code,
+
+        attendance_status:
+          attendance?.attendance_status ??
+          pass?.attendance_status ??
+          booking?.attendance_status,
+
+        attendance_marked_at:
+          attendance?.marked_at ??
+          pass?.attendance_marked_at ??
+          booking?.attendance_marked_at,
       };
     };
 
@@ -1508,10 +1593,8 @@ function BookingHistory() {
                     );
 
                   const amount =
-                    Number(
-                      booking.amount ||
-                        booking.price ||
-                        0
+                    getBookingAmount(
+                      booking
                     );
 
                   const paymentState =
@@ -2067,9 +2150,9 @@ function BookingHistory() {
                   <strong>
                     ₹
                     {Number(
-                      selectedPass.payment_amount ||
-                        selectedPass.amount ||
-                        0
+                      getBookingAmount(
+                        selectedPass
+                      )
                     ).toLocaleString(
                       "en-IN"
                     )}
