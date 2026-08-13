@@ -1,30 +1,23 @@
 const express = require("express");
 
-
 // =========================================================
 // CONTROLLERS
 // =========================================================
 
 const {
-  getEvents,
-  getEventById,
-  getAllEvents,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-} = require("../controllers/eventController");
-
+  getExpenses,
+  createExpense,
+  updateExpense,
+  deleteExpense,
+  getEventFinancials,
+} = require("../controllers/expenseController");
 
 // =========================================================
-// MIDDLEWARE
+// ADMIN MIDDLEWARE
 // =========================================================
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
-
-const eventUpload =
-  require("../middleware/eventUpload");
-
 
 // =========================================================
 // ROUTER
@@ -32,68 +25,80 @@ const eventUpload =
 
 const router = express.Router();
 
+// =========================================================
+// ADMIN EXPENSE ROUTES
+// =========================================================
+//
+// IMPORTANT:
+// Expense management is an ADMIN-only module.
+//
+// Admin authentication uses:
+// snict_admin_token
+//
+// Therefore:
+// DO NOT use authMiddleware here.
+//
+// adminMiddleware handles admin authentication.
+// =========================================================
+
 
 // =========================================================
-// PUBLIC
+// GET ALL EXPENSES
+// GET /api/admin/expenses
 // =========================================================
 
-// GET /api/events
 router.get(
   "/",
-  getEvents
-);
-
-
-// =========================================================
-// ADMIN
-// IMPORTANT:
-// Admin routes MUST come before /:id
-// =========================================================
-
-// GET /api/events/admin/all
-router.get(
-  "/admin/all",
   adminMiddleware,
-  getAllEvents
+  getExpenses
 );
 
 
-// POST /api/events/admin
+// =========================================================
+// CREATE EXPENSE
+// POST /api/admin/expenses
+// =========================================================
+
 router.post(
-  "/admin",
+  "/",
   adminMiddleware,
-  eventUpload,
-  createEvent
+  createExpense
 );
 
 
-// PUT /api/events/admin/:id
+// =========================================================
+// UPDATE EXPENSE
+// PUT /api/admin/expenses/:id
+// =========================================================
+
 router.put(
-  "/admin/:id",
-  adminMiddleware,
-  eventUpload,
-  updateEvent
-);
-
-
-// DELETE /api/events/admin/:id
-router.delete(
-  "/admin/:id",
-  adminMiddleware,
-  deleteEvent
-);
-
-
-// =========================================================
-// PUBLIC SINGLE EVENT
-// IMPORTANT:
-// This MUST come after all /admin routes.
-// =========================================================
-
-// GET /api/events/:id
-router.get(
   "/:id",
-  getEventById
+  adminMiddleware,
+  updateExpense
+);
+
+
+// =========================================================
+// DELETE EXPENSE
+// DELETE /api/admin/expenses/:id
+// =========================================================
+
+router.delete(
+  "/:id",
+  adminMiddleware,
+  deleteExpense
+);
+
+
+// =========================================================
+// EVENT FINANCIAL SUMMARY
+// GET /api/admin/expenses/event/:eventId/summary
+// =========================================================
+
+router.get(
+  "/event/:eventId/summary",
+  adminMiddleware,
+  getEventFinancials
 );
 
 
