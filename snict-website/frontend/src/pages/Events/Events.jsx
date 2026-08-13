@@ -124,12 +124,12 @@ const calculateEventStatus = (
 const getBackendOrigin = () => {
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://backend.snict.net/api";
+    "https://snict-backend.onrender.com/api";
 
   try {
     return new URL(apiUrl).origin;
   } catch {
-    return "https://backend.snict.net/";
+    return "https://snict-backend.onrender.com/";
   }
 };
 

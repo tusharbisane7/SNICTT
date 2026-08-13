@@ -18,177 +18,432 @@ import "./Login.css";
 
 // =========================================================
 // SNICT LOGO
-// Change this path only if your logo is stored elsewhere.
 // =========================================================
+
 import snictLogo from "../../assets/snict-logo.png";
 
 
-function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
+// =========================================================
+// LOGIN COMPONENT
+// =========================================================
 
-  const { login } = useAuth();
+function Login() {
+
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
+  const {
+    login,
+  } = useAuth();
+
 
   // =========================================================
   // FORM STATE
   // =========================================================
 
-  const [identifier, setIdentifier] =
-    useState("");
+  const [
+    identifier,
+    setIdentifier,
+  ] = useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [
+    password,
+    setPassword,
+  ] = useState("");
+
 
   // =========================================================
   // UI STATE
   // =========================================================
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
+
 
   // =========================================================
   // LOGIN
   // =========================================================
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit =
+    async (event) => {
 
-    if (loading) {
-      return;
-    }
+      event.preventDefault();
 
-    setError("");
-
-    // =======================================================
-    // VALIDATE IDENTIFIER
-    // =======================================================
-
-    const cleanIdentifier =
-      identifier.trim();
-
-    if (!cleanIdentifier) {
-      setError(
-        "Please enter your email or username."
-      );
-
-      return;
-    }
-
-    // =======================================================
-    // VALIDATE PASSWORD
-    // =======================================================
-
-    if (!password) {
-      setError(
-        "Please enter your password."
-      );
-
-      return;
-    }
-
-    if (password.length < 8) {
-      setError(
-        "Password must be at least 8 characters."
-      );
-
-      return;
-    }
-
-    // =======================================================
-    // API LOGIN
-    // =======================================================
-
-    try {
-      setLoading(true);
-
-      await login(
-        cleanIdentifier,
-        password
-      );
-
-      // =====================================================
-      // REDIRECT
-      // =====================================================
-
-      const redirect =
-        location.state?.from ||
-        "/dashboard";
-
-      if (
-        typeof redirect === "string"
-      ) {
-        navigate(
-          redirect,
-          {
-            replace: true,
-          }
-        );
-      } else {
-        navigate(
-          "/dashboard",
-          {
-            replace: true,
-          }
-        );
+      if (loading) {
+        return;
       }
 
-    } catch (error) {
-      console.error(
-        "Login error:",
-        error
-      );
+      setError("");
+
 
       // =====================================================
-      // BACKEND ERROR
+      // CLEAN INPUT
       // =====================================================
 
-      const backendMessage =
-        error.response?.data?.message;
+      const cleanIdentifier =
+        identifier.trim();
 
-      if (backendMessage) {
+
+      // =====================================================
+      // VALIDATE USERNAME / EMAIL
+      // =====================================================
+
+      if (!cleanIdentifier) {
+
         setError(
+          "Please enter your email or username."
+        );
+
+        return;
+      }
+
+
+      // =====================================================
+      // VALIDATE PASSWORD
+      // =====================================================
+
+      if (!password) {
+
+        setError(
+          "Please enter your password."
+        );
+
+        return;
+      }
+
+
+      if (
+        password.length < 8
+      ) {
+
+        setError(
+          "Password must be at least 8 characters."
+        );
+
+        return;
+      }
+
+
+      // =====================================================
+      // API LOGIN
+      // =====================================================
+
+      try {
+
+        setLoading(true);
+
+        setError("");
+
+
+        await login(
+          cleanIdentifier,
+          password
+        );
+
+
+        // ===================================================
+        // REDIRECT AFTER SUCCESS
+        // ===================================================
+
+        const redirect =
+          location.state?.from ||
+          "/dashboard";
+
+
+        if (
+          typeof redirect ===
+          "string"
+        ) {
+
+          navigate(
+            redirect,
+            {
+              replace: true,
+            }
+          );
+
+        } else {
+
+          navigate(
+            "/dashboard",
+            {
+              replace: true,
+            }
+          );
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "Login error:",
+          error
+        );
+
+
+        // ===================================================
+        // GET BACKEND RESPONSE
+        // ===================================================
+
+        const responseData =
+          error.response?.data;
+
+        const backendMessage =
+          responseData?.message;
+
+        const backendCode =
+          responseData?.code;
+
+
+        // ===================================================
+        // WRONG USERNAME / EMAIL
+        // ===================================================
+
+        if (
+          backendCode ===
+          "INVALID_IDENTIFIER"
+        ) {
+
+          setError(
+            "Incorrect username or email"
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // WRONG PASSWORD
+        // ===================================================
+
+        if (
+          backendCode ===
+          "INVALID_PASSWORD"
+        ) {
+
+          setError(
+            "Incorrect password"
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // MEMBERSHIP PENDING
+        // ===================================================
+
+        if (
+          backendCode ===
+          "MEMBERSHIP_PENDING"
+        ) {
+
+          setError(
+            "Please wait for some time. After your membership is approved, you can login."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // MEMBERSHIP REJECTED
+        // ===================================================
+
+        if (
+          backendCode ===
+          "MEMBERSHIP_REJECTED"
+        ) {
+
+          setError(
+            backendMessage ||
+            "Your membership application was rejected."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // MEMBERSHIP REQUIRED
+        // ===================================================
+
+        if (
+          backendCode ===
+          "MEMBERSHIP_REQUIRED"
+        ) {
+
+          setError(
+            "Please apply for membership before logging in."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // MEMBERSHIP NOT APPROVED
+        // ===================================================
+
+        if (
+          backendCode ===
+          "MEMBERSHIP_NOT_APPROVED"
+        ) {
+
+          setError(
+            backendMessage ||
+            "Your membership is not approved yet. You cannot login."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // MISSING CREDENTIALS
+        // ===================================================
+
+        if (
+          backendCode ===
+          "MISSING_CREDENTIALS"
+        ) {
+
+          setError(
+            "Please enter your email/username and password."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // BACKEND MESSAGE
+        // ===================================================
+
+        if (
           backendMessage
-        );
-      } else if (
-        error.response?.status === 401
-      ) {
-        setError(
-          "Invalid email/username or password."
-        );
-      } else if (
-        error.response?.status === 400
-      ) {
-        setError(
-          "Please enter your email/username and password."
-        );
-      } else if (
-        error.response?.status === 500
-      ) {
-        setError(
-          "Server error. Please try again later."
-        );
-      } else if (
-        error.request
-      ) {
-        setError(
-          "Unable to connect to SNICT server. Please make sure the backend is running."
-        );
-      } else {
+        ) {
+
+          setError(
+            backendMessage
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // 401
+        // ===================================================
+
+        if (
+          error.response?.status ===
+          401
+        ) {
+
+          setError(
+            "Unable to authenticate. Please check your login details."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // 403
+        // ===================================================
+
+        if (
+          error.response?.status ===
+          403
+        ) {
+
+          setError(
+            "You are not allowed to login at this time."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // 400
+        // ===================================================
+
+        if (
+          error.response?.status ===
+          400
+        ) {
+
+          setError(
+            "Please enter your email/username and password."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // 500
+        // ===================================================
+
+        if (
+          error.response?.status ===
+          500
+        ) {
+
+          setError(
+            "Server error. Please try again later."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // NETWORK ERROR
+        // ===================================================
+
+        if (
+          error.request
+        ) {
+
+          setError(
+            "Unable to connect to SNICT server. Please make sure the backend is running."
+          );
+
+          return;
+        }
+
+
+        // ===================================================
+        // UNKNOWN ERROR
+        // ===================================================
+
         setError(
           "Unable to login. Please try again."
         );
-      }
 
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+
+        setLoading(false);
+      }
+    };
 
 
   // =========================================================
@@ -196,7 +451,9 @@ function Login() {
   // =========================================================
 
   return (
+
     <main className="login-page">
+
 
       {/* =====================================================
           BACKGROUND
@@ -216,6 +473,7 @@ function Login() {
         className="login-card"
         aria-labelledby="login-title"
       >
+
 
         {/* ===================================================
             LOGO
@@ -247,9 +505,13 @@ function Login() {
           </span>
 
           <span className="login-brand-description">
+
             Society of Neo Interventional
+
             <br />
+
             Cardiovascular Technologists
+
           </span>
 
         </div>
@@ -274,8 +536,10 @@ function Login() {
 
 
         <p className="login-subtitle">
+
           Sign in to access your SNICT
           member dashboard.
+
         </p>
 
 
@@ -284,12 +548,17 @@ function Login() {
         =================================================== */}
 
         {error && (
+
           <div
             className="login-error"
             role="alert"
+            aria-live="polite"
           >
+
             {error}
+
           </div>
+
         )}
 
 
@@ -303,20 +572,29 @@ function Login() {
           noValidate
         >
 
+
           {/* =================================================
               EMAIL / USERNAME
           ================================================= */}
 
           <div className="login-field">
 
-            <label htmlFor="login-identifier">
+            <label
+              htmlFor="login-identifier"
+            >
               Email or Username
             </label>
 
+
             <input
               id="login-identifier"
+
               type="text"
-              value={identifier}
+
+              value={
+                identifier
+              }
+
               onChange={(event) => {
 
                 setIdentifier(
@@ -328,9 +606,13 @@ function Login() {
                 }
 
               }}
+
               placeholder="Enter email or username"
+
               autoComplete="username"
+
               maxLength={150}
+
               required
             />
 
@@ -345,9 +627,12 @@ function Login() {
 
             <div className="login-label-row">
 
-              <label htmlFor="login-password">
+              <label
+                htmlFor="login-password"
+              >
                 Password
               </label>
+
 
               <Link
                 to="/forgot-password"
@@ -362,12 +647,17 @@ function Login() {
 
               <input
                 id="login-password"
+
                 type={
                   showPassword
                     ? "text"
                     : "password"
                 }
-                value={password}
+
+                value={
+                  password
+                }
+
                 onChange={(event) => {
 
                   setPassword(
@@ -379,21 +669,28 @@ function Login() {
                   }
 
                 }}
+
                 placeholder="Enter password"
+
                 autoComplete="current-password"
+
                 minLength={8}
+
                 required
               />
 
 
               <button
                 type="button"
+
                 className="login-password-toggle"
+
                 aria-label={
                   showPassword
                     ? "Hide password"
                     : "Show password"
                 }
+
                 onClick={() =>
                   setShowPassword(
                     (previous) =>
@@ -403,9 +700,17 @@ function Login() {
               >
 
                 {showPassword ? (
-                  <EyeOff size={17} />
+
+                  <EyeOff
+                    size={17}
+                  />
+
                 ) : (
-                  <Eye size={17} />
+
+                  <Eye
+                    size={17}
+                  />
+
                 )}
 
               </button>
@@ -421,24 +726,32 @@ function Login() {
 
           <button
             className="login-submit"
+
             type="submit"
+
             disabled={loading}
           >
 
             <span>
+
               {loading
                 ? "Signing in..."
                 : "Sign In"}
+
             </span>
 
+
             {!loading && (
+
               <ArrowRight
                 size={17}
                 aria-hidden="true"
               />
+
             )}
 
           </button>
+
 
         </form>
 
@@ -453,7 +766,10 @@ function Login() {
             Don't have an account?
           </span>
 
-          <Link to="/signup">
+
+          <Link
+            to="/signup"
+          >
             Create account
           </Link>
 
@@ -466,7 +782,9 @@ function Login() {
 
         <div className="login-security">
 
-          <span className="login-security-dot" />
+          <span
+            className="login-security-dot"
+          />
 
           <span>
             Secure SNICT Member Access
@@ -474,10 +792,12 @@ function Login() {
 
         </div>
 
+
       </section>
 
     </main>
   );
 }
+
 
 export default Login;

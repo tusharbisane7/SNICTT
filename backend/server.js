@@ -9,22 +9,13 @@ require("dotenv").config();
 // =========================================================
 
 const authRoutes = require("./routes/authRoutes");
-
 const adminRoutes = require("./routes/adminRoutes");
-
 const committeeRoutes = require("./routes/committeeRoutes");
-
 const eventRoutes = require("./routes/eventRoutes");
-
 const bookingRoutes = require("./routes/bookingRoutes");
-
 const paymentRoutes = require("./routes/paymentRoutes");
-
 const expenseRoutes = require("./routes/expenseRoutes");
-
-const membershipRoutes =
-  require("./routes/membershipRoutes");
-
+const membershipRoutes = require("./routes/membershipRoutes");
 const sliderRoutes = require("./routes/sliderRoutes");
 
 // =========================================================
@@ -37,12 +28,11 @@ const app = express();
 // CORS
 // =========================================================
 //
-// Allowed Frontends:
-//
-// Production:
+// Production frontend:
 // https://snict.net
+// https://www.snict.net
 //
-// Old/previous frontend:
+// Old frontend:
 // https://demositesnict.netlify.app
 //
 // Local development:
@@ -50,18 +40,14 @@ const app = express();
 // http://localhost:5174
 //
 // IMPORTANT:
-// These must be plain URLs.
-// DO NOT use Markdown format.
+// These MUST be plain URLs.
+// Do NOT use Markdown links.
 // =========================================================
 
 const allowedOrigins = [
   "https://snict.net",
   "https://www.snict.net",
-
-  // Old frontend - keep if still required
   "https://demositesnict.netlify.app",
-
-  // Local development
   "http://localhost:5173",
   "http://localhost:5174",
 ];
@@ -93,10 +79,7 @@ app.use(
       // ===================================================
 
       if (allowedOrigins.includes(origin)) {
-        console.log(
-          "✅ CORS allowed:",
-          origin
-        );
+        console.log("✅ CORS allowed:", origin);
 
         return callback(null, true);
       }
@@ -105,14 +88,9 @@ app.use(
       // BLOCK UNKNOWN ORIGIN
       // ===================================================
 
-      console.error(
-        "❌ CORS blocked origin:",
-        origin
-      );
+      console.error("❌ CORS blocked origin:", origin);
 
-      return callback(
-        new Error("Not allowed by CORS")
-      );
+      return callback(new Error("Not allowed by CORS"));
     },
 
     // =====================================================
@@ -175,35 +153,25 @@ app.use(
 // COOKIE PARSER
 // =========================================================
 
-app.use(
-  cookieParser()
-);
+app.use(cookieParser());
 
 // =========================================================
 // HEALTH CHECK
 // =========================================================
 
-app.get(
-  "/",
-  (req, res) => {
-    return res.json({
-      success: true,
+app.get("/", (req, res) => {
+  return res.json({
+    success: true,
+    message: "SNICT Backend API is running",
 
-      message:
-        "SNICT Backend API is running",
+    environment:
+      process.env.NODE_ENV || "development",
 
-      environment:
-        process.env.NODE_ENV ||
-        "development",
+    frontend: "https://snict.net",
 
-      frontend:
-        "https://snict.net",
-
-      api:
-        "https://backend.snict.net/api",
-    });
-  }
-);
+    api: "https://snict-backend.onrender.com/api",
+  });
+});
 
 // =========================================================
 // MEMBERSHIP ROUTES
@@ -290,31 +258,20 @@ app.use(
 // 404 ROUTE
 // =========================================================
 
-app.use(
-  (req, res) => {
-    return res.status(404).json({
-      success: false,
-
-      message:
-        "API route not found",
-
-      path:
-        req.originalUrl,
-    });
-  }
-);
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: "API route not found",
+    path: req.originalUrl,
+  });
+});
 
 // =========================================================
 // GLOBAL ERROR HANDLER
 // =========================================================
 
 app.use(
-  (
-    error,
-    req,
-    res,
-    next
-  ) => {
+  (error, req, res, next) => {
     console.error(
       "❌ Global server error:",
       error
@@ -330,13 +287,9 @@ app.use(
     ) {
       return res.status(403).json({
         success: false,
-
-        message:
-          "CORS origin not allowed",
-
+        message: "CORS origin not allowed",
         origin:
-          req.headers.origin ||
-          null,
+          req.headers.origin || null,
       });
     }
 
@@ -346,9 +299,7 @@ app.use(
 
     return res.status(500).json({
       success: false,
-
-      message:
-        "Internal server error",
+      message: "Internal server error",
 
       debug:
         process.env.NODE_ENV !==
@@ -381,15 +332,15 @@ app.listen(
     );
 
     console.log(
-      `🌐 Frontend: https://snict.net`
+      "🌐 Frontend: https://snict.net"
     );
 
     console.log(
-      `🔗 Backend: https://backend.snict.net`
+      "🔗 Backend: https://snict-backend.onrender.com/"
     );
 
     console.log(
-      `☁️ Cloudinary image storage enabled`
+      "☁️ Cloudinary image storage enabled"
     );
   }
 );

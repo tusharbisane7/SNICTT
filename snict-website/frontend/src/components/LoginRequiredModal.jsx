@@ -66,7 +66,7 @@ function LoginRequiredModal({ isOpen, onClose }) {
         {/* CONTENT */}
 
         <span className="login-required-label">
-          EVENT BOOKING
+          
         </span>
 
 
@@ -77,7 +77,7 @@ function LoginRequiredModal({ isOpen, onClose }) {
 
         <p>
           Please login or create an account
-          to book this event.
+          to access this!
         </p>
 
 

@@ -407,7 +407,7 @@ const getCommitteeImage = (member) => {
   // Your API URL
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://backend.snict.net/api";
+    "https://snict-backend.onrender.com/api";
 
   // Safely remove /api from the backend URL.
   // No regex required.
@@ -528,7 +528,7 @@ const getEventImage = (event) => {
   // https://snict.net/uploads/...
   const apiUrl =
     import.meta.env.VITE_API_URL ||
-    "https://backend.snict.net/api";
+    "https://snict-backend.onrender.com/api";
 
   let backendOrigin = apiUrl.trim();
 
@@ -1269,6 +1269,27 @@ function Home() {
   };
 
   // =========================================================
+  // PROTECTED MEMBERSHIP NAVIGATION
+  // =========================================================
+  // Logged out  -> show LoginRequiredModal
+  // Logged in   -> open membership page
+  // =========================================================
+
+  const handleBecomeMember = () => {
+
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    navigate("/membership");
+  };
+
+  // =========================================================
   // RENDER
   // =========================================================
 
@@ -1330,23 +1351,21 @@ function Home() {
 
             <div className="hero-actions">
 
-              {!authLoading &&
-                !user && (
+              <button
+                type="button"
+                className="hero-primary-btn"
+                onClick={handleBecomeMember}
+                disabled={authLoading}
+                aria-label="Become a Member"
+              >
 
-                  <Link
-                    to="/signup"
-                    className="hero-primary-btn"
-                  >
+                Become a Member
 
-                    Become a Member
+                <ArrowRight
+                  size={18}
+                />
 
-                    <ArrowRight
-                      size={18}
-                    />
-
-                  </Link>
-
-                )}
+              </button>
 
               <Link
                 to="/about"
@@ -2782,23 +2801,22 @@ function Home() {
 
           </div>
 
-          {!authLoading &&
-            !user && (
+          <button
+            type="button"
+            className="membership-btn"
+            onClick={handleBecomeMember}
+            disabled={authLoading}
+          >
 
-              <Link
-                to="/signup"
-                className="membership-btn"
-              >
+            {user
+              ? "View Membership"
+              : "Become a Member"}
 
-                Create Your Account
+            <ArrowRight
+              size={18}
+            />
 
-                <ArrowRight
-                  size={18}
-                />
-
-              </Link>
-
-            )}
+          </button>
 
         </div>
 

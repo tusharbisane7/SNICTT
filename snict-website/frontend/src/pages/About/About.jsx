@@ -78,14 +78,14 @@ function About() {
 
             <div className="about-hero-actions">
 
-              <button
+              {/* <button
                 type="button"
                 className="about-primary-btn"
                 onClick={handleMembershipClick}
               >
                 Become a Member
                 <ArrowRight size={17} />
-              </button>
+              </button> */}
 
               <Link
                 to="/team"
@@ -677,7 +677,7 @@ function About() {
 
             <div className="about-cta-actions">
 
-              <button
+              {/* <button
                 type="button"
                 className="about-cta-primary"
                 onClick={() => {
@@ -693,7 +693,7 @@ function About() {
                   ? "Become a Member"
                   : "Create Your Account"}
                 <ArrowRight size={18} />
-              </button>
+              </button> */}
 
               <Link
                 to="/contact"

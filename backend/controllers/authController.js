@@ -11,7 +11,6 @@ const {
   hashOtp,
 } = require("../utils/generateOtp");
 
-
 // =========================================================
 // HELPERS
 // =========================================================
@@ -25,7 +24,6 @@ const createExpiry = () => {
 
   return expiry;
 };
-
 
 // =========================================================
 // IMAGE URL / CLOUDINARY HELPERS
@@ -42,7 +40,6 @@ const getImageUrl = (req, imagePath) => {
     return null;
   }
 
-  // Cloudinary URL
   if (
     image.startsWith("http://") ||
     image.startsWith("https://") ||
@@ -51,12 +48,8 @@ const getImageUrl = (req, imagePath) => {
     return image;
   }
 
-  // Backward compatibility for old local images
   const backendUrl = process.env.BACKEND_URL
-    ? String(process.env.BACKEND_URL).replace(
-        /\/+$/,
-        ""
-      )
+    ? String(process.env.BACKEND_URL).replace(/\/+$/, "")
     : `${req.protocol}://${req.get("host")}`;
 
   if (image.startsWith("/")) {
@@ -65,7 +58,6 @@ const getImageUrl = (req, imagePath) => {
 
   return `${backendUrl}/${image}`;
 };
-
 
 // =========================================================
 // GET CLOUDINARY PUBLIC ID
@@ -82,9 +74,7 @@ const getCloudinaryPublicId = (
     String(imageUrl).trim();
 
   if (
-    !value.includes(
-      "res.cloudinary.com"
-    ) ||
+    !value.includes("res.cloudinary.com") ||
     !value.includes("/upload/")
   ) {
     return null;
@@ -103,8 +93,6 @@ const getCloudinaryPublicId = (
         .split("/")
         .filter(Boolean);
 
-    // Remove Cloudinary version
-    // Example: v123456789
     if (
       parts.length > 0 &&
       /^v\d+$/.test(parts[0])
@@ -118,13 +106,9 @@ const getCloudinaryPublicId = (
 
     return parts
       .join("/")
-      .replace(
-        /\.[^/.]+$/,
-        ""
-      );
+      .replace(/\.[^/.]+$/, "");
 
   } catch (error) {
-
     console.error(
       "Cloudinary public ID extraction error:",
       error.message
@@ -133,7 +117,6 @@ const getCloudinaryPublicId = (
     return null;
   }
 };
-
 
 // =========================================================
 // DELETE CLOUDINARY IMAGE
@@ -154,7 +137,6 @@ const deleteCloudinaryImage =
     }
 
     try {
-
       await cloudinary.uploader.destroy(
         publicId,
         {
@@ -164,16 +146,12 @@ const deleteCloudinaryImage =
       );
 
     } catch (error) {
-
       console.error(
         "Cloudinary image delete error:",
         error.message
       );
-
-      // Do not fail the main DB operation
     }
   };
-
 
 // =========================================================
 // AUTH COOKIE
@@ -202,7 +180,6 @@ const authCookieOptions = {
   path: "/",
 };
 
-
 // =========================================================
 // SET AUTH COOKIE
 // =========================================================
@@ -211,14 +188,12 @@ const setAuthCookie = (
   res,
   token
 ) => {
-
   res.cookie(
     "snict_token",
     token,
     authCookieOptions
   );
 };
-
 
 // =========================================================
 // BIO WORD COUNT
@@ -227,7 +202,6 @@ const setAuthCookie = (
 const getWordCount = (
   text
 ) => {
-
   if (!text) {
     return 0;
   }
@@ -239,7 +213,6 @@ const getWordCount = (
     .length;
 };
 
-
 // =========================================================
 // CLEAN USER
 // =========================================================
@@ -248,9 +221,7 @@ const cleanUser = (
   user,
   req
 ) => {
-
   return {
-
     id:
       user.id,
 
@@ -295,7 +266,6 @@ const cleanUser = (
   };
 };
 
-
 // =========================================================
 // SAFE OTP COMPARISON
 // =========================================================
@@ -304,7 +274,6 @@ const safeHashCompare = (
   hashA,
   hashB
 ) => {
-
   if (
     !hashA ||
     !hashB
@@ -337,7 +306,6 @@ const safeHashCompare = (
   );
 };
 
-
 // =========================================================
 // CHECK USERNAME
 // GET /api/auth/check-username
@@ -360,16 +328,11 @@ const checkUsername =
           .toLowerCase();
 
       if (!username) {
-
         return res.json({
           success: true,
-
-          available:
-            false,
-
+          available: false,
           message:
             "Enter a username",
-
           suggestions: [],
         });
       }
@@ -379,16 +342,11 @@ const checkUsername =
           username
         )
       ) {
-
         return res.json({
           success: true,
-
-          available:
-            false,
-
+          available: false,
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
-
           suggestions: [],
         });
       }
@@ -397,32 +355,22 @@ const checkUsername =
         await pool.query(
           `
           SELECT id
-
           FROM users
-
           WHERE username = $1
-
           LIMIT 1
           `,
-          [
-            username,
-          ]
+          [username]
         );
 
       if (
         result.rows.length ===
         0
       ) {
-
         return res.json({
           success: true,
-
-          available:
-            true,
-
+          available: true,
           message:
             "Username available",
-
           suggestions: [],
         });
       }
@@ -436,13 +384,9 @@ const checkUsername =
 
       return res.json({
         success: true,
-
-        available:
-          false,
-
+        available: false,
         message:
           "Username already taken",
-
         suggestions,
       });
 
@@ -455,13 +399,11 @@ const checkUsername =
 
       return res.status(500).json({
         success: false,
-
         message:
           "Unable to check username",
       });
     }
   };
-
 
 // =========================================================
 // REGISTER USER
@@ -494,10 +436,6 @@ const registerUser =
         bio,
       } = req.body;
 
-      // =====================================================
-      // REQUIRED FIELDS
-      // =====================================================
-
       if (
         !fullName ||
         !username ||
@@ -510,18 +448,12 @@ const registerUser =
         !address ||
         !bloodGroup
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "All fields are required",
         });
       }
-
-      // =====================================================
-      // NORMALIZE
-      // =====================================================
 
       const normalizedEmail =
         String(email)
@@ -549,45 +481,29 @@ const registerUser =
           bio || ""
         ).trim();
 
-      // =====================================================
-      // MOBILE VALIDATION
-      // =====================================================
-
       if (
         !/^[0-9]{10}$/.test(
           normalizedMobile
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid 10-digit mobile number",
         });
       }
-
-      // =====================================================
-      // USERNAME VALIDATION
-      // =====================================================
 
       if (
         !/^[a-z0-9_]{3,20}$/.test(
           normalizedUsername
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
         });
       }
-
-      // =====================================================
-      // EMAIL VALIDATION
-      // =====================================================
 
       const emailRegex =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -597,34 +513,22 @@ const registerUser =
           normalizedEmail
         )
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid email",
         });
       }
 
-      // =====================================================
-      // PASSWORD VALIDATION
-      // =====================================================
-
       if (
         password.length < 8
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Password must be at least 8 characters",
         });
       }
-
-      // =====================================================
-      // AGE VALIDATION
-      // =====================================================
 
       const numericAge =
         Number(age);
@@ -636,77 +540,27 @@ const registerUser =
         numericAge < 1 ||
         numericAge > 120
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
             "Please enter a valid age",
         });
       }
 
-      // =====================================================
-      // DESIGNATION VALIDATION
-      // =====================================================
-
       if (
-        cleanDesignation.length >
-        150
+        cleanBio &&
+        getWordCount(cleanBio) > 100
       ) {
-
         return res.status(400).json({
           success: false,
-
           message:
-            "Designation must not exceed 150 characters",
+            "Bio cannot exceed 100 words",
         });
       }
-
-      // =====================================================
-      // BIO VALIDATION
-      // =====================================================
-
-      if (
-        getWordCount(
-          cleanBio
-        ) > 300
-      ) {
-
-        return res.status(400).json({
-          success: false,
-
-          message:
-            "Bio must not exceed 300 words",
-        });
-      }
-
-      // =====================================================
-      // CLOUDINARY PROFILE IMAGE
-      // =====================================================
-
-      let profileImageUrl =
-        null;
-
-      if (req.file) {
-
-        profileImageUrl =
-          req.file.path ||
-          req.file.secure_url ||
-          req.file.url ||
-          null;
-      }
-
-      // =====================================================
-      // START TRANSACTION
-      // =====================================================
 
       await client.query(
         "BEGIN"
       );
-
-      // =====================================================
-      // CHECK EXISTING USER
-      // =====================================================
 
       const existingUser =
         await client.query(
@@ -716,9 +570,7 @@ const registerUser =
             username,
             email,
             mobile
-
           FROM users
-
           WHERE
             email = $1
             OR username = $2
@@ -747,10 +599,8 @@ const registerUser =
           existing.email ===
           normalizedEmail
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Email already registered",
           });
@@ -760,10 +610,8 @@ const registerUser =
           existing.username ===
           normalizedUsername
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Username already taken",
           });
@@ -773,19 +621,13 @@ const registerUser =
           existing.mobile ===
           normalizedMobile
         ) {
-
           return res.status(409).json({
             success: false,
-
             message:
               "Mobile number already registered",
           });
         }
       }
-
-      // =====================================================
-      // HASH PASSWORD
-      // =====================================================
 
       const passwordHash =
         await bcrypt.hash(
@@ -793,9 +635,16 @@ const registerUser =
           12
         );
 
-      // =====================================================
-      // INSERT USER
-      // =====================================================
+      let profileImageUrl =
+        null;
+
+      if (req.file) {
+        profileImageUrl =
+          req.file.path ||
+          req.file.secure_url ||
+          req.file.url ||
+          null;
+      }
 
       const result =
         await client.query(
@@ -815,7 +664,6 @@ const registerUser =
             designation,
             bio
           )
-
           VALUES
           (
             $1,
@@ -831,7 +679,6 @@ const registerUser =
             $11,
             $12
           )
-
           RETURNING *
           `,
           [
@@ -869,10 +716,6 @@ const registerUser =
           ]
         );
 
-      // =====================================================
-      // COMMIT
-      // =====================================================
-
       await client.query(
         "COMMIT"
       );
@@ -897,15 +740,12 @@ const registerUser =
     } catch (error) {
 
       try {
-
         await client.query(
           "ROLLBACK"
         );
-
       } catch (
         rollbackError
       ) {
-
         console.error(
           "Rollback error:",
           rollbackError.message
@@ -944,11 +784,9 @@ const registerUser =
       });
 
     } finally {
-
       client.release();
     }
   };
-
 
 // =========================================================
 // LOGIN
@@ -968,13 +806,19 @@ const loginUser =
         password,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !identifier ||
         !password
       ) {
-
         return res.status(400).json({
           success: false,
+
+          code:
+            "MISSING_CREDENTIALS",
 
           message:
             "Username/email and password are required",
@@ -986,17 +830,18 @@ const loginUser =
           .trim()
           .toLowerCase();
 
+      // =====================================================
+      // FIND USER
+      // =====================================================
+
       const result =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE
             email = $1
             OR username = $1
-
           LIMIT 1
           `,
           [
@@ -1004,21 +849,32 @@ const loginUser =
           ]
         );
 
+      // =====================================================
+      // WRONG USERNAME / EMAIL
+      // =====================================================
+
       if (
         result.rows.length ===
         0
       ) {
-
         return res.status(401).json({
+
           success: false,
 
+          code:
+            "INVALID_IDENTIFIER",
+
           message:
-            "Invalid username/email or password",
+            "Incorrect username or email",
         });
       }
 
       const user =
         result.rows[0];
+
+      // =====================================================
+      // WRONG PASSWORD
+      // =====================================================
 
       const passwordMatch =
         await bcrypt.compare(
@@ -1029,24 +885,162 @@ const loginUser =
       if (
         !passwordMatch
       ) {
-
         return res.status(401).json({
+
           success: false,
 
+          code:
+            "INVALID_PASSWORD",
+
           message:
-            "Invalid username/email or password",
+            "Incorrect password",
         });
       }
+
+      // =====================================================
+      // MEMBERSHIP CHECK
+      // =====================================================
+
+      const membershipResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            membership_number,
+            membership_type,
+            status,
+            rejection_reason,
+            applied_at,
+            approved_at
+          FROM memberships
+          WHERE user_id = $1
+          ORDER BY applied_at DESC
+          LIMIT 1
+          `,
+          [
+            user.id,
+          ]
+        );
+
+      // =====================================================
+      // NO MEMBERSHIP
+      // =====================================================
+
+      if (
+        membershipResult.rows.length ===
+        0
+      ) {
+        return res.status(403).json({
+
+          success: false,
+
+          code:
+            "MEMBERSHIP_REQUIRED",
+
+          message:
+            "Please apply for membership before logging in.",
+        });
+      }
+
+      const membership =
+        membershipResult.rows[0];
+
+      // =====================================================
+      // MEMBERSHIP PENDING
+      // =====================================================
+
+      if (
+        membership.status ===
+        "pending"
+      ) {
+        return res.status(403).json({
+
+          success: false,
+
+          code:
+            "MEMBERSHIP_PENDING",
+
+          message:
+            "Please wait for some time. After your membership is approved, you can login.",
+
+          membershipStatus:
+            "pending",
+        });
+      }
+
+      // =====================================================
+      // MEMBERSHIP REJECTED
+      // =====================================================
+
+      if (
+        membership.status ===
+        "rejected"
+      ) {
+        return res.status(403).json({
+
+          success: false,
+
+          code:
+            "MEMBERSHIP_REJECTED",
+
+          message:
+            membership.rejection_reason
+              ? `Your membership application was rejected. Reason: ${membership.rejection_reason}`
+              : "Your membership application was rejected. Please apply again.",
+
+          membershipStatus:
+            "rejected",
+
+          rejectionReason:
+            membership.rejection_reason ||
+            null,
+        });
+      }
+
+      // =====================================================
+      // ONLY APPROVED MEMBERS CAN LOGIN
+      // =====================================================
+
+      if (
+        membership.status !==
+        "approved"
+      ) {
+        return res.status(403).json({
+
+          success: false,
+
+          code:
+            "MEMBERSHIP_NOT_APPROVED",
+
+          message:
+            "Your membership is not approved yet. You cannot login.",
+
+          membershipStatus:
+            membership.status,
+        });
+      }
+
+      // =====================================================
+      // GENERATE TOKEN
+      // =====================================================
 
       const token =
         generateToken(
           user.id
         );
 
+      // =====================================================
+      // SET COOKIE
+      // =====================================================
+
       setAuthCookie(
         res,
         token
       );
+
+      // =====================================================
+      // SUCCESS
+      // =====================================================
 
       return res.json({
 
@@ -1060,6 +1054,21 @@ const loginUser =
             user,
             req
           ),
+
+        membership: {
+
+          membershipNumber:
+            membership.membership_number,
+
+          membershipType:
+            membership.membership_type,
+
+          status:
+            membership.status,
+
+          approvedAt:
+            membership.approved_at,
+        },
       });
 
     } catch (error) {
@@ -1070,6 +1079,7 @@ const loginUser =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -1077,9 +1087,7 @@ const loginUser =
       });
     }
   };
-
-
-// =========================================================
+  // =========================================================
 // FORGOT PASSWORD
 // POST /api/auth/forgot-password
 // =========================================================
@@ -1096,6 +1104,10 @@ const forgotPassword =
         email,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (!email) {
 
         return res.status(400).json({
@@ -1106,10 +1118,18 @@ const forgotPassword =
         });
       }
 
+      // =====================================================
+      // NORMALIZE EMAIL
+      // =====================================================
+
       const normalizedEmail =
         String(email)
           .trim()
           .toLowerCase();
+
+      // =====================================================
+      // FIND USER
+      // =====================================================
 
       const result =
         await pool.query(
@@ -1127,7 +1147,10 @@ const forgotPassword =
           ]
         );
 
-      // Do not reveal whether account exists
+      // =====================================================
+      // DO NOT REVEAL ACCOUNT EXISTENCE
+      // =====================================================
+
       if (
         result.rows.length ===
         0
@@ -1144,6 +1167,10 @@ const forgotPassword =
       const user =
         result.rows[0];
 
+      // =====================================================
+      // GENERATE OTP
+      // =====================================================
+
       const otp =
         generateOtp();
 
@@ -1154,6 +1181,10 @@ const forgotPassword =
 
       const otpExpiry =
         createExpiry();
+
+      // =====================================================
+      // SAVE OTP
+      // =====================================================
 
       await pool.query(
         `
@@ -1173,6 +1204,10 @@ const forgotPassword =
           user.id,
         ]
       );
+
+      // =====================================================
+      // SEND EMAIL
+      // =====================================================
 
       await sendEmail(
         user.email,
@@ -1280,6 +1315,10 @@ const resetPassword =
         newPassword,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !email ||
         !otp ||
@@ -1307,10 +1346,18 @@ const resetPassword =
         });
       }
 
+      // =====================================================
+      // NORMALIZE EMAIL
+      // =====================================================
+
       const normalizedEmail =
         String(email)
           .trim()
           .toLowerCase();
+
+      // =====================================================
+      // FIND USER
+      // =====================================================
 
       const result =
         await pool.query(
@@ -1344,6 +1391,10 @@ const resetPassword =
       const user =
         result.rows[0];
 
+      // =====================================================
+      // CHECK OTP EXISTS
+      // =====================================================
+
       if (
         !user.reset_otp_hash ||
         !user.reset_otp_expires
@@ -1356,6 +1407,10 @@ const resetPassword =
             "Reset OTP not available",
         });
       }
+
+      // =====================================================
+      // CHECK OTP EXPIRY
+      // =====================================================
 
       if (
         new Date() >
@@ -1372,10 +1427,18 @@ const resetPassword =
         });
       }
 
+      // =====================================================
+      // HASH ENTERED OTP
+      // =====================================================
+
       const otpHash =
         hashOtp(
           String(otp).trim()
         );
+
+      // =====================================================
+      // COMPARE OTP
+      // =====================================================
 
       if (
         !safeHashCompare(
@@ -1392,11 +1455,19 @@ const resetPassword =
         });
       }
 
+      // =====================================================
+      // HASH NEW PASSWORD
+      // =====================================================
+
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           12
         );
+
+      // =====================================================
+      // UPDATE PASSWORD
+      // =====================================================
 
       await pool.query(
         `
@@ -1404,8 +1475,11 @@ const resetPassword =
 
         SET
           password_hash = $1,
+
           reset_otp_hash = NULL,
+
           reset_otp_expires = NULL,
+
           updated_at =
             CURRENT_TIMESTAMP
 
@@ -1417,10 +1491,18 @@ const resetPassword =
         ]
       );
 
+      // =====================================================
+      // CLEAR AUTH COOKIE
+      // =====================================================
+
       res.clearCookie(
         "snict_token",
         authCookieOptions
       );
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
 
       return res.json({
         success: true,
@@ -1464,6 +1546,10 @@ const changePassword =
         newPassword,
       } = req.body;
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !currentPassword ||
         !newPassword
@@ -1503,6 +1589,10 @@ const changePassword =
         });
       }
 
+      // =====================================================
+      // GET USER
+      // =====================================================
+
       const result =
         await pool.query(
           `
@@ -1535,6 +1625,10 @@ const changePassword =
       const user =
         result.rows[0];
 
+      // =====================================================
+      // VERIFY CURRENT PASSWORD
+      // =====================================================
+
       const valid =
         await bcrypt.compare(
           currentPassword,
@@ -1551,11 +1645,19 @@ const changePassword =
         });
       }
 
+      // =====================================================
+      // HASH NEW PASSWORD
+      // =====================================================
+
       const passwordHash =
         await bcrypt.hash(
           newPassword,
           12
         );
+
+      // =====================================================
+      // UPDATE PASSWORD
+      // =====================================================
 
       await pool.query(
         `
@@ -1563,6 +1665,7 @@ const changePassword =
 
         SET
           password_hash = $1,
+
           updated_at =
             CURRENT_TIMESTAMP
 
@@ -1611,6 +1714,10 @@ const getProfile =
 
     try {
 
+      // =====================================================
+      // AUTHENTICATION CHECK
+      // =====================================================
+
       if (!req.userId) {
 
         return res.status(401).json({
@@ -1620,6 +1727,10 @@ const getProfile =
             "Authentication required",
         });
       }
+
+      // =====================================================
+      // GET USER
+      // =====================================================
 
       const result =
         await pool.query(
@@ -1649,6 +1760,10 @@ const getProfile =
             "User not found",
         });
       }
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
 
       return res.json({
 
@@ -1733,7 +1848,9 @@ const updateProfile =
       // =====================================================
 
       const cleanFullName =
-        String(fullName).trim();
+        String(
+          fullName
+        ).trim();
 
       const normalizedUsername =
         String(username)
@@ -1752,10 +1869,14 @@ const updateProfile =
         );
 
       const cleanAddress =
-        String(address).trim();
+        String(
+          address
+        ).trim();
 
       const cleanSex =
-        String(sex).trim();
+        String(
+          sex
+        ).trim();
 
       const cleanBloodGroup =
         String(
@@ -1888,6 +2009,42 @@ const updateProfile =
       }
 
       // =====================================================
+      // GET CURRENT USER
+      // =====================================================
+
+      const currentUserResult =
+        await pool.query(
+          `
+          SELECT *
+
+          FROM users
+
+          WHERE id = $1
+
+          LIMIT 1
+          `,
+          [
+            req.userId,
+          ]
+        );
+
+      if (
+        currentUserResult.rows.length ===
+        0
+      ) {
+
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "User not found",
+        });
+      }
+
+      const currentUser =
+        currentUserResult.rows[0];
+
+      // =====================================================
       // CHECK DUPLICATES
       // =====================================================
 
@@ -1970,59 +2127,35 @@ const updateProfile =
       }
 
       // =====================================================
-      // GET OLD PROFILE IMAGE
+      // PROFILE IMAGE
       // =====================================================
 
-      const currentUserResult =
-        await pool.query(
-          `
-          SELECT
-            profile_image_url
-
-          FROM users
-
-          WHERE id = $1
-
-          LIMIT 1
-          `,
-          [
-            req.userId,
-          ]
-        );
-
-      if (
-        currentUserResult.rows.length ===
-        0
-      ) {
-
-        return res.status(404).json({
-          success: false,
-
-          message:
-            "User not found",
-        });
-      }
-
-      const oldProfileImageUrl =
-        currentUserResult.rows[0]
-          .profile_image_url ||
-        null;
-
-      // Keep old image if no new image
       let profileImageUrl =
-        oldProfileImageUrl;
-
-      // =====================================================
-      // NEW CLOUDINARY IMAGE
-      // =====================================================
+        currentUser.profile_image_url ||
+        null;
 
       if (req.file) {
 
-        profileImageUrl =
+        const newImageUrl =
           req.file.path ||
           req.file.secure_url ||
           req.file.url ||
-          oldProfileImageUrl;
+          null;
+
+        if (newImageUrl) {
+
+          profileImageUrl =
+            newImageUrl;
+
+          if (
+            currentUser.profile_image_url
+          ) {
+
+            await deleteCloudinaryImage(
+              currentUser.profile_image_url
+            );
+          }
+        }
       }
 
       // =====================================================
@@ -2036,16 +2169,27 @@ const updateProfile =
 
           SET
             full_name = $1,
+
             username = $2,
+
             email = $3,
+
             mobile = $4,
+
             age = $5,
+
             sex = $6,
+
             address = $7,
+
             blood_group = $8,
+
             profile_image_url = $9,
+
             designation = $10,
+
             bio = $11,
+
             updated_at =
               CURRENT_TIMESTAMP
 
@@ -2091,23 +2235,6 @@ const updateProfile =
           message:
             "User not found",
         });
-      }
-
-      // =====================================================
-      // DELETE OLD CLOUDINARY IMAGE
-      // ONLY AFTER DATABASE UPDATE
-      // =====================================================
-
-      if (
-        req.file &&
-        oldProfileImageUrl &&
-        oldProfileImageUrl !==
-          profileImageUrl
-      ) {
-
-        await deleteCloudinaryImage(
-          oldProfileImageUrl
-        );
       }
 
       return res.json({
@@ -2170,9 +2297,7 @@ const updateProfile =
       });
     }
   };
-
-
-// =========================================================
+  // =========================================================
 // GET ALL REGISTERED MEMBERS
 // GET /api/auth/members
 // =========================================================
@@ -2192,60 +2317,33 @@ const getMembers =
             id,
             full_name,
             username,
+            email,
+            mobile,
+            age,
+            sex,
+            address,
+            blood_group,
             profile_image_url,
             designation,
             bio,
             created_at
-
           FROM users
-
-          ORDER BY
-            created_at DESC
+          ORDER BY created_at DESC
           `
-        );
-
-      const members =
-        result.rows.map(
-          (user) => ({
-
-            id:
-              user.id,
-
-            fullName:
-              user.full_name ||
-              "",
-
-            username:
-              user.username ||
-              "",
-
-            profileImageUrl:
-              getImageUrl(
-                req,
-                user.profile_image_url
-              ),
-
-            designation:
-              user.designation ||
-              "Member",
-
-            bio:
-              user.bio ||
-              "",
-
-            createdAt:
-              user.created_at,
-          })
         );
 
       return res.json({
 
         success: true,
 
-        count:
-          members.length,
-
-        members,
+        members:
+          result.rows.map(
+            (user) =>
+              cleanUser(
+                user,
+                req
+              )
+          ),
       });
 
     } catch (error) {
@@ -2256,6 +2354,7 @@ const getMembers =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -2278,24 +2377,15 @@ const deleteProfilePhoto =
 
     try {
 
-      if (!req.userId) {
-
-        return res.status(401).json({
-          success: false,
-
-          message:
-            "Authentication required",
-        });
-      }
-
       // =====================================================
-      // GET CURRENT IMAGE
+      // GET CURRENT USER
       // =====================================================
 
-      const currentResult =
+      const result =
         await pool.query(
           `
           SELECT
+            id,
             profile_image_url
 
           FROM users
@@ -2310,11 +2400,12 @@ const deleteProfilePhoto =
         );
 
       if (
-        currentResult.rows.length ===
+        result.rows.length ===
         0
       ) {
 
         return res.status(404).json({
+
           success: false,
 
           message:
@@ -2322,22 +2413,46 @@ const deleteProfilePhoto =
         });
       }
 
-      const oldProfileImageUrl =
-        currentResult.rows[0]
-          .profile_image_url ||
-        null;
+      const user =
+        result.rows[0];
 
       // =====================================================
-      // REMOVE FROM DATABASE
+      // NO PHOTO
       // =====================================================
 
-      const result =
+      if (
+        !user.profile_image_url
+      ) {
+
+        return res.json({
+
+          success: true,
+
+          message:
+            "Profile photo already removed",
+        });
+      }
+
+      // =====================================================
+      // DELETE FROM CLOUDINARY
+      // =====================================================
+
+      await deleteCloudinaryImage(
+        user.profile_image_url
+      );
+
+      // =====================================================
+      // REMOVE URL FROM DATABASE
+      // =====================================================
+
+      const updatedResult =
         await pool.query(
           `
           UPDATE users
 
           SET
             profile_image_url = NULL,
+
             updated_at =
               CURRENT_TIMESTAMP
 
@@ -2350,31 +2465,9 @@ const deleteProfilePhoto =
           ]
         );
 
-      if (
-        result.rows.length ===
-        0
-      ) {
-
-        return res.status(404).json({
-          success: false,
-
-          message:
-            "User not found",
-        });
-      }
-
       // =====================================================
-      // DELETE FROM CLOUDINARY
+      // RESPONSE
       // =====================================================
-
-      if (
-        oldProfileImageUrl
-      ) {
-
-        await deleteCloudinaryImage(
-          oldProfileImageUrl
-        );
-      }
 
       return res.json({
 
@@ -2385,7 +2478,7 @@ const deleteProfilePhoto =
 
         user:
           cleanUser(
-            result.rows[0],
+            updatedResult.rows[0],
             req
           ),
       });
@@ -2398,6 +2491,7 @@ const deleteProfilePhoto =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -2418,18 +2512,44 @@ const logoutUser =
     res
   ) => {
 
-    res.clearCookie(
-      "snict_token",
-      authCookieOptions
-    );
+    try {
 
-    return res.json({
+      // =====================================================
+      // CLEAR AUTH COOKIE
+      // =====================================================
 
-      success: true,
+      res.clearCookie(
+        "snict_token",
+        authCookieOptions
+      );
 
-      message:
-        "Logged out successfully",
-    });
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Logged out successfully",
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+      return res.status(500).json({
+
+        success: false,
+
+        message:
+          "Unable to logout",
+      });
+    }
   };
 
 
