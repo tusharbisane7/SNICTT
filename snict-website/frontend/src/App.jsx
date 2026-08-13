@@ -92,6 +92,19 @@ import SliderManagement
 import PaymentManagement
   from "./pages/Admin/Payments/PaymentManagement";
 
+
+// =====================================================
+// ATTENDANCE MANAGEMENT
+// =====================================================
+
+import AttendanceManagement
+  from "./pages/Admin/Attendance/AttendanceManagement";
+
+
+// =====================================================
+// ADMIN PROFILE
+// =====================================================
+
 import AdminProfile
   from "./pages/Admin/Profile/AdminProfile";
 
@@ -391,6 +404,17 @@ function App() {
           path="/admin/payments"
           element={<PaymentManagement />}
         />
+
+
+        {/* =====================================================
+            ADMIN ATTENDANCE MANAGEMENT
+        ===================================================== */}
+
+        <Route
+          path="/admin/attendance"
+          element={<AttendanceManagement />}
+        />
+
 
       </Routes>
 

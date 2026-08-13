@@ -12,6 +12,7 @@ import {
   BadgeCheck,
   CreditCard,
   SlidersHorizontal,
+  QrCode,
 } from "lucide-react";
 
 import {
@@ -23,6 +24,7 @@ import api from "../../../services/api";
 
 import "./AdminDashboard.css";
 
+
 // =========================================================
 // ADMIN DASHBOARD
 // =========================================================
@@ -30,6 +32,7 @@ import "./AdminDashboard.css";
 function AdminDashboard() {
 
   const navigate = useNavigate();
+
 
   // =========================================================
   // STATE
@@ -305,9 +308,9 @@ function AdminDashboard() {
             <p>
               Manage your SNICT website,
               members, memberships,
-              events, bookings, payments
-              and organization content
-              from one place.
+              events, bookings, payments,
+              attendance and organization
+              content from one place.
             </p>
 
           </div>
@@ -333,39 +336,194 @@ function AdminDashboard() {
         </div>
 
 
-      
         {/* =================================================
             QUICK STATS
         ================================================= */}
 
-      
+        <div className="admin-dashboard-stats">
 
-          {/* COMMITTEES */}
+          {/* =================================================
+              COMMITTEES
+          ================================================= */}
 
-         
+          <Link
+            to="/admin/committees"
+            className="admin-stat-card"
+          >
+
+            <div className="admin-stat-icon">
+              <Users size={21} />
+            </div>
+
+            <div>
+              <span>
+                COMMITTEES
+              </span>
+
+              <strong>
+                Manage
+              </strong>
+            </div>
+
+          </Link>
 
 
-          {/* EVENTS */}
+          {/* =================================================
+              EVENTS
+          ================================================= */}
 
-         
+          <Link
+            to="/admin/events"
+            className="admin-stat-card"
+          >
+
+            <div className="admin-stat-icon">
+              <CalendarDays size={21} />
+            </div>
+
+            <div>
+              <span>
+                EVENTS
+              </span>
+
+              <strong>
+                Manage
+              </strong>
+            </div>
+
+          </Link>
 
 
-          {/* BOOKINGS */}
+          {/* =================================================
+              BOOKINGS
+          ================================================= */}
 
-          
+          <Link
+            to="/admin/bookings"
+            className="admin-stat-card"
+          >
 
-          {/* PAYMENTS */}
+            <div className="admin-stat-icon">
+              <TicketCheck size={21} />
+            </div>
 
-          
+            <div>
+              <span>
+                BOOKINGS
+              </span>
+
+              <strong>
+                Manage
+              </strong>
+            </div>
+
+          </Link>
 
 
-          {/* MEMBERS */}
+          {/* =================================================
+              PAYMENTS
+          ================================================= */}
+
+          <Link
+            to="/admin/payments"
+            className="admin-stat-card"
+          >
+
+            <div className="admin-stat-icon">
+              <CreditCard size={21} />
+            </div>
+
+            <div>
+              <span>
+                PAYMENTS
+              </span>
+
+              <strong>
+                Manage
+              </strong>
+            </div>
+
+          </Link>
 
 
+          {/* =================================================
+              MEMBERS
+          ================================================= */}
 
-          {/* SLIDERS */}
+          <Link
+            to="/admin/users"
+            className="admin-stat-card"
+          >
 
-        
+            <div className="admin-stat-icon">
+              <UserCog size={21} />
+            </div>
+
+            <div>
+              <span>
+                MEMBERS
+              </span>
+
+              <strong>
+                Manage
+              </strong>
+            </div>
+
+          </Link>
+
+
+          {/* =================================================
+              SLIDERS
+          ================================================= */}
+
+          <Link
+            to="/admin/sliders"
+            className="admin-stat-card"
+          >
+
+            <div className="admin-stat-icon">
+              <SlidersHorizontal size={21} />
+            </div>
+
+            <div>
+              <span>
+                SLIDERS
+              </span>
+
+              <strong>
+                Manage
+              </strong>
+            </div>
+
+          </Link>
+
+
+          {/* =================================================
+              ATTENDANCE
+          ================================================= */}
+
+          <Link
+            to="/admin/attendance"
+            className="admin-stat-card"
+          >
+
+            <div className="admin-stat-icon">
+              <QrCode size={21} />
+            </div>
+
+            <div>
+              <span>
+                ATTENDANCE
+              </span>
+
+              <strong>
+                Scan & Manage
+              </strong>
+            </div>
+
+          </Link>
+
+        </div>
 
 
         {/* =================================================
@@ -595,6 +753,46 @@ function AdminDashboard() {
 
 
             {/* =================================================
+                ATTENDANCE MANAGEMENT
+            ================================================= */}
+
+            <Link
+              to="/admin/attendance"
+              className="admin-management-card"
+            >
+
+              <div className="admin-management-icon">
+                <QrCode size={23} />
+              </div>
+
+              <div className="admin-management-content">
+
+                <span>
+                  ATTENDANCE MANAGEMENT
+                </span>
+
+                <h3>
+                  Event Attendance
+                </h3>
+
+                <p>
+                  Scan attendee QR codes,
+                  verify manual attendance
+                  codes and mark registered
+                  members as present.
+                </p>
+
+              </div>
+
+              <ArrowRight
+                size={19}
+                className="admin-card-arrow"
+              />
+
+            </Link>
+
+
+            {/* =================================================
                 MEMBERSHIP MANAGEMENT
             ================================================= */}
 
@@ -631,7 +829,7 @@ function AdminDashboard() {
                 className="admin-card-arrow"
               />
 
-            </Link> 
+            </Link>
 
 
             {/* =================================================
@@ -712,6 +910,7 @@ function AdminDashboard() {
 
             </div>
 
+
           </div>
 
         </section>
@@ -743,7 +942,9 @@ function AdminDashboard() {
           <div className="admin-quick-grid">
 
 
-            {/* COMMITTEES */}
+            {/* =================================================
+                COMMITTEES
+            ================================================= */}
 
             <Link
               to="/admin/committees"
@@ -761,7 +962,9 @@ function AdminDashboard() {
             </Link>
 
 
-            {/* SLIDERS */}
+            {/* =================================================
+                SLIDERS
+            ================================================= */}
 
             <Link
               to="/admin/sliders"
@@ -779,7 +982,9 @@ function AdminDashboard() {
             </Link>
 
 
-            {/* EVENTS */}
+            {/* =================================================
+                EVENTS
+            ================================================= */}
 
             <Link
               to="/admin/events"
@@ -797,7 +1002,9 @@ function AdminDashboard() {
             </Link>
 
 
-            {/* BOOKINGS */}
+            {/* =================================================
+                BOOKINGS
+            ================================================= */}
 
             <Link
               to="/admin/bookings"
@@ -815,7 +1022,9 @@ function AdminDashboard() {
             </Link>
 
 
-            {/* PAYMENTS */}
+            {/* =================================================
+                PAYMENTS
+            ================================================= */}
 
             <Link
               to="/admin/payments"
@@ -833,7 +1042,29 @@ function AdminDashboard() {
             </Link>
 
 
-            {/* MEMBERSHIPS */}
+            {/* =================================================
+                ATTENDANCE
+            ================================================= */}
+
+            <Link
+              to="/admin/attendance"
+              className="admin-quick-card"
+            >
+
+              <QrCode size={18} />
+
+              <span>
+                Attendance
+              </span>
+
+              <ArrowRight size={15} />
+
+            </Link>
+
+
+            {/* =================================================
+                MEMBERSHIPS
+            ================================================= */}
 
             <Link
               to="/admin/memberships"
@@ -851,7 +1082,9 @@ function AdminDashboard() {
             </Link>
 
 
-            {/* USERS */}
+            {/* =================================================
+                USERS
+            ================================================= */}
 
             <Link
               to="/admin/users"
@@ -868,6 +1101,7 @@ function AdminDashboard() {
 
             </Link>
 
+
           </div>
 
         </section>
@@ -880,5 +1114,6 @@ function AdminDashboard() {
   );
 
 }
+
 
 export default AdminDashboard;

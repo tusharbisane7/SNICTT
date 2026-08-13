@@ -1,518 +1,653 @@
 const pool = require("../config/db");
+const crypto = require("crypto");
 
 // =========================================================
-// HELPER
+// HELPERS
 // =========================================================
 
-// ---------------------------------------------------------
-// GET ADMIN ID
-// ---------------------------------------------------------
-//
-// Your adminMiddleware may store the admin ID differently.
-// This helper supports common formats.
-//
-// If your adminMiddleware uses another property, we can
-// adjust this later without changing the attendance logic.
-// ---------------------------------------------------------
-
-const getAdminId = (req) => {
-  return (
-    req.adminId ||
-    req.admin?.id ||
-    req.admin?.userId ||
-    req.userId ||
-    null
-  );
-};
-
-
-// =========================================================
-// HELPER
-// =========================================================
-// Normalize attendance code
-// =========================================================
-
-const normalizeAttendanceCode = (
-  code
-) => {
-
-  if (!code) {
-    return null;
-  }
-
-  return String(code)
-    .trim()
+const generateAttendanceCode = () => {
+  const randomPart = crypto
+    .randomBytes(5)
+    .toString("hex")
     .toUpperCase();
+
+  return `SNICT-ATT-${randomPart}`;
 };
 
 
 // =========================================================
-// HELPER
+// FIND BOOKING + USER + EVENT + PASS
 // =========================================================
-// Normalize QR payload
+//
+// This query intentionally uses INTEGER relationships:
+//
+// event_bookings.id       -> INTEGER
+// event_bookings.event_id -> INTEGER
+// event_bookings.user_id  -> INTEGER
+//
 // =========================================================
 
-const parseQrPayload = (
-  qrData
+const getBookingDetails = async (
+  bookingId
 ) => {
 
-  if (!qrData) {
+  const result =
+    await pool.query(
+      `
+      SELECT
+
+        b.id AS booking_id,
+        b.booking_code,
+        b.event_id,
+        b.user_id,
+        b.amount AS booking_amount,
+        b.booking_status,
+        b.created_at AS booking_created_at,
+
+        u.full_name,
+        u.username,
+        u.email,
+        u.mobile,
+        u.profile_image_url,
+        u.age,
+        u.sex,
+        u.blood_group,
+        u.designation,
+
+        e.title AS event_title,
+        e.event_type,
+        e.description AS event_description,
+        e.doctor_name,
+        e.specialization,
+        e.event_date,
+        e.start_time,
+        e.end_time,
+        e.venue,
+        e.event_mode,
+        e.price AS event_price,
+
+        ep.id AS pass_id,
+        ep.pass_code,
+        ep.pass_token,
+        ep.valid_from,
+        ep.valid_until,
+
+        payment.payment_status,
+        payment.payment_method,
+        payment.transaction_id,
+        payment.amount AS payment_amount
+
+      FROM event_bookings b
+
+      INNER JOIN users u
+        ON u.id = b.user_id
+
+      INNER JOIN events e
+        ON e.id = b.event_id
+
+      LEFT JOIN event_passes ep
+        ON ep.booking_id = b.id
+
+      LEFT JOIN LATERAL (
+        SELECT
+          p.payment_status,
+          p.payment_method,
+          p.transaction_id,
+          p.amount
+
+        FROM event_payments p
+
+        WHERE p.booking_id = b.id
+
+        ORDER BY
+          p.created_at DESC
+
+        LIMIT 1
+      ) payment
+        ON TRUE
+
+      WHERE b.id = $1
+
+      LIMIT 1
+      `,
+      [bookingId]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
     return null;
   }
 
-  // -------------------------------------------------------
-  // Already an object
-  // -------------------------------------------------------
+  return result.rows[0];
+};
 
-  if (
-    typeof qrData ===
-    "object"
-  ) {
-    return qrData;
-  }
 
-  // -------------------------------------------------------
-  // JSON string
-  // -------------------------------------------------------
+// =========================================================
+// GET /api/attendance/booking/:bookingId
+// ADMIN
+// =========================================================
 
-  if (
-    typeof qrData ===
-    "string"
-  ) {
+const getBookingAttendance =
+  async (
+    req,
+    res
+  ) => {
 
     try {
 
-      return JSON.parse(
-        qrData
-      );
+      const {
+        bookingId,
+      } = req.params;
+
+      if (
+        !bookingId ||
+        !/^\d+$/.test(
+          String(bookingId)
+        )
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid booking ID",
+        });
+      }
+
+      const booking =
+        await getBookingDetails(
+          Number(bookingId)
+        );
+
+      if (!booking) {
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Booking not found",
+        });
+      }
+
+      const attendanceResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            booking_id,
+            event_id,
+            attendance_code,
+            attendance_status,
+            marked_at,
+            marked_by,
+            created_at,
+            updated_at
+
+          FROM event_attendance
+
+          WHERE booking_id = $1
+
+          LIMIT 1
+          `,
+          [
+            Number(bookingId),
+          ]
+        );
+
+      const attendance =
+        attendanceResult.rows[0] ||
+        null;
+
+      return res.json({
+
+        success: true,
+
+        booking: {
+          id:
+            booking.booking_id,
+
+          bookingCode:
+            booking.booking_code,
+
+          bookingStatus:
+            booking.booking_status,
+
+          amount:
+            Number(
+              booking.booking_amount || 0
+            ),
+        },
+
+        user: {
+          id:
+            booking.user_id,
+
+          fullName:
+            booking.full_name,
+
+          username:
+            booking.username,
+
+          email:
+            booking.email,
+
+          mobile:
+            booking.mobile,
+
+          profileImageUrl:
+            booking.profile_image_url,
+
+          age:
+            booking.age,
+
+          sex:
+            booking.sex,
+
+          bloodGroup:
+            booking.blood_group,
+
+          designation:
+            booking.designation,
+        },
+
+        event: {
+          id:
+            booking.event_id,
+
+          title:
+            booking.event_title,
+
+          eventType:
+            booking.event_type,
+
+          description:
+            booking.event_description,
+
+          doctorName:
+            booking.doctor_name,
+
+          specialization:
+            booking.specialization,
+
+          eventDate:
+            booking.event_date,
+
+          startTime:
+            booking.start_time,
+
+          endTime:
+            booking.end_time,
+
+          venue:
+            booking.venue,
+
+          eventMode:
+            booking.event_mode,
+
+          price:
+            Number(
+              booking.event_price || 0
+            ),
+        },
+
+        pass: {
+          id:
+            booking.pass_id,
+
+          passCode:
+            booking.pass_code,
+
+          validFrom:
+            booking.valid_from,
+
+          validUntil:
+            booking.valid_until,
+        },
+
+        payment: {
+          status:
+            booking.payment_status ||
+            null,
+
+          method:
+            booking.payment_method ||
+            null,
+
+          transactionId:
+            booking.transaction_id ||
+            null,
+
+          amount:
+            booking.payment_amount !==
+            null
+              ? Number(
+                  booking.payment_amount
+                )
+              : null,
+        },
+
+        attendance,
+
+      });
 
     } catch (error) {
 
-      return null;
-    }
-  }
-
-  return null;
-};
-
-
-// =========================================================
-// HELPER
-// =========================================================
-// Check event validity
-// =========================================================
-
-const checkPassValidity = (
-  validFrom,
-  validUntil
-) => {
-
-  const now =
-    new Date();
-
-  // -------------------------------------------------------
-  // VALID FROM
-  // -------------------------------------------------------
-
-  if (validFrom) {
-
-    const from =
-      new Date(
-        validFrom
+      console.error(
+        "Get booking attendance error:",
+        error
       );
 
-    if (
-      !Number.isNaN(
-        from.getTime()
-      ) &&
-      now < from
-    ) {
-
-      return {
-        valid: false,
-
-        reason:
-          "This event pass is not valid yet.",
-      };
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to fetch booking attendance",
+      });
     }
-  }
-
-  // -------------------------------------------------------
-  // VALID UNTIL
-  // -------------------------------------------------------
-
-  if (validUntil) {
-
-    const until =
-      new Date(
-        validUntil
-      );
-
-    if (
-      !Number.isNaN(
-        until.getTime()
-      ) &&
-      now > until
-    ) {
-
-      return {
-        valid: false,
-
-        reason:
-          "This event pass has expired.",
-      };
-    }
-  }
-
-  return {
-    valid: true,
-    reason: null,
   };
-};
 
 
 // =========================================================
-// INTERNAL
-// GET / VERIFY BOOKING
-// =========================================================
-//
-// This is the main security validation used by both:
-//
-// 1. QR scanner
-// 2. Manual attendance code
-//
-// ---------------------------------------------------------
-//
-// It checks:
-//
-// - booking exists
-// - correct event
-// - payment verified
-// - booking confirmed
-// - event pass exists
-// - attendance record exists
-// - pass token/code is valid
-// - pass validity
-// - attendance status
+// INTERNAL - MARK ATTENDANCE
 // =========================================================
 
-const getVerifiedAttendanceRecord =
+const markBookingPresent =
   async ({
-    bookingId,
-    eventId,
-    passToken,
-    attendanceCode,
+    booking,
+    adminId,
   }) => {
 
-    const values = [];
-
-    const conditions = [
-      "b.id = $1",
-    ];
-
-    values.push(
-      bookingId
-    );
-
-    // -------------------------------------------------------
-    // EVENT CHECK
-    // -------------------------------------------------------
-
-    if (eventId) {
-
-      values.push(
-        eventId
-      );
-
-      conditions.push(
-        `b.event_id = $${values.length}`
-      );
-    }
-
-    // -------------------------------------------------------
-    // QUERY
-    // -------------------------------------------------------
-
-    const result =
-      await pool.query(
-        `
-        SELECT
-
-          b.id AS booking_id,
-          b.booking_code,
-          b.user_id,
-          b.event_id,
-          b.amount,
-          b.booking_status,
-
-          u.full_name,
-          u.username,
-          u.email,
-          u.mobile,
-          u.profile_image_url,
-
-          e.id AS event_id,
-          e.title AS event_name,
-          e.event_date,
-          e.start_time,
-          e.end_time,
-          e.venue,
-          e.event_mode,
-
-          p.id AS payment_id,
-          p.payment_status,
-          p.transaction_id,
-
-          ep.id AS pass_id,
-          ep.pass_code,
-          ep.pass_token,
-          ep.valid_from,
-          ep.valid_until,
-
-          ea.id AS attendance_id,
-          ea.attendance_code,
-          ea.attendance_status,
-          ea.marked_at,
-          ea.marked_by
-
-        FROM event_bookings b
-
-        INNER JOIN users u
-          ON u.id = b.user_id
-
-        INNER JOIN events e
-          ON e.id = b.event_id
-
-        LEFT JOIN event_payments p
-          ON p.booking_id = b.id
-
-        LEFT JOIN event_passes ep
-          ON ep.booking_id = b.id
-
-        LEFT JOIN event_attendance ea
-          ON ea.booking_id = b.id
-
-        WHERE
-          ${conditions.join(
-            " AND "
-          )}
-
-        LIMIT 1
-        `,
-        values
-      );
-
-    // -------------------------------------------------------
-    // BOOKING NOT FOUND
-    // -------------------------------------------------------
-
-    if (
-      result.rows.length ===
-      0
-    ) {
-
-      return {
-        success: false,
-
-        statusCode: 404,
-
-        message:
-          "Booking not found.",
-      };
-    }
-
-    const record =
-      result.rows[0];
-
     // =====================================================
-    // PAYMENT VALIDATION
+    // BOOKING STATUS
     // =====================================================
 
     if (
-      record.payment_status !==
-      "verified"
-    ) {
-
-      return {
-        success: false,
-
-        statusCode: 403,
-
-        message:
-          "Payment has not been verified. Attendance is not allowed.",
-      };
-    }
-
-    // =====================================================
-    // BOOKING VALIDATION
-    // =====================================================
-
-    if (
-      record.booking_status !==
+      booking.booking_status !==
       "confirmed"
     ) {
 
       return {
         success: false,
 
-        statusCode: 403,
+        status: 400,
 
         message:
-          "This booking is not confirmed. Attendance is not allowed.",
+          "Booking is not confirmed",
       };
     }
 
+
     // =====================================================
-    // EVENT PASS VALIDATION
+    // PAYMENT STATUS
     // =====================================================
 
     if (
-      !record.pass_id
+      booking.payment_status !==
+      "verified"
     ) {
 
       return {
         success: false,
 
-        statusCode: 403,
+        status: 400,
 
         message:
-          "Valid event pass was not found.",
+          "Payment has not been verified",
       };
     }
 
+
     // =====================================================
-    // ATTENDANCE RECORD
+    // PASS REQUIRED
     // =====================================================
 
     if (
-      !record.attendance_id
+      !booking.pass_id
     ) {
 
       return {
         success: false,
 
-        statusCode: 500,
+        status: 400,
 
         message:
-          "Attendance record was not generated for this booking.",
+          "Event pass has not been generated",
       };
     }
 
+
     // =====================================================
-    // PASS TOKEN VALIDATION
+    // CHECK PASS VALIDITY
     // =====================================================
 
-    if (passToken) {
+    const now =
+      new Date();
 
-      if (
-        String(
-          record.pass_token
-        ) !==
-        String(
-          passToken
+    if (
+      booking.valid_from &&
+      now <
+        new Date(
+          booking.valid_from
         )
-      ) {
+    ) {
 
-        return {
-          success: false,
+      return {
+        success: false,
 
-          statusCode: 403,
+        status: 400,
 
-          message:
-            "Invalid event pass QR code.",
-        };
-      }
+        message:
+          "Event pass is not valid yet",
+      };
     }
 
-    // =====================================================
-    // ATTENDANCE CODE VALIDATION
-    // =====================================================
-
-    if (attendanceCode) {
-
-      const normalizedCode =
-        normalizeAttendanceCode(
-          attendanceCode
-        );
-
-      if (
-        normalizedCode !==
-        normalizeAttendanceCode(
-          record.attendance_code
+    if (
+      booking.valid_until &&
+      now >
+        new Date(
+          booking.valid_until
         )
-      ) {
+    ) {
 
-        return {
-          success: false,
+      return {
+        success: false,
 
-          statusCode: 403,
+        status: 400,
 
-          message:
-            "Invalid attendance code.",
-        };
-      }
+        message:
+          "Event pass has expired",
+      };
     }
 
+
     // =====================================================
-    // PASS VALIDITY
+    // CHECK EXISTING ATTENDANCE
     // =====================================================
 
-    const validity =
-      checkPassValidity(
-        record.valid_from,
-        record.valid_until
+    const existingResult =
+      await pool.query(
+        `
+        SELECT
+          id,
+          booking_id,
+          event_id,
+          attendance_code,
+          attendance_status,
+          marked_at,
+          marked_by
+
+        FROM event_attendance
+
+        WHERE booking_id = $1
+
+        LIMIT 1
+        `,
+        [
+          booking.booking_id,
+        ]
       );
 
     if (
-      !validity.valid
+      existingResult.rows.length >
+      0
     ) {
 
-      return {
-        success: false,
+      const existing =
+        existingResult.rows[0];
 
-        statusCode: 403,
+      if (
+        existing.attendance_status ===
+        "present"
+      ) {
 
-        message:
-          validity.reason,
-      };
+        return {
+          success: false,
+
+          status: 409,
+
+          alreadyPresent: true,
+
+          message:
+            "Attendance has already been marked",
+
+          attendance:
+            existing,
+        };
+      }
     }
 
+
     // =====================================================
-    // SUCCESS
+    // ATTENDANCE CODE
     // =====================================================
+
+    let attendanceCode =
+      existingResult.rows[0]
+        ?.attendance_code ||
+      null;
+
+    if (
+      !attendanceCode
+    ) {
+
+      attendanceCode =
+        generateAttendanceCode();
+    }
+
+
+    // =====================================================
+    // INSERT / UPDATE
+    // =====================================================
+
+    let result;
+
+    if (
+      existingResult.rows.length >
+      0
+    ) {
+
+      result =
+        await pool.query(
+          `
+          UPDATE event_attendance
+
+          SET
+            attendance_status = 'present',
+
+            marked_at =
+              CURRENT_TIMESTAMP,
+
+            marked_by = $1,
+
+            updated_at =
+              CURRENT_TIMESTAMP,
+
+            attendance_code = $2
+
+          WHERE booking_id = $3
+
+          RETURNING *
+          `,
+          [
+            adminId,
+
+            attendanceCode,
+
+            booking.booking_id,
+          ]
+        );
+
+    } else {
+
+      result =
+        await pool.query(
+          `
+          INSERT INTO event_attendance
+          (
+            booking_id,
+            event_id,
+            attendance_code,
+            attendance_status,
+            marked_at,
+            marked_by,
+            created_at,
+            updated_at
+          )
+
+          VALUES
+          (
+            $1,
+            $2,
+            $3,
+            'present',
+            CURRENT_TIMESTAMP,
+            $4,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+          )
+
+          RETURNING *
+          `,
+          [
+            booking.booking_id,
+
+            booking.event_id,
+
+            attendanceCode,
+
+            adminId,
+          ]
+        );
+    }
+
 
     return {
       success: true,
 
-      record,
+      status: 200,
+
+      message:
+        "Attendance marked successfully",
+
+      attendance:
+        result.rows[0],
     };
   };
 
 
 // =========================================================
-// VERIFY QR CODE
+// 1. VERIFY QR CODE
 // POST /api/attendance/verify-qr
 // =========================================================
 //
-// Expected body:
+// Body:
 //
 // {
 //   "qrData": {
-//     "type": "SNICT_EVENT_PASS",
-//     "bookingId": "...",
-//     "eventId": "...",
-//     "passToken": "...",
-//     "attendanceCode": "..."
-//   }
+//      "type": "SNICT_EVENT_PASS",
+//      "passToken": "..."
+//   },
+//   "eventId": 123
 // }
 //
-// OR:
-//
-// {
-//   "qrData": "{\"type\":\"SNICT_EVENT_PASS\",...}"
-// }
-//
-// Optional eventId can also be sent separately.
 // =========================================================
 
 const verifyQrCode =
@@ -525,330 +660,301 @@ const verifyQrCode =
 
       const {
         qrData,
-        eventId:
-          requestedEventId,
+        eventId,
       } = req.body;
 
+
       // =====================================================
-      // QR REQUIRED
+      // VALIDATE QR DATA
       // =====================================================
 
       if (!qrData) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
-            "QR code data is required.",
+            "QR data is required",
         });
       }
 
+
+      let parsedQr =
+        qrData;
+
+
       // =====================================================
-      // PARSE QR
+      // SUPPORT STRING QR DATA
       // =====================================================
 
-      const qr =
-        parseQrPayload(
-          qrData
+      if (
+        typeof qrData ===
+        "string"
+      ) {
+
+        try {
+
+          parsedQr =
+            JSON.parse(
+              qrData
+            );
+
+        } catch (
+          parseError
+        ) {
+
+          // If QR contains raw pass token
+          parsedQr = {
+            passToken:
+              qrData.trim(),
+          };
+        }
+      }
+
+
+      const passToken =
+        String(
+          parsedQr?.passToken ||
+            parsedQr?.token ||
+            ""
+        ).trim();
+
+
+      if (!passToken) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid QR code: pass token missing",
+        });
+      }
+
+
+      // =====================================================
+      // FIND PASS
+      // =====================================================
+
+      const passResult =
+        await pool.query(
+          `
+          SELECT
+            booking_id
+
+          FROM event_passes
+
+          WHERE pass_token = $1
+
+          LIMIT 1
+          `,
+          [
+            passToken,
+          ]
         );
 
-      if (!qr) {
 
-        return res.status(400).json({
+      if (
+        passResult.rows.length ===
+        0
+      ) {
 
+        return res.status(404).json({
           success: false,
-
           message:
-            "Invalid QR code format.",
+            "Invalid or unknown event pass",
         });
       }
 
+
+      const bookingId =
+        passResult.rows[0]
+          .booking_id;
+
+
       // =====================================================
-      // QR TYPE
+      // GET COMPLETE BOOKING
+      // =====================================================
+
+      const booking =
+        await getBookingDetails(
+          bookingId
+        );
+
+
+      if (!booking) {
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Booking associated with this pass was not found",
+        });
+      }
+
+
+      // =====================================================
+      // EVENT VALIDATION
       // =====================================================
 
       if (
-        qr.type !==
-        "SNICT_EVENT_PASS"
+        eventId !==
+          undefined &&
+        eventId !==
+          null &&
+        String(
+          booking.event_id
+        ) !==
+          String(eventId)
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
-            "This QR code is not a valid SNICT event pass.",
+            "This pass belongs to another event",
         });
       }
 
+
       // =====================================================
-      // BOOKING ID
+      // TOKEN VALIDATION
       // =====================================================
 
       if (
-        !qr.bookingId
+        booking.pass_token !==
+        passToken
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
-            "Booking information is missing from QR code.",
+            "Invalid event pass token",
         });
       }
 
-      // =====================================================
-      // EVENT ID
-      // =====================================================
-
-      const eventId =
-        requestedEventId ||
-        qr.eventId ||
-        null;
 
       // =====================================================
-      // VERIFY
+      // MARK PRESENT
       // =====================================================
 
-      const verification =
-        await getVerifiedAttendanceRecord({
-          bookingId:
-            qr.bookingId,
-
-          eventId,
-
-          passToken:
-            qr.passToken,
-
-          attendanceCode:
-            null,
+      const attendance =
+        await markBookingPresent({
+          booking,
+          adminId:
+            req.adminId,
         });
 
+
       if (
-        !verification.success
+        !attendance.success
       ) {
 
         return res.status(
-          verification.statusCode
+          attendance.status
         ).json({
-
           success: false,
 
           message:
-            verification.message,
-        });
-      }
-
-      const record =
-        verification.record;
-
-      // =====================================================
-      // EXTRA QR ATTENDANCE CODE CHECK
-      // =====================================================
-      //
-      // The QR contains attendanceCode.
-      // We verify it against database too.
-      // =====================================================
-
-      if (
-        qr.attendanceCode &&
-        normalizeAttendanceCode(
-          qr.attendanceCode
-        ) !==
-        normalizeAttendanceCode(
-          record.attendance_code
-        )
-      ) {
-
-        return res.status(403).json({
-
-          success: false,
-
-          message:
-            "QR attendance information is invalid.",
-        });
-      }
-
-      // =====================================================
-      // ALREADY PRESENT
-      // =====================================================
-
-      if (
-        record.attendance_status ===
-        "present"
-      ) {
-
-        return res.json({
-
-          success: true,
+            attendance.message,
 
           alreadyPresent:
-            true,
+            attendance.alreadyPresent ||
+            false,
 
-          message:
-            "This attendee has already been marked present.",
-
-          attendee: {
-
-            bookingId:
-              record.booking_id,
-
-            bookingCode:
-              record.booking_code,
-
-            name:
-              record.full_name,
-
-            username:
-              record.username,
-
-            email:
-              record.email,
-
-            eventId:
-              record.event_id,
-
-            eventName:
-              record.event_name,
-
-            eventDate:
-              record.event_date,
-
-            startTime:
-              record.start_time,
-
-            endTime:
-              record.end_time,
-
-            venue:
-              record.venue,
-
-            attendanceCode:
-              record.attendance_code,
-
-            attendanceStatus:
-              record.attendance_status,
-
-            markedAt:
-              record.marked_at,
-          },
+          attendance:
+            attendance.attendance ||
+            null,
         });
       }
 
-      // =====================================================
-      // VALID BUT NOT PRESENT
-      // =====================================================
 
       return res.json({
 
         success: true,
 
-        alreadyPresent:
-          false,
-
         message:
-          "QR code verified successfully. Attendee can be marked present.",
+          "QR verified and attendance marked successfully",
 
-        attendee: {
-
-          bookingId:
-            record.booking_id,
+        booking: {
+          id:
+            booking.booking_id,
 
           bookingCode:
-            record.booking_code,
+            booking.booking_code,
 
-          name:
-            record.full_name,
+          status:
+            booking.booking_status,
+        },
+
+        user: {
+          id:
+            booking.user_id,
+
+          fullName:
+            booking.full_name,
 
           username:
-            record.username,
+            booking.username,
 
           email:
-            record.email,
+            booking.email,
 
           mobile:
-            record.mobile,
+            booking.mobile,
 
-          profileImage:
-            record.profile_image_url,
+          profileImageUrl:
+            booking.profile_image_url,
+        },
 
-          eventId:
-            record.event_id,
+        event: {
+          id:
+            booking.event_id,
 
-          eventName:
-            record.event_name,
+          title:
+            booking.event_title,
 
           eventDate:
-            record.event_date,
+            booking.event_date,
 
           startTime:
-            record.start_time,
+            booking.start_time,
 
           endTime:
-            record.end_time,
+            booking.end_time,
 
           venue:
-            record.venue,
-
-          eventMode:
-            record.event_mode,
-
-          passCode:
-            record.pass_code,
-
-          attendanceCode:
-            record.attendance_code,
-
-          attendanceStatus:
-            record.attendance_status,
-
-          validFrom:
-            record.valid_from,
-
-          validUntil:
-            record.valid_until,
+            booking.venue,
         },
+
+        attendance:
+          attendance.attendance,
+
       });
 
     } catch (error) {
 
       console.error(
-        "Verify QR attendance error:",
+        "Verify QR error:",
         error
       );
 
       return res.status(500).json({
-
         success: false,
-
         message:
-          "Unable to verify QR code.",
-
-        error:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
+          "Unable to verify QR code",
       });
     }
   };
 
 
 // =========================================================
-// VERIFY MANUAL ATTENDANCE CODE
+// 2. VERIFY ATTENDANCE CODE
 // POST /api/attendance/verify-code
 // =========================================================
 //
-// Expected body:
+// Body:
 //
 // {
-//   "attendanceCode": "SNICT-ATT-ABC123",
-//   "eventId": "..."
+//   "attendanceCode": "SNICT-ATT-XXXXXXXXXX",
+//   "eventId": 123
 // }
 //
-// QR not scanning? Admin enters this code.
 // =========================================================
 
 const verifyAttendanceCode =
@@ -864,40 +970,48 @@ const verifyAttendanceCode =
         eventId,
       } = req.body;
 
-      // =====================================================
-      // CODE REQUIRED
-      // =====================================================
 
       if (
         !attendanceCode
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
-            "Attendance code is required.",
+            "Attendance code is required",
         });
       }
 
+
       const normalizedCode =
-        normalizeAttendanceCode(
+        String(
           attendanceCode
-        );
+        )
+          .trim()
+          .toUpperCase();
+
 
       // =====================================================
-      // GET ATTENDANCE
+      // FIND ATTENDANCE
       // =====================================================
 
-      const result =
+      const attendanceResult =
         await pool.query(
           `
           SELECT
             booking_id,
-            event_id
+            event_id,
+            attendance_code,
+            attendance_status,
+            marked_at,
+            marked_by
+
           FROM event_attendance
-          WHERE attendance_code = $1
+
+          WHERE UPPER(
+            attendance_code
+          ) = $1
+
           LIMIT 1
           `,
           [
@@ -905,222 +1019,163 @@ const verifyAttendanceCode =
           ]
         );
 
+
       if (
-        result.rows.length ===
+        attendanceResult.rows.length ===
         0
       ) {
 
         return res.status(404).json({
-
           success: false,
-
           message:
-            "Invalid attendance code.",
+            "Invalid attendance code",
         });
       }
 
-      const attendance =
-        result.rows[0];
+
+      const attendanceRecord =
+        attendanceResult.rows[0];
+
 
       // =====================================================
-      // EVENT CHECK
+      // EVENT VALIDATION
       // =====================================================
 
       if (
-        eventId &&
+        eventId !==
+          undefined &&
+        eventId !==
+          null &&
         String(
-          attendance.event_id
+          attendanceRecord.event_id
         ) !==
-        String(eventId)
+          String(eventId)
       ) {
 
-        return res.status(403).json({
-
+        return res.status(400).json({
           success: false,
-
           message:
-            "This attendance code belongs to another event.",
+            "This attendance code belongs to another event",
         });
       }
 
+
       // =====================================================
-      // VERIFY BOOKING
+      // GET BOOKING
       // =====================================================
 
-      const verification =
-        await getVerifiedAttendanceRecord({
+      const booking =
+        await getBookingDetails(
+          attendanceRecord.booking_id
+        );
 
-          bookingId:
-            attendance.booking_id,
 
-          eventId:
-            eventId ||
-            attendance.event_id,
+      if (!booking) {
 
-          passToken:
-            null,
+        return res.status(404).json({
+          success: false,
+          message:
+            "Booking not found",
+        });
+      }
 
-          attendanceCode:
-            normalizedCode,
+
+      // =====================================================
+      // MARK PRESENT
+      // =====================================================
+
+      const attendance =
+        await markBookingPresent({
+          booking,
+          adminId:
+            req.adminId,
         });
 
+
       if (
-        !verification.success
+        !attendance.success
       ) {
 
         return res.status(
-          verification.statusCode
+          attendance.status
         ).json({
 
           success: false,
 
           message:
-            verification.message,
-        });
-      }
-
-      const record =
-        verification.record;
-
-      // =====================================================
-      // ALREADY PRESENT
-      // =====================================================
-
-      if (
-        record.attendance_status ===
-        "present"
-      ) {
-
-        return res.json({
-
-          success: true,
+            attendance.message,
 
           alreadyPresent:
-            true,
+            attendance.alreadyPresent ||
+            false,
 
-          message:
-            "This attendee has already been marked present.",
-
-          attendee: {
-
-            bookingId:
-              record.booking_id,
-
-            bookingCode:
-              record.booking_code,
-
-            name:
-              record.full_name,
-
-            username:
-              record.username,
-
-            email:
-              record.email,
-
-            eventId:
-              record.event_id,
-
-            eventName:
-              record.event_name,
-
-            eventDate:
-              record.event_date,
-
-            startTime:
-              record.start_time,
-
-            endTime:
-              record.end_time,
-
-            venue:
-              record.venue,
-
-            attendanceCode:
-              record.attendance_code,
-
-            attendanceStatus:
-              record.attendance_status,
-
-            markedAt:
-              record.marked_at,
-          },
+          attendance:
+            attendance.attendance ||
+            null,
         });
       }
 
-      // =====================================================
-      // VALID CODE
-      // =====================================================
 
       return res.json({
 
         success: true,
 
-        alreadyPresent:
-          false,
-
         message:
-          "Attendance code verified successfully.",
+          "Attendance code verified and attendance marked successfully",
 
-        attendee: {
-
-          bookingId:
-            record.booking_id,
+        booking: {
+          id:
+            booking.booking_id,
 
           bookingCode:
-            record.booking_code,
+            booking.booking_code,
 
-          name:
-            record.full_name,
+          status:
+            booking.booking_status,
+        },
+
+        user: {
+          id:
+            booking.user_id,
+
+          fullName:
+            booking.full_name,
 
           username:
-            record.username,
+            booking.username,
 
           email:
-            record.email,
+            booking.email,
 
           mobile:
-            record.mobile,
+            booking.mobile,
 
-          profileImage:
-            record.profile_image_url,
+          profileImageUrl:
+            booking.profile_image_url,
+        },
 
-          eventId:
-            record.event_id,
+        event: {
+          id:
+            booking.event_id,
 
-          eventName:
-            record.event_name,
+          title:
+            booking.event_title,
 
           eventDate:
-            record.event_date,
+            booking.event_date,
 
           startTime:
-            record.start_time,
+            booking.start_time,
 
           endTime:
-            record.end_time,
+            booking.end_time,
 
           venue:
-            record.venue,
-
-          eventMode:
-            record.event_mode,
-
-          passCode:
-            record.pass_code,
-
-          attendanceCode:
-            record.attendance_code,
-
-          attendanceStatus:
-            record.attendance_status,
-
-          validFrom:
-            record.valid_from,
-
-          validUntil:
-            record.valid_until,
+            booking.venue,
         },
+
+        attendance:
+          attendance.attendance,
       });
 
     } catch (error) {
@@ -1131,34 +1186,25 @@ const verifyAttendanceCode =
       );
 
       return res.status(500).json({
-
         success: false,
-
         message:
-          "Unable to verify attendance code.",
-
-        error:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
+          "Unable to verify attendance code",
       });
     }
   };
 
 
 // =========================================================
-// MARK ATTENDANCE PRESENT
+// 3. MARK PRESENT MANUALLY
 // POST /api/attendance/:bookingId/mark-present
 // =========================================================
 //
-// Expected body:
+// Body:
 //
 // {
-//   "eventId": "..."
+//   "eventId": 123
 // }
 //
-// The booking must first pass all validations.
 // =========================================================
 
 const markPresent =
@@ -1166,9 +1212,6 @@ const markPresent =
     req,
     res
   ) => {
-
-    const client =
-      await pool.connect();
 
     try {
 
@@ -1180,444 +1223,182 @@ const markPresent =
         eventId,
       } = req.body;
 
-      // =====================================================
-      // BOOKING ID
-      // =====================================================
 
       if (
-        !bookingId
+        !bookingId ||
+        !/^\d+$/.test(
+          String(bookingId)
+        )
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
-            "Booking ID is required.",
+            "Invalid booking ID",
         });
       }
 
-      // =====================================================
-      // START TRANSACTION
-      // =====================================================
 
-      await client.query(
-        "BEGIN"
-      );
-
-      // =====================================================
-      // LOCK ATTENDANCE RECORD
-      // =====================================================
-
-      const attendanceResult =
-        await client.query(
-          `
-          SELECT
-
-            ea.*,
-
-            b.booking_code,
-            b.user_id,
-            b.event_id,
-            b.booking_status,
-
-            p.payment_status,
-
-            ep.pass_code,
-            ep.pass_token,
-            ep.valid_from,
-            ep.valid_until,
-
-            u.full_name,
-            u.username,
-            u.email,
-            u.mobile,
-            u.profile_image_url,
-
-            e.title AS event_name,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.venue,
-            e.event_mode
-
-          FROM event_attendance ea
-
-          INNER JOIN event_bookings b
-            ON b.id = ea.booking_id
-
-          LEFT JOIN event_payments p
-            ON p.booking_id = b.id
-
-          LEFT JOIN event_passes ep
-            ON ep.booking_id = b.id
-
-          INNER JOIN users u
-            ON u.id = b.user_id
-
-          INNER JOIN events e
-            ON e.id = b.event_id
-
-          WHERE ea.booking_id = $1
-
-          FOR UPDATE
-          `,
-          [
-            bookingId,
-          ]
+      const booking =
+        await getBookingDetails(
+          Number(bookingId)
         );
 
-      if (
-        attendanceResult.rows.length ===
-        0
-      ) {
 
-        await client.query(
-          "ROLLBACK"
-        );
+      if (!booking) {
 
         return res.status(404).json({
-
           success: false,
-
           message:
-            "Attendance record not found.",
+            "Booking not found",
         });
       }
 
-      const record =
-        attendanceResult.rows[0];
 
       // =====================================================
-      // EVENT CHECK
+      // EVENT VALIDATION
       // =====================================================
 
       if (
-        eventId &&
+        eventId !==
+          undefined &&
+        eventId !==
+          null &&
         String(
-          record.event_id
+          booking.event_id
         ) !==
-        String(eventId)
+          String(eventId)
       ) {
 
-        await client.query(
-          "ROLLBACK"
-        );
+        return res.status(400).json({
+          success: false,
+          message:
+            "Booking belongs to another event",
+        });
+      }
 
-        return res.status(403).json({
+
+      const attendance =
+        await markBookingPresent({
+          booking,
+          adminId:
+            req.adminId,
+        });
+
+
+      if (
+        !attendance.success
+      ) {
+
+        return res.status(
+          attendance.status
+        ).json({
 
           success: false,
 
           message:
-            "This booking belongs to another event.",
-        });
-      }
-
-      // =====================================================
-      // PAYMENT CHECK
-      // =====================================================
-
-      if (
-        record.payment_status !==
-        "verified"
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(403).json({
-
-          success: false,
-
-          message:
-            "Payment has not been verified.",
-        });
-      }
-
-      // =====================================================
-      // BOOKING CHECK
-      // =====================================================
-
-      if (
-        record.booking_status !==
-        "confirmed"
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(403).json({
-
-          success: false,
-
-          message:
-            "Booking is not confirmed.",
-        });
-      }
-
-      // =====================================================
-      // PASS CHECK
-      // =====================================================
-
-      if (
-        !record.pass_code ||
-        !record.pass_token
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(403).json({
-
-          success: false,
-
-          message:
-            "Valid event pass not found.",
-        });
-      }
-
-      // =====================================================
-      // VALIDITY CHECK
-      // =====================================================
-
-      const validity =
-        checkPassValidity(
-          record.valid_from,
-          record.valid_until
-        );
-
-      if (
-        !validity.valid
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(403).json({
-
-          success: false,
-
-          message:
-            validity.reason,
-        });
-      }
-
-      // =====================================================
-      // ALREADY PRESENT
-      // =====================================================
-
-      if (
-        record.attendance_status ===
-        "present"
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(409).json({
-
-          success: false,
+            attendance.message,
 
           alreadyPresent:
-            true,
+            attendance.alreadyPresent ||
+            false,
 
-          message:
-            "Attendance is already marked present.",
-
-          attendee: {
-
-            bookingId:
-              record.booking_id,
-
-            bookingCode:
-              record.booking_code,
-
-            name:
-              record.full_name,
-
-            attendanceCode:
-              record.attendance_code,
-
-            attendanceStatus:
-              record.attendance_status,
-
-            markedAt:
-              record.marked_at,
-          },
+          attendance:
+            attendance.attendance ||
+            null,
         });
       }
 
-      // =====================================================
-      // ADMIN ID
-      // =====================================================
-
-      const adminId =
-        getAdminId(req);
-
-      // =====================================================
-      // MARK PRESENT
-      // =====================================================
-
-      const updateResult =
-        await client.query(
-          `
-          UPDATE event_attendance
-
-          SET
-
-            attendance_status =
-              'present',
-
-            marked_at =
-              CURRENT_TIMESTAMP,
-
-            marked_by =
-              $1,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE booking_id = $2
-
-          RETURNING *
-          `,
-          [
-            adminId,
-            bookingId,
-          ]
-        );
-
-      if (
-        updateResult.rows.length ===
-        0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(500).json({
-
-          success: false,
-
-          message:
-            "Unable to mark attendance.",
-        });
-      }
-
-      await client.query(
-        "COMMIT"
-      );
-
-      // =====================================================
-      // RESPONSE
-      // =====================================================
-
-      const updated =
-        updateResult.rows[0];
 
       return res.json({
 
         success: true,
 
         message:
-          "Attendance marked as present successfully.",
+          "Attendance marked successfully",
 
-        attendance: {
-
+        booking: {
           id:
-            updated.id,
-
-          bookingId:
-            record.booking_id,
+            booking.booking_id,
 
           bookingCode:
-            record.booking_code,
+            booking.booking_code,
 
-          eventId:
-            record.event_id,
+          status:
+            booking.booking_status,
+        },
 
-          eventName:
-            record.event_name,
+        user: {
+          id:
+            booking.user_id,
 
-          attendeeName:
-            record.full_name,
+          fullName:
+            booking.full_name,
 
           username:
-            record.username,
+            booking.username,
 
           email:
-            record.email,
+            booking.email,
 
-          attendanceCode:
-            updated.attendance_code,
+          mobile:
+            booking.mobile,
 
-          attendanceStatus:
-            updated.attendance_status,
-
-          markedAt:
-            updated.marked_at,
-
-          markedBy:
-            updated.marked_by,
+          profileImageUrl:
+            booking.profile_image_url,
         },
+
+        event: {
+          id:
+            booking.event_id,
+
+          title:
+            booking.event_title,
+
+          eventDate:
+            booking.event_date,
+
+          startTime:
+            booking.start_time,
+
+          endTime:
+            booking.end_time,
+
+          venue:
+            booking.venue,
+        },
+
+        attendance:
+          attendance.attendance,
       });
 
     } catch (error) {
 
-      try {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-      } catch (
-        rollbackError
-      ) {
-
-        console.error(
-          "Attendance rollback error:",
-          rollbackError
-        );
-      }
-
       console.error(
-        "Mark attendance error:",
+        "Mark present error:",
         error
       );
 
       return res.status(500).json({
-
         success: false,
-
         message:
-          "Unable to mark attendance.",
-
-        error:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
+          "Unable to mark attendance",
       });
-
-    } finally {
-
-      client.release();
     }
   };
 
 
 // =========================================================
-// GET EVENT ATTENDANCE
+// 4. GET EVENT ATTENDANCE
 // GET /api/attendance/event/:eventId
 // =========================================================
 //
-// Admin can see all attendees for a specific event.
+// Optional:
+//
+// ?search=tushar
+// ?status=present
+// ?status=not_present
+//
 // =========================================================
 
 const getEventAttendance =
@@ -1632,121 +1413,84 @@ const getEventAttendance =
         eventId,
       } = req.params;
 
-      // =====================================================
-      // OPTIONAL SEARCH
-      // =====================================================
-
       const {
         search,
         status,
       } = req.query;
 
-      const values = [
-        eventId,
-      ];
-
-      const conditions = [
-        "ea.event_id = $1",
-      ];
-
-      // =====================================================
-      // STATUS FILTER
-      // =====================================================
 
       if (
-        status ===
-        "present" ||
-        status ===
-        "not_present"
+        !eventId ||
+        !/^\d+$/.test(
+          String(eventId)
+        )
       ) {
 
-        values.push(
-          status
-        );
-
-        conditions.push(
-          `ea.attendance_status = $${values.length}`
-        );
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid event ID",
+        });
       }
 
+
+      const numericEventId =
+        Number(eventId);
+
+
       // =====================================================
-      // SEARCH
+      // STATUS VALIDATION
       // =====================================================
+
+      let attendanceStatus =
+        null;
 
       if (
-        search &&
-        String(search).trim()
+        status &&
+        [
+          "present",
+          "not_present",
+        ].includes(
+          String(status)
+            .toLowerCase()
+        )
       ) {
 
-        values.push(
-          `%${String(
-            search
-          ).trim()}%`
-        );
-
-        conditions.push(
-          `
-          (
-            u.full_name ILIKE $${values.length}
-            OR u.username ILIKE $${values.length}
-            OR u.email ILIKE $${values.length}
-            OR b.booking_code ILIKE $${values.length}
-            OR ea.attendance_code ILIKE $${values.length}
-          )
-          `
-        );
+        attendanceStatus =
+          String(status)
+            .toLowerCase();
       }
 
-      // =====================================================
-      // QUERY
-      // =====================================================
 
       const result =
         await pool.query(
           `
           SELECT
 
-            ea.id AS attendance_id,
-
+            ea.id,
             ea.booking_id,
             ea.event_id,
-
             ea.attendance_code,
             ea.attendance_status,
-
             ea.marked_at,
             ea.marked_by,
-
             ea.created_at,
             ea.updated_at,
 
-            -- BOOKING
             b.booking_code,
-            b.amount,
             b.booking_status,
+            b.amount AS booking_amount,
 
-            -- USER
             u.id AS user_id,
             u.full_name,
             u.username,
             u.email,
             u.mobile,
             u.profile_image_url,
-
-            -- EVENT
-            e.title AS event_name,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.venue,
-
-            -- PAYMENT
-            p.payment_status,
-
-            -- PASS
-            ep.pass_code,
-            ep.valid_from,
-            ep.valid_until
+            u.age,
+            u.sex,
+            u.blood_group,
+            u.designation
 
           FROM event_attendance ea
 
@@ -1756,19 +1500,61 @@ const getEventAttendance =
           INNER JOIN users u
             ON u.id = b.user_id
 
-          INNER JOIN events e
-            ON e.id = ea.event_id
+          WHERE ea.event_id = $1
 
-          LEFT JOIN event_payments p
-            ON p.booking_id = b.id
+          AND (
+            $2::TEXT IS NULL
 
-          LEFT JOIN event_passes ep
-            ON ep.booking_id = b.id
+            OR
+            ea.attendance_status =
+              $2
+          )
 
-          WHERE
-            ${conditions.join(
-              " AND "
-            )}
+          AND (
+            $3::TEXT IS NULL
+
+            OR
+            LOWER(
+              u.full_name
+            ) LIKE LOWER(
+              '%' || $3 || '%'
+            )
+
+            OR
+            LOWER(
+              u.username
+            ) LIKE LOWER(
+              '%' || $3 || '%'
+            )
+
+            OR
+            LOWER(
+              u.email
+            ) LIKE LOWER(
+              '%' || $3 || '%'
+            )
+
+            OR
+            LOWER(
+              u.mobile
+            ) LIKE LOWER(
+              '%' || $3 || '%'
+            )
+
+            OR
+            LOWER(
+              b.booking_code
+            ) LIKE LOWER(
+              '%' || $3 || '%'
+            )
+
+            OR
+            LOWER(
+              ea.attendance_code
+            ) LIKE LOWER(
+              '%' || $3 || '%'
+            )
+          )
 
           ORDER BY
             CASE
@@ -1780,22 +1566,110 @@ const getEventAttendance =
 
             ea.marked_at DESC NULLS LAST,
 
-            u.full_name ASC
+            ea.created_at DESC
           `,
-          values
+          [
+            numericEventId,
+
+            attendanceStatus,
+
+            search
+              ? String(search).trim()
+              : null,
+          ]
         );
+
 
       return res.json({
 
         success: true,
 
-        eventId,
+        eventId:
+          numericEventId,
 
         total:
           result.rows.length,
 
         attendance:
-          result.rows,
+          result.rows.map(
+            (row) => ({
+              id:
+                row.id,
+
+              bookingId:
+                row.booking_id,
+
+              eventId:
+                row.event_id,
+
+              attendanceCode:
+                row.attendance_code,
+
+              attendanceStatus:
+                row.attendance_status,
+
+              markedAt:
+                row.marked_at,
+
+              markedBy:
+                row.marked_by,
+
+              createdAt:
+                row.created_at,
+
+              updatedAt:
+                row.updated_at,
+
+              booking: {
+                id:
+                  row.booking_id,
+
+                bookingCode:
+                  row.booking_code,
+
+                status:
+                  row.booking_status,
+
+                amount:
+                  Number(
+                    row.booking_amount ||
+                      0
+                  ),
+              },
+
+              user: {
+                id:
+                  row.user_id,
+
+                fullName:
+                  row.full_name,
+
+                username:
+                  row.username,
+
+                email:
+                  row.email,
+
+                mobile:
+                  row.mobile,
+
+                profileImageUrl:
+                  row.profile_image_url,
+
+                age:
+                  row.age,
+
+                sex:
+                  row.sex,
+
+                bloodGroup:
+                  row.blood_group,
+
+                designation:
+                  row.designation,
+              },
+            })
+          ),
       });
 
     } catch (error) {
@@ -1806,24 +1680,16 @@ const getEventAttendance =
       );
 
       return res.status(500).json({
-
         success: false,
-
         message:
-          "Unable to fetch event attendance.",
-
-        error:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
+          "Unable to fetch event attendance",
       });
     }
   };
 
 
 // =========================================================
-// GET EVENT ATTENDANCE STATS
+// 5. GET EVENT ATTENDANCE STATS
 // GET /api/attendance/event/:eventId/stats
 // =========================================================
 
@@ -1839,17 +1705,59 @@ const getEventAttendanceStats =
         eventId,
       } = req.params;
 
+
+      if (
+        !eventId ||
+        !/^\d+$/.test(
+          String(eventId)
+        )
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid event ID",
+        });
+      }
+
+
+      const numericEventId =
+        Number(eventId);
+
+
       // =====================================================
-      // GET COUNTS
+      // TOTAL CONFIRMED BOOKINGS
       // =====================================================
 
-      const result =
+      const bookingResult =
+        await pool.query(
+          `
+          SELECT
+            COUNT(*)::INTEGER AS total
+
+          FROM event_bookings
+
+          WHERE event_id = $1
+
+          AND booking_status =
+            'confirmed'
+          `,
+          [
+            numericEventId,
+          ]
+        );
+
+
+      // =====================================================
+      // ATTENDANCE COUNTS
+      // =====================================================
+
+      const attendanceResult =
         await pool.query(
           `
           SELECT
 
-            COUNT(*)::INTEGER
-              AS total,
+            COUNT(*)::INTEGER AS attendance_records,
 
             COUNT(
               CASE
@@ -1857,56 +1765,35 @@ const getEventAttendanceStats =
                   'present'
                 THEN 1
               END
-            )::INTEGER
-              AS present,
-
-            COUNT(
-              CASE
-                WHEN attendance_status =
-                  'not_present'
-                THEN 1
-              END
-            )::INTEGER
-              AS not_present
+            )::INTEGER AS present
 
           FROM event_attendance
 
           WHERE event_id = $1
           `,
           [
-            eventId,
+            numericEventId,
           ]
         );
 
-      const stats =
-        result.rows[0] || {
-          total: 0,
-          present: 0,
-          not_present: 0,
-        };
-
-      // =====================================================
-      // NUMERIC VALUES
-      // =====================================================
 
       const total =
         Number(
-          stats.total || 0
+          bookingResult.rows[0]
+            .total || 0
         );
 
       const present =
         Number(
-          stats.present || 0
+          attendanceResult.rows[0]
+            .present || 0
         );
 
       const notPresent =
-        Number(
-          stats.not_present || 0
+        Math.max(
+          total - present,
+          0
         );
-
-      // =====================================================
-      // ATTENDANCE PERCENTAGE
-      // =====================================================
 
       const attendancePercentage =
         total > 0
@@ -1919,11 +1806,13 @@ const getEventAttendanceStats =
             )
           : 0;
 
+
       return res.json({
 
         success: true,
 
-        eventId,
+        eventId:
+          numericEventId,
 
         stats: {
 
@@ -1934,6 +1823,14 @@ const getEventAttendanceStats =
           notPresent,
 
           attendancePercentage,
+
+          attendanceRecords:
+            Number(
+              attendanceResult
+                .rows[0]
+                .attendance_records ||
+                0
+            ),
         },
       });
 
@@ -1945,146 +1842,9 @@ const getEventAttendanceStats =
       );
 
       return res.status(500).json({
-
         success: false,
-
         message:
-          "Unable to fetch attendance statistics.",
-
-        error:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
-      });
-    }
-  };
-
-
-// =========================================================
-// GET SINGLE ATTENDANCE
-// GET /api/attendance/booking/:bookingId
-// =========================================================
-
-const getBookingAttendance =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      const {
-        bookingId,
-      } = req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT
-
-            ea.id AS attendance_id,
-
-            ea.booking_id,
-            ea.event_id,
-
-            ea.attendance_code,
-            ea.attendance_status,
-
-            ea.marked_at,
-            ea.marked_by,
-
-            ea.created_at,
-            ea.updated_at,
-
-            b.booking_code,
-            b.booking_status,
-            b.amount,
-
-            u.full_name,
-            u.username,
-            u.email,
-            u.mobile,
-
-            e.title AS event_name,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.venue,
-
-            p.payment_status,
-
-            ep.pass_code,
-            ep.valid_from,
-            ep.valid_until
-
-          FROM event_attendance ea
-
-          INNER JOIN event_bookings b
-            ON b.id = ea.booking_id
-
-          INNER JOIN users u
-            ON u.id = b.user_id
-
-          INNER JOIN events e
-            ON e.id = ea.event_id
-
-          LEFT JOIN event_payments p
-            ON p.booking_id = b.id
-
-          LEFT JOIN event_passes ep
-            ON ep.booking_id = b.id
-
-          WHERE ea.booking_id = $1
-
-          LIMIT 1
-          `,
-          [
-            bookingId,
-          ]
-        );
-
-      if (
-        result.rows.length ===
-        0
-      ) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Attendance record not found.",
-        });
-      }
-
-      return res.json({
-
-        success: true,
-
-        attendance:
-          result.rows[0],
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Get booking attendance error:",
-        error
-      );
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to fetch attendance.",
-
-        error:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
+          "Unable to fetch attendance statistics",
       });
     }
   };

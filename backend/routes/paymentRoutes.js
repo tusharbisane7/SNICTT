@@ -1,5 +1,9 @@
 const express = require("express");
 
+// =========================================================
+// CONTROLLERS
+// =========================================================
+
 const {
   submitPayment,
   getAllPayments,
@@ -7,41 +11,55 @@ const {
   verifyPayment,
 } = require("../controllers/paymentController");
 
-const authMiddleware =
-  require("../middleware/authMiddleware");
+// =========================================================
+// MIDDLEWARE
+// =========================================================
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
+// =========================================================
+// ROUTER
+// =========================================================
+
 const router = express.Router();
 
 // =========================================================
-// USER PAYMENT
+// USER - SUBMIT PAYMENT
 // =========================================================
-
+//
 // POST /api/payments/:bookingId
-// User submits UPI payment
+//
+// Body:
+//
+// {
+//   "transactionId": "XXXXXXXXXXXX",
+//   "paymentProofUrl": "https://..."
+// }
+//
+// Authentication:
+// Normal user authentication
+//
+// =========================================================
 
 router.post(
   "/:bookingId",
-  authMiddleware,
   submitPayment
 );
 
 // =========================================================
-// ADMIN PAYMENT MANAGEMENT
+// ADMIN - GET ALL PAYMENTS
 // =========================================================
-
-// IMPORTANT:
-// Admin uses separate authentication:
-// snict_admin_token
 //
-// Therefore admin routes use ONLY adminMiddleware.
-// Do NOT add authMiddleware here.
-
-// =========================================================
-// GET ALL PAYMENTS
 // GET /api/payments/admin
+//
+// Returns:
+// - payment details
+// - booking details
+// - user details
+// - event details
+// - attendance details
+//
 // =========================================================
 
 router.get(
@@ -51,8 +69,11 @@ router.get(
 );
 
 // =========================================================
-// GET SINGLE PAYMENT
+// ADMIN - GET SINGLE PAYMENT
+// =========================================================
+//
 // GET /api/payments/admin/:id
+//
 // =========================================================
 
 router.get(
@@ -62,10 +83,13 @@ router.get(
 );
 
 // =========================================================
-// VERIFY / REJECT PAYMENT
+// ADMIN - VERIFY / REJECT PAYMENT
+// =========================================================
+//
 // PUT /api/payments/admin/:id/verify
 //
 // Body:
+//
 // {
 //   "status": "confirmed"
 // }
