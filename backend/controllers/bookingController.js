@@ -25,13 +25,16 @@ const crypto = require("crypto");
 //
 // DO NOT JOIN event_attendance here.
 //
-// Reason:
+// Database structure:
+//
 // event_bookings.event_id = INTEGER
 // events.id              = INTEGER
 // event_attendance.event_id = UUID
 //
-// Attendance must use booking_id when connecting
-// attendance with a booking.
+// Therefore attendance is connected using:
+//
+// event_attendance.booking_id
+// event_bookings.id
 //
 // =========================================================
 
@@ -449,15 +452,10 @@ const createBooking = async (
     } = req.params;
 
 
-    // -------------------------------------------------------
-    // AUTHENTICATION
-    // -------------------------------------------------------
-
     if (!userId) {
 
       return res.status(401).json({
         success: false,
-
         message:
           "User authentication required",
       });
@@ -468,7 +466,6 @@ const createBooking = async (
 
       return res.status(400).json({
         success: false,
-
         message:
           "Event ID is required",
       });
@@ -527,7 +524,6 @@ const createBooking = async (
 
       return res.status(404).json({
         success: false,
-
         message:
           "Event not found or booking is closed",
       });
@@ -576,7 +572,6 @@ const createBooking = async (
 
         return res.status(400).json({
           success: false,
-
           message:
             "This event has already ended",
         });
@@ -682,7 +677,6 @@ const createBooking = async (
 
         return res.status(409).json({
           success: false,
-
           message:
             "No booking slots are available",
         });
@@ -885,15 +879,12 @@ const createBooking = async (
   } catch (error) {
 
     try {
-
       await client.query(
         "ROLLBACK"
       );
-
     } catch (
       rollbackError
     ) {
-
       console.error(
         "Rollback error:",
         rollbackError.message
@@ -935,7 +926,6 @@ const getMyBookings = async (
 
       return res.status(401).json({
         success: false,
-
         message:
           "User authentication required",
       });
@@ -1154,7 +1144,6 @@ const getMyBookingById =
 
         return res.status(404).json({
           success: false,
-
           message:
             "Booking not found",
         });
@@ -1329,7 +1318,6 @@ const getMyPass = async (
 
       return res.status(404).json({
         success: false,
-
         message:
           "Valid event pass not found.",
       });
@@ -1444,17 +1432,6 @@ const getMyPass = async (
 // =========================================================
 // ADMIN - GET ALL BOOKINGS
 // GET /api/bookings/admin
-// =========================================================
-//
-// IMPORTANT:
-//
-// NO event_attendance JOIN.
-//
-// event_attendance.event_id is UUID.
-// event_bookings.event_id is INTEGER.
-//
-// Attendance is handled separately.
-//
 // =========================================================
 
 const getAllBookings =
@@ -1637,8 +1614,6 @@ const getAdminBookingById =
           `
           SELECT
 
-            -- BOOKING
-
             b.id,
             b.id AS booking_id,
             b.booking_code,
@@ -1650,8 +1625,6 @@ const getAdminBookingById =
             b.created_at,
             b.updated_at,
 
-            -- USER
-
             u.id AS member_id,
             u.full_name,
             u.username,
@@ -1662,8 +1635,6 @@ const getAdminBookingById =
             u.address,
             u.blood_group,
             u.profile_image_url,
-
-            -- EVENT
 
             e.id AS event_db_id,
             e.title AS event_title,
@@ -1683,8 +1654,6 @@ const getAdminBookingById =
             e.booking_enabled,
             e.published,
 
-            -- PAYMENT
-
             p.id AS payment_id,
             p.payment_method,
             p.transaction_id,
@@ -1694,8 +1663,6 @@ const getAdminBookingById =
             p.verified_by,
             p.verified_at,
             p.created_at AS payment_created_at,
-
-            -- PASS
 
             ep.id AS pass_id,
             ep.pass_code,
@@ -1714,25 +1681,17 @@ const getAdminBookingById =
 
           LEFT JOIN LATERAL (
             SELECT *
-
             FROM event_payments
-
             WHERE booking_id = b.id
-
             ORDER BY id DESC
-
             LIMIT 1
           ) p ON TRUE
 
           LEFT JOIN LATERAL (
             SELECT *
-
             FROM event_passes
-
             WHERE booking_id = b.id
-
             ORDER BY id DESC
-
             LIMIT 1
           ) ep ON TRUE
 
@@ -1749,9 +1708,7 @@ const getAdminBookingById =
       ) {
 
         return res.status(404).json({
-
           success: false,
-
           message:
             "Booking not found",
         });
@@ -1781,6 +1738,20 @@ const getAdminBookingById =
 // =========================================================
 // ADMIN - UPDATE BOOKING / PAYMENT STATUS
 // PUT /api/bookings/admin/:id/status
+// =========================================================
+//
+// IMPORTANT FIX:
+//
+// event_payments.verified_by = INTEGER
+//
+// Therefore DO NOT save:
+//
+// req.adminId
+//
+// if req.adminId is UUID.
+//
+// We only update payment_status and verified_at.
+//
 // =========================================================
 
 const updateBookingStatus =
@@ -1847,24 +1818,22 @@ const updateBookingStatus =
       // ALLOWED STATUS
       // -------------------------------------------------------
 
-      const allowedBookingStatuses =
-        [
-          "payment_pending",
-          "confirmed",
-          "completed",
-          "cancelled",
-          "rejected",
-        ];
+      const allowedBookingStatuses = [
+        "payment_pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "rejected",
+      ];
 
 
-      const allowedPaymentStatuses =
-        [
-          "pending",
-          "submitted",
-          "verified",
-          "rejected",
-          "refunded",
-        ];
+      const allowedPaymentStatuses = [
+        "pending",
+        "submitted",
+        "verified",
+        "rejected",
+        "refunded",
+      ];
 
 
       if (
@@ -1875,9 +1844,7 @@ const updateBookingStatus =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             `Invalid booking status: ${finalBookingStatus}`,
         });
@@ -1892,9 +1859,7 @@ const updateBookingStatus =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             `Invalid payment status: ${finalPaymentStatus}`,
         });
@@ -1907,9 +1872,7 @@ const updateBookingStatus =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             "No status provided",
         });
@@ -1953,9 +1916,7 @@ const updateBookingStatus =
         );
 
         return res.status(404).json({
-
           success: false,
-
           message:
             "Booking not found",
         });
@@ -1976,6 +1937,7 @@ const updateBookingStatus =
 
           SET
             booking_status = $1,
+
             updated_at =
               CURRENT_TIMESTAMP
 
@@ -2005,13 +1967,6 @@ const updateBookingStatus =
             SET
               payment_status = $1,
 
-              verified_by =
-                CASE
-                  WHEN $1 = 'verified'
-                  THEN $3
-                  ELSE verified_by
-                END,
-
               verified_at =
                 CASE
                   WHEN $1 = 'verified'
@@ -2026,9 +1981,6 @@ const updateBookingStatus =
             [
               finalPaymentStatus,
               id,
-              req.adminId ||
-                req.admin?.id ||
-                null,
             ]
           );
 
@@ -2043,9 +1995,7 @@ const updateBookingStatus =
           );
 
           return res.status(404).json({
-
             success: false,
-
             message:
               "Payment record not found",
           });
@@ -2182,25 +2132,17 @@ const updateBookingStatus =
 
           LEFT JOIN LATERAL (
             SELECT *
-
             FROM event_payments
-
             WHERE booking_id = b.id
-
             ORDER BY id DESC
-
             LIMIT 1
           ) p ON TRUE
 
           LEFT JOIN LATERAL (
             SELECT *
-
             FROM event_passes
-
             WHERE booking_id = b.id
-
             ORDER BY id DESC
-
             LIMIT 1
           ) ep ON TRUE
 
@@ -2275,12 +2217,12 @@ const updateBookingStatus =
 //
 // IMPORTANT:
 //
-// Attendance is deleted by booking_id.
+// event_attendance.booking_id = INTEGER
+// event_bookings.id           = INTEGER
 //
-// We DO NOT use event_attendance.event_id.
+// Therefore attendance is deleted using booking_id.
 //
-// This avoids UUID / INTEGER mismatch.
-//
+// DO NOT use event_attendance.event_id here.
 // =========================================================
 
 const deleteBooking =
@@ -2335,9 +2277,7 @@ const deleteBooking =
         );
 
         return res.status(404).json({
-
           success: false,
-
           message:
             "Booking not found",
         });
@@ -2346,21 +2286,6 @@ const deleteBooking =
 
       // -------------------------------------------------------
       // DELETE ATTENDANCE
-      // -------------------------------------------------------
-      //
-      // IMPORTANT:
-      //
-      // event_attendance.booking_id = INTEGER
-      // event_bookings.id = INTEGER
-      //
-      // Therefore use booking_id.
-      //
-      // DO NOT:
-      //
-      // WHERE event_id = $1
-      //
-      // because event_attendance.event_id is UUID.
-      //
       // -------------------------------------------------------
 
       await client.query(
@@ -2379,7 +2304,6 @@ const deleteBooking =
       await client.query(
         `
         DELETE FROM event_passes
-
         WHERE booking_id = $1
         `,
         [id]
@@ -2393,7 +2317,6 @@ const deleteBooking =
       await client.query(
         `
         DELETE FROM event_payments
-
         WHERE booking_id = $1
         `,
         [id]
