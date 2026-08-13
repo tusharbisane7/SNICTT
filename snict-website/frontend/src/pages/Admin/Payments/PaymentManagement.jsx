@@ -1274,12 +1274,19 @@ function PaymentManagement() {
           // EVENT PAYMENT
           // ===============================================
 
+          // Backend uses `verified` for a successful event payment.
+          // The UI action remains `confirmed` for readability.
+          const backendStatus =
+            status === "confirmed"
+              ? "verified"
+              : "rejected";
+
           response =
             await api.put(
               `/payments/admin/${payment.id}/verify`,
               {
                 status:
-                  status,
+                  backendStatus,
               }
             );
 
