@@ -309,6 +309,150 @@ function EventManagement() {
 
 
   // =========================================================
+  // NORMALIZE ADMIN BOOKING RESPONSE
+  // =========================================================
+  //
+  // Backend /api/bookings/admin returns flat PostgreSQL fields:
+  //
+  // booking_id, booking_code, user_id, event_id, amount,
+  // booking_status, full_name, username, email, mobile,
+  // profile_image_url, event_name, event_date, start_time,
+  // end_time, venue, event_mode, payment_id,
+  // payment_status, transaction_id, pass_id, pass_code,
+  // pass_token, valid_from, valid_until, attendance_id,
+  // attendance_code, attendance_status, marked_at, marked_by
+  //
+  // Keep the original backend field names. This avoids creating
+  // a frontend shape that does not exist in the backend.
+  // =========================================================
+
+  const normalizeBooking = (booking) => ({
+    ...booking,
+
+    booking_id:
+      booking.booking_id ??
+      booking.id ??
+      null,
+
+    booking_code:
+      booking.booking_code ??
+      "",
+
+    user_id:
+      booking.user_id ??
+      null,
+
+    event_id:
+      booking.event_id ??
+      null,
+
+    amount:
+      booking.amount ??
+      0,
+
+    booking_status:
+      booking.booking_status ??
+      "payment_pending",
+
+    full_name:
+      booking.full_name ??
+      "",
+
+    username:
+      booking.username ??
+      "",
+
+    email:
+      booking.email ??
+      "",
+
+    mobile:
+      booking.mobile ??
+      "",
+
+    profile_image_url:
+      booking.profile_image_url ??
+      "",
+
+    event_name:
+      booking.event_name ??
+      "",
+
+    event_date:
+      booking.event_date ??
+      null,
+
+    start_time:
+      booking.start_time ??
+      null,
+
+    end_time:
+      booking.end_time ??
+      null,
+
+    venue:
+      booking.venue ??
+      "",
+
+    event_mode:
+      booking.event_mode ??
+      "",
+
+    payment_id:
+      booking.payment_id ??
+      null,
+
+    payment_status:
+      booking.payment_status ??
+      "pending",
+
+    transaction_id:
+      booking.transaction_id ??
+      "",
+
+    pass_id:
+      booking.pass_id ??
+      null,
+
+    pass_code:
+      booking.pass_code ??
+      "",
+
+    pass_token:
+      booking.pass_token ??
+      "",
+
+    valid_from:
+      booking.valid_from ??
+      null,
+
+    valid_until:
+      booking.valid_until ??
+      null,
+
+    attendance_id:
+      booking.attendance_id ??
+      null,
+
+    attendance_code:
+      booking.attendance_code ??
+      "",
+
+    attendance_status:
+      booking.attendance_status ??
+      "",
+
+    marked_at:
+      booking.marked_at ??
+      null,
+
+    marked_by:
+      booking.marked_by ??
+      null,
+  });
+
+
+  // =========================================================
   // LOAD ALL BOOKINGS
   // =========================================================
 
@@ -335,8 +479,17 @@ function EventManagement() {
         response.data?.success
       ) {
 
+        const backendBookings =
+          Array.isArray(
+            response.data.bookings
+          )
+            ? response.data.bookings
+            : [];
+
         setBookings(
-          response.data.bookings || []
+          backendBookings.map(
+            normalizeBooking
+          )
         );
 
       } else {
@@ -1215,9 +1368,11 @@ function EventManagement() {
     booking
   ) => {
 
+    // Backend admin booking API returns:
+    // b.id AS booking_id
     return (
-      booking.id ||
       booking.booking_id ||
+      booking.id ||
       null
     );
 
@@ -1228,9 +1383,10 @@ function EventManagement() {
     booking
   ) => {
 
+    // Backend returns u.full_name
     return (
-      booking.user_name ||
       booking.full_name ||
+      booking.user_name ||
       booking.username ||
       booking.user?.name ||
       booking.user?.fullName ||
@@ -1271,12 +1427,13 @@ function EventManagement() {
     booking
   ) => {
 
+    // Backend returns u.mobile
     return (
-      booking.phone ||
       booking.mobile ||
+      booking.phone ||
       booking.user_phone ||
-      booking.user?.phone ||
       booking.user?.mobile ||
+      booking.user?.phone ||
       "—"
     );
 
@@ -1301,9 +1458,10 @@ function EventManagement() {
     booking
   ) => {
 
+    // Backend returns e.title AS event_name
     return (
-      booking.event_title ||
       booking.event_name ||
+      booking.event_title ||
       booking.event?.title ||
       booking.event?.name ||
       booking.title ||
@@ -1317,14 +1475,82 @@ function EventManagement() {
     booking
   ) => {
 
+    // Current admin booking API returns event_mode,
+    // not event_type.
     return (
       booking.event_type ||
       booking.event?.event_type ||
+      booking.event_mode ||
       "EVENT"
     );
 
   };
 
+
+  const getEventDate = (
+    booking
+  ) => {
+    return (
+      booking.event_date ||
+      null
+    );
+  };
+
+
+  const getEventTime = (
+    booking
+  ) => {
+    const start =
+      formatTime(
+        booking.start_time
+      );
+
+    const end =
+      formatTime(
+        booking.end_time
+      );
+
+    if (start && end) {
+      return `${start} - ${end}`;
+    }
+
+    return start || end || "—";
+  };
+
+
+  const getEventMode = (
+    booking
+  ) => {
+    return (
+      booking.event_mode ||
+      "—"
+    );
+  };
+
+
+  const getVenue = (
+    booking
+  ) => {
+    return (
+      booking.venue ||
+      "—"
+    );
+  };
+
+
+  const getAttendanceStatus = (
+    booking
+  ) => {
+    return (
+      booking.attendance_status ||
+      "not generated"
+    );
+  };
+
+
+  // =========================================================
+  // PAYMENT STATUS
+  // =========================================================
 
   const getPaymentStatus = (
     booking
@@ -1385,7 +1611,10 @@ function EventManagement() {
     booking
   ) => {
 
+    // The current admin booking API does not select b.created_at.
+    // Use the event date as the available date from the backend.
     return (
+      booking.event_date ||
       booking.created_at ||
       booking.createdAt ||
       booking.booking_date ||
@@ -3483,7 +3712,7 @@ function EventManagement() {
                       </th>
 
                       <th>
-                        Registered
+                        Event Date
                       </th>
 
  
@@ -3518,6 +3747,15 @@ function EventManagement() {
                                 booking
                               )
                             }
+                            onClick={() =>
+                              setSelectedBooking(
+                                booking
+                              )
+                            }
+                            style={{
+                              cursor:
+                                "pointer",
+                            }}
                           >
 
 
@@ -3935,6 +4173,100 @@ function EventManagement() {
                 </div>
 
 
+                {/* EVENT DATE */}
+
+                <div className="admin-registration-detail-card">
+                  <div className="admin-registration-detail-icon">
+                    <CalendarDays
+                      size={19}
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Event Date
+                    </span>
+
+                    <strong>
+                      {formatEventDate(
+                        getEventDate(
+                          selectedBooking
+                        )
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+
+                {/* EVENT TIME */}
+
+                <div className="admin-registration-detail-card">
+                  <div className="admin-registration-detail-icon">
+                    <Clock3
+                      size={19}
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Event Time
+                    </span>
+
+                    <strong>
+                      {getEventTime(
+                        selectedBooking
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+
+                {/* EVENT MODE */}
+
+                <div className="admin-registration-detail-card">
+                  <div className="admin-registration-detail-icon">
+                    <MapPin
+                      size={19}
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Event Mode
+                    </span>
+
+                    <strong>
+                      {getEventMode(
+                        selectedBooking
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+
+                {/* VENUE */}
+
+                <div className="admin-registration-detail-card full">
+                  <div className="admin-registration-detail-icon">
+                    <MapPin
+                      size={19}
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Venue
+                    </span>
+
+                    <strong>
+                      {getVenue(
+                        selectedBooking
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+
                 {/* BOOKING ID */}
 
                 <div className="admin-registration-detail-card">
@@ -4082,6 +4414,51 @@ function EventManagement() {
                 </div>
 
 
+                {/* EVENT PASS */}
+
+                <div className="admin-registration-detail-card">
+                  <div className="admin-registration-detail-icon">
+                    <TicketCheck
+                      size={19}
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Event Pass
+                    </span>
+
+                    <strong>
+                      {selectedBooking.pass_code ||
+                        "Not generated"}
+                    </strong>
+                  </div>
+                </div>
+
+
+                {/* ATTENDANCE */}
+
+                <div className="admin-registration-detail-card">
+                  <div className="admin-registration-detail-icon">
+                    <Users
+                      size={19}
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Attendance
+                    </span>
+
+                    <strong>
+                      {getAttendanceStatus(
+                        selectedBooking
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+
                 {/* BOOKING DATE */}
 
                 <div className="admin-registration-detail-card full">
@@ -4095,12 +4472,12 @@ function EventManagement() {
                   <div>
 
                     <span>
-                      Registered On
+                      Event Date
                     </span>
 
                     <strong>
                       {
-                        formatDateTime(
+                        formatEventDate(
                           getBookingDate(
                             selectedBooking
                           )

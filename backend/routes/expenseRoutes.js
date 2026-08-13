@@ -1,5 +1,9 @@
 const express = require("express");
 
+// =========================================================
+// CONTROLLERS
+// =========================================================
+
 const {
   getExpenses,
   createExpense,
@@ -8,55 +12,98 @@ const {
   getEventFinancials,
 } = require("../controllers/expenseController");
 
-const authMiddleware =
-  require("../middleware/authMiddleware");
+// =========================================================
+// ADMIN MIDDLEWARE
+// =========================================================
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-const router =
-  express.Router();
+// =========================================================
+// ROUTER
+// =========================================================
+
+const router = express.Router();
+
+// =========================================================
+// ADMIN EXPENSE ROUTES
+// =========================================================
+//
+// IMPORTANT:
+// Expense management is an ADMIN-only module.
+//
+// Admin authentication uses:
+// snict_admin_token
+//
+// Therefore:
+// DO NOT use authMiddleware here.
+//
+// adminMiddleware handles admin authentication.
+// =========================================================
 
 
 // =========================================================
-// ALL EXPENSE ROUTES ARE ADMIN ONLY
+// GET ALL EXPENSES
+// GET /api/admin/expenses
 // =========================================================
 
 router.get(
   "/",
-  authMiddleware,
   adminMiddleware,
   getExpenses
 );
 
+
+// =========================================================
+// CREATE EXPENSE
+// POST /api/admin/expenses
+// =========================================================
+
 router.post(
   "/",
-  authMiddleware,
   adminMiddleware,
   createExpense
 );
 
+
+// =========================================================
+// UPDATE EXPENSE
+// PUT /api/admin/expenses/:id
+// =========================================================
+
 router.put(
   "/:id",
-  authMiddleware,
   adminMiddleware,
   updateExpense
 );
 
+
+// =========================================================
+// DELETE EXPENSE
+// DELETE /api/admin/expenses/:id
+// =========================================================
+
 router.delete(
   "/:id",
-  authMiddleware,
   adminMiddleware,
   deleteExpense
 );
 
+
+// =========================================================
+// EVENT FINANCIAL SUMMARY
+// GET /api/admin/expenses/event/:eventId/summary
+// =========================================================
+
 router.get(
   "/event/:eventId/summary",
-  authMiddleware,
   adminMiddleware,
   getEventFinancials
 );
 
 
-module.exports =
-  router;
+// =========================================================
+// EXPORT
+// =========================================================
+
+module.exports = router;
