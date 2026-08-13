@@ -1,5 +1,6 @@
 const express = require("express");
 
+
 // =========================================================
 // CONTROLLERS
 // =========================================================
@@ -13,19 +14,17 @@ const {
   deleteEvent,
 } = require("../controllers/eventController");
 
+
 // =========================================================
-// ADMIN MIDDLEWARE
+// MIDDLEWARE
 // =========================================================
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-// =========================================================
-// EVENT UPLOAD MIDDLEWARE
-// =========================================================
-
 const eventUpload =
   require("../middleware/eventUpload");
+
 
 // =========================================================
 // ROUTER
@@ -33,50 +32,33 @@ const eventUpload =
 
 const router = express.Router();
 
+
 // =========================================================
-// PUBLIC ROUTES
+// PUBLIC
 // =========================================================
 
-// ---------------------------------------------------------
-// GET PUBLISHED EVENTS
 // GET /api/events
-// ---------------------------------------------------------
-
 router.get(
   "/",
   getEvents
 );
 
-// ---------------------------------------------------------
-// GET SINGLE EVENT
-// GET /api/events/:id
-// ---------------------------------------------------------
-
-router.get(
-  "/:id",
-  getEventById
-);
 
 // =========================================================
-// ADMIN ROUTES
+// ADMIN
+// IMPORTANT:
+// Admin routes MUST come before /:id
 // =========================================================
 
-// ---------------------------------------------------------
-// GET ALL EVENTS
 // GET /api/events/admin/all
-// ---------------------------------------------------------
-
 router.get(
   "/admin/all",
   adminMiddleware,
   getAllEvents
 );
 
-// ---------------------------------------------------------
-// CREATE EVENT
-// POST /api/events/admin
-// ---------------------------------------------------------
 
+// POST /api/events/admin
 router.post(
   "/admin",
   adminMiddleware,
@@ -84,11 +66,8 @@ router.post(
   createEvent
 );
 
-// ---------------------------------------------------------
-// UPDATE EVENT
-// PUT /api/events/admin/:id
-// ---------------------------------------------------------
 
+// PUT /api/events/admin/:id
 router.put(
   "/admin/:id",
   adminMiddleware,
@@ -96,16 +75,27 @@ router.put(
   updateEvent
 );
 
-// ---------------------------------------------------------
-// DELETE EVENT
-// DELETE /api/events/admin/:id
-// ---------------------------------------------------------
 
+// DELETE /api/events/admin/:id
 router.delete(
   "/admin/:id",
   adminMiddleware,
   deleteEvent
 );
+
+
+// =========================================================
+// PUBLIC SINGLE EVENT
+// IMPORTANT:
+// This MUST come after all /admin routes.
+// =========================================================
+
+// GET /api/events/:id
+router.get(
+  "/:id",
+  getEventById
+);
+
 
 // =========================================================
 // EXPORT

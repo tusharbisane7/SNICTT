@@ -18,6 +18,8 @@ import {
   UserCircle,
   X,
   Download,
+  Printer,
+  QrCode,
 } from "lucide-react";
 
 import {
@@ -54,6 +56,9 @@ function BookingHistory() {
   const [selectedPass, setSelectedPass] =
     useState(null);
 
+  const [printingPass, setPrintingPass] =
+    useState(false);
+
 
   // =========================================================
   // LOAD BOOKINGS
@@ -87,7 +92,7 @@ function BookingHistory() {
 
         setBookings(
           response.data.bookings ||
-            []
+          []
         );
 
       } else {
@@ -96,7 +101,7 @@ function BookingHistory() {
 
         setError(
           response.data?.message ||
-            "Unable to load bookings."
+          "Unable to load bookings."
         );
 
       }
@@ -134,7 +139,7 @@ function BookingHistory() {
 
       setError(
         error.response?.data?.message ||
-          "Unable to load booking history."
+        "Unable to load booking history."
       );
 
     } finally {
@@ -398,14 +403,14 @@ function BookingHistory() {
       const paymentStatus =
         String(
           booking?.payment_status ||
-            "pending"
+          "pending"
         ).toLowerCase();
 
 
       const bookingStatus =
         String(
           booking?.booking_status ||
-            ""
+          ""
         ).toLowerCase();
 
 
@@ -476,14 +481,14 @@ function BookingHistory() {
       const paymentStatus =
         String(
           booking?.payment_status ||
-            ""
+          ""
         ).toLowerCase();
 
 
       const bookingStatus =
         String(
           booking?.booking_status ||
-            ""
+          ""
         ).toLowerCase();
 
 
@@ -538,11 +543,210 @@ function BookingHistory() {
 
 
   // =========================================================
+  // GET QR PAYLOAD
+  // =========================================================
+
+  const getQrPayload =
+    (pass) => {
+
+      if (!pass) {
+        return "";
+      }
+
+
+      // Backend may already provide QR payload
+      if (
+        pass.qr_payload
+      ) {
+
+        return pass.qr_payload;
+
+      }
+
+
+      // Backend may provide qr_data object
+      if (
+        pass.qr_data
+      ) {
+
+        try {
+
+          return JSON.stringify(
+            pass.qr_data
+          );
+
+        } catch {
+          return "";
+        }
+
+      }
+
+
+      // Fallback payload
+      const fallback = {
+        type:
+          "SNICT_EVENT_PASS",
+
+        passId:
+          pass.pass_id ||
+          pass.passId ||
+          "",
+
+        passCode:
+          pass.pass_code ||
+          pass.passCode ||
+          "",
+
+        passToken:
+          pass.pass_token ||
+          pass.passToken ||
+          "",
+
+        bookingId:
+          pass.booking_id ||
+          pass.bookingId ||
+          pass.id ||
+          "",
+
+        bookingCode:
+          pass.booking_code ||
+          "",
+
+        userName:
+          pass.full_name ||
+          pass.fullName ||
+          user?.fullName ||
+          "",
+
+        eventId:
+          pass.event_id ||
+          pass.eventId ||
+          "",
+
+        eventName:
+          pass.event_name ||
+          pass.event_title ||
+          pass.title ||
+          "",
+
+        eventDate:
+          pass.event_date ||
+          "",
+
+        startTime:
+          pass.start_time ||
+          "",
+
+        endTime:
+          pass.end_time ||
+          "",
+
+        venue:
+          pass.venue ||
+          "",
+
+        validFrom:
+          pass.valid_from ||
+          "",
+
+        validUntil:
+          pass.valid_until ||
+          "",
+
+        attendanceCode:
+          pass.attendance_code ||
+          "",
+
+      };
+
+
+      return JSON.stringify(
+        fallback
+      );
+
+    };
+
+
+  // =========================================================
+  // CREATE QR IMAGE URL
+  // =========================================================
+
+  const getQrImageUrl =
+    (pass) => {
+
+      const payload =
+        getQrPayload(
+          pass
+        );
+
+
+      if (!payload) {
+        return "";
+      }
+
+
+      return (
+        "https://api.qrserver.com/v1/create-qr-code/" +
+        "?size=260x260" +
+        "&margin=10" +
+        "&data=" +
+        encodeURIComponent(
+          payload
+        )
+      );
+
+    };
+
+
+  // =========================================================
+  // FETCH REAL PASS
+  // =========================================================
+
+  const fetchPass =
+    async (booking) => {
+
+      if (!booking?.id) {
+
+        throw new Error(
+          "Booking ID is missing."
+        );
+
+      }
+
+
+      const response =
+        await api.get(
+          `/bookings/${booking.id}/pass`
+        );
+
+
+      if (
+        !response.data?.success ||
+        !response.data?.pass
+      ) {
+
+        throw new Error(
+          response.data?.message ||
+          "Unable to load event pass."
+        );
+
+      }
+
+
+      return {
+        ...booking,
+        ...response.data.pass,
+      };
+
+    };
+
+
+  // =========================================================
   // VIEW PASS
   // =========================================================
 
   const handleViewPass =
-    (booking) => {
+    async (booking) => {
 
       if (
         !isPaymentCompleted(
@@ -555,9 +759,146 @@ function BookingHistory() {
       }
 
 
-      setSelectedPass(
-        booking
-      );
+      try {
+
+        setError("");
+
+        const pass =
+          await fetchPass(
+            booking
+          );
+
+        setSelectedPass(
+          pass
+        );
+
+      } catch (error) {
+
+        console.error(
+          "View pass error:",
+          error
+        );
+
+        if (
+          error.response?.status ===
+          401
+        ) {
+
+          navigate(
+            "/login",
+            {
+              state: {
+                from:
+                  "/booking-history",
+              },
+            }
+          );
+
+          return;
+
+        }
+
+        setError(
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to load event pass."
+        );
+
+      }
+
+    };
+
+
+  // =========================================================
+  // PRINT PASS
+  // =========================================================
+  //
+  // Fetch the latest pass from backend first.
+  // This ensures QR code + attendance code are current.
+  //
+  // =========================================================
+
+  const handlePrintPass =
+    async (booking) => {
+
+      if (
+        !isPaymentCompleted(
+          booking
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        setPrintingPass(true);
+
+        setError("");
+
+
+        const pass =
+          await fetchPass(
+            booking
+          );
+
+
+        setSelectedPass(
+          pass
+        );
+
+
+        // Wait for React to render the pass
+        // before opening print dialog.
+
+        setTimeout(() => {
+
+          window.print();
+
+          setPrintingPass(false);
+
+        }, 500);
+
+      } catch (error) {
+
+        console.error(
+          "Print pass error:",
+          error
+        );
+
+
+        setPrintingPass(false);
+
+
+        if (
+          error.response?.status ===
+          401
+        ) {
+
+          navigate(
+            "/login",
+            {
+              state: {
+                from:
+                  "/booking-history",
+              },
+            }
+          );
+
+          return;
+
+        }
+
+
+        setError(
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to print event pass."
+        );
+
+      }
 
     };
 
@@ -1151,7 +1492,7 @@ function BookingHistory() {
                   const amount =
                     Number(
                       booking.amount ||
-                        0
+                      0
                     );
 
 
@@ -1362,7 +1703,7 @@ function BookingHistory() {
 
                           {formatStatus(
                             booking.booking_status ||
-                              "payment_pending"
+                            "payment_pending"
                           )}
 
                         </div>
@@ -1378,35 +1719,70 @@ function BookingHistory() {
 
 
                         {/* =====================================
-                            ACTION
+                            ACTIONS
                         ===================================== */}
 
                         {isPaymentCompleted(
                           booking
                         ) ? (
 
-                          <button
-                            type="button"
-                            className="booking-history-view booking-pass-button"
-                            onClick={() =>
-                              handleViewPass(
-                                booking
-                              )}
-                          >
+                          <div className="booking-pass-actions">
 
-                            <Ticket
-                              size={16}
-                            />
+                            {/* VIEW PASS */}
 
-                            <span>
-                              View Event Pass
-                            </span>
+                            <button
+                              type="button"
+                              className="booking-history-view booking-pass-button"
+                              onClick={() =>
+                                handleViewPass(
+                                  booking
+                                )
+                              }
+                            >
 
-                            <ArrowRight
-                              size={15}
-                            />
+                              <Ticket
+                                size={16}
+                              />
 
-                          </button>
+                              <span>
+                                View Event Pass
+                              </span>
+
+                              <ArrowRight
+                                size={15}
+                              />
+
+                            </button>
+
+
+                            {/* PRINT PASS */}
+
+                            <button
+                              type="button"
+                              className="booking-history-view booking-pass-print-button"
+                              onClick={() =>
+                                handlePrintPass(
+                                  booking
+                                )
+                              }
+                              disabled={
+                                printingPass
+                              }
+                            >
+
+                              <Printer
+                                size={16}
+                              />
+
+                              <span>
+                                {printingPass
+                                  ? "Preparing..."
+                                  : "Print Pass"}
+                              </span>
+
+                            </button>
+
+                          </div>
 
                         ) : (
 
@@ -1490,8 +1866,9 @@ function BookingHistory() {
                     id="event-pass-title"
                   >
 
-                    {selectedPass.title ||
+                    {selectedPass.event_name ||
                       selectedPass.event_title ||
+                      selectedPass.title ||
                       "SNICT Event"}
 
                   </h2>
@@ -1623,7 +2000,8 @@ function BookingHistory() {
                   <strong>
 
                     {selectedPass.booking_code ||
-                      `#${selectedPass.id}`}
+                      `#${selectedPass.booking_id ||
+                        selectedPass.id}`}
 
                   </strong>
 
@@ -1686,7 +2064,7 @@ function BookingHistory() {
                     ₹
                     {Number(
                       selectedPass.amount ||
-                        0
+                      0
                     ).toLocaleString(
                       "en-IN"
                     )}
@@ -1716,6 +2094,92 @@ function BookingHistory() {
               </div>
 
 
+              {/* =================================================
+                  QR CODE
+              ================================================= */}
+
+              <div className="booking-pass-qr-section">
+
+                <div className="booking-pass-qr-heading">
+
+                  <QrCode
+                    size={20}
+                  />
+
+                  <div>
+
+                    <strong>
+                      EVENT ENTRY QR
+                    </strong>
+
+                    <span>
+                      Scan this QR code at the event entrance
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <div className="booking-pass-qr-box">
+
+                  {getQrImageUrl(
+                    selectedPass
+                  ) ? (
+
+                    <img
+                      src={getQrImageUrl(
+                        selectedPass
+                      )}
+                      alt="SNICT Event Pass QR Code"
+                      className="booking-pass-qr-image"
+                    />
+
+                  ) : (
+
+                    <div className="booking-pass-qr-error">
+
+                      <QrCode
+                        size={70}
+                      />
+
+                      <span>
+                        QR unavailable
+                      </span>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+
+                {/* =================================================
+                    ATTENDANCE CODE
+                ================================================= */}
+
+                <div className="booking-pass-attendance-code">
+
+                  <span>
+                    ATTENDANCE CODE
+                  </span>
+
+                  <strong>
+                    {selectedPass.attendance_code ||
+                      selectedPass.attendanceCode ||
+                      "Not generated"}
+                  </strong>
+
+                  <small>
+                    If QR scanning is unavailable,
+                    provide this code to the event administrator.
+                  </small>
+
+                </div>
+
+              </div>
+
+
               {/* VALIDITY */}
 
               <div className="booking-pass-validity">
@@ -1731,11 +2195,20 @@ function BookingHistory() {
                   </strong>
 
                   <span>
-
-                    {getPassValidity(
-                      selectedPass
-                    )}
-
+                    {selectedPass.valid_from &&
+                      selectedPass.valid_until
+                      ? `Valid from ${new Date(
+                          selectedPass.valid_from
+                        ).toLocaleString(
+                          "en-IN"
+                        )} to ${new Date(
+                          selectedPass.valid_until
+                        ).toLocaleString(
+                          "en-IN"
+                        )}`
+                      : getPassValidity(
+                          selectedPass
+                        )}
                   </span>
 
                 </div>
@@ -1769,7 +2242,7 @@ function BookingHistory() {
                   }
                 >
 
-                  <Download
+                  <Printer
                     size={15}
                   />
 
