@@ -2463,850 +2463,176 @@ const updateBookingStatus =
 
   };
 
-
 // =========================================================
-// CONFIRM PAYMENT
-// PUT /api/bookings/admin/:id/confirm-payment
-// =========================================================
-//
-// THIS IS THE MAIN PAYMENT CONFIRMATION FUNCTION.
-//
-// Flow:
-//
-// submitted payment
-//       ↓
-// payment_status = verified
-//       ↓
-// booking_status = confirmed
-//       ↓
-// event pass generated
-//
+// ADMIN - GET ALL BOOKINGS
+// GET /api/bookings/admin
 // =========================================================
 
-const confirmPayment =
-  async (
-    req,
-    res
-  ) => {
+const getAllBookings = async (
+  req,
+  res
+) => {
 
-    const client =
-      await pool.connect();
+  try {
 
-    try {
+    const result =
+      await pool.query(
+        `
+        SELECT
 
-      const {
-        id,
-      } = req.params;
+          b.id,
+          b.booking_code,
+          b.event_id,
+          b.user_id,
+          b.amount,
+          b.booking_status,
+          b.created_at,
+          b.updated_at,
 
+          u.full_name,
+          u.username,
+          u.email,
+          u.mobile,
 
-      if (!id) {
+          e.title AS event_title,
+          e.event_type,
+          e.description,
+          e.doctor_name,
+          e.specialization,
+          e.event_date,
+          e.start_time,
+          e.end_time,
+          e.venue,
+          e.event_mode,
+          e.price AS event_price,
+          e.image_url,
 
-        return res.status(400).json({
+          p.id AS payment_id,
+          p.payment_method,
+          p.transaction_id,
+          p.amount AS payment_amount,
+          p.payment_status,
+          p.payment_proof_url,
+          p.verified_by,
+          p.verified_at,
 
-          success: false,
+          ep.id AS pass_id,
+          ep.pass_code,
+          ep.pass_token,
+          ep.valid_from,
+          ep.valid_until,
+          ep.created_at AS pass_created_at,
 
-          message:
-            "Booking ID is required",
+          ea.id AS attendance_id,
+          ea.event_id AS attendance_event_id,
+          ea.attendance_code,
+          ea.attendance_status,
+          ea.marked_at,
+          ea.marked_by
 
-        });
+        FROM event_bookings b
 
-      }
+        INNER JOIN users u
+          ON u.id = b.user_id
 
+        INNER JOIN events e
+          ON e.id = b.event_id
 
-      // -----------------------------------------------------
-      // ADMIN ID
-      // -----------------------------------------------------
-
-      const adminId =
-        req.adminId || null;
-
-
-      await client.query(
-        "BEGIN"
-      );
-
-
-      // -----------------------------------------------------
-      // GET BOOKING
-      // -----------------------------------------------------
-
-      const bookingResult =
-        await client.query(
-          `
+        LEFT JOIN LATERAL (
           SELECT
-
-            b.id,
-            b.booking_code,
-            b.event_id,
-            b.user_id,
-            b.amount,
-            b.booking_status,
-
-            e.title AS event_title
-
-          FROM event_bookings b
-
-          INNER JOIN events e
-            ON e.id = b.event_id
-
-          WHERE b.id = $1
-
-          FOR UPDATE
-          `,
-          [id]
-        );
-
-
-      if (
-        bookingResult.rows.length === 0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Booking not found",
-
-        });
-
-      }
-
-
-      const booking =
-        bookingResult.rows[0];
-
-
-      // -----------------------------------------------------
-      // GET LATEST PAYMENT
-      // -----------------------------------------------------
-
-      const paymentResult =
-        await client.query(
-          `
-          SELECT *
+            id,
+            payment_method,
+            transaction_id,
+            amount,
+            payment_status,
+            payment_proof_url,
+            verified_by,
+            verified_at
 
           FROM event_payments
 
-          WHERE booking_id = $1
+          WHERE booking_id = b.id
 
           ORDER BY id DESC
 
           LIMIT 1
 
-          FOR UPDATE
-          `,
-          [id]
-        );
+        ) p ON TRUE
 
-
-      if (
-        paymentResult.rows.length === 0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Payment record not found for this booking",
-
-        });
-
-      }
-
-
-      const payment =
-        paymentResult.rows[0];
-
-
-      // -----------------------------------------------------
-      // ALREADY VERIFIED
-      // -----------------------------------------------------
-
-      if (
-        payment.payment_status ===
-        "verified"
-      ) {
-
-        // If already verified, still make sure
-        // booking/pass are synchronized.
-
-        await client.query(
-          `
-          UPDATE event_bookings
-
-          SET
-            booking_status = 'confirmed',
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
-          `,
-          [id]
-        );
-
-
-        const pass =
-          await createEventPass(
-            client,
-            id
-          );
-
-
-        await client.query(
-          "COMMIT"
-        );
-
-
-        return res.json({
-
-          success: true,
-
-          message:
-            "Payment was already verified",
-
-          booking: {
-
-            ...booking,
-
-            booking_status:
-              "confirmed",
-
-          },
-
-          payment: {
-
-            ...payment,
-
-            payment_status:
-              "verified",
-
-          },
-
-          pass,
-
-        });
-
-      }
-
-
-      // -----------------------------------------------------
-      // PAYMENT MUST BE SUBMITTED/PENDING
-      // -----------------------------------------------------
-
-      const acceptableStatuses = [
-        "submitted",
-        "pending",
-        "payment_pending",
-      ];
-
-
-      if (
-        !acceptableStatuses.includes(
-          payment.payment_status
-        )
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            `Payment cannot be confirmed from status "${payment.payment_status}"`,
-
-          payment_status:
-            payment.payment_status,
-
-        });
-
-      }
-
-
-      // -----------------------------------------------------
-      // VERIFY PAYMENT
-      // -----------------------------------------------------
-
-      const verifiedPaymentResult =
-        await client.query(
-          `
-          UPDATE event_payments
-
-          SET
-
-            payment_status =
-              'verified',
-
-            verified_by =
-              $1,
-
-            verified_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $2
-
-          RETURNING *
-          `,
-          [
-            adminId,
-            payment.id,
-          ]
-        );
-
-
-      const verifiedPayment =
-        verifiedPaymentResult.rows[0];
-
-
-      // -----------------------------------------------------
-      // CONFIRM BOOKING
-      // -----------------------------------------------------
-
-      const confirmedBookingResult =
-        await client.query(
-          `
-          UPDATE event_bookings
-
-          SET
-
-            booking_status =
-              'confirmed',
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
-
-          RETURNING *
-          `,
-          [id]
-        );
-
-
-      const confirmedBooking =
-        confirmedBookingResult.rows[0];
-
-
-      // -----------------------------------------------------
-      // CREATE EVENT PASS
-      // -----------------------------------------------------
-
-      const pass =
-        await createEventPass(
-          client,
-          id
-        );
-
-
-      if (!pass) {
-
-        throw new Error(
-          "Payment was verified but event pass could not be generated"
-        );
-
-      }
-
-
-      // -----------------------------------------------------
-      // COMMIT
-      // -----------------------------------------------------
-
-      await client.query(
-        "COMMIT"
-      );
-
-
-      // -----------------------------------------------------
-      // RESPONSE
-      // -----------------------------------------------------
-
-      return res.json({
-
-        success: true,
-
-        message:
-          "Payment confirmed and booking confirmed successfully",
-
-        booking:
-          confirmedBooking,
-
-        payment:
-          verifiedPayment,
-
-        pass,
-
-      });
-
-
-    } catch (error) {
-
-      try {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-      } catch (
-        rollbackError
-      ) {
-
-        console.error(
-          "Rollback error:",
-          rollbackError.message
-        );
-
-      }
-
-
-      console.error(
-        "Confirm payment error:",
-        error
-      );
-
-
-      return sendDatabaseError(
-        res,
-        "Unable to confirm payment",
-        error
-      );
-
-
-    } finally {
-
-      client.release();
-
-    }
-
-  };
-
-
-// =========================================================
-// GET ADMIN PAYMENT / BOOKING DETAILS
-// =========================================================
-
-const getAdminPaymentDetails =
-  async (
-    client,
-    bookingId
-  ) => {
-
-    const result =
-      await client.query(
-        `
-        SELECT
-
-          p.id,
-          p.booking_id,
-          p.payment_method,
-          p.transaction_id,
-          p.amount,
-          p.payment_status,
-          p.payment_proof_url,
-          p.verified_by,
-          p.verified_at,
-          p.created_at,
-
-          b.booking_code,
-          b.booking_status,
-          b.event_id,
-          b.user_id
-
-        FROM event_payments p
-
-        INNER JOIN event_bookings b
-          ON b.id = p.booking_id
-
-        WHERE p.booking_id = $1
-
-        ORDER BY p.id DESC
-
-        LIMIT 1
-        `,
-        [bookingId]
-      );
-
-
-    return (
-      result.rows[0] ||
-      null
-    );
-
-  };
-
-
-// =========================================================
-// GET ADMIN PASS BY BOOKING ID
-// GET /api/bookings/admin/:id/pass
-// =========================================================
-//
-// This endpoint is useful for Admin Booking Management.
-//
-// If payment is verified and booking is confirmed/completed
-// but pass is missing, it automatically generates the pass.
-//
-// =========================================================
-
-const getAdminPassByBookingId =
-  async (
-    req,
-    res
-  ) => {
-
-    const client =
-      await pool.connect();
-
-    try {
-
-      const {
-        id,
-      } = req.params;
-
-
-      if (!id) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Booking ID is required",
-
-        });
-
-      }
-
-
-      await client.query(
-        "BEGIN"
-      );
-
-
-      // -----------------------------------------------------
-      // GET BOOKING
-      // -----------------------------------------------------
-
-      const bookingResult =
-        await client.query(
-          `
-          SELECT
-
-            b.id AS booking_id,
-            b.booking_code,
-            b.event_id,
-            b.user_id,
-            b.amount,
-            b.booking_status,
-
-            u.full_name,
-            u.username,
-            u.email,
-            u.mobile,
-
-            e.title AS event_title,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.venue,
-            e.event_mode,
-
-            p.payment_status,
-            p.transaction_id,
-            p.amount AS payment_amount
-
-          FROM event_bookings b
-
-          INNER JOIN users u
-            ON u.id = b.user_id
-
-          INNER JOIN events e
-            ON e.id = b.event_id
-
-          LEFT JOIN LATERAL (
-            SELECT
-              payment_status,
-              transaction_id,
-              amount
-            FROM event_payments
-            WHERE booking_id = b.id
-            ORDER BY id DESC
-            LIMIT 1
-          ) p ON TRUE
-
-          WHERE b.id = $1
-
-          LIMIT 1
-          `,
-          [id]
-        );
-
-
-      if (
-        bookingResult.rows.length === 0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Booking not found",
-
-        });
-
-      }
-
-
-      const booking =
-        bookingResult.rows[0];
-
-
-      // -----------------------------------------------------
-      // PAYMENT CHECK
-      // -----------------------------------------------------
-
-      if (
-        booking.payment_status !==
-        "verified"
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Pass is available only after payment is verified",
-
-          payment_status:
-            booking.payment_status ||
-            "pending",
-
-        });
-
-      }
-
-
-      // -----------------------------------------------------
-      // BOOKING STATUS CHECK
-      // -----------------------------------------------------
-
-      if (
-        ![
-          "confirmed",
-          "completed",
-        ].includes(
-          booking.booking_status
-        )
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Booking is not confirmed yet",
-
-          booking_status:
-            booking.booking_status,
-
-        });
-
-      }
-
-
-      // -----------------------------------------------------
-      // CREATE / GET PASS
-      // -----------------------------------------------------
-
-      const pass =
-        await createEventPass(
-          client,
-          booking.booking_id
-        );
-
-
-      if (!pass) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(500).json({
-
-          success: false,
-
-          message:
-            "Unable to generate event pass",
-
-        });
-
-      }
-
-
-      // -----------------------------------------------------
-      // GET ATTENDANCE
-      // -----------------------------------------------------
-
-      const attendanceResult =
-        await client.query(
-          `
+        LEFT JOIN LATERAL (
           SELECT
             id,
-            booking_id,
+            pass_code,
+            pass_token,
+            valid_from,
+            valid_until,
+            created_at
+
+          FROM event_passes
+
+          WHERE booking_id = b.id
+
+          ORDER BY id DESC
+
+          LIMIT 1
+
+        ) ep ON TRUE
+
+        LEFT JOIN LATERAL (
+          SELECT
+            id,
             event_id,
             attendance_code,
             attendance_status,
             marked_at,
-            marked_by,
-            created_at,
-            updated_at
+            marked_by
 
           FROM event_attendance
 
-          WHERE booking_id = $1
+          WHERE booking_id = b.id
+
+          ORDER BY created_at DESC
 
           LIMIT 1
-          `,
-          [id]
-        );
 
+        ) ea ON TRUE
 
-      const attendance =
-        attendanceResult.rows[0] ||
-        null;
-
-
-      await client.query(
-        "COMMIT"
+        ORDER BY
+          b.created_at DESC
+        `
       );
 
 
-      return res.json({
+    return res.status(200).json({
 
-        success: true,
+      success: true,
 
-        message:
-          "Event pass loaded successfully",
+      bookings:
+        result.rows,
 
-        pass: {
+      total:
+        result.rows.length,
 
-          ...pass,
-
-          booking_code:
-            booking.booking_code,
-
-          full_name:
-            booking.full_name,
-
-          username:
-            booking.username,
-
-          email:
-            booking.email,
-
-          mobile:
-            booking.mobile,
-
-          event_id:
-            booking.event_id,
-
-          event_title:
-            booking.event_title,
-
-          event_date:
-            booking.event_date,
-
-          start_time:
-            booking.start_time,
-
-          end_time:
-            booking.end_time,
-
-          venue:
-            booking.venue,
-
-          event_mode:
-            booking.event_mode,
-
-          amount:
-            booking.amount,
-
-          payment_amount:
-            booking.payment_amount,
-
-          payment_status:
-            booking.payment_status,
-
-          transaction_id:
-            booking.transaction_id,
-
-          booking_status:
-            booking.booking_status,
-
-        },
-
-        attendance,
-
-      });
+    });
 
 
-    } catch (error) {
+  } catch (error) {
 
-      try {
+    console.error(
+      "Get all bookings error:",
+      error
+    );
 
-        await client.query(
-          "ROLLBACK"
-        );
+    return sendDatabaseError(
+      res,
+      "Unable to fetch bookings",
+      error
+    );
 
-      } catch (
-        rollbackError
-      ) {
+  }
 
-        console.error(
-          "Rollback error:",
-          rollbackError.message
-        );
+};
 
-      }
-
-
-      return sendDatabaseError(
-        res,
-        "Unable to fetch admin event pass",
-        error
-      );
-
-
-    } finally {
-
-      client.release();
-
-    }
-
-  };
   // =========================================================
 // CONFIRM PAYMENT - ADMIN
 // PUT /api/bookings/admin/:id/confirm-payment
