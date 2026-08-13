@@ -20,11 +20,9 @@ const {
 // MIDDLEWARE
 // =========================================================
 
-const authMiddleware =
-  require("../middleware/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
-const adminMiddleware =
-  require("../middleware/adminMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 
 // =========================================================
 // ROUTER
@@ -36,8 +34,10 @@ const router = express.Router();
 // ADMIN BOOKING ROUTES
 // =========================================================
 
+// =========================================================
 // GET ALL BOOKINGS
 // GET /api/bookings/admin
+// =========================================================
 
 router.get(
   "/admin",
@@ -72,7 +72,6 @@ router.get(
 //   "bookingStatus": "confirmed",
 //   "paymentStatus": "verified"
 // }
-//
 // =========================================================
 
 router.put(
@@ -96,8 +95,10 @@ router.delete(
 // USER BOOKING ROUTES
 // =========================================================
 
+// =========================================================
 // GET MY BOOKINGS
 // GET /api/bookings
+// =========================================================
 
 router.get(
   "/",
@@ -117,25 +118,31 @@ router.post(
 );
 
 // =========================================================
-// GET MY SINGLE BOOKING
-// GET /api/bookings/:id
-// =========================================================
-
-router.get(
-  "/:id",
-  authMiddleware,
-  getMyBookingById
-);
-
-// =========================================================
 // GET MY EVENT PASS
 // GET /api/bookings/:id/pass
+//
+// IMPORTANT:
+// This MUST come BEFORE "/:id"
+// because Express matches routes from top to bottom.
 // =========================================================
 
 router.get(
   "/:id/pass",
   authMiddleware,
   getMyPass
+);
+
+// =========================================================
+// GET MY SINGLE BOOKING
+// GET /api/bookings/:id
+//
+// Keep this AFTER "/:id/pass".
+// =========================================================
+
+router.get(
+  "/:id",
+  authMiddleware,
+  getMyBookingById
 );
 
 // =========================================================
