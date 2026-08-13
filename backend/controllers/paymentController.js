@@ -612,9 +612,7 @@ const submitPayment =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             "UPI transaction ID / UTR is required",
         });
@@ -626,9 +624,7 @@ const submitPayment =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             "Please enter a valid UPI transaction ID / UTR",
         });
@@ -642,7 +638,6 @@ const submitPayment =
         await pool.query(
           `
           SELECT
-
             b.id,
             b.booking_code,
             b.event_id,
@@ -676,9 +671,7 @@ const submitPayment =
       ) {
 
         return res.status(404).json({
-
           success: false,
-
           message:
             "Booking not found",
         });
@@ -697,9 +690,7 @@ const submitPayment =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             "Payment cannot be submitted for this booking",
         });
@@ -714,9 +705,7 @@ const submitPayment =
       ) {
 
         return res.status(404).json({
-
           success: false,
-
           message:
             "Payment record not found",
         });
@@ -732,9 +721,7 @@ const submitPayment =
       ) {
 
         return res.status(400).json({
-
           success: false,
-
           message:
             "This payment has already been verified",
         });
@@ -750,9 +737,7 @@ const submitPayment =
       ) {
 
         return res.status(409).json({
-
           success: false,
-
           message:
             "Payment has already been submitted and is waiting for verification",
         });
@@ -768,16 +753,11 @@ const submitPayment =
           UPDATE event_payments
 
           SET
-
             transaction_id = $1,
-
             payment_proof_url = $2,
-
             payment_status =
               'submitted',
-
             verified_by = NULL,
-
             verified_at = NULL
 
           WHERE booking_id = $3
@@ -786,10 +766,8 @@ const submitPayment =
           `,
           [
             cleanTransactionId,
-
             paymentProofUrl ||
               null,
-
             bookingId,
           ]
         );
@@ -851,94 +829,61 @@ const getAllPayments =
             ========================= */
 
             p.id,
-
             p.booking_id,
-
             p.payment_method,
-
             p.transaction_id,
-
             p.amount AS payment_amount,
-
             p.payment_status,
-
             p.payment_proof_url,
-
             p.verified_by,
-
             p.verified_at,
-
             p.created_at
               AS payment_created_at,
-
 
             /* =========================
                BOOKING
             ========================= */
 
             b.booking_code,
-
             b.user_id,
-
             b.amount AS booking_amount,
-
             b.booking_status,
-
             b.created_at
               AS booking_created_at,
-
             b.updated_at
               AS booking_updated_at,
-
 
             /* =========================
                USER
             ========================= */
 
             u.full_name,
-
             u.username,
-
             u.email,
-
             u.mobile,
-
 
             /* =========================
                EVENT
             ========================= */
 
             e.id AS event_id,
-
             e.title AS event_title,
-
             e.event_type,
-
             e.event_date,
-
             e.start_time,
-
             e.end_time,
-
             e.venue,
-
             e.event_mode,
-
             e.doctor_name,
-
             e.specialization,
-
 
             /* =========================
                ATTENDANCE
             ========================= */
 
             ea.id AS attendance_id,
-
             ea.attendance_code,
-
             ea.attendance_status,
-
             ea.marked_at
               AS attendance_marked_at
 
@@ -1016,71 +961,48 @@ const getPaymentById =
 
             p.*,
 
-
             /* =========================
                BOOKING
             ========================= */
 
             b.booking_code,
-
             b.user_id,
-
             b.amount AS booking_amount,
-
             b.booking_status,
-
             b.event_id,
-
 
             /* =========================
                USER
             ========================= */
 
             u.full_name,
-
             u.username,
-
             u.email,
-
             u.mobile,
-
 
             /* =========================
                EVENT
             ========================= */
 
             e.title AS event_title,
-
             e.event_type,
-
             e.event_date,
-
             e.start_time,
-
             e.end_time,
-
             e.venue,
-
             e.event_mode,
-
             e.doctor_name,
-
             e.specialization,
-
 
             /* =========================
                ATTENDANCE
             ========================= */
 
             ea.id AS attendance_id,
-
             ea.attendance_code,
-
             ea.attendance_status,
-
             ea.marked_at
               AS attendance_marked_at,
-
             ea.marked_by
               AS attendance_marked_by
 
@@ -1111,9 +1033,7 @@ const getPaymentById =
       ) {
 
         return res.status(404).json({
-
           success: false,
-
           message:
             "Payment not found",
         });
@@ -1223,19 +1143,13 @@ const verifyPayment =
           SELECT
 
             p.id,
-
             p.booking_id,
-
             p.payment_status,
-
             p.transaction_id,
-
             p.amount,
 
             b.booking_status,
-
             b.event_id,
-
             b.user_id
 
           FROM event_payments p
@@ -1332,7 +1246,6 @@ const verifyPayment =
           UPDATE event_payments
 
           SET
-
             payment_status =
               'verified',
 
@@ -1359,7 +1272,6 @@ const verifyPayment =
           UPDATE event_bookings
 
           SET
-
             booking_status =
               'confirmed',
 
@@ -1409,6 +1321,7 @@ const verifyPayment =
             "Payment verified, booking confirmed and event pass generated successfully",
 
           payment: {
+
             id:
               id,
 
@@ -1441,7 +1354,6 @@ const verifyPayment =
         UPDATE event_payments
 
         SET
-
           payment_status =
             'rejected',
 
@@ -1468,7 +1380,6 @@ const verifyPayment =
         UPDATE event_bookings
 
         SET
-
           booking_status =
             'rejected',
 
@@ -1573,5 +1484,4 @@ module.exports = {
   getPaymentById,
 
   verifyPayment,
-
 };

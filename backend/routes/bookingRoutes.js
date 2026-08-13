@@ -33,38 +33,17 @@ const adminMiddleware =
 const router = express.Router();
 
 // =========================================================
-// =========================================================
 // ADMIN BOOKING ROUTES
 // =========================================================
-// =========================================================
-//
-// IMPORTANT:
-//
-// Admin authentication is handled by:
-//
-// snict_admin_token
-//
-// Therefore:
-// DO NOT use authMiddleware on admin routes.
-//
-// adminMiddleware verifies:
-//
-// snict_admin_token
-//
-// =========================================================
 
-
-// =========================================================
 // GET ALL BOOKINGS
 // GET /api/bookings/admin
-// =========================================================
 
 router.get(
   "/admin",
   adminMiddleware,
   getAllBookings
 );
-
 
 // =========================================================
 // GET SINGLE ADMIN BOOKING
@@ -77,24 +56,22 @@ router.get(
   getAdminBookingById
 );
 
-
 // =========================================================
 // UPDATE BOOKING STATUS
 // PUT /api/bookings/admin/:id/status
 //
-// Example body:
+// Body examples:
 //
 // {
 //   "status": "confirmed"
 // }
 //
-// Possible statuses can include:
+// OR
 //
-// payment_pending
-// confirmed
-// completed
-// cancelled
-// rejected
+// {
+//   "bookingStatus": "confirmed",
+//   "paymentStatus": "verified"
+// }
 //
 // =========================================================
 
@@ -103,7 +80,6 @@ router.put(
   adminMiddleware,
   updateBookingStatus
 );
-
 
 // =========================================================
 // DELETE BOOKING
@@ -116,31 +92,12 @@ router.delete(
   deleteBooking
 );
 
-
-// =========================================================
 // =========================================================
 // USER BOOKING ROUTES
 // =========================================================
-// =========================================================
-//
-// User authentication is handled by:
-//
-// snict_token
-//
-// Therefore:
-// Use authMiddleware.
-//
-// =========================================================
 
-
-// =========================================================
 // GET MY BOOKINGS
 // GET /api/bookings
-// =========================================================
-//
-// Returns only bookings belonging to the logged-in user.
-//
-// =========================================================
 
 router.get(
   "/",
@@ -148,32 +105,9 @@ router.get(
   getMyBookings
 );
 
-
 // =========================================================
 // CREATE BOOKING
 // POST /api/bookings/event/:eventId
-// =========================================================
-//
-// User must be logged in.
-//
-// Booking flow:
-//
-// User
-//   ↓
-// Create booking
-//   ↓
-// payment_pending
-//   ↓
-// Submit payment
-//   ↓
-// Admin verifies payment
-//   ↓
-// Booking confirmed
-//   ↓
-// Event pass generated
-//   ↓
-// Attendance record generated
-//
 // =========================================================
 
 router.post(
@@ -182,14 +116,9 @@ router.post(
   createBooking
 );
 
-
 // =========================================================
 // GET MY SINGLE BOOKING
 // GET /api/bookings/:id
-// =========================================================
-//
-// User can access ONLY their own booking.
-//
 // =========================================================
 
 router.get(
@@ -198,31 +127,9 @@ router.get(
   getMyBookingById
 );
 
-
 // =========================================================
 // GET MY EVENT PASS
 // GET /api/bookings/:id/pass
-// =========================================================
-//
-// User can access the pass only if:
-//
-// 1. User is logged in
-// 2. Booking belongs to user
-// 3. Payment is verified
-// 4. Booking is confirmed
-// 5. Event pass exists
-//
-// Pass contains:
-//
-// - Event information
-// - User information
-// - Pass code
-// - Pass token
-// - QR data
-// - Attendance code
-// - Attendance status
-// - Validity
-//
 // =========================================================
 
 router.get(
@@ -230,7 +137,6 @@ router.get(
   authMiddleware,
   getMyPass
 );
-
 
 // =========================================================
 // EXPORT
