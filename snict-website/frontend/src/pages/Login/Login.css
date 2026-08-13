@@ -1,7 +1,7 @@
 /* =========================================================
    SNICT LOGIN
    Premium Medical / Professional / Futuristic
-   Updated Typography + Animations
+   Updated Authentication UI
 ========================================================= */
 
 :root {
@@ -19,7 +19,14 @@
   --login-border: #d8e7e9;
 
   --login-danger: #c94b4b;
+  --login-danger-dark: #a93434;
   --login-danger-bg: #fff2f2;
+
+  --login-warning: #b87916;
+  --login-warning-bg: #fff8e8;
+
+  --login-success: #16845b;
+  --login-success-bg: #eefaf5;
 
   --login-shadow:
     0 25px 70px rgba(16, 42, 47, 0.10);
@@ -436,7 +443,7 @@
 
 
 /* =========================================================
-   ERROR
+   ERROR MESSAGE
 ========================================================= */
 
 .login-error {
@@ -445,6 +452,12 @@
 
   align-items:
     flex-start;
+
+  justify-content:
+    flex-start;
+
+  width:
+    100%;
 
   margin-bottom:
     20px;
@@ -474,8 +487,40 @@
   line-height:
     1.55;
 
+  text-align:
+    left;
+
   animation:
     loginErrorIn 0.3s ease both;
+}
+
+
+/* =========================================================
+   ERROR TYPES
+   Optional classes if later needed
+========================================================= */
+
+.login-error.pending {
+  color:
+    var(--login-warning);
+
+  border-color:
+    #f1d99d;
+
+  background:
+    var(--login-warning-bg);
+}
+
+
+.login-error.success {
+  color:
+    var(--login-success);
+
+  border-color:
+    #bce5d3;
+
+  background:
+    var(--login-success-bg);
 }
 
 
@@ -672,6 +717,26 @@
 
   transform:
     translateY(-1px);
+}
+
+
+/* =========================================================
+   INVALID INPUT
+========================================================= */
+
+.login-field input:invalid:not(:placeholder-shown) {
+  border-color:
+    #e6bcbc;
+}
+
+
+.login-field input:focus:invalid {
+  border-color:
+    var(--login-primary);
+
+  box-shadow:
+    0 0 0 4px
+    rgba(8, 127, 140, 0.09);
 }
 
 
@@ -1053,7 +1118,6 @@
       translateY(0)
       scale(1);
   }
-
 }
 
 
@@ -1074,7 +1138,6 @@
     transform:
       translateY(0);
   }
-
 }
 
 
@@ -1095,7 +1158,6 @@
     transform:
       translateY(0);
   }
-
 }
 
 
@@ -1116,7 +1178,6 @@
     transform:
       translateY(0);
   }
-
 }
 
 
@@ -1139,7 +1200,6 @@
       translateY(0)
       scale(1);
   }
-
 }
 
 
@@ -1163,7 +1223,6 @@
       translate(-50%, -50%)
       scale(1.08);
   }
-
 }
 
 
@@ -1178,7 +1237,6 @@
     background-position:
       200% 50%;
   }
-
 }
 
 
@@ -1196,7 +1254,6 @@
       0 0 0 7px
       rgba(22, 132, 91, 0.03);
   }
-
 }
 
 
@@ -1361,6 +1418,18 @@
 
     font-size:
       14px;
+  }
+
+
+  .login-error {
+    margin-bottom:
+      18px;
+
+    padding:
+      12px 13px;
+
+    font-size:
+      13px;
   }
 
 

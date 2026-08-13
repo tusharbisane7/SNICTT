@@ -567,6 +567,15 @@ function Signup() {
         );
       }
 
+      // Tell the backend whether this signup immediately
+      // continues into the protected membership/payment flow.
+      // The backend will issue a short-lived auth cookie only
+      // for this flow.
+      formData.append(
+        "signupWithMembership",
+        selectedPlanId ? "true" : "false"
+      );
+
       const response = await api.post(
         "/auth/signup",
         formData,
@@ -592,28 +601,12 @@ function Signup() {
 
         try {
           // -------------------------------------------------
-          // AUTO LOGIN
+          // ACCOUNT IS ALREADY TEMPORARILY AUTHENTICATED
           // -------------------------------------------------
-
-          const loginResponse =
-            await api.post(
-              "/auth/login",
-              {
-                identifier:
-                  form.username
-                    .trim()
-                    .toLowerCase(),
-
-                password:
-                  form.password,
-              }
-            );
-
-          if (!loginResponse.data?.success) {
-            throw new Error(
-              "Automatic login failed"
-            );
-          }
+          // registerUser issues a short-lived auth cookie when
+          // signupWithMembership=true. Do NOT call /auth/login
+          // here because normal login intentionally requires an
+          // approved membership.
 
           // -------------------------------------------------
           // CREATE MEMBERSHIP
@@ -815,6 +808,21 @@ function Signup() {
         response.data?.message ||
           "Payment submitted successfully. Your membership is now waiting for admin approval."
       );
+
+      // -----------------------------------------------------
+      // END TEMPORARY SIGNUP SESSION
+      // -----------------------------------------------------
+      // The user must not remain authenticated while the
+      // membership is pending. Normal login will become
+      // available only after admin approval.
+      try {
+        await api.post("/auth/logout");
+      } catch (logoutError) {
+        console.warn(
+          "Temporary signup logout error:",
+          logoutError
+        );
+      }
 
       setMembershipStep("submitted");
     } catch (error) {
