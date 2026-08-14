@@ -19,6 +19,8 @@ const membershipRoutes = require("./routes/membershipRoutes");
 const sliderRoutes = require("./routes/sliderRoutes");
 const attendanceRoutes =
   require("./routes/attendanceRoutes");
+  const eventPassRoutes =
+  require("./routes/eventPassRoutes");
 
 // =========================================================
 // APP
@@ -261,6 +263,10 @@ app.use(
   sliderRoutes
 );
 
+app.use(
+  "/api/bookings",
+  eventPassRoutes
+);
 // =========================================================
 // 404 ROUTE
 // =========================================================

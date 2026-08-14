@@ -1,40 +1,31 @@
 const pool = require("../config/db");
-const crypto = require("crypto");
 
 // =========================================================
 // BOOKING CONTROLLER
 // SNICT
 // =========================================================
 //
-// FEATURES
+// RESPONSIBILITIES
 //
-// - Create event booking
-// - Create UPI payment
-// - Get user bookings
-// - Get single booking
-// - Generate event pass
-// - Generate secure QR payload
+// - Create booking
+// - Create payment record
+// - Generate UPI payment URL
+// - Get user's bookings
+// - Get user's single booking
 // - Admin booking management
-// - Payment status management
+// - Update booking/payment status
+// - Confirm payment
 // - Delete booking
 //
-// IMPORTANT
+// EVENT PASS
 //
-// Attendance is handled separately by:
+// Event pass logic is handled separately by:
+//
+// controllers/eventPassController.js
+//
+// Attendance logic is handled separately by:
+//
 // controllers/attendanceController.js
-//
-// DO NOT JOIN event_attendance here.
-//
-// Database structure:
-//
-// event_bookings.event_id = INTEGER
-// events.id              = INTEGER
-// event_attendance.event_id = UUID
-//
-// Therefore attendance is connected using:
-//
-// event_attendance.booking_id
-// event_bookings.id
 //
 // =========================================================
 
@@ -43,30 +34,23 @@ const crypto = require("crypto");
 // HELPERS
 // =========================================================
 
+
+// ---------------------------------------------------------
+// GENERATE UNIQUE BOOKING CODE
+// ---------------------------------------------------------
+
 const generateBookingCode = () => {
+
   return `SNICT-BKG-${Math.floor(
-    100000 + Math.random() * 900000
+    100000 +
+    Math.random() * 900000
   )}`;
-};
 
-
-const generatePassCode = () => {
-  return `SNICT-PASS-${crypto
-    .randomBytes(5)
-    .toString("hex")
-    .toUpperCase()}`;
-};
-
-
-const generatePassToken = () => {
-  return crypto
-    .randomBytes(32)
-    .toString("hex");
 };
 
 
 // =========================================================
-// DATABASE ERROR
+// DATABASE ERROR HANDLER
 // =========================================================
 
 const sendDatabaseError = (
@@ -79,7 +63,9 @@ const sendDatabaseError = (
     "===================================="
   );
 
-  console.error(message);
+  console.error(
+    message
+  );
 
   console.error(
     "Message:",
@@ -120,24 +106,44 @@ const sendDatabaseError = (
     "===================================="
   );
 
+
   return res.status(500).json({
+
     success: false,
 
     message,
 
     debug:
-      process.env.NODE_ENV !== "production"
+      process.env.NODE_ENV !==
+      "production"
         ? {
-            message: error.message,
-            code: error.code,
-            detail: error.detail,
-            hint: error.hint,
-            table: error.table,
-            column: error.column,
-            constraint: error.constraint,
+
+            message:
+              error.message,
+
+            code:
+              error.code,
+
+            detail:
+              error.detail,
+
+            hint:
+              error.hint,
+
+            table:
+              error.table,
+
+            column:
+              error.column,
+
+            constraint:
+              error.constraint,
+
           }
         : undefined,
+
   });
+
 };
 
 
@@ -148,13 +154,17 @@ const sendDatabaseError = (
 const getUpiConfig = () => {
 
   return {
+
     upiId:
-      process.env.SNICT_UPI_ID || "",
+      process.env.SNICT_UPI_ID ||
+      "",
 
     payeeName:
       process.env.SNICT_UPI_NAME ||
       "SNICT",
+
   };
+
 };
 
 
@@ -170,10 +180,14 @@ const createUpiUrl = ({
 }) => {
 
   if (!upiId) {
+
     return "";
+
   }
 
+
   return (
+
     `upi://pay?pa=${encodeURIComponent(
       upiId
     )}` +
@@ -191,241 +205,9 @@ const createUpiUrl = ({
     `&tn=${encodeURIComponent(
       bookingCode
     )}`
+
   );
-};
 
-
-// =========================================================
-// CREATE EVENT PASS
-// =========================================================
-
-const createEventPass = async (
-  client,
-  bookingId
-) => {
-
-  // -------------------------------------------------------
-  // CHECK EXISTING PASS
-  // -------------------------------------------------------
-
-  const existingPass =
-    await client.query(
-      `
-      SELECT *
-      FROM event_passes
-      WHERE booking_id = $1
-      ORDER BY id DESC
-      LIMIT 1
-      `,
-      [bookingId]
-    );
-
-  if (
-    existingPass.rows.length > 0
-  ) {
-    return existingPass.rows[0];
-  }
-
-
-  // -------------------------------------------------------
-  // GET BOOKING
-  // -------------------------------------------------------
-
-  const result =
-    await client.query(
-      `
-      SELECT
-
-        b.id AS booking_id,
-        b.booking_code,
-        b.user_id,
-        b.event_id,
-        b.amount,
-        b.booking_status,
-
-        u.full_name,
-        u.username,
-        u.profile_image_url,
-
-        e.title AS event_name,
-        e.event_date,
-        e.start_time,
-        e.end_time,
-        e.venue,
-        e.event_mode,
-
-        p.payment_status
-
-      FROM event_bookings b
-
-      INNER JOIN users u
-        ON u.id = b.user_id
-
-      INNER JOIN events e
-        ON e.id = b.event_id
-
-      LEFT JOIN LATERAL (
-        SELECT
-          payment_status
-        FROM event_payments
-        WHERE booking_id = b.id
-        ORDER BY id DESC
-        LIMIT 1
-      ) p ON TRUE
-
-      WHERE b.id = $1
-
-      LIMIT 1
-      `,
-      [bookingId]
-    );
-
-
-  if (
-    result.rows.length === 0
-  ) {
-
-    throw new Error(
-      "Booking not found while creating pass"
-    );
-  }
-
-
-  const booking =
-    result.rows[0];
-
-
-  // -------------------------------------------------------
-  // ONLY CONFIRMED + VERIFIED
-  // -------------------------------------------------------
-
-  if (
-    booking.booking_status !==
-      "confirmed" ||
-    booking.payment_status !==
-      "verified"
-  ) {
-
-    return null;
-  }
-
-
-  // -------------------------------------------------------
-  // UNIQUE PASS CODE
-  // -------------------------------------------------------
-
-  let passCode = null;
-
-  for (
-    let i = 0;
-    i < 20;
-    i++
-  ) {
-
-    const generated =
-      generatePassCode();
-
-    const check =
-      await client.query(
-        `
-        SELECT id
-        FROM event_passes
-        WHERE pass_code = $1
-        LIMIT 1
-        `,
-        [generated]
-      );
-
-    if (
-      check.rows.length === 0
-    ) {
-
-      passCode = generated;
-
-      break;
-    }
-  }
-
-
-  if (!passCode) {
-
-    throw new Error(
-      "Unable to generate unique pass code"
-    );
-  }
-
-
-  const passToken =
-    generatePassToken();
-
-
-  // -------------------------------------------------------
-  // EVENT DATE / TIME
-  // -------------------------------------------------------
-
-  const eventDate =
-    booking.event_date
-      ?.toString()
-      .slice(0, 10);
-
-  const startTime =
-    booking.start_time
-      ?.toString()
-      .slice(0, 8) ||
-    "00:00:00";
-
-  const endTime =
-    booking.end_time
-      ?.toString()
-      .slice(0, 8) ||
-    "23:59:59";
-
-
-  const validFrom =
-    `${eventDate}T${startTime}+05:30`;
-
-  const validUntil =
-    `${eventDate}T${endTime}+05:30`;
-
-
-  // -------------------------------------------------------
-  // CREATE PASS
-  // -------------------------------------------------------
-
-  const passResult =
-    await client.query(
-      `
-      INSERT INTO event_passes
-      (
-        booking_id,
-        pass_code,
-        pass_token,
-        valid_from,
-        valid_until
-      )
-
-      VALUES
-      (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5
-      )
-
-      RETURNING *
-      `,
-      [
-        bookingId,
-        passCode,
-        passToken,
-        validFrom,
-        validUntil,
-      ]
-    );
-
-
-  return passResult.rows[0];
 };
 
 
@@ -442,6 +224,7 @@ const createBooking = async (
   const client =
     await pool.connect();
 
+
   try {
 
     const userId =
@@ -452,23 +235,39 @@ const createBooking = async (
     } = req.params;
 
 
+    // =======================================================
+    // AUTHENTICATION
+    // =======================================================
+
     if (!userId) {
 
       return res.status(401).json({
+
         success: false,
+
         message:
           "User authentication required",
+
       });
+
     }
 
+
+    // =======================================================
+    // EVENT ID
+    // =======================================================
 
     if (!eventId) {
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "Event ID is required",
+
       });
+
     }
 
 
@@ -477,14 +276,15 @@ const createBooking = async (
     );
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // GET EVENT
-    // -------------------------------------------------------
+    // =======================================================
 
     const eventResult =
       await client.query(
         `
         SELECT
+
           id,
           title,
           event_type,
@@ -505,28 +305,42 @@ const createBooking = async (
         FROM events
 
         WHERE id = $1
+
           AND published = TRUE
+
           AND booking_enabled = TRUE
 
         FOR UPDATE
         `,
-        [eventId]
+        [
+          eventId,
+        ]
       );
 
 
+    // =======================================================
+    // EVENT NOT FOUND
+    // =======================================================
+
     if (
-      eventResult.rows.length === 0
+      eventResult.rows.length ===
+      0
     ) {
 
       await client.query(
         "ROLLBACK"
       );
 
+
       return res.status(404).json({
+
         success: false,
+
         message:
           "Event not found or booking is closed",
+
       });
+
     }
 
 
@@ -534,9 +348,9 @@ const createBooking = async (
       eventResult.rows[0];
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // EVENT END CHECK
-    // -------------------------------------------------------
+    // =======================================================
 
     if (
       event.event_date &&
@@ -546,12 +360,20 @@ const createBooking = async (
       const eventDate =
         event.event_date
           .toString()
-          .slice(0, 10);
+          .slice(
+            0,
+            10
+          );
+
 
       const endTime =
         event.end_time
           .toString()
-          .slice(0, 8);
+          .slice(
+            0,
+            8
+          );
+
 
       const eventEnd =
         new Date(
@@ -570,23 +392,30 @@ const createBooking = async (
           "ROLLBACK"
         );
 
+
         return res.status(400).json({
+
           success: false,
+
           message:
             "This event has already ended",
+
         });
+
       }
+
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // DUPLICATE BOOKING CHECK
-    // -------------------------------------------------------
+    // =======================================================
 
     const existing =
       await client.query(
         `
         SELECT
+
           id,
           booking_code,
           booking_status
@@ -594,6 +423,7 @@ const createBooking = async (
         FROM event_bookings
 
         WHERE event_id = $1
+
           AND user_id = $2
 
           AND booking_status NOT IN
@@ -612,14 +442,17 @@ const createBooking = async (
 
 
     if (
-      existing.rows.length > 0
+      existing.rows.length >
+      0
     ) {
 
       await client.query(
         "ROLLBACK"
       );
 
+
       return res.status(409).json({
+
         success: false,
 
         message:
@@ -627,13 +460,15 @@ const createBooking = async (
 
         booking:
           existing.rows[0],
+
       });
+
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // SLOT CHECK
-    // -------------------------------------------------------
+    // =======================================================
 
     if (
       event.max_slots !== null
@@ -655,7 +490,9 @@ const createBooking = async (
               'completed'
             )
           `,
-          [eventId]
+          [
+            eventId,
+          ]
         );
 
 
@@ -668,27 +505,37 @@ const createBooking = async (
 
       if (
         booked >=
-        Number(event.max_slots)
+        Number(
+          event.max_slots
+        )
       ) {
 
         await client.query(
           "ROLLBACK"
         );
 
+
         return res.status(409).json({
+
           success: false,
+
           message:
             "No booking slots are available",
+
         });
+
       }
+
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // UNIQUE BOOKING CODE
-    // -------------------------------------------------------
+    // =======================================================
 
-    let bookingCode = null;
+    let bookingCode =
+      null;
+
 
     for (
       let i = 0;
@@ -699,27 +546,36 @@ const createBooking = async (
       const generated =
         generateBookingCode();
 
+
       const check =
         await client.query(
           `
           SELECT id
+
           FROM event_bookings
+
           WHERE booking_code = $1
+
           LIMIT 1
           `,
-          [generated]
+          [
+            generated,
+          ]
         );
 
 
       if (
-        check.rows.length === 0
+        check.rows.length ===
+        0
       ) {
 
         bookingCode =
           generated;
 
         break;
+
       }
+
     }
 
 
@@ -728,16 +584,23 @@ const createBooking = async (
       throw new Error(
         "Unable to generate unique booking code"
       );
+
     }
 
 
+    // =======================================================
+    // AMOUNT
+    // =======================================================
+
     const amount =
-      Number(event.price || 0);
+      Number(
+        event.price || 0
+      );
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // CREATE BOOKING
-    // -------------------------------------------------------
+    // =======================================================
 
     const bookingResult =
       await client.query(
@@ -775,9 +638,9 @@ const createBooking = async (
       bookingResult.rows[0];
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // CREATE PAYMENT
-    // -------------------------------------------------------
+    // =======================================================
 
     const paymentResult =
       await client.query(
@@ -807,29 +670,47 @@ const createBooking = async (
       );
 
 
+    // =======================================================
+    // COMMIT
+    // =======================================================
+
     await client.query(
       "COMMIT"
     );
 
 
-    // -------------------------------------------------------
-    // UPI
-    // -------------------------------------------------------
+    // =======================================================
+    // UPI CONFIG
+    // =======================================================
 
     const {
       upiId,
       payeeName,
-    } = getUpiConfig();
+    } =
+      getUpiConfig();
 
+
+    // =======================================================
+    // UPI URL
+    // =======================================================
 
     const upiUrl =
       createUpiUrl({
+
         upiId,
+
         payeeName,
+
         amount,
+
         bookingCode,
+
       });
 
+
+    // =======================================================
+    // RESPONSE
+    // =======================================================
 
     return res.status(201).json({
 
@@ -851,55 +732,34 @@ const createBooking = async (
         event_name:
           event.title,
 
-        event_type:
-          event.event_type,
-
-        description:
-          event.description,
-
-        doctor_name:
-          event.doctor_name,
-
-        specialization:
-          event.specialization,
-
-        event_date:
-          event.event_date,
-
-        start_time:
-          event.start_time,
-
-        end_time:
-          event.end_time,
-
-        venue:
-          event.venue,
-
-        event_mode:
-          event.event_mode,
-
-        price:
-          event.price,
-
-        max_slots:
-          event.max_slots,
-
-        image_url:
-          event.image_url,
-
-        payment_id:
-          paymentResult.rows[0]?.id,
-
         payment_status:
-          paymentResult.rows[0]?.payment_status,
+          "pending",
 
-        payment_method:
-          paymentResult.rows[0]?.payment_method,
+        upi_id:
+          upiId,
 
-        upi_url:
+        upi_qr_url:
           upiUrl,
 
+        payment_qr_url:
+          upiUrl,
+
+        payee_name:
+          payeeName,
+
+        // Event pass is now handled
+        // by eventPassController.
+
+        pass:
+          null,
+
+        attendance:
+          null,
+
       },
+
+      payment:
+        paymentResult.rows[0],
 
     });
 
@@ -917,16 +777,11 @@ const createBooking = async (
     ) {
 
       console.error(
-        "Create booking rollback error:",
-        rollbackError
+        "Rollback error:",
+        rollbackError.message
       );
+
     }
-
-
-    console.error(
-      "Create booking error:",
-      error
-    );
 
 
     return sendDatabaseError(
@@ -935,6 +790,7 @@ const createBooking = async (
       error
     );
 
+
   } finally {
 
     client.release();
@@ -942,6 +798,8 @@ const createBooking = async (
   }
 
 };
+
+
 // =========================================================
 // GET MY BOOKINGS
 // GET /api/bookings
@@ -961,10 +819,14 @@ const getMyBookings = async (
     if (!userId) {
 
       return res.status(401).json({
+
         success: false,
+
         message:
           "User authentication required",
+
       });
+
     }
 
 
@@ -974,78 +836,141 @@ const getMyBookings = async (
         SELECT
 
           b.id,
+
           b.id AS booking_id,
+
           b.booking_code,
+
           b.user_id,
+
           b.event_id,
+
           b.amount,
+
           b.booking_status,
+
           b.created_at,
+
           b.updated_at,
 
+
+          -- USER
+
           u.full_name,
+
           u.username,
+
           u.profile_image_url,
 
+
+          -- EVENT
+
           e.title AS event_title,
+
           e.title AS event_name,
+
           e.event_type,
+
           e.description,
+
           e.doctor_name,
+
           e.specialization,
+
           e.event_date,
+
           e.start_time,
+
           e.end_time,
+
           e.venue,
+
           e.event_mode,
+
           e.image_url,
+
           e.max_slots,
 
+
+          -- PAYMENT
+
           p.id AS payment_id,
+
           p.payment_status,
+
           p.transaction_id,
+
           p.payment_method,
+
           p.payment_proof_url,
+
           p.amount AS payment_amount,
+
           p.created_at AS payment_created_at,
 
-          ep.id AS pass_id,
-          ep.pass_code,
-          ep.pass_token,
-          ep.valid_from,
-          ep.valid_until,
-          ep.created_at AS pass_created_at
+
+          -- PASS EXISTS ONLY
+          --
+          -- Actual pass data is handled by
+          -- eventPassController.
+
+          CASE
+            WHEN ep.id IS NOT NULL
+            THEN TRUE
+            ELSE FALSE
+          END AS has_pass
+
 
         FROM event_bookings b
+
 
         INNER JOIN events e
           ON e.id = b.event_id
 
+
         LEFT JOIN users u
           ON u.id = b.user_id
 
+
         LEFT JOIN LATERAL (
+
           SELECT *
+
           FROM event_payments
+
           WHERE booking_id = b.id
+
           ORDER BY id DESC
+
           LIMIT 1
+
         ) p ON TRUE
 
+
         LEFT JOIN LATERAL (
-          SELECT *
+
+          SELECT id
+
           FROM event_passes
+
           WHERE booking_id = b.id
+
           ORDER BY id DESC
+
           LIMIT 1
+
         ) ep ON TRUE
 
+
         WHERE b.user_id = $1
+
 
         ORDER BY
           b.created_at DESC
         `,
-        [userId]
+        [
+          userId,
+        ]
       );
 
 
@@ -1088,9 +1013,47 @@ const getMyBookingById =
       const userId =
         req.userId;
 
+
       const {
         id,
       } = req.params;
+
+
+      if (!userId) {
+
+        return res.status(401).json({
+
+          success: false,
+
+          message:
+            "User authentication required",
+
+        });
+
+      }
+
+
+      const bookingId =
+        Number(id);
+
+
+      if (
+        !Number.isInteger(
+          bookingId
+        ) ||
+        bookingId <= 0
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message:
+            "Invalid booking ID",
+
+        });
+
+      }
 
 
       const result =
@@ -1099,93 +1062,157 @@ const getMyBookingById =
           SELECT
 
             b.id,
+
             b.id AS booking_id,
+
             b.booking_code,
+
             b.user_id,
+
             b.event_id,
+
             b.amount,
+
             b.booking_status,
+
             b.created_at,
+
             b.updated_at,
 
+
+            -- USER
+
             u.full_name,
+
             u.username,
+
             u.profile_image_url,
 
+
+            -- EVENT
+
             e.title AS event_title,
+
             e.title AS event_name,
+
             e.event_type,
+
             e.description,
+
             e.doctor_name,
+
             e.specialization,
+
             e.event_date,
+
             e.start_time,
+
             e.end_time,
+
             e.venue,
+
             e.event_mode,
+
             e.image_url,
+
             e.max_slots,
 
+
+            -- PAYMENT
+
             p.id AS payment_id,
+
             p.payment_method,
+
             p.amount AS payment_amount,
+
             p.payment_status,
+
             p.transaction_id,
+
             p.payment_proof_url,
+
             p.created_at AS payment_created_at,
 
-            ep.id AS pass_id,
-            ep.pass_code,
-            ep.pass_token,
-            ep.valid_from,
-            ep.valid_until,
-            ep.created_at AS pass_created_at
+
+            -- PASS EXISTENCE
+
+            CASE
+              WHEN ep.id IS NOT NULL
+              THEN TRUE
+              ELSE FALSE
+            END AS has_pass
+
 
           FROM event_bookings b
+
 
           INNER JOIN events e
             ON e.id = b.event_id
 
+
           LEFT JOIN users u
             ON u.id = b.user_id
 
+
           LEFT JOIN LATERAL (
+
             SELECT *
+
             FROM event_payments
+
             WHERE booking_id = b.id
+
             ORDER BY id DESC
+
             LIMIT 1
+
           ) p ON TRUE
 
+
           LEFT JOIN LATERAL (
-            SELECT *
+
+            SELECT id
+
             FROM event_passes
+
             WHERE booking_id = b.id
+
             ORDER BY id DESC
+
             LIMIT 1
+
           ) ep ON TRUE
 
+
           WHERE b.id = $1
+
             AND b.user_id = $2
+
 
           LIMIT 1
           `,
           [
-            id,
+            bookingId,
             userId,
           ]
         );
 
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
 
         return res.status(404).json({
+
           success: false,
+
           message:
             "Booking not found",
+
         });
+
       }
 
 
@@ -1202,12 +1229,17 @@ const getMyBookingById =
 
       const upiUrl =
         createUpiUrl({
+
           upiId,
+
           payeeName,
+
           amount:
             booking.amount,
+
           bookingCode:
             booking.booking_code,
+
         });
 
 
@@ -1237,11 +1269,8 @@ const getMyBookingById =
 
           has_pass:
             Boolean(
-              booking.pass_id
+              booking.has_pass
             ),
-
-          has_attendance:
-            false,
 
           attendance_status:
             "not_present",
@@ -1265,219 +1294,6 @@ const getMyBookingById =
 
 
 // =========================================================
-// GET MY EVENT PASS
-// GET /api/bookings/:id/pass
-// =========================================================
-
-const getMyPass = async (
-  req,
-  res
-) => {
-
-  try {
-
-    const userId =
-      req.userId;
-
-    const {
-      id,
-    } = req.params;
-
-
-    const result =
-      await pool.query(
-        `
-        SELECT
-
-          ep.id AS pass_id,
-          ep.pass_code,
-          ep.pass_token,
-          ep.valid_from,
-          ep.valid_until,
-          ep.created_at AS pass_created_at,
-
-          b.id AS booking_id,
-          b.booking_code,
-          b.amount,
-          b.booking_status,
-
-          u.id AS user_id,
-          u.full_name,
-          u.username,
-          u.profile_image_url,
-
-          e.id AS event_id,
-          e.title AS event_name,
-          e.event_date,
-          e.start_time,
-          e.end_time,
-          e.venue,
-          e.event_mode,
-
-          p.payment_status,
-          p.transaction_id
-
-        FROM event_passes ep
-
-        INNER JOIN event_bookings b
-          ON b.id = ep.booking_id
-
-        INNER JOIN users u
-          ON u.id = b.user_id
-
-        INNER JOIN events e
-          ON e.id = b.event_id
-
-        LEFT JOIN LATERAL (
-          SELECT
-            payment_status,
-            transaction_id
-          FROM event_payments
-          WHERE booking_id = b.id
-          ORDER BY id DESC
-          LIMIT 1
-        ) p ON TRUE
-
-        WHERE ep.booking_id = $1
-          AND b.user_id = $2
-          AND b.booking_status = 'confirmed'
-          AND p.payment_status = 'verified'
-
-        ORDER BY
-          ep.id DESC
-
-        LIMIT 1
-        `,
-        [
-          id,
-          userId,
-        ]
-      );
-
-
-    if (
-      result.rows.length === 0
-    ) {
-
-      return res.status(404).json({
-        success: false,
-        message:
-          "Valid event pass not found.",
-      });
-    }
-
-
-    const pass =
-      result.rows[0];
-
-
-    // -------------------------------------------------------
-    // QR PAYLOAD
-    // -------------------------------------------------------
-
-    const qrData = {
-
-      type:
-        "SNICT_EVENT_PASS",
-
-      version:
-        1,
-
-      passId:
-        pass.pass_id,
-
-      passCode:
-        pass.pass_code,
-
-      passToken:
-        pass.pass_token,
-
-      bookingId:
-        pass.booking_id,
-
-      bookingCode:
-        pass.booking_code,
-
-      userId:
-        pass.user_id,
-
-      userName:
-        pass.full_name,
-
-      eventId:
-        pass.event_id,
-
-      eventName:
-        pass.event_name,
-
-      eventDate:
-        pass.event_date,
-
-      startTime:
-        pass.start_time,
-
-      endTime:
-        pass.end_time,
-
-      venue:
-        pass.venue,
-
-      eventMode:
-        pass.event_mode,
-
-      validFrom:
-        pass.valid_from,
-
-      validUntil:
-        pass.valid_until,
-
-    };
-
-
-    return res.json({
-
-      success: true,
-
-      pass: {
-
-        ...pass,
-
-        qr_data:
-          qrData,
-
-        qr_payload:
-          JSON.stringify(
-            qrData
-          ),
-
-        has_attendance:
-          false,
-
-        attendance_required:
-          true,
-
-        attendance_status:
-          "not_present",
-
-      },
-
-    });
-
-
-  } catch (error) {
-
-    return sendDatabaseError(
-      res,
-      "Unable to fetch event pass",
-      error
-    );
-
-  }
-
-};
-
-
-// =========================================================
 // ADMIN - GET ALL BOOKINGS
 // GET /api/bookings/admin
 // =========================================================
@@ -1495,92 +1311,162 @@ const getAllBookings =
           `
           SELECT
 
+            -- =================================================
             -- BOOKING
+            -- =================================================
 
             b.id,
+
             b.id AS booking_id,
+
             b.booking_code,
+
             b.user_id,
+
             b.event_id,
+
             b.amount,
+
             b.booking_status,
+
             b.booking_status AS status,
+
             b.created_at AS booking_created_at,
+
             b.updated_at AS booking_updated_at,
 
+
+            -- =================================================
             -- USER
+            -- =================================================
 
             u.id AS member_id,
+
             u.full_name,
+
             u.username,
+
             u.username AS user_name,
+
             u.email,
+
             u.mobile,
+
             u.profile_image_url,
+
             u.age,
+
             u.sex,
+
             u.address,
+
             u.blood_group,
 
+
+            -- =================================================
             -- EVENT
+            -- =================================================
 
             e.id AS event_db_id,
+
             e.title AS event_title,
+
             e.title AS event_name,
+
             e.event_type,
+
             e.description AS event_description,
+
             e.doctor_name,
+
             e.specialization,
+
             e.event_date,
+
             e.start_time,
+
             e.end_time,
+
             e.venue,
+
             e.event_mode,
+
             e.price AS event_price,
+
             e.max_slots,
+
             e.image_url,
+
             e.booking_enabled,
+
             e.published,
 
+
+            -- =================================================
             -- PAYMENT
+            -- =================================================
 
             p.id AS payment_id,
+
             p.payment_method,
+
             p.transaction_id,
+
             p.amount AS payment_amount,
+
             p.payment_status,
+
             p.payment_proof_url,
+
             p.verified_by,
+
             p.verified_at,
+
             p.created_at AS payment_created_at,
 
-            -- PASS
 
-            ep.id AS pass_id,
-            ep.pass_code,
-            ep.pass_token,
-            ep.valid_from,
-            ep.valid_until,
-            ep.created_at AS pass_created_at
+            -- =================================================
+            -- PASS EXISTENCE
+            -- =================================================
+
+            CASE
+              WHEN ep.id IS NOT NULL
+              THEN TRUE
+              ELSE FALSE
+            END AS has_pass
+
 
           FROM event_bookings b
+
 
           LEFT JOIN users u
             ON u.id = b.user_id
 
+
           LEFT JOIN events e
             ON e.id = b.event_id
 
+
           LEFT JOIN LATERAL (
+
             SELECT
+
               id,
+
               payment_method,
+
               transaction_id,
+
               amount,
+
               payment_status,
+
               payment_proof_url,
+
               verified_by,
+
               verified_at,
+
               created_at
 
             FROM event_payments
@@ -1590,16 +1476,13 @@ const getAllBookings =
             ORDER BY id DESC
 
             LIMIT 1
+
           ) p ON TRUE
 
+
           LEFT JOIN LATERAL (
-            SELECT
-              id,
-              pass_code,
-              pass_token,
-              valid_from,
-              valid_until,
-              created_at
+
+            SELECT id
 
             FROM event_passes
 
@@ -1608,7 +1491,9 @@ const getAllBookings =
             ORDER BY id DESC
 
             LIMIT 1
+
           ) ep ON TRUE
+
 
           ORDER BY
             b.created_at DESC
@@ -1660,113 +1545,227 @@ const getAdminBookingById =
       } = req.params;
 
 
+      const bookingId =
+        Number(id);
+
+
+      if (
+        !Number.isInteger(
+          bookingId
+        ) ||
+        bookingId <= 0
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message:
+            "Invalid booking ID",
+
+        });
+
+      }
+
+
       const result =
         await pool.query(
           `
           SELECT
 
+            -- =================================================
+            -- BOOKING
+            -- =================================================
+
             b.id,
+
             b.id AS booking_id,
+
             b.booking_code,
+
             b.user_id,
+
             b.event_id,
+
             b.amount,
+
             b.booking_status,
+
             b.booking_status AS status,
+
             b.created_at,
+
             b.updated_at,
 
+
+            -- =================================================
+            -- USER
+            -- =================================================
+
             u.id AS member_id,
+
             u.full_name,
+
             u.username,
+
             u.email,
+
             u.mobile,
+
             u.age,
+
             u.sex,
+
             u.address,
+
             u.blood_group,
+
             u.profile_image_url,
 
+
+            -- =================================================
+            -- EVENT
+            -- =================================================
+
             e.id AS event_db_id,
+
             e.title AS event_title,
+
             e.title AS event_name,
+
             e.event_type,
+
             e.description AS event_description,
+
             e.doctor_name,
+
             e.specialization,
+
             e.event_date,
+
             e.start_time,
+
             e.end_time,
+
             e.venue,
+
             e.event_mode,
+
             e.price AS event_price,
+
             e.max_slots,
+
             e.image_url,
+
             e.booking_enabled,
+
             e.published,
 
+
+            -- =================================================
+            -- PAYMENT
+            -- =================================================
+
             p.id AS payment_id,
+
             p.payment_method,
+
             p.transaction_id,
+
             p.amount AS payment_amount,
+
             p.payment_status,
+
             p.payment_proof_url,
+
             p.verified_by,
+
             p.verified_at,
+
             p.created_at AS payment_created_at,
 
-            ep.id AS pass_id,
-            ep.pass_code,
-            ep.pass_token,
-            ep.valid_from,
-            ep.valid_until,
-            ep.created_at AS pass_created_at
+
+            -- =================================================
+            -- PASS EXISTENCE
+            -- =================================================
+
+            CASE
+              WHEN ep.id IS NOT NULL
+              THEN TRUE
+              ELSE FALSE
+            END AS has_pass
+
 
           FROM event_bookings b
+
 
           LEFT JOIN users u
             ON u.id = b.user_id
 
+
           LEFT JOIN events e
             ON e.id = b.event_id
 
-          LEFT JOIN LATERAL (
-            SELECT *
-            FROM event_payments
-            WHERE booking_id = b.id
-            ORDER BY id DESC
-            LIMIT 1
-          ) p ON TRUE
 
           LEFT JOIN LATERAL (
+
             SELECT *
-            FROM event_passes
+
+            FROM event_payments
+
             WHERE booking_id = b.id
+
             ORDER BY id DESC
+
             LIMIT 1
+
+          ) p ON TRUE
+
+
+          LEFT JOIN LATERAL (
+
+            SELECT id
+
+            FROM event_passes
+
+            WHERE booking_id = b.id
+
+            ORDER BY id DESC
+
+            LIMIT 1
+
           ) ep ON TRUE
+
 
           WHERE b.id = $1
 
+
           LIMIT 1
           `,
-          [id]
+          [
+            bookingId,
+          ]
         );
 
 
       if (
-        result.rows.length === 0
+        result.rows.length ===
+        0
       ) {
 
         return res.status(404).json({
+
           success: false,
+
           message:
             "Booking not found",
+
         });
+
       }
 
 
-      return res.status(200).json({
+      return res.json({
 
         success: true,
 
@@ -1787,23 +1786,11 @@ const getAdminBookingById =
     }
 
   };
-  // =========================================================
+
+
+// =========================================================
 // ADMIN - UPDATE BOOKING / PAYMENT STATUS
 // PUT /api/bookings/admin/:id/status
-// =========================================================
-//
-// IMPORTANT FIX:
-//
-// event_payments.verified_by = INTEGER
-//
-// Therefore DO NOT save:
-//
-// req.adminId
-//
-// if req.adminId is UUID.
-//
-// We only update payment_status and verified_at.
-//
 // =========================================================
 
 const updateBookingStatus =
@@ -1815,6 +1802,7 @@ const updateBookingStatus =
     const client =
       await pool.connect();
 
+
     try {
 
       const {
@@ -1822,11 +1810,35 @@ const updateBookingStatus =
       } = req.params;
 
 
+      const bookingId =
+        Number(id);
+
+
+      if (
+        !Number.isInteger(
+          bookingId
+        ) ||
+        bookingId <= 0
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message:
+            "Invalid booking ID",
+
+        });
+
+      }
+
+
       let {
         status,
         bookingStatus,
         paymentStatus,
-      } = req.body;
+      } =
+        req.body;
 
 
       let finalBookingStatus =
@@ -1840,9 +1852,9 @@ const updateBookingStatus =
         null;
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // AUTOMATIC STATUS SYNC
-      // -------------------------------------------------------
+      // =====================================================
 
       if (
         finalBookingStatus ===
@@ -1852,6 +1864,7 @@ const updateBookingStatus =
 
         finalPaymentStatus =
           "verified";
+
       }
 
 
@@ -1863,28 +1876,45 @@ const updateBookingStatus =
 
         finalBookingStatus =
           "confirmed";
+
       }
 
 
-      // -------------------------------------------------------
-      // ALLOWED STATUS
-      // -------------------------------------------------------
+      // =====================================================
+      // ALLOWED BOOKING STATUS
+      // =====================================================
 
       const allowedBookingStatuses = [
+
         "payment_pending",
+
         "confirmed",
+
         "completed",
+
         "cancelled",
+
         "rejected",
+
       ];
 
 
+      // =====================================================
+      // ALLOWED PAYMENT STATUS
+      // =====================================================
+
       const allowedPaymentStatuses = [
+
         "pending",
+
         "submitted",
+
         "verified",
+
         "rejected",
+
         "refunded",
+
       ];
 
 
@@ -1896,10 +1926,14 @@ const updateBookingStatus =
       ) {
 
         return res.status(400).json({
+
           success: false,
+
           message:
             `Invalid booking status: ${finalBookingStatus}`,
+
         });
+
       }
 
 
@@ -1911,10 +1945,14 @@ const updateBookingStatus =
       ) {
 
         return res.status(400).json({
+
           success: false,
+
           message:
             `Invalid payment status: ${finalPaymentStatus}`,
+
         });
+
       }
 
 
@@ -1924,10 +1962,14 @@ const updateBookingStatus =
       ) {
 
         return res.status(400).json({
+
           success: false,
+
           message:
             "No status provided",
+
         });
+
       }
 
 
@@ -1936,16 +1978,19 @@ const updateBookingStatus =
       );
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // CHECK BOOKING
-      // -------------------------------------------------------
+      // =====================================================
 
       const bookingCheck =
         await client.query(
           `
           SELECT
+
             id,
+
             event_id,
+
             booking_status
 
           FROM event_bookings
@@ -1954,7 +1999,9 @@ const updateBookingStatus =
 
           FOR UPDATE
           `,
-          [id]
+          [
+            bookingId,
+          ]
         );
 
 
@@ -1967,17 +2014,22 @@ const updateBookingStatus =
           "ROLLBACK"
         );
 
+
         return res.status(404).json({
+
           success: false,
+
           message:
             "Booking not found",
+
         });
+
       }
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // UPDATE BOOKING
-      // -------------------------------------------------------
+      // =====================================================
 
       if (
         finalBookingStatus
@@ -1988,6 +2040,7 @@ const updateBookingStatus =
           UPDATE event_bookings
 
           SET
+
             booking_status = $1,
 
             updated_at =
@@ -1997,15 +2050,16 @@ const updateBookingStatus =
           `,
           [
             finalBookingStatus,
-            id,
+            bookingId,
           ]
         );
+
       }
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // UPDATE PAYMENT
-      // -------------------------------------------------------
+      // =====================================================
 
       if (
         finalPaymentStatus
@@ -2017,13 +2071,19 @@ const updateBookingStatus =
             UPDATE event_payments
 
             SET
+
               payment_status = $1,
 
               verified_at =
                 CASE
-                  WHEN $1 = 'verified'
+
+                  WHEN $1 =
+                    'verified'
+
                   THEN CURRENT_TIMESTAMP
+
                   ELSE verified_at
+
                 END
 
             WHERE booking_id = $2
@@ -2032,7 +2092,7 @@ const updateBookingStatus =
             `,
             [
               finalPaymentStatus,
-              id,
+              bookingId,
             ]
           );
 
@@ -2046,18 +2106,24 @@ const updateBookingStatus =
             "ROLLBACK"
           );
 
+
           return res.status(404).json({
+
             success: false,
+
             message:
               "Payment record not found",
+
           });
+
         }
+
       }
 
 
-      // -------------------------------------------------------
-      // GET FINAL STATUS
-      // -------------------------------------------------------
+      // =====================================================
+      // CHECK FINAL STATUS
+      // =====================================================
 
       const currentStatus =
         await client.query(
@@ -2065,14 +2131,15 @@ const updateBookingStatus =
           SELECT
 
             b.booking_status,
-            b.event_id,
 
             p.payment_status
 
           FROM event_bookings b
 
           LEFT JOIN LATERAL (
+
             SELECT
+
               payment_status
 
             FROM event_payments
@@ -2089,46 +2156,29 @@ const updateBookingStatus =
 
           LIMIT 1
           `,
-          [id]
+          [
+            bookingId,
+          ]
         );
 
 
-      let eventPass =
-        null;
+      // =====================================================
+      // IMPORTANT
+      //
+      // Event pass generation is NOT handled here.
+      //
+      // If payment is confirmed through this generic status
+      // endpoint, the pass can be generated separately through
+      // eventPassController.
+      //
+      // The dedicated confirmPayment endpoint handles pass
+      // generation immediately.
+      // =====================================================
 
 
-      // -------------------------------------------------------
-      // CREATE PASS
-      // -------------------------------------------------------
-
-      if (
-        currentStatus.rows.length >
-        0
-      ) {
-
-        const current =
-          currentStatus.rows[0];
-
-
-        if (
-          current.booking_status ===
-            "confirmed" &&
-          current.payment_status ===
-            "verified"
-        ) {
-
-          eventPass =
-            await createEventPass(
-              client,
-              id
-            );
-        }
-      }
-
-
-      // -------------------------------------------------------
+      // =====================================================
       // GET UPDATED BOOKING
-      // -------------------------------------------------------
+      // =====================================================
 
       const updated =
         await client.query(
@@ -2136,55 +2186,91 @@ const updateBookingStatus =
           SELECT
 
             b.id,
+
             b.booking_code,
+
             b.user_id,
+
             b.event_id,
+
             b.amount,
+
             b.booking_status,
+
             b.created_at,
+
             b.updated_at,
 
+
             u.full_name,
+
             u.username,
+
             u.email,
+
             u.mobile,
+
             u.profile_image_url,
 
+
             e.title AS event_title,
+
             e.title AS event_name,
+
             e.event_type,
+
             e.event_date,
+
             e.start_time,
+
             e.end_time,
+
             e.venue,
+
             e.event_mode,
+
             e.image_url,
 
+
             p.id AS payment_id,
+
             p.payment_status,
+
             p.transaction_id,
+
             p.payment_method,
+
             p.payment_proof_url,
+
             p.amount AS payment_amount,
+
             p.verified_by,
+
             p.verified_at,
 
-            ep.id AS pass_id,
-            ep.pass_code,
-            ep.pass_token,
-            ep.valid_from,
-            ep.valid_until
+
+            CASE
+              WHEN ep.id IS NOT NULL
+              THEN TRUE
+              ELSE FALSE
+            END AS has_pass
+
 
           FROM event_bookings b
+
 
           LEFT JOIN users u
             ON u.id = b.user_id
 
+
           LEFT JOIN events e
             ON e.id = b.event_id
 
+
           LEFT JOIN LATERAL (
+
             SELECT *
+
             FROM event_payments
 
             WHERE booking_id = b.id
@@ -2192,10 +2278,14 @@ const updateBookingStatus =
             ORDER BY id DESC
 
             LIMIT 1
+
           ) p ON TRUE
 
+
           LEFT JOIN LATERAL (
-            SELECT *
+
+            SELECT id
+
             FROM event_passes
 
             WHERE booking_id = b.id
@@ -2203,13 +2293,17 @@ const updateBookingStatus =
             ORDER BY id DESC
 
             LIMIT 1
+
           ) ep ON TRUE
+
 
           WHERE b.id = $1
 
           LIMIT 1
           `,
-          [id]
+          [
+            bookingId,
+          ]
         );
 
 
@@ -2227,12 +2321,6 @@ const updateBookingStatus =
 
         booking:
           updated.rows[0],
-
-        pass:
-          eventPass,
-
-        attendance:
-          null,
 
       });
 
@@ -2253,6 +2341,7 @@ const updateBookingStatus =
           "Rollback error:",
           rollbackError.message
         );
+
       }
 
 
@@ -2277,14 +2366,11 @@ const updateBookingStatus =
 // DELETE /api/bookings/admin/:id
 // =========================================================
 //
-// IMPORTANT:
+// Deletes related records first.
 //
-// event_attendance.booking_id = INTEGER
-// event_bookings.id           = INTEGER
-//
-// Therefore attendance is deleted using booking_id.
-//
-// DO NOT use event_attendance.event_id here.
+// event_attendance.booking_id
+// event_passes.booking_id
+// event_payments.booking_id
 //
 // =========================================================
 
@@ -2297,6 +2383,7 @@ const deleteBooking =
     const client =
       await pool.connect();
 
+
     try {
 
       const {
@@ -2304,20 +2391,45 @@ const deleteBooking =
       } = req.params;
 
 
+      const bookingId =
+        Number(id);
+
+
+      if (
+        !Number.isInteger(
+          bookingId
+        ) ||
+        bookingId <= 0
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message:
+            "Invalid booking ID",
+
+        });
+
+      }
+
+
       await client.query(
         "BEGIN"
       );
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // CHECK BOOKING
-      // -------------------------------------------------------
+      // =====================================================
 
       const booking =
         await client.query(
           `
           SELECT
+
             id,
+
             booking_code
 
           FROM event_bookings
@@ -2326,7 +2438,9 @@ const deleteBooking =
 
           FOR UPDATE
           `,
-          [id]
+          [
+            bookingId,
+          ]
         );
 
 
@@ -2339,17 +2453,22 @@ const deleteBooking =
           "ROLLBACK"
         );
 
+
         return res.status(404).json({
+
           success: false,
+
           message:
             "Booking not found",
+
         });
+
       }
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // DELETE ATTENDANCE
-      // -------------------------------------------------------
+      // =====================================================
 
       await client.query(
         `
@@ -2357,13 +2476,15 @@ const deleteBooking =
 
         WHERE booking_id = $1
         `,
-        [id]
+        [
+          bookingId,
+        ]
       );
 
 
-      // -------------------------------------------------------
-      // DELETE PASS
-      // -------------------------------------------------------
+      // =====================================================
+      // DELETE EVENT PASS
+      // =====================================================
 
       await client.query(
         `
@@ -2371,13 +2492,15 @@ const deleteBooking =
 
         WHERE booking_id = $1
         `,
-        [id]
+        [
+          bookingId,
+        ]
       );
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // DELETE PAYMENT
-      // -------------------------------------------------------
+      // =====================================================
 
       await client.query(
         `
@@ -2385,13 +2508,15 @@ const deleteBooking =
 
         WHERE booking_id = $1
         `,
-        [id]
+        [
+          bookingId,
+        ]
       );
 
 
-      // -------------------------------------------------------
+      // =====================================================
       // DELETE BOOKING
-      // -------------------------------------------------------
+      // =====================================================
 
       const deleted =
         await client.query(
@@ -2401,12 +2526,32 @@ const deleteBooking =
           WHERE id = $1
 
           RETURNING
+
             id,
+
             booking_code
           `,
-          [id]
+          [
+            bookingId,
+          ]
         );
 
+
+      if (
+        deleted.rows.length ===
+        0
+      ) {
+
+        throw new Error(
+          "Booking deletion failed"
+        );
+
+      }
+
+
+      // =====================================================
+      // COMMIT
+      // =====================================================
 
       await client.query(
         "COMMIT"
@@ -2442,6 +2587,7 @@ const deleteBooking =
           "Rollback error:",
           rollbackError.message
         );
+
       }
 
 
@@ -2466,24 +2612,14 @@ const deleteBooking =
 // PUT /api/bookings/admin/:id/confirm-payment
 // =========================================================
 //
-// Confirms the latest payment for a booking.
-//
 // FLOW:
 //
-// 1. Check booking exists
+// 1. Check booking
 // 2. Get latest payment
 // 3. Verify payment
 // 4. Confirm booking
-// 5. Create event pass
-// 6. Return updated booking + payment + pass
-//
-// IMPORTANT:
-//
-// - event_payments.verified_by is INTEGER.
-// - event_attendance is NOT created here.
-// - Attendance is handled by attendanceController.js.
-// - Existing pass is reused.
-// - Duplicate passes are not created.
+// 5. Call eventPassController.createEventPass()
+// 6. Return booking + payment + pass
 //
 // =========================================================
 
@@ -2515,16 +2651,20 @@ const confirmPayment = async (
     ) {
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "Invalid booking ID",
+
       });
+
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // ADMIN ID
-    // -------------------------------------------------------
+    // =======================================================
 
     const rawAdminId =
       req.adminId ??
@@ -2536,7 +2676,9 @@ const confirmPayment = async (
       rawAdminId !== null &&
       rawAdminId !== undefined &&
       rawAdminId !== ""
-        ? Number(rawAdminId)
+        ? Number(
+            rawAdminId
+          )
         : null;
 
 
@@ -2545,9 +2687,9 @@ const confirmPayment = async (
     );
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // CHECK BOOKING
-    // -------------------------------------------------------
+    // =======================================================
 
     const bookingResult =
       await client.query(
@@ -2555,17 +2697,27 @@ const confirmPayment = async (
         SELECT
 
           b.id,
+
           b.booking_code,
+
           b.user_id,
+
           b.event_id,
+
           b.amount,
+
           b.booking_status,
 
           e.title AS event_title,
+
           e.event_date,
+
           e.start_time,
+
           e.end_time,
+
           e.venue,
+
           e.event_mode
 
         FROM event_bookings b
@@ -2577,7 +2729,9 @@ const confirmPayment = async (
 
         FOR UPDATE
         `,
-        [bookingId]
+        [
+          bookingId,
+        ]
       );
 
 
@@ -2592,10 +2746,14 @@ const confirmPayment = async (
 
 
       return res.status(404).json({
+
         success: false,
+
         message:
           "Booking not found",
+
       });
+
     }
 
 
@@ -2603,9 +2761,9 @@ const confirmPayment = async (
       bookingResult.rows[0];
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // GET LATEST PAYMENT
-    // -------------------------------------------------------
+    // =======================================================
 
     const paymentResult =
       await client.query(
@@ -2622,7 +2780,9 @@ const confirmPayment = async (
 
         FOR UPDATE
         `,
-        [bookingId]
+        [
+          bookingId,
+        ]
       );
 
 
@@ -2637,10 +2797,14 @@ const confirmPayment = async (
 
 
       return res.status(404).json({
+
         success: false,
+
         message:
           "Payment record not found",
+
       });
+
     }
 
 
@@ -2648,9 +2812,9 @@ const confirmPayment = async (
       paymentResult.rows[0];
 
 
-    // -------------------------------------------------------
-    // PAYMENT ALREADY VERIFIED
-    // -------------------------------------------------------
+    // =======================================================
+    // ALREADY VERIFIED
+    // =======================================================
 
     if (
       payment.payment_status ===
@@ -2658,6 +2822,19 @@ const confirmPayment = async (
       booking.booking_status ===
         "confirmed"
     ) {
+
+      // -----------------------------------------------------
+      // IMPORTANT:
+      //
+      // Pass creation is now delegated to
+      // eventPassController.
+      // -----------------------------------------------------
+
+      const {
+        createEventPass,
+      } =
+        require("./eventPassController");
+
 
       const existingPass =
         await createEventPass(
@@ -2672,31 +2849,49 @@ const confirmPayment = async (
           SELECT
 
             b.id AS booking_id,
+
             b.booking_code,
+
             b.event_id,
+
             b.user_id,
+
             b.amount AS booking_amount,
+
             b.booking_status,
 
+
             p.id AS payment_id,
+
             p.payment_method,
+
             p.transaction_id,
+
             p.amount AS payment_amount,
+
             p.payment_status,
+
             p.payment_proof_url,
+
             p.verified_by,
+
             p.verified_at,
 
-            ep.id AS pass_id,
-            ep.pass_code,
-            ep.pass_token,
-            ep.valid_from,
-            ep.valid_until
+
+            CASE
+              WHEN ep.id IS NOT NULL
+              THEN TRUE
+              ELSE FALSE
+            END AS has_pass
+
 
           FROM event_bookings b
 
+
           LEFT JOIN LATERAL (
+
             SELECT *
+
             FROM event_payments
 
             WHERE booking_id = b.id
@@ -2704,10 +2899,14 @@ const confirmPayment = async (
             ORDER BY id DESC
 
             LIMIT 1
+
           ) p ON TRUE
 
+
           LEFT JOIN LATERAL (
-            SELECT *
+
+            SELECT id
+
             FROM event_passes
 
             WHERE booking_id = b.id
@@ -2715,13 +2914,17 @@ const confirmPayment = async (
             ORDER BY id DESC
 
             LIMIT 1
+
           ) ep ON TRUE
+
 
           WHERE b.id = $1
 
           LIMIT 1
           `,
-          [bookingId]
+          [
+            bookingId,
+          ]
         );
 
 
@@ -2741,18 +2944,19 @@ const confirmPayment = async (
           finalResult.rows[0],
 
         payment:
-          finalResult.rows[0],
+          payment,
 
         pass:
           existingPass,
 
       });
+
     }
 
 
-    // -------------------------------------------------------
-    // DO NOT CONFIRM REJECTED / REFUNDED PAYMENT
-    // -------------------------------------------------------
+    // =======================================================
+    // REJECTED / REFUNDED PAYMENT
+    // =======================================================
 
     if (
       payment.payment_status ===
@@ -2774,12 +2978,13 @@ const confirmPayment = async (
           `Cannot confirm a ${payment.payment_status} payment`,
 
       });
+
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // TRANSACTION ID CHECK
-    // -------------------------------------------------------
+    // =======================================================
 
     if (
       !payment.transaction_id ||
@@ -2801,24 +3006,22 @@ const confirmPayment = async (
           "Cannot confirm payment without transaction ID",
 
       });
+
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // UPDATE PAYMENT
-    // -------------------------------------------------------
-    //
-    // verified_by is only written
-    // when it is a valid INTEGER.
-    //
-    // This avoids:
-    //
-    // UUID -> INTEGER
-    // errors.
-    //
+    // =======================================================
 
     let updatedPayment;
 
+
+    // -------------------------------------------------------
+    // verified_by is INTEGER.
+    //
+    // Only save it if adminId is a valid positive integer.
+    // -------------------------------------------------------
 
     if (
       Number.isInteger(
@@ -2857,6 +3060,7 @@ const confirmPayment = async (
       updatedPayment =
         result.rows[0];
 
+
     } else {
 
       const result =
@@ -2876,7 +3080,9 @@ const confirmPayment = async (
 
           RETURNING *
           `,
-          [payment.id]
+          [
+            payment.id,
+          ]
         );
 
 
@@ -2886,9 +3092,9 @@ const confirmPayment = async (
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // CONFIRM BOOKING
-    // -------------------------------------------------------
+    // =======================================================
 
     const updatedBookingResult =
       await client.query(
@@ -2907,7 +3113,9 @@ const confirmPayment = async (
 
         RETURNING *
         `,
-        [bookingId]
+        [
+          bookingId,
+        ]
       );
 
 
@@ -2915,9 +3123,21 @@ const confirmPayment = async (
       updatedBookingResult.rows[0];
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // CREATE / GET EVENT PASS
-    // -------------------------------------------------------
+    // =======================================================
+    //
+    // Event pass is now handled by:
+    //
+    // controllers/eventPassController.js
+    //
+    // =======================================================
+
+    const {
+      createEventPass,
+    } =
+      require("./eventPassController");
+
 
     const eventPass =
       await createEventPass(
@@ -2926,9 +3146,9 @@ const confirmPayment = async (
       );
 
 
-    // -------------------------------------------------------
-    // FINAL DATA
-    // -------------------------------------------------------
+    // =======================================================
+    // FINAL BOOKING DATA
+    // =======================================================
 
     const finalResult =
       await client.query(
@@ -2936,50 +3156,81 @@ const confirmPayment = async (
         SELECT
 
           b.id AS booking_id,
+
           b.booking_code,
+
           b.user_id,
+
           b.event_id,
+
           b.amount AS booking_amount,
+
           b.booking_status,
+
           b.created_at AS booking_created_at,
+
           b.updated_at AS booking_updated_at,
 
+
           u.full_name,
+
           u.username,
+
           u.email,
+
           u.mobile,
 
+
           e.title AS event_title,
+
           e.event_date,
+
           e.start_time,
+
           e.end_time,
+
           e.venue,
+
           e.event_mode,
 
+
           p.id AS payment_id,
+
           p.payment_method,
+
           p.transaction_id,
+
           p.amount AS payment_amount,
+
           p.payment_status,
+
           p.payment_proof_url,
+
           p.verified_by,
+
           p.verified_at,
 
-          ep.id AS pass_id,
-          ep.pass_code,
-          ep.pass_token,
-          ep.valid_from,
-          ep.valid_until
+
+          CASE
+            WHEN ep.id IS NOT NULL
+            THEN TRUE
+            ELSE FALSE
+          END AS has_pass
+
 
         FROM event_bookings b
+
 
         LEFT JOIN users u
           ON u.id = b.user_id
 
+
         LEFT JOIN events e
           ON e.id = b.event_id
 
+
         LEFT JOIN LATERAL (
+
           SELECT *
 
           FROM event_payments
@@ -2989,10 +3240,13 @@ const confirmPayment = async (
           ORDER BY id DESC
 
           LIMIT 1
+
         ) p ON TRUE
 
+
         LEFT JOIN LATERAL (
-          SELECT *
+
+          SELECT id
 
           FROM event_passes
 
@@ -3001,20 +3255,32 @@ const confirmPayment = async (
           ORDER BY id DESC
 
           LIMIT 1
+
         ) ep ON TRUE
+
 
         WHERE b.id = $1
 
         LIMIT 1
         `,
-        [bookingId]
+        [
+          bookingId,
+        ]
       );
 
+
+    // =======================================================
+    // COMMIT
+    // =======================================================
 
     await client.query(
       "COMMIT"
     );
 
+
+    // =======================================================
+    // RESPONSE
+    // =======================================================
 
     return res.status(200).json({
 
@@ -3051,11 +3317,13 @@ const confirmPayment = async (
         "Confirm payment rollback error:",
         rollbackError.message
       );
+
     }
 
 
     console.error(
-      "CONFIRM PAYMENT ERROR"
+      "CONFIRM PAYMENT ERROR:",
+      error
     );
 
 
@@ -3076,10 +3344,21 @@ const confirmPayment = async (
 
 
 // =========================================================
-// EXPORT
+// FINAL EXPORTS
+// =========================================================
+//
+// IMPORTANT:
+//
+// ONLY ONE module.exports BLOCK.
+// Event-pass functions are NOT exported from here.
+//
 // =========================================================
 
 module.exports = {
+
+  // =======================================================
+  // USER BOOKING
+  // =======================================================
 
   createBooking,
 
@@ -3087,7 +3366,10 @@ module.exports = {
 
   getMyBookingById,
 
-  getMyPass,
+
+  // =======================================================
+  // ADMIN BOOKING
+  // =======================================================
 
   getAllBookings,
 
@@ -3095,32 +3377,17 @@ module.exports = {
 
   updateBookingStatus,
 
-  confirmPayment,
 
-  deleteBooking,
-
-};
-// =========================================================
-// EXPORT
-// =========================================================
-
-module.exports = {
-
-  createBooking,
-
-  getMyBookings,
-
-  getMyBookingById,
-
-  getMyPass,
-
-  getAllBookings,
-
-  getAdminBookingById,
-
-  updateBookingStatus,
+  // =======================================================
+  // ADMIN PAYMENT
+  // =======================================================
 
   confirmPayment,
+
+
+  // =======================================================
+  // DELETE
+  // =======================================================
 
   deleteBooking,
 
