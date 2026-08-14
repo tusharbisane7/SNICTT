@@ -141,25 +141,75 @@ const EventPass = () => {
   };
 
   // =======================================================
-  // NORMALIZE API RESPONSE
+  // NORMALIZE EVENT PASS RESPONSE
   // =======================================================
 
-  const normalizeBookingResponse = (
+  const normalizePassResponse = (
     responseData
   ) => {
     if (!responseData) {
       return null;
     }
 
+    // -----------------------------------------------
+    // { pass: {...} }
+    // -----------------------------------------------
+
+    if (responseData.pass) {
+      return responseData.pass;
+    }
+
+    // -----------------------------------------------
+    // { eventPass: {...} }
+    // -----------------------------------------------
+
+    if (responseData.eventPass) {
+      return responseData.eventPass;
+    }
+
+    // -----------------------------------------------
+    // { event_pass: {...} }
+    // -----------------------------------------------
+
+    if (responseData.event_pass) {
+      return responseData.event_pass;
+    }
+
+    // -----------------------------------------------
+    // { booking: {...} }
+    // -----------------------------------------------
+
     if (responseData.booking) {
       return responseData.booking;
     }
 
-    if (
-      responseData.data?.booking
-    ) {
+    // -----------------------------------------------
+    // { data: { pass: {...} } }
+    // -----------------------------------------------
+
+    if (responseData.data?.pass) {
+      return responseData.data.pass;
+    }
+
+    // -----------------------------------------------
+    // { data: { eventPass: {...} } }
+    // -----------------------------------------------
+
+    if (responseData.data?.eventPass) {
+      return responseData.data.eventPass;
+    }
+
+    // -----------------------------------------------
+    // { data: { booking: {...} } }
+    // -----------------------------------------------
+
+    if (responseData.data?.booking) {
       return responseData.data.booking;
     }
+
+    // -----------------------------------------------
+    // { data: {...} }
+    // -----------------------------------------------
 
     if (responseData.data) {
       return responseData.data;
@@ -169,19 +219,10 @@ const EventPass = () => {
   };
 
   // =======================================================
-  // FETCH BOOKING
-  //
-  // IMPORTANT:
-  // We DO NOT call:
-  //
-  // /bookings/:id/pass
-  //
-  // We only use:
-  //
-  // /bookings/:id
+  // FETCH EVENT PASS
   // =======================================================
 
-  const fetchBooking = async (
+  const fetchPass = async (
     showLoader = true
   ) => {
     try {
@@ -190,6 +231,10 @@ const EventPass = () => {
       }
 
       setError("");
+
+      // ---------------------------------------------
+      // Validate booking ID
+      // ---------------------------------------------
 
       if (
         !bookingId ||
@@ -206,31 +251,61 @@ const EventPass = () => {
         return;
       }
 
-      const response = await api.get(
-        `/bookings/${bookingId}`
-      );
+      // =================================================
+      // DEDICATED EVENT PASS API
+      //
+      // IMPORTANT:
+      //
+      // Event Pass controller/routes are now separate
+      // from booking controller/routes.
+      // =================================================
 
-      const bookingData =
-        normalizeBookingResponse(
+      let response;
+
+      try {
+        response = await api.get(
+          `/event-passes/booking/${bookingId}`
+        );
+      } catch (passError) {
+        /*
+         * Compatibility fallback.
+         *
+         * If backend is still exposing the pass through
+         * booking route, this prevents the frontend from
+         * breaking immediately.
+         */
+
+        if (
+          passError?.response?.status === 404 ||
+          passError?.response?.status === 405
+        ) {
+          response = await api.get(
+            `/bookings/${bookingId}/pass`
+          );
+        } else {
+          throw passError;
+        }
+      }
+
+      const passData =
+        normalizePassResponse(
           response.data
         );
 
-      if (!bookingData) {
+      if (!passData) {
         setBooking(null);
 
         setError(
-          "Booking details could not be found."
+          "Event pass details could not be found."
         );
 
         return;
       }
 
-      setBooking(
-        bookingData
-      );
+      setBooking(passData);
     } catch (err) {
       console.error(
-        "Event pass booking error:",
+        "Event pass error:",
         err
       );
 
@@ -246,17 +321,17 @@ const EventPass = () => {
         );
       } else if (status === 403) {
         setError(
-          "You are not allowed to view this booking."
+          "You are not allowed to view this event pass."
         );
       } else if (status === 404) {
         setError(
           backendMessage ||
-            "Booking was not found."
+            "Event pass was not found."
         );
       } else {
         setError(
           backendMessage ||
-            "Unable to load booking details. Please try again."
+            "Unable to load event pass. Please try again."
         );
       }
 
@@ -279,10 +354,18 @@ const EventPass = () => {
 
       setLoading(false);
 
+      /*
+       * Even when booking data comes through
+       * navigation state, fetch the latest event pass
+       * so that passCode / attendanceCode are current.
+       */
+
+      fetchPass(false);
+
       return;
     }
 
-    fetchBooking(true);
+    fetchPass(true);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
@@ -294,7 +377,7 @@ const EventPass = () => {
   const handleRetry = async () => {
     setRetrying(true);
 
-    await fetchBooking(false);
+    await fetchPass(false);
   };
 
   // =======================================================
@@ -356,7 +439,7 @@ const EventPass = () => {
     );
 
   // =======================================================
-  // EVENT PASS DATA
+  // NESTED PASS
   // =======================================================
 
   const nestedPass =
@@ -364,6 +447,10 @@ const EventPass = () => {
     booking?.eventPass ||
     booking?.event_pass ||
     null;
+
+  // =======================================================
+  // PASS CODE
+  // =======================================================
 
   const passCode =
     firstValue(
@@ -384,6 +471,10 @@ const EventPass = () => {
       ],
       ""
     );
+
+  // =======================================================
+  // PASS TOKEN
+  // =======================================================
 
   const passToken =
     firstValue(
@@ -407,13 +498,6 @@ const EventPass = () => {
 
   // =======================================================
   // ATTENDANCE CODE
-  //
-  // Backend should return one of:
-  //
-  // attendance_code
-  // attendanceCode
-  // verification_code
-  // verificationCode
   // =======================================================
 
   const attendanceCode =
@@ -441,7 +525,7 @@ const EventPass = () => {
     );
 
   // =======================================================
-  // EVENT DATA
+  // EVENT ID
   // =======================================================
 
   const eventId =
@@ -454,6 +538,10 @@ const EventPass = () => {
       null
     );
 
+  // =======================================================
+  // EVENT DATE
+  // =======================================================
+
   const eventDate =
     firstValue(
       booking,
@@ -465,6 +553,10 @@ const EventPass = () => {
       ""
     );
 
+  // =======================================================
+  // START TIME
+  // =======================================================
+
   const startTime =
     firstValue(
       booking,
@@ -475,6 +567,10 @@ const EventPass = () => {
       ""
     );
 
+  // =======================================================
+  // END TIME
+  // =======================================================
+
   const endTime =
     firstValue(
       booking,
@@ -484,6 +580,10 @@ const EventPass = () => {
       ],
       ""
     );
+
+  // =======================================================
+  // VENUE
+  // =======================================================
 
   const venue =
     firstValue(
@@ -497,6 +597,10 @@ const EventPass = () => {
       "Venue will be announced"
     );
 
+  // =======================================================
+  // EVENT MODE
+  // =======================================================
+
   const eventMode =
     firstValue(
       booking,
@@ -509,7 +613,7 @@ const EventPass = () => {
     );
 
   // =======================================================
-  // STATUS
+  // BOOKING STATUS
   // =======================================================
 
   const bookingStatus =
@@ -523,6 +627,10 @@ const EventPass = () => {
       "confirmed"
     );
 
+  // =======================================================
+  // PAYMENT STATUS
+  // =======================================================
+
   const paymentStatus =
     firstValue(
       booking,
@@ -533,6 +641,10 @@ const EventPass = () => {
       "verified"
     );
 
+  // =======================================================
+  // TRANSACTION ID
+  // =======================================================
+
   const transactionId =
     firstValue(
       booking,
@@ -542,6 +654,10 @@ const EventPass = () => {
       ],
       ""
     );
+
+  // =======================================================
+  // AMOUNT
+  // =======================================================
 
   const amount =
     firstValue(
@@ -554,6 +670,10 @@ const EventPass = () => {
       ],
       null
     );
+
+  // =======================================================
+  // VALID FROM
+  // =======================================================
 
   const validFrom =
     firstValue(
@@ -572,6 +692,10 @@ const EventPass = () => {
       ],
       ""
     );
+
+  // =======================================================
+  // VALID UNTIL
+  // =======================================================
 
   const validUntil =
     firstValue(
@@ -617,13 +741,13 @@ const EventPass = () => {
       return "";
     }
 
-    return JSON.stringify({
-      type:
-        "SNICT_EVENT_PASS",
+    const qrData = {
+      type: "SNICT_EVENT_PASS",
 
       bookingId:
         Number(
           booking?.id ||
+          booking?.booking_id ||
           bookingId
         ),
 
@@ -646,7 +770,9 @@ const EventPass = () => {
       eventName,
 
       userName,
-    });
+    };
+
+    return JSON.stringify(qrData);
   }, [
     booking,
     bookingId,
@@ -671,9 +797,7 @@ const EventPass = () => {
         </style>
 
         <div className="event-pass-page">
-
           <div className="pass-loading">
-
             <div className="loading-spinner" />
 
             <h2>
@@ -681,12 +805,10 @@ const EventPass = () => {
             </h2>
 
             <p>
-              Please wait while we
-              load your booking.
+              Please wait while we load
+              your event pass.
             </p>
-
           </div>
-
         </div>
       </>
     );
@@ -707,9 +829,7 @@ const EventPass = () => {
         </style>
 
         <div className="event-pass-page">
-
           <div className="pass-topbar">
-
             <button
               type="button"
               className="back-button"
@@ -717,11 +837,9 @@ const EventPass = () => {
             >
               ← Back
             </button>
-
           </div>
 
           <div className="pass-error-card">
-
             <div className="error-icon">
               !
             </div>
@@ -732,20 +850,15 @@ const EventPass = () => {
 
             <p>
               {error ||
-                "The booking details are not available."}
+                "The event pass details are not available."}
             </p>
 
             <div className="error-actions">
-
               <button
                 type="button"
                 className="primary-button"
-                onClick={
-                  handleRetry
-                }
-                disabled={
-                  retrying
-                }
+                onClick={handleRetry}
+                disabled={retrying}
               >
                 {retrying
                   ? "Checking..."
@@ -755,17 +868,12 @@ const EventPass = () => {
               <button
                 type="button"
                 className="secondary-button"
-                onClick={
-                  handleBack
-                }
+                onClick={handleBack}
               >
                 Back to Bookings
               </button>
-
             </div>
-
           </div>
-
         </div>
       </>
     );
@@ -798,7 +906,6 @@ const EventPass = () => {
           </button>
 
           <div className="topbar-actions">
-
             <button
               type="button"
               className="print-button"
@@ -806,7 +913,6 @@ const EventPass = () => {
             >
               🖨 Print Pass
             </button>
-
           </div>
 
         </div>
@@ -830,10 +936,11 @@ const EventPass = () => {
 
               <div className="brand-area">
 
-               
+                <div className="brand-logo">
+                  S
+                </div>
 
                 <div>
-
                   <div className="brand-name">
                     SNICT
                   </div>
@@ -841,7 +948,6 @@ const EventPass = () => {
                   <div className="brand-subtitle">
                     Event Pass
                   </div>
-
                 </div>
 
               </div>
@@ -911,7 +1017,6 @@ const EventPass = () => {
                     </div>
 
                     <div>
-
                       <span className="info-label">
                         DATE
                       </span>
@@ -921,7 +1026,6 @@ const EventPass = () => {
                           eventDate
                         )}
                       </strong>
-
                     </div>
 
                   </div>
@@ -933,13 +1037,11 @@ const EventPass = () => {
                     </div>
 
                     <div>
-
                       <span className="info-label">
                         TIME
                       </span>
 
                       <strong>
-
                         {formatTime(
                           startTime
                         )}
@@ -949,9 +1051,7 @@ const EventPass = () => {
                               endTime
                             )}`
                           : ""}
-
                       </strong>
-
                     </div>
 
                   </div>
@@ -963,7 +1063,6 @@ const EventPass = () => {
                     </div>
 
                     <div>
-
                       <span className="info-label">
                         VENUE
                       </span>
@@ -971,7 +1070,6 @@ const EventPass = () => {
                       <strong>
                         {venue}
                       </strong>
-
                     </div>
 
                   </div>
@@ -984,7 +1082,6 @@ const EventPass = () => {
                       </div>
 
                       <div>
-
                         <span className="info-label">
                           MODE
                         </span>
@@ -992,7 +1089,6 @@ const EventPass = () => {
                         <strong>
                           {eventMode}
                         </strong>
-
                       </div>
 
                     </div>
@@ -1007,7 +1103,6 @@ const EventPass = () => {
                 <div className="booking-details">
 
                   <div className="detail-row">
-
                     <span>
                       Booking Code
                     </span>
@@ -1015,11 +1110,9 @@ const EventPass = () => {
                     <strong>
                       {bookingCode}
                     </strong>
-
                   </div>
 
                   <div className="detail-row">
-
                     <span>
                       Pass Code
                     </span>
@@ -1028,12 +1121,10 @@ const EventPass = () => {
                       {passCode ||
                         "Generated for entry"}
                     </strong>
-
                   </div>
 
                   {transactionId && (
                     <div className="detail-row">
-
                       <span>
                         Transaction ID
                       </span>
@@ -1041,15 +1132,12 @@ const EventPass = () => {
                       <strong>
                         {transactionId}
                       </strong>
-
                     </div>
                   )}
 
                   {amount !== null &&
-                    amount !==
-                      undefined && (
+                    amount !== undefined && (
                       <div className="detail-row">
-
                         <span>
                           Amount
                         </span>
@@ -1062,7 +1150,6 @@ const EventPass = () => {
                             "en-IN"
                           )}
                         </strong>
-
                       </div>
                     )}
 
@@ -1080,9 +1167,7 @@ const EventPass = () => {
 
                   {qrValue ? (
                     <QRCode
-                      value={
-                        qrValue
-                      }
+                      value={qrValue}
                       size={190}
                       level="H"
                       bgColor="#ffffff"
@@ -1122,7 +1207,6 @@ const EventPass = () => {
                   </span>
 
                   {attendanceCode ? (
-
                     <>
                       <div className="attendance-code">
                         {attendanceCode}
@@ -1135,9 +1219,7 @@ const EventPass = () => {
                         event coordinator.
                       </p>
                     </>
-
                   ) : (
-
                     <>
                       <div className="attendance-code unavailable">
                         Not Generated
@@ -1150,7 +1232,6 @@ const EventPass = () => {
                         booking yet.
                       </p>
                     </>
-
                   )}
 
                 </div>
@@ -1164,16 +1245,11 @@ const EventPass = () => {
             ================================================= */}
 
             <div className="perforation">
-
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-
+              {Array.from(
+                { length: 8 }
+              ).map((_, index) => (
+                <span key={index} />
+              ))}
             </div>
 
             {/* =================================================
@@ -1183,7 +1259,6 @@ const EventPass = () => {
             <div className="pass-footer">
 
               <div>
-
                 <span className="footer-label">
                   BOOKING STATUS
                 </span>
@@ -1198,19 +1273,15 @@ const EventPass = () => {
                     )
                     .toUpperCase()}
                 </strong>
-
               </div>
 
               <div>
-
                 <span className="footer-label">
                   PAYMENT
                 </span>
 
                 <strong className="payment-status">
-
                   ✓{" "}
-
                   {String(
                     paymentStatus
                   )
@@ -1219,13 +1290,10 @@ const EventPass = () => {
                       " "
                     )
                     .toUpperCase()}
-
                 </strong>
-
               </div>
 
               <div>
-
                 <span className="footer-label">
                   PASS ID
                 </span>
@@ -1235,7 +1303,6 @@ const EventPass = () => {
                   {passCode ||
                     bookingCode}
                 </strong>
-
               </div>
 
             </div>
@@ -1246,7 +1313,6 @@ const EventPass = () => {
 
             {(validFrom ||
               validUntil) && (
-
               <div className="validity-bar">
 
                 <span>
@@ -1276,7 +1342,6 @@ const EventPass = () => {
                 )}
 
               </div>
-
             )}
 
           </div>
@@ -1292,7 +1357,6 @@ const EventPass = () => {
             </h3>
 
             <ul>
-
               <li>
                 Keep this event pass
                 ready when entering
@@ -1323,7 +1387,6 @@ const EventPass = () => {
                 matching your booking
                 details if required.
               </li>
-
             </ul>
 
           </div>
@@ -1334,7 +1397,6 @@ const EventPass = () => {
     </>
   );
 };
-
 
 // =========================================================
 // CSS
@@ -1348,6 +1410,8 @@ const pageStyles = `
 
 .event-pass-page {
   min-height: 100vh;
+
+  padding-bottom: 60px;
 
   background:
     radial-gradient(
@@ -1364,8 +1428,6 @@ const pageStyles = `
 
   color: #111827;
 
-  padding-bottom: 60px;
-
   font-family:
     Inter,
     system-ui,
@@ -1374,7 +1436,6 @@ const pageStyles = `
     "Segoe UI",
     sans-serif;
 }
-
 
 /* =========================================================
    TOP BAR
@@ -1391,9 +1452,7 @@ const pageStyles = `
   padding: 24px 0;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
 }
 
@@ -1413,8 +1472,7 @@ const pageStyles = `
 
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    box-shadow 0.2s ease;
 }
 
 .back-button {
@@ -1439,10 +1497,8 @@ const pageStyles = `
 
 .back-button:hover,
 .print-button:hover {
-  transform:
-    translateY(-2px);
+  transform: translateY(-2px);
 }
-
 
 /* =========================================================
    CONTAINER
@@ -1457,27 +1513,25 @@ const pageStyles = `
   margin: 0 auto;
 }
 
-
 /* =========================================================
    PASS CARD
 ========================================================= */
 
 .event-pass-card {
+  overflow: hidden;
+
   background: #ffffff;
 
   border-radius: 26px;
 
-  overflow: hidden;
+  border:
+    1px solid
+    rgba(148, 163, 184, 0.25);
 
   box-shadow:
     0 24px 70px
     rgba(15, 23, 42, 0.14);
-
-  border:
-    1px solid
-    rgba(148, 163, 184, 0.25);
 }
-
 
 /* =========================================================
    HEADER
@@ -1487,10 +1541,12 @@ const pageStyles = `
   padding: 27px 32px;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
+
+  gap: 20px;
+
+  color: #ffffff;
 
   background:
     linear-gradient(
@@ -1498,13 +1554,10 @@ const pageStyles = `
       #111827,
       #1e293b
     );
-
-  color: white;
 }
 
 .brand-area {
   display: flex;
-
   align-items: center;
 
   gap: 13px;
@@ -1512,16 +1565,15 @@ const pageStyles = `
 
 .brand-logo {
   width: 48px;
-
   height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   border-radius: 14px;
 
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
+  color: #ffffff;
 
   background:
     linear-gradient(
@@ -1531,7 +1583,6 @@ const pageStyles = `
     );
 
   font-size: 25px;
-
   font-weight: 900;
 
   box-shadow:
@@ -1562,7 +1613,6 @@ const pageStyles = `
 .confirmed-badge,
 .pending-badge {
   display: flex;
-
   align-items: center;
 
   gap: 7px;
@@ -1575,58 +1625,52 @@ const pageStyles = `
 
   font-weight: 800;
 
-  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .confirmed-badge {
+  color: #86efac;
+
   background:
     rgba(34, 197, 94, 0.15);
 
   border:
     1px solid
     rgba(74, 222, 128, 0.28);
-
-  color: #86efac;
 }
 
 .pending-badge {
+  color: #fde68a;
+
   background:
     rgba(251, 191, 36, 0.15);
 
   border:
     1px solid
     rgba(251, 191, 36, 0.30);
-
-  color: #fde68a;
 }
 
 .confirmed-badge span,
 .pending-badge span {
   width: 19px;
-
   height: 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   border-radius: 50%;
 
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
+  color: #ffffff;
 }
 
 .confirmed-badge span {
   background: #22c55e;
-
-  color: white;
 }
 
 .pending-badge span {
   background: #f59e0b;
-
-  color: white;
 }
-
 
 /* =========================================================
    BODY
@@ -1658,21 +1702,23 @@ const pageStyles = `
   margin:
     10px 0 8px;
 
-  font-size: clamp(
-    28px,
-    4vw,
-    44px
-  );
+  color: #111827;
+
+  font-size:
+    clamp(
+      28px,
+      4vw,
+      44px
+    );
 
   line-height: 1.12;
 
   letter-spacing: -1.2px;
-
-  color: #111827;
 }
 
 .welcome-text {
-  margin: 0 0 30px;
+  margin:
+    0 0 30px;
 
   color: #64748b;
 
@@ -1683,9 +1729,8 @@ const pageStyles = `
   color: #111827;
 }
 
-
 /* =========================================================
-   EVENT INFO
+   EVENT INFORMATION
 ========================================================= */
 
 .event-info-grid {
@@ -1722,18 +1767,15 @@ const pageStyles = `
 
 .info-icon {
   width: 38px;
-
   height: 38px;
 
   flex-shrink: 0;
 
-  border-radius: 11px;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
+
+  border-radius: 11px;
 
   background: #eef2ff;
 
@@ -1770,25 +1812,23 @@ const pageStyles = `
   word-break: break-word;
 }
 
-
 /* =========================================================
    BOOKING DETAILS
 ========================================================= */
 
 .booking-details {
+  padding-top: 18px;
+
   border-top:
     1px solid
     #e5e7eb;
-
-  padding-top: 18px;
 }
 
 .detail-row {
   display: flex;
 
-  justify-content: space-between;
-
   align-items: center;
+  justify-content: space-between;
 
   gap: 20px;
 
@@ -1809,9 +1849,8 @@ const pageStyles = `
   word-break: break-word;
 }
 
-
 /* =========================================================
-   QR SECTION
+   QR
 ========================================================= */
 
 .qr-section {
@@ -1821,21 +1860,19 @@ const pageStyles = `
 
   align-items: center;
 
-  justify-content: flex-start;
-
   text-align: center;
 }
 
 .qr-container {
   padding: 15px;
 
-  background: white;
-
-  border-radius: 20px;
+  background: #ffffff;
 
   border:
     1px solid
     #e5e7eb;
+
+  border-radius: 20px;
 
   box-shadow:
     0 12px 35px
@@ -1850,17 +1887,17 @@ const pageStyles = `
   margin:
     17px 0 4px;
 
-  font-weight: 800;
-
   color: #111827;
 
   font-size: 14px;
+
+  font-weight: 800;
 }
 
 .qr-description {
-  margin: 0;
-
   max-width: 220px;
+
+  margin: 0;
 
   color: #64748b;
 
@@ -1871,48 +1908,37 @@ const pageStyles = `
 
 .qr-placeholder {
   width: 190px;
-
   height: 190px;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
-  background: #f1f5f9;
-
   color: #64748b;
+
+  background: #f1f5f9;
 
   font-size: 25px;
 
   font-weight: 800;
 }
 
-
 /* =========================================================
-   MANUAL ATTENDANCE CODE
+   MANUAL CODE
 ========================================================= */
 
 .manual-code-section {
   width: 100%;
 
   margin-top: 22px;
-
-  padding-top: 4px;
 }
 
 .manual-code-divider {
-  position: relative;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
-  margin:
-    0 auto 15px;
+  margin-bottom: 15px;
 }
 
 .manual-code-divider::before,
@@ -1921,14 +1947,13 @@ const pageStyles = `
 
   height: 1px;
 
-  background: #e5e7eb;
-
   flex: 1;
+
+  background: #e5e7eb;
 }
 
 .manual-code-divider span {
-  margin:
-    0 10px;
+  margin: 0 10px;
 
   color: #94a3b8;
 
@@ -1956,10 +1981,11 @@ const pageStyles = `
 .attendance-code {
   width: 100%;
 
-  padding:
-    12px 10px;
+  padding: 12px 10px;
 
   border-radius: 11px;
+
+  color: #312e81;
 
   background:
     linear-gradient(
@@ -1972,8 +1998,6 @@ const pageStyles = `
     1px solid
     #c7d2fe;
 
-  color: #312e81;
-
   font-family:
     "Courier New",
     monospace;
@@ -1984,26 +2008,24 @@ const pageStyles = `
 
   letter-spacing: 1.3px;
 
-  word-break: break-all;
-
   text-align: center;
+
+  word-break: break-all;
 }
 
 .attendance-code.unavailable {
+  color: #94a3b8;
+
   background: #f8fafc;
 
   border-color: #e2e8f0;
-
-  color: #94a3b8;
-
-  letter-spacing: 0.5px;
 }
 
 .manual-code-help {
+  max-width: 230px;
+
   margin:
     9px auto 0;
-
-  max-width: 230px;
 
   color: #64748b;
 
@@ -2016,18 +2038,16 @@ const pageStyles = `
   color: #b45309;
 }
 
-
 /* =========================================================
    PERFORATION
 ========================================================= */
 
 .perforation {
-  position: relative;
-
   height: 1px;
 
-  margin:
-    0 32px;
+  position: relative;
+
+  margin: 0 32px;
 
   border-top:
     2px dashed
@@ -2040,7 +2060,6 @@ const pageStyles = `
   top: -12px;
 
   width: 24px;
-
   height: 24px;
 
   border-radius: 50%;
@@ -2083,7 +2102,6 @@ const pageStyles = `
 .perforation span:nth-child(8) {
   right: 0;
 }
-
 
 /* =========================================================
    FOOTER
@@ -2140,7 +2158,6 @@ const pageStyles = `
   color: #16a34a !important;
 }
 
-
 /* =========================================================
    VALIDITY
 ========================================================= */
@@ -2157,20 +2174,18 @@ const pageStyles = `
 
   gap: 8px;
 
-  background:
-    #eef2ff;
+  flex-wrap: wrap;
 
   color: #64748b;
 
-  font-size: 11px;
+  background: #eef2ff;
 
-  flex-wrap: wrap;
+  font-size: 11px;
 }
 
 .validity-bar strong {
   color: #3730a3;
 }
-
 
 /* =========================================================
    INSTRUCTIONS
@@ -2183,7 +2198,7 @@ const pageStyles = `
 
   border-radius: 18px;
 
-  background: white;
+  background: #ffffff;
 
   border:
     1px solid
@@ -2198,9 +2213,9 @@ const pageStyles = `
   margin:
     0 0 13px;
 
-  font-size: 16px;
-
   color: #111827;
+
+  font-size: 16px;
 }
 
 .pass-instructions ul {
@@ -2215,7 +2230,6 @@ const pageStyles = `
   line-height: 1.8;
 }
 
-
 /* =========================================================
    LOADING
 ========================================================= */
@@ -2229,9 +2243,10 @@ const pageStyles = `
   margin:
     15vh auto 0;
 
-  padding: 50px 30px;
+  padding:
+    50px 30px;
 
-  background: white;
+  background: #ffffff;
 
   border-radius: 24px;
 
@@ -2244,7 +2259,6 @@ const pageStyles = `
 
 .loading-spinner {
   width: 45px;
-
   height: 45px;
 
   margin:
@@ -2265,12 +2279,10 @@ const pageStyles = `
 }
 
 @keyframes pass-spin {
-
   to {
     transform:
       rotate(360deg);
   }
-
 }
 
 .pass-loading h2 {
@@ -2288,7 +2300,6 @@ const pageStyles = `
   font-size: 14px;
 }
 
-
 /* =========================================================
    ERROR
 ========================================================= */
@@ -2302,9 +2313,10 @@ const pageStyles = `
   margin:
     10vh auto 0;
 
-  padding: 45px 30px;
+  padding:
+    45px 30px;
 
-  background: white;
+  background: #ffffff;
 
   border-radius: 24px;
 
@@ -2317,23 +2329,20 @@ const pageStyles = `
 
 .error-icon {
   width: 58px;
-
   height: 58px;
 
   margin:
     0 auto 18px;
 
-  border-radius: 50%;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
-  background: #fef2f2;
+  border-radius: 50%;
 
   color: #dc2626;
+
+  background: #fef2f2;
 
   font-size: 28px;
 
@@ -2344,16 +2353,16 @@ const pageStyles = `
   margin:
     0 0 10px;
 
-  font-size: 24px;
-
   color: #111827;
+
+  font-size: 24px;
 }
 
 .pass-error-card p {
+  max-width: 420px;
+
   margin:
     0 auto 25px;
-
-  max-width: 420px;
 
   color: #64748b;
 
@@ -2378,7 +2387,8 @@ const pageStyles = `
 
   border-radius: 11px;
 
-  padding: 12px 18px;
+  padding:
+    12px 18px;
 
   font-size: 13px;
 
@@ -2388,15 +2398,15 @@ const pageStyles = `
 }
 
 .primary-button {
-  background: #111827;
+  color: #ffffff;
 
-  color: white;
+  background: #111827;
 }
 
 .secondary-button {
-  background: #f1f5f9;
-
   color: #334155;
+
+  background: #f1f5f9;
 }
 
 .primary-button:disabled {
@@ -2405,14 +2415,11 @@ const pageStyles = `
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
 
-@media (
-  max-width: 800px
-) {
+@media (max-width: 800px) {
 
   .pass-body {
     grid-template-columns: 1fr;
@@ -2434,13 +2441,9 @@ const pageStyles = `
     padding:
       22px 28px;
   }
-
 }
 
-
-@media (
-  max-width: 560px
-) {
+@media (max-width: 560px) {
 
   .event-pass-page {
     padding-bottom: 30px;
@@ -2454,18 +2457,12 @@ const pageStyles = `
       14px 0;
   }
 
-  .print-button {
-    font-size: 12px;
-
-    padding:
-      10px 12px;
-  }
-
+  .print-button,
   .back-button {
-    font-size: 12px;
-
     padding:
       10px 12px;
+
+    font-size: 12px;
   }
 
   .pass-container {
@@ -2474,13 +2471,11 @@ const pageStyles = `
   }
 
   .pass-header {
-    padding:
-      20px;
+    padding: 20px;
   }
 
   .brand-logo {
     width: 40px;
-
     height: 40px;
 
     font-size: 20px;
@@ -2512,8 +2507,7 @@ const pageStyles = `
 
     gap: 15px;
 
-    padding:
-      20px;
+    padding: 20px;
   }
 
   .perforation {
@@ -2526,9 +2520,7 @@ const pageStyles = `
 
     letter-spacing: 0.8px;
   }
-
 }
-
 
 /* =========================================================
    PRINT
@@ -2542,16 +2534,23 @@ const pageStyles = `
     margin: 10mm;
   }
 
+  html,
   body {
-    background: white !important;
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    background:
+      #ffffff !important;
   }
 
   .event-pass-page {
-    background: white !important;
-
     min-height: auto !important;
 
     padding: 0 !important;
+
+    background:
+      #ffffff !important;
   }
 
   .pass-topbar,
@@ -2568,36 +2567,53 @@ const pageStyles = `
   }
 
   .event-pass-card {
+    width: 100% !important;
+
+    border-radius: 0 !important;
+
     box-shadow: none !important;
 
     border:
       1px solid
       #d1d5db !important;
 
-    border-radius: 0 !important;
+    page-break-inside: avoid;
+
+    break-inside: avoid;
   }
 
-  .pass-header {
-    -webkit-print-color-adjust: exact;
-
-    print-color-adjust: exact;
-  }
-
-  .validity-bar {
-    -webkit-print-color-adjust: exact;
-
-    print-color-adjust: exact;
-  }
-
+  .pass-header,
+  .validity-bar,
   .attendance-code {
-    -webkit-print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
 
-    print-color-adjust: exact;
+    print-color-adjust: exact !important;
+  }
+
+  .pass-body {
+    page-break-inside: avoid;
+
+    break-inside: avoid;
+  }
+
+  .qr-section {
+    page-break-inside: avoid;
+
+    break-inside: avoid;
+  }
+
+  .pass-footer {
+    page-break-inside: avoid;
+
+    break-inside: avoid;
+  }
+
+  .perforation {
+    page-break-inside: avoid;
   }
 
 }
 `;
-
 
 // =========================================================
 // EXPORT

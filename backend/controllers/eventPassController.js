@@ -8,53 +8,91 @@ const crypto = require("crypto");
 //
 // RESPONSIBILITIES
 //
-// - Generate event pass
+// - Create event pass
 // - Reuse existing event pass
 // - Get user's event pass
-// - Get all admin event passes
+// - Get admin event passes
 // - Get admin pass by booking ID
 // - Generate secure pass code
 // - Generate secure pass token
+// - Generate attendance code
+// - Create/reuse attendance record
 // - Generate QR payload
 //
 // IMPORTANT
 //
-// Booking logic stays in:
+// Booking logic:
 // controllers/bookingController.js
 //
-// Attendance logic stays in:
+// Attendance verification logic:
 // controllers/attendanceController.js
 //
 // =========================================================
 
 
 // =========================================================
-// HELPERS
+// CONSTANTS
 // =========================================================
 
+const CONFIRMED_BOOKING_STATUSES = [
+  "confirmed",
+  "completed",
+];
 
-// ---------------------------------------------------------
+const VERIFIED_PAYMENT_STATUS = "verified";
+
+const EVENT_PASS_TYPE =
+  "SNICT_EVENT_PASS";
+
+
+// =========================================================
 // GENERATE UNIQUE PASS CODE
 // Example:
+//
 // SNICT-PASS-A1B2C3D4E5
-// ---------------------------------------------------------
+// =========================================================
 
 const generatePassCode = () => {
-  return `SNICT-PASS-${crypto
-    .randomBytes(5)
-    .toString("hex")
-    .toUpperCase()}`;
+  return (
+    "SNICT-PASS-" +
+    crypto
+      .randomBytes(5)
+      .toString("hex")
+      .toUpperCase()
+  );
 };
 
 
-// ---------------------------------------------------------
+// =========================================================
 // GENERATE SECURE PASS TOKEN
-// ---------------------------------------------------------
+// =========================================================
 
 const generatePassToken = () => {
   return crypto
     .randomBytes(32)
     .toString("hex");
+};
+
+
+// =========================================================
+// GENERATE ATTENDANCE CODE
+//
+// Example:
+//
+// SNICT-ATT-A1B2C3D4E5F6
+//
+// This is the manual fallback code
+// when QR scanning is not possible.
+// =========================================================
+
+const generateAttendanceCode = () => {
+  return (
+    "SNICT-ATT-" +
+    crypto
+      .randomBytes(6)
+      .toString("hex")
+      .toUpperCase()
+  );
 };
 
 
@@ -73,48 +111,47 @@ const sendDatabaseError = (
   );
 
   console.error(
-    message
+    "EVENT PASS ERROR"
   );
 
   console.error(
     "Message:",
-    error.message
+    error?.message
   );
 
   console.error(
     "Code:",
-    error.code
+    error?.code
   );
 
   console.error(
     "Detail:",
-    error.detail
+    error?.detail
   );
 
   console.error(
     "Hint:",
-    error.hint
+    error?.hint
   );
 
   console.error(
     "Table:",
-    error.table
+    error?.table
   );
 
   console.error(
     "Column:",
-    error.column
+    error?.column
   );
 
   console.error(
     "Constraint:",
-    error.constraint
+    error?.constraint
   );
 
   console.error(
     "===================================="
   );
-
 
   return res.status(500).json({
 
@@ -127,25 +164,25 @@ const sendDatabaseError = (
       "production"
         ? {
             message:
-              error.message,
+              error?.message,
 
             code:
-              error.code,
+              error?.code,
 
             detail:
-              error.detail,
+              error?.detail,
 
             hint:
-              error.hint,
+              error?.hint,
 
             table:
-              error.table,
+              error?.table,
 
             column:
-              error.column,
+              error?.column,
 
             constraint:
-              error.constraint,
+              error?.constraint,
           }
         : undefined,
 
@@ -154,109 +191,15 @@ const sendDatabaseError = (
 
 
 // =========================================================
-// CREATE EVENT PASS
-// =========================================================
-//
-// This function is used by:
-// bookingController.confirmPayment()
-//
-// Flow:
-//
-// payment verified
-//       ↓
-// booking confirmed
-//       ↓
-// createEventPass()
-//       ↓
-// existing pass?
-//       ↓
-// YES → return existing pass
-// NO  → generate new pass
-//
+// GET BOOKING DETAILS
 // =========================================================
 
-const createEventPass = async (
+const getBookingDetails = async (
   client,
   bookingId
 ) => {
 
-  // =======================================================
-  // VALIDATE BOOKING ID
-  // =======================================================
-
-  const normalizedBookingId =
-    Number(
-      bookingId
-    );
-
-
-  if (
-    !Number.isInteger(
-      normalizedBookingId
-    ) ||
-    normalizedBookingId <= 0
-  ) {
-
-    throw new Error(
-      "Invalid booking ID while creating event pass"
-    );
-  }
-
-
-  // =======================================================
-  // CHECK EXISTING PASS
-  // =======================================================
-
-  const existingPassResult =
-    await client.query(
-      `
-      SELECT
-
-        id,
-        booking_id,
-        pass_code,
-        pass_token,
-        valid_from,
-        valid_until,
-        created_at
-
-      FROM event_passes
-
-      WHERE booking_id = $1
-
-      ORDER BY id DESC
-
-      LIMIT 1
-      `,
-      [
-        normalizedBookingId,
-      ]
-    );
-
-
-  // =======================================================
-  // EXISTING PASS FOUND
-  // =======================================================
-
-  if (
-    existingPassResult.rows.length >
-    0
-  ) {
-
-    console.log(
-      `Existing event pass found for booking ${normalizedBookingId}`
-    );
-
-
-    return existingPassResult.rows[0];
-  }
-
-
-  // =======================================================
-  // GET BOOKING + USER + EVENT + PAYMENT
-  // =======================================================
-
-  const bookingResult =
+  const result =
     await client.query(
       `
       SELECT
@@ -286,6 +229,7 @@ const createEventPass = async (
         e.event_mode,
         e.image_url,
 
+        p.id AS payment_id,
         p.payment_status,
         p.transaction_id,
         p.payment_method,
@@ -302,7 +246,7 @@ const createEventPass = async (
       LEFT JOIN LATERAL (
 
         SELECT
-
+          id,
           payment_status,
           transaction_id,
           payment_method,
@@ -323,64 +267,345 @@ const createEventPass = async (
       LIMIT 1
       `,
       [
-        normalizedBookingId,
+        bookingId,
       ]
     );
 
-
-  // =======================================================
-  // BOOKING NOT FOUND
-  // =======================================================
-
   if (
-    bookingResult.rows.length ===
-    0
+    result.rows.length === 0
   ) {
-
-    throw new Error(
-      "Booking not found while creating event pass"
-    );
+    return null;
   }
 
+  return result.rows[0];
+};
 
-  const booking =
-    bookingResult.rows[0];
 
+// =========================================================
+// ENSURE ATTENDANCE RECORD
+//
+// IMPORTANT
+//
+// This is the main fix for:
+//
+// "manual unique attendance code not showing"
+//
+// If attendance record exists:
+//     reuse it
+//
+// If attendance record does not exist:
+//     generate SNICT-ATT-XXXXXXXXXXXX
+//     create record
+//
+// =========================================================
 
-  // =======================================================
-  // PAYMENT MUST BE VERIFIED
-  // =======================================================
+const ensureAttendanceRecord = async (
+  client,
+  booking
+) => {
+
+  if (!booking) {
+    return null;
+  }
 
   if (
-    booking.payment_status !==
-    "verified"
+    !CONFIRMED_BOOKING_STATUSES.includes(
+      booking.booking_status
+    )
   ) {
-
     return null;
   }
 
 
-  // =======================================================
-  // BOOKING MUST BE CONFIRMED
-  // OR COMPLETED
-  // =======================================================
+  // ---------------------------------------------------------
+  // CHECK EXISTING ATTENDANCE
+  // ---------------------------------------------------------
+
+  const existing =
+    await client.query(
+      `
+      SELECT *
+
+      FROM event_attendance
+
+      WHERE booking_id = $1
+
+      ORDER BY id DESC
+
+      LIMIT 1
+
+      FOR UPDATE
+      `,
+      [
+        booking.booking_id,
+      ]
+    );
+
 
   if (
-    ![
-      "confirmed",
-      "completed",
-    ].includes(
+    existing.rows.length > 0
+  ) {
+
+    return existing.rows[0];
+
+  }
+
+
+  // ---------------------------------------------------------
+  // GENERATE UNIQUE ATTENDANCE CODE
+  // ---------------------------------------------------------
+
+  let attendanceCode = null;
+
+
+  for (
+    let i = 0;
+    i < 20;
+    i++
+  ) {
+
+    const generatedCode =
+      generateAttendanceCode();
+
+
+    const check =
+      await client.query(
+        `
+        SELECT id
+
+        FROM event_attendance
+
+        WHERE attendance_code = $1
+
+        LIMIT 1
+        `,
+        [
+          generatedCode,
+        ]
+      );
+
+
+    if (
+      check.rows.length === 0
+    ) {
+
+      attendanceCode =
+        generatedCode;
+
+      break;
+
+    }
+
+  }
+
+
+  if (!attendanceCode) {
+
+    throw new Error(
+      "Unable to generate unique attendance code"
+    );
+
+  }
+
+
+  // ---------------------------------------------------------
+  // CREATE ATTENDANCE
+  // ---------------------------------------------------------
+
+  const inserted =
+    await client.query(
+      `
+      INSERT INTO event_attendance
+      (
+        booking_id,
+        event_id,
+        attendance_code,
+        attendance_status,
+        created_at,
+        updated_at
+      )
+
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        'not_present',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+
+      RETURNING *
+      `,
+      [
+        booking.booking_id,
+        booking.event_id,
+        attendanceCode,
+      ]
+    );
+
+
+  return (
+    inserted.rows[0] ||
+    null
+  );
+};
+
+
+// =========================================================
+// CREATE EVENT PASS
+//
+// Called by bookingController.confirmPayment()
+//
+// Flow:
+//
+// Payment verified
+//       ↓
+// Booking confirmed
+//       ↓
+// createEventPass()
+//       ↓
+// Existing pass?
+//       ↓
+// YES → reuse pass
+// NO  → create pass
+//       ↓
+// Ensure attendance record
+//       ↓
+// Manual attendance code ready
+//
+// =========================================================
+
+const createEventPass = async (
+  client,
+  bookingId
+) => {
+
+  const normalizedBookingId =
+    Number(bookingId);
+
+
+  if (
+    !Number.isInteger(
+      normalizedBookingId
+    ) ||
+    normalizedBookingId <= 0
+  ) {
+
+    throw new Error(
+      "Invalid booking ID while creating event pass"
+    );
+
+  }
+
+
+  // ---------------------------------------------------------
+  // GET BOOKING
+  // ---------------------------------------------------------
+
+  const booking =
+    await getBookingDetails(
+      client,
+      normalizedBookingId
+    );
+
+
+  if (!booking) {
+
+    throw new Error(
+      "Booking not found while creating event pass"
+    );
+
+  }
+
+
+  // ---------------------------------------------------------
+  // PAYMENT CHECK
+  // ---------------------------------------------------------
+
+  if (
+    booking.payment_status !==
+    VERIFIED_PAYMENT_STATUS
+  ) {
+
+    return null;
+
+  }
+
+
+  // ---------------------------------------------------------
+  // BOOKING STATUS CHECK
+  // ---------------------------------------------------------
+
+  if (
+    !CONFIRMED_BOOKING_STATUSES.includes(
       booking.booking_status
     )
   ) {
 
     return null;
+
   }
 
 
-  // =======================================================
+  // ---------------------------------------------------------
+  // CHECK EXISTING PASS
+  // ---------------------------------------------------------
+
+  const existingPassResult =
+    await client.query(
+      `
+      SELECT
+
+        id,
+        booking_id,
+        pass_code,
+        pass_token,
+        valid_from,
+        valid_until,
+        created_at
+
+      FROM event_passes
+
+      WHERE booking_id = $1
+
+      ORDER BY id DESC
+
+      LIMIT 1
+      `,
+      [
+        normalizedBookingId,
+      ]
+    );
+
+
+  // ---------------------------------------------------------
+  // EXISTING PASS
+  // ---------------------------------------------------------
+
+  if (
+    existingPassResult.rows.length >
+    0
+  ) {
+
+    // IMPORTANT:
+    // Even when pass already exists,
+    // attendance must also exist.
+
+    await ensureAttendanceRecord(
+      client,
+      booking
+    );
+
+
+    return existingPassResult.rows[0];
+
+  }
+
+
+  // ---------------------------------------------------------
   // GENERATE UNIQUE PASS CODE
-  // =======================================================
+  // ---------------------------------------------------------
 
   let passCode = null;
 
@@ -413,15 +638,16 @@ const createEventPass = async (
 
 
     if (
-      check.rows.length ===
-      0
+      check.rows.length === 0
     ) {
 
       passCode =
         generatedCode;
 
       break;
+
     }
+
   }
 
 
@@ -430,12 +656,13 @@ const createEventPass = async (
     throw new Error(
       "Unable to generate unique event pass code"
     );
+
   }
 
 
-  // =======================================================
-  // GENERATE UNIQUE PASS TOKEN
-  // =======================================================
+  // ---------------------------------------------------------
+  // GENERATE PASS TOKEN
+  // ---------------------------------------------------------
 
   let passToken = null;
 
@@ -468,15 +695,16 @@ const createEventPass = async (
 
 
     if (
-      check.rows.length ===
-      0
+      check.rows.length === 0
     ) {
 
       passToken =
         generatedToken;
 
       break;
+
     }
+
   }
 
 
@@ -485,12 +713,13 @@ const createEventPass = async (
     throw new Error(
       "Unable to generate unique event pass token"
     );
+
   }
 
 
-  // =======================================================
+  // ---------------------------------------------------------
   // EVENT DATE
-  // =======================================================
+  // ---------------------------------------------------------
 
   const eventDate =
     booking.event_date
@@ -506,12 +735,13 @@ const createEventPass = async (
     throw new Error(
       "Event date is missing while creating event pass"
     );
+
   }
 
 
-  // =======================================================
-  // EVENT START TIME
-  // =======================================================
+  // ---------------------------------------------------------
+  // EVENT TIME
+  // ---------------------------------------------------------
 
   const startTime =
     booking.start_time
@@ -523,10 +753,6 @@ const createEventPass = async (
     "00:00:00";
 
 
-  // =======================================================
-  // EVENT END TIME
-  // =======================================================
-
   const endTime =
     booking.end_time
       ?.toString()
@@ -537,12 +763,10 @@ const createEventPass = async (
     "23:59:59";
 
 
-  // =======================================================
-  // VALIDITY
-  //
-  // India timezone:
-  // Asia/Kolkata = +05:30
-  // =======================================================
+  // ---------------------------------------------------------
+  // PASS VALIDITY
+  // Asia/Kolkata
+  // ---------------------------------------------------------
 
   const validFrom =
     `${eventDate}T${startTime}+05:30`;
@@ -552,14 +776,9 @@ const createEventPass = async (
     `${eventDate}T${endTime}+05:30`;
 
 
-  // =======================================================
+  // ---------------------------------------------------------
   // INSERT EVENT PASS
-  //
-  // event_passes.booking_id is UNIQUE.
-  //
-  // If another request creates the pass first,
-  // ON CONFLICT prevents the request from crashing.
-  // =======================================================
+  // ---------------------------------------------------------
 
   const passResult =
     await client.query(
@@ -583,9 +802,11 @@ const createEventPass = async (
       )
 
       ON CONFLICT (booking_id)
+
       DO NOTHING
 
       RETURNING
+
         id,
         booking_id,
         pass_code,
@@ -604,71 +825,97 @@ const createEventPass = async (
     );
 
 
-  // =======================================================
+  let finalPass;
+
+
+  // ---------------------------------------------------------
   // PASS CREATED
-  // =======================================================
+  // ---------------------------------------------------------
 
   if (
     passResult.rows.length >
     0
   ) {
 
-    return passResult.rows[0];
+    finalPass =
+      passResult.rows[0];
+
+  } else {
+
+    // -------------------------------------------------------
+    // ANOTHER REQUEST CREATED IT
+    // -------------------------------------------------------
+
+    const existing =
+      await client.query(
+        `
+        SELECT
+
+          id,
+          booking_id,
+          pass_code,
+          pass_token,
+          valid_from,
+          valid_until,
+          created_at
+
+        FROM event_passes
+
+        WHERE booking_id = $1
+
+        ORDER BY id DESC
+
+        LIMIT 1
+        `,
+        [
+          normalizedBookingId,
+        ]
+      );
+
+
+    if (
+      existing.rows.length ===
+      0
+    ) {
+
+      throw new Error(
+        "Event pass could not be created"
+      );
+
+    }
+
+
+    finalPass =
+      existing.rows[0];
+
   }
 
 
-  // =======================================================
-  // ANOTHER REQUEST CREATED THE PASS
-  // =======================================================
+  // ---------------------------------------------------------
+  // IMPORTANT FIX
+  //
+  // CREATE ATTENDANCE AFTER PASS CREATION
+  // ---------------------------------------------------------
 
-  const finalPassResult =
-    await client.query(
-      `
-      SELECT
-
-        id,
-        booking_id,
-        pass_code,
-        pass_token,
-        valid_from,
-        valid_until,
-        created_at
-
-      FROM event_passes
-
-      WHERE booking_id = $1
-
-      ORDER BY id DESC
-
-      LIMIT 1
-      `,
-      [
-        normalizedBookingId,
-      ]
-    );
+  await ensureAttendanceRecord(
+    client,
+    booking
+  );
 
 
-  if (
-    finalPassResult.rows.length ===
-    0
-  ) {
-
-    throw new Error(
-      "Event pass could not be created"
-    );
-  }
-
-
-  return finalPassResult.rows[0];
+  return finalPass;
 };
 
 
 // =========================================================
 // BUILD QR DATA
-// =========================================================
 //
-// This object is directly usable by frontend QR library.
+// QR contains BOTH:
 //
+// 1. Event pass credentials
+// 2. Attendance code
+//
+// So scanner can verify the pass and attendance.
 // =========================================================
 
 const buildQrData = (
@@ -678,60 +925,82 @@ const buildQrData = (
   return {
 
     type:
-      "SNICT_EVENT_PASS",
+      EVENT_PASS_TYPE,
 
     version:
       1,
 
     passId:
       pass.pass_id ??
-      pass.id,
+      pass.id ??
+      null,
 
     passCode:
-      pass.pass_code,
+      pass.pass_code ??
+      null,
 
     passToken:
-      pass.pass_token,
+      pass.pass_token ??
+      null,
 
     bookingId:
-      pass.booking_id,
+      pass.booking_id ??
+      null,
 
     bookingCode:
-      pass.booking_code,
+      pass.booking_code ??
+      null,
 
     userId:
-      pass.user_id,
+      pass.user_id ??
+      null,
 
     userName:
-      pass.full_name,
+      pass.full_name ??
+      null,
 
     eventId:
-      pass.event_id,
+      pass.event_id ??
+      null,
 
     eventName:
       pass.event_title ??
-      pass.event_name,
+      pass.event_name ??
+      null,
 
     eventDate:
-      pass.event_date,
+      pass.event_date ??
+      null,
 
     startTime:
-      pass.start_time,
+      pass.start_time ??
+      null,
 
     endTime:
-      pass.end_time,
+      pass.end_time ??
+      null,
 
     venue:
-      pass.venue,
+      pass.venue ??
+      null,
 
     eventMode:
-      pass.event_mode,
+      pass.event_mode ??
+      null,
 
     validFrom:
-      pass.valid_from,
+      pass.valid_from ??
+      null,
 
     validUntil:
-      pass.valid_until,
+      pass.valid_until ??
+      null,
+
+    // IMPORTANT
+    // Manual attendance fallback
+    attendanceCode:
+      pass.attendance_code ??
+      null,
 
   };
 };
@@ -739,21 +1008,14 @@ const buildQrData = (
 
 // =========================================================
 // GET MY EVENT PASS
+//
+// GET /api/event-passes/booking/:bookingId
+//
+// ALSO compatible with:
+//
 // GET /api/bookings/:id/pass
-// =========================================================
 //
-// USER CAN ONLY VIEW HIS OWN PASS.
-//
-// Requirements:
-//
-// payment_status = verified
-//
-// AND
-//
-// booking_status = confirmed/completed
-//
-// If pass does not exist:
-// createEventPass() is called.
+// depending on route configuration.
 //
 // =========================================================
 
@@ -772,14 +1034,16 @@ const getMyPass = async (
       req.userId;
 
 
-    const {
-      id,
-    } = req.params;
+    const bookingId =
+      Number(
+        req.params.bookingId ??
+        req.params.id
+      );
 
 
-    // =======================================================
-    // AUTH CHECK
-    // =======================================================
+    // -------------------------------------------------------
+    // AUTH
+    // -------------------------------------------------------
 
     if (!userId) {
 
@@ -791,16 +1055,13 @@ const getMyPass = async (
           "User authentication required",
 
       });
+
     }
 
 
-    const bookingId =
-      Number(id);
-
-
-    // =======================================================
-    // BOOKING ID VALIDATION
-    // =======================================================
+    // -------------------------------------------------------
+    // BOOKING ID
+    // -------------------------------------------------------
 
     if (
       !Number.isInteger(
@@ -817,6 +1078,7 @@ const getMyPass = async (
           "Invalid booking ID",
 
       });
+
     }
 
 
@@ -825,13 +1087,9 @@ const getMyPass = async (
     );
 
 
-    // =======================================================
-    // GET BOOKING
-    //
-    // IMPORTANT:
-    //
-    // User ownership is checked here.
-    // =======================================================
+    // -------------------------------------------------------
+    // GET OWN BOOKING
+    // -------------------------------------------------------
 
     const bookingResult =
       await client.query(
@@ -898,7 +1156,8 @@ const getMyPass = async (
         ) p ON TRUE
 
         WHERE b.id = $1
-          AND b.user_id = $2
+
+        AND b.user_id = $2
 
         LIMIT 1
         `,
@@ -908,10 +1167,6 @@ const getMyPass = async (
         ]
       );
 
-
-    // =======================================================
-    // BOOKING NOT FOUND
-    // =======================================================
 
     if (
       bookingResult.rows.length ===
@@ -931,6 +1186,7 @@ const getMyPass = async (
           "Booking not found",
 
       });
+
     }
 
 
@@ -938,13 +1194,13 @@ const getMyPass = async (
       bookingResult.rows[0];
 
 
-    // =======================================================
-    // PAYMENT CHECK
-    // =======================================================
+    // -------------------------------------------------------
+    // PAYMENT
+    // -------------------------------------------------------
 
     if (
       booking.payment_status !==
-      "verified"
+      VERIFIED_PAYMENT_STATUS
     ) {
 
       await client.query(
@@ -967,18 +1223,16 @@ const getMyPass = async (
           booking.booking_status,
 
       });
+
     }
 
 
-    // =======================================================
-    // BOOKING STATUS CHECK
-    // =======================================================
+    // -------------------------------------------------------
+    // BOOKING STATUS
+    // -------------------------------------------------------
 
     if (
-      ![
-        "confirmed",
-        "completed",
-      ].includes(
+      !CONFIRMED_BOOKING_STATUSES.includes(
         booking.booking_status
       )
     ) {
@@ -999,14 +1253,15 @@ const getMyPass = async (
           booking.booking_status,
 
       });
+
     }
 
 
-    // =======================================================
-    // GET EXISTING PASS
-    // =======================================================
+    // -------------------------------------------------------
+    // GET / CREATE EVENT PASS
+    // -------------------------------------------------------
 
-    const existingPassResult =
+    let passResult =
       await client.query(
         `
         SELECT
@@ -1036,23 +1291,15 @@ const getMyPass = async (
     let pass;
 
 
-    // =======================================================
-    // EXISTING PASS
-    // =======================================================
-
     if (
-      existingPassResult.rows.length >
+      passResult.rows.length >
       0
     ) {
 
       pass =
-        existingPassResult.rows[0];
+        passResult.rows[0];
 
     } else {
-
-      // =====================================================
-      // CREATE PASS
-      // =====================================================
 
       pass =
         await createEventPass(
@@ -1076,82 +1323,31 @@ const getMyPass = async (
             "Unable to generate event pass",
 
         });
+
       }
+
     }
 
 
-    // =======================================================
-    // GET ATTENDANCE
+    // -------------------------------------------------------
+    // IMPORTANT FIX
     //
-    // Attendance is handled separately, but pass response
-    // can expose the current attendance code/status.
-    // =======================================================
+    // ALWAYS ENSURE ATTENDANCE
+    //
+    // This fixes missing manual code for
+    // old event passes.
+    // -------------------------------------------------------
 
-    let attendance = null;
-
-
-    try {
-
-      const attendanceResult =
-        await client.query(
-          `
-          SELECT
-
-            id,
-            event_id,
-            attendance_code,
-            attendance_status,
-            marked_at,
-            marked_by,
-            created_at
-
-          FROM event_attendance
-
-          WHERE booking_id = $1
-
-          ORDER BY created_at DESC
-
-          LIMIT 1
-          `,
-          [
-            bookingId,
-          ]
-        );
-
-
-      if (
-        attendanceResult.rows.length >
-        0
-      ) {
-
-        attendance =
-          attendanceResult.rows[0];
-      }
-
-    } catch (
-      attendanceError
-    ) {
-
-      // -----------------------------------------------------
-      // IMPORTANT:
-      //
-      // Event pass must NOT fail only because attendance
-      // information is unavailable.
-      // -----------------------------------------------------
-
-      console.warn(
-        "Attendance lookup skipped:",
-        attendanceError.message
+    const attendance =
+      await ensureAttendanceRecord(
+        client,
+        booking
       );
 
-      attendance =
-        null;
-    }
 
-
-    // =======================================================
-    // BUILD FINAL PASS OBJECT
-    // =======================================================
+    // -------------------------------------------------------
+    // FINAL PASS OBJECT
+    // -------------------------------------------------------
 
     const finalPass = {
 
@@ -1260,13 +1456,18 @@ const getMyPass = async (
       booking_status:
         booking.booking_status,
 
+
+      // -----------------------------------------------------
+      // ATTENDANCE
+      // -----------------------------------------------------
+
       attendance_id:
         attendance?.id ??
         null,
 
       attendance_event_id:
         attendance?.event_id ??
-        null,
+        booking.event_id,
 
       attendance_code:
         attendance?.attendance_code ??
@@ -1298,9 +1499,9 @@ const getMyPass = async (
     };
 
 
-    // =======================================================
+    // -------------------------------------------------------
     // QR DATA
-    // =======================================================
+    // -------------------------------------------------------
 
     const qrData =
       buildQrData(
@@ -1318,18 +1519,18 @@ const getMyPass = async (
       );
 
 
-    // =======================================================
+    // -------------------------------------------------------
     // COMMIT
-    // =======================================================
+    // -------------------------------------------------------
 
     await client.query(
       "COMMIT"
     );
 
 
-    // =======================================================
+    // -------------------------------------------------------
     // RESPONSE
-    // =======================================================
+    // -------------------------------------------------------
 
     return res.status(200).json({
 
@@ -1360,13 +1561,8 @@ const getMyPass = async (
         "Event pass rollback error:",
         rollbackError.message
       );
+
     }
-
-
-    console.error(
-      "Get my event pass error:",
-      error
-    );
 
 
     return sendDatabaseError(
@@ -1387,7 +1583,8 @@ const getMyPass = async (
 
 // =========================================================
 // ADMIN - GET ALL EVENT PASSES
-// GET /api/bookings/admin/passes
+//
+// GET /api/event-passes/admin
 // =========================================================
 
 const getAdminPasses = async (
@@ -1496,10 +1693,6 @@ const getAdminPasses = async (
       );
 
 
-    // =======================================================
-    // ADD QR DATA TO EACH PASS
-    // =======================================================
-
     const passes =
       result.rows.map(
         (pass) => {
@@ -1538,6 +1731,7 @@ const getAdminPasses = async (
               "valid",
 
           };
+
         }
       );
 
@@ -1556,12 +1750,6 @@ const getAdminPasses = async (
 
   } catch (error) {
 
-    console.error(
-      "Get admin passes error:",
-      error
-    );
-
-
     return sendDatabaseError(
       res,
       "Unable to fetch event passes",
@@ -1575,7 +1763,8 @@ const getAdminPasses = async (
 
 // =========================================================
 // ADMIN - GET PASS BY BOOKING ID
-// GET /api/bookings/admin/:id/pass
+//
+// GET /api/event-passes/admin/booking/:bookingId
 // =========================================================
 
 const getAdminPassByBookingId =
@@ -1586,18 +1775,12 @@ const getAdminPassByBookingId =
 
     try {
 
-      const {
-        id,
-      } = req.params;
-
-
       const bookingId =
-        Number(id);
+        Number(
+          req.params.bookingId ??
+          req.params.id
+        );
 
-
-      // =====================================================
-      // VALIDATE BOOKING ID
-      // =====================================================
 
       if (
         !Number.isInteger(
@@ -1614,12 +1797,9 @@ const getAdminPassByBookingId =
             "Invalid booking ID",
 
         });
+
       }
 
-
-      // =====================================================
-      // GET PASS
-      // =====================================================
 
       const result =
         await pool.query(
@@ -1639,7 +1819,6 @@ const getAdminPassByBookingId =
             b.user_id,
             b.amount,
             b.booking_status,
-            b.created_at AS booking_created_at,
 
             u.full_name,
             u.username,
@@ -1724,10 +1903,6 @@ const getAdminPassByBookingId =
         );
 
 
-      // =====================================================
-      // PASS NOT FOUND
-      // =====================================================
-
       if (
         result.rows.length ===
         0
@@ -1741,6 +1916,7 @@ const getAdminPassByBookingId =
             "Event pass not found for this booking",
 
         });
+
       }
 
 
@@ -1748,19 +1924,11 @@ const getAdminPassByBookingId =
         result.rows[0];
 
 
-      // =====================================================
-      // QR DATA
-      // =====================================================
-
       const qrData =
         buildQrData(
           pass
         );
 
-
-      // =====================================================
-      // RESPONSE
-      // =====================================================
 
       return res.status(200).json({
 
@@ -1786,6 +1954,10 @@ const getAdminPassByBookingId =
               pass.attendance_id
             ),
 
+          attendance_code:
+            pass.attendance_code ??
+            null,
+
           attendance_status:
             pass.attendance_status ||
             "not_present",
@@ -1799,12 +1971,6 @@ const getAdminPassByBookingId =
 
 
     } catch (error) {
-
-      console.error(
-        "Get admin pass error:",
-        error
-      );
-
 
       return sendDatabaseError(
         res,
@@ -1820,36 +1986,17 @@ const getAdminPassByBookingId =
 // =========================================================
 // EXPORTS
 // =========================================================
-//
-// IMPORTANT:
-//
-// This file exports createEventPass because
-// bookingController.confirmPayment() needs to call it.
-//
-// =========================================================
 
 module.exports = {
 
-  // -------------------------------------------------------
   // PASS CREATION
-  // -------------------------------------------------------
-
   createEventPass,
 
-
-  // -------------------------------------------------------
   // USER
-  // -------------------------------------------------------
-
   getMyPass,
 
-
-  // -------------------------------------------------------
   // ADMIN
-  // -------------------------------------------------------
-
   getAdminPasses,
-
   getAdminPassByBookingId,
 
 };

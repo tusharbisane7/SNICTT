@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -45,8 +46,7 @@ function AttendanceManagement() {
   // STATE
   // =======================================================
 
-  const [events, setEvents] =
-    useState([]);
+  const [events, setEvents] = useState([]);
 
   const [selectedEventId, setSelectedEventId] =
     useState("");
@@ -54,13 +54,12 @@ function AttendanceManagement() {
   const [attendance, setAttendance] =
     useState([]);
 
-  const [stats, setStats] =
-    useState({
-      total: 0,
-      present: 0,
-      notPresent: 0,
-      attendancePercentage: 0,
-    });
+  const [stats, setStats] = useState({
+    total: 0,
+    present: 0,
+    notPresent: 0,
+    attendancePercentage: 0,
+  });
 
   const [loading, setLoading] =
     useState(true);
@@ -95,22 +94,70 @@ function AttendanceManagement() {
   const [copiedCode, setCopiedCode] =
     useState("");
 
+  // =======================================================
+  // REFS
+  // =======================================================
+
   const scannerRef =
     useRef(null);
 
   const scannerInstanceRef =
     useRef(null);
 
+  const scannerProcessingRef =
+    useRef(false);
+
+  const mountedRef =
+    useRef(true);
+
+  const selectedEventIdRef =
+    useRef("");
 
   // =======================================================
-  // CLEANUP SCANNER
+  // KEEP EVENT REF UPDATED
+  // =======================================================
+
+  useEffect(() => {
+    selectedEventIdRef.current =
+      selectedEventId;
+  }, [selectedEventId]);
+
+
+  // =======================================================
+  // COMPONENT MOUNT / UNMOUNT
   // =======================================================
 
   useEffect(() => {
 
+    mountedRef.current = true;
+
     return () => {
 
-      stopScanner();
+      mountedRef.current = false;
+
+      const scanner =
+        scannerInstanceRef.current;
+
+      if (scanner) {
+
+        scanner
+          .stop()
+          .catch(() => {})
+          .finally(() => {
+
+            scanner
+              .clear()
+              .catch(() => {});
+
+          });
+
+      }
+
+      scannerInstanceRef.current =
+        null;
+
+      scannerProcessingRef.current =
+        false;
 
     };
 
@@ -118,76 +165,387 @@ function AttendanceManagement() {
 
 
   // =======================================================
+  // SAFE ERROR MESSAGE
+  // =======================================================
+
+  const getApiErrorMessage = useCallback(
+    (
+      error,
+      fallback = "Something went wrong."
+    ) => {
+
+      return (
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        fallback
+      );
+
+    },
+    []
+  );
+
+
+  // =======================================================
   // LOAD EVENTS
   // =======================================================
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(
+    async () => {
 
-    try {
+      try {
 
-      const response =
-        await api.get(
-          "/events/admin/all"
-        );
-
-      if (
-        response.data?.success
-      ) {
-
-        const eventList =
-          response.data.events ||
-          response.data.data ||
-          [];
-
-        setEvents(
-          eventList
-        );
+        const response =
+          await api.get(
+            "/events/admin/all"
+          );
 
         if (
-          eventList.length > 0 &&
-          !selectedEventId
+          response?.data?.success
         ) {
 
-          setSelectedEventId(
-            String(
-              eventList[0].id
-            )
-          );
+          const eventList =
+            response.data.events ||
+            response.data.data ||
+            [];
+
+          const safeEvents =
+            Array.isArray(eventList)
+              ? eventList
+              : [];
+
+          if (mountedRef.current) {
+
+            setEvents(
+              safeEvents
+            );
+
+          }
+
+          /*
+           * Automatically select first event
+           * only when no event is selected.
+           */
+
+          if (
+            safeEvents.length > 0 &&
+            !selectedEventIdRef.current
+          ) {
+
+            if (mountedRef.current) {
+
+              setSelectedEventId(
+                String(
+                  safeEvents[0].id
+                )
+              );
+
+            }
+
+          }
+
+          return safeEvents;
+
         }
 
-      } else {
+        if (mountedRef.current) {
 
-        setEvents([]);
+          setEvents([]);
 
-        setError(
-          response.data?.message ||
-          "Unable to load events."
+          setError(
+            response?.data?.message ||
+            "Unable to load events."
+          );
+
+        }
+
+        return [];
+
+      } catch (error) {
+
+        console.error(
+          "Load events error:",
+          error
         );
+
+        if (mountedRef.current) {
+
+          setEvents([]);
+
+          setError(
+            getApiErrorMessage(
+              error,
+              "Unable to load events."
+            )
+          );
+
+        }
+
+        return [];
+
       }
 
-    } catch (error) {
-
-      console.error(
-        "Load events error:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-        "Unable to load events."
-      );
-
-    }
-  };
+    },
+    [getApiErrorMessage]
+  );
 
 
   // =======================================================
   // LOAD ATTENDANCE
   // =======================================================
 
-  const loadAttendance = async (
-    showRefresh = false
-  ) => {
+  const loadAttendance = useCallback(
+    async (
+      eventId = selectedEventIdRef.current,
+      showRefresh = false
+    ) => {
+
+      if (!eventId) {
+
+        if (mountedRef.current) {
+
+          setAttendance([]);
+
+        }
+
+        return [];
+
+      }
+
+      try {
+
+        if (showRefresh) {
+
+          setRefreshing(true);
+
+        } else {
+
+          setLoading(true);
+
+        }
+
+        const response =
+          await api.get(
+            `/attendance/event/${eventId}`
+          );
+
+        if (
+          response?.data?.success
+        ) {
+
+          const records =
+            response.data.attendance ||
+            response.data.data ||
+            [];
+
+          const safeRecords =
+            Array.isArray(records)
+              ? records
+              : [];
+
+          if (mountedRef.current) {
+
+            setAttendance(
+              safeRecords
+            );
+
+          }
+
+          return safeRecords;
+
+        }
+
+        if (mountedRef.current) {
+
+          setAttendance([]);
+
+          setError(
+            response?.data?.message ||
+            "Unable to load attendance."
+          );
+
+        }
+
+        return [];
+
+      } catch (error) {
+
+        console.error(
+          "Load attendance error:",
+          error
+        );
+
+        if (mountedRef.current) {
+
+          setAttendance([]);
+
+          setError(
+            getApiErrorMessage(
+              error,
+              "Unable to load attendance."
+            )
+          );
+
+        }
+
+        return [];
+
+      } finally {
+
+        if (mountedRef.current) {
+
+          setLoading(false);
+
+          if (showRefresh) {
+            setRefreshing(false);
+          }
+
+        }
+
+      }
+
+    },
+    [getApiErrorMessage]
+  );
+
+
+  // =======================================================
+  // LOAD STATS
+  // =======================================================
+
+  const loadStats = useCallback(
+    async (
+      eventId = selectedEventIdRef.current
+    ) => {
+
+      if (!eventId) {
+
+        if (mountedRef.current) {
+
+          setStats({
+            total: 0,
+            present: 0,
+            notPresent: 0,
+            attendancePercentage: 0,
+          });
+
+        }
+
+        return;
+
+      }
+
+      try {
+
+        const response =
+          await api.get(
+            `/attendance/event/${eventId}/stats`
+          );
+
+        if (
+          response?.data?.success
+        ) {
+
+          const serverStats =
+            response.data.stats ||
+            response.data.data ||
+            {};
+
+          const total =
+            Number(
+              serverStats.total ??
+              serverStats.totalBookings ??
+              serverStats.total_attendees ??
+              0
+            );
+
+          const present =
+            Number(
+              serverStats.present ??
+              serverStats.presentCount ??
+              serverStats.present_attendance ??
+              0
+            );
+
+          const notPresent =
+            Number(
+              serverStats.notPresent ??
+              serverStats.not_present ??
+              serverStats.notPresentCount ??
+              Math.max(
+                total - present,
+                0
+              )
+            );
+
+          const percentage =
+            Number(
+              serverStats.attendancePercentage ??
+              serverStats.attendance_percentage ??
+              (
+                total > 0
+                  ? (
+                      present /
+                      total
+                    ) *
+                    100
+                  : 0
+              )
+            );
+
+          if (mountedRef.current) {
+
+            setStats({
+              total,
+              present,
+              notPresent,
+              attendancePercentage:
+                Number.isFinite(
+                  percentage
+                )
+                  ? percentage
+                  : 0,
+            });
+
+          }
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Load attendance stats error:",
+          error
+        );
+
+        /*
+         * Stats failure should not
+         * destroy attendance records.
+         */
+
+      }
+
+    },
+    []
+  );
+
+
+  // =======================================================
+  // INITIAL LOAD
+  // =======================================================
+
+  useEffect(() => {
+
+    loadEvents();
+
+  }, [loadEvents]);
+
+
+  // =======================================================
+  // EVENT CHANGE
+  // =======================================================
+
+  useEffect(() => {
 
     if (!selectedEventId) {
 
@@ -200,140 +558,27 @@ function AttendanceManagement() {
         attendancePercentage: 0,
       });
 
-      setLoading(false);
-
       return;
-    }
-
-    try {
-
-      if (showRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      setError("");
-
-      const response =
-        await api.get(
-          `/attendance/event/${selectedEventId}`
-        );
-
-      if (
-        response.data?.success
-      ) {
-
-        setAttendance(
-          response.data.attendance ||
-          []
-        );
-
-      } else {
-
-        setAttendance([]);
-
-        setError(
-          response.data?.message ||
-          "Unable to load attendance."
-        );
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Load attendance error:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-        "Unable to load attendance."
-      );
-
-      setAttendance([]);
-
-    } finally {
-
-      setLoading(false);
-
-      setRefreshing(false);
-    }
-  };
-
-
-  // =======================================================
-  // LOAD STATS
-  // =======================================================
-
-  const loadStats = async () => {
-
-    if (!selectedEventId) {
-      return;
-    }
-
-    try {
-
-      const response =
-        await api.get(
-          `/attendance/event/${selectedEventId}/stats`
-        );
-
-      if (
-        response.data?.success
-      ) {
-
-        setStats(
-          response.data.stats || {
-            total: 0,
-            present: 0,
-            notPresent: 0,
-            attendancePercentage: 0,
-          }
-        );
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Load attendance stats error:",
-        error
-      );
 
     }
-  };
+
+    loadAttendance(
+      selectedEventId
+    );
+
+    loadStats(
+      selectedEventId
+    );
+
+  }, [
+    selectedEventId,
+    loadAttendance,
+    loadStats,
+  ]);
 
 
   // =======================================================
-  // INITIAL LOAD
-  // =======================================================
-
-  useEffect(() => {
-
-    loadEvents();
-
-  }, []);
-
-
-  // =======================================================
-  // EVENT CHANGE
-  // =======================================================
-
-  useEffect(() => {
-
-    if (!selectedEventId) {
-      return;
-    }
-
-    loadAttendance();
-
-    loadStats();
-
-  }, [selectedEventId]);
-
-
-  // =======================================================
-  // SUCCESS MESSAGE AUTO CLEAR
+  // SUCCESS AUTO CLEAR
   // =======================================================
 
   useEffect(() => {
@@ -344,7 +589,11 @@ function AttendanceManagement() {
 
     const timer =
       setTimeout(() => {
-        setSuccess("");
+
+        if (mountedRef.current) {
+          setSuccess("");
+        }
+
       }, 4000);
 
     return () =>
@@ -354,7 +603,7 @@ function AttendanceManagement() {
 
 
   // =======================================================
-  // ERROR MESSAGE AUTO CLEAR
+  // ERROR AUTO CLEAR
   // =======================================================
 
   useEffect(() => {
@@ -365,7 +614,11 @@ function AttendanceManagement() {
 
     const timer =
       setTimeout(() => {
-        setError("");
+
+        if (mountedRef.current) {
+          setError("");
+        }
+
       }, 6000);
 
     return () =>
@@ -380,26 +633,41 @@ function AttendanceManagement() {
 
   const refreshAll = async () => {
 
+    if (refreshing) {
+      return;
+    }
+
     setRefreshing(true);
 
     try {
 
+      const currentEventId =
+        selectedEventIdRef.current;
+
       await loadEvents();
 
-      if (selectedEventId) {
+      if (currentEventId) {
 
         await Promise.all([
-          loadAttendance(true),
-          loadStats(),
+          loadAttendance(
+            currentEventId,
+            true
+          ),
+          loadStats(
+            currentEventId
+          ),
         ]);
 
       }
 
     } finally {
 
-      setRefreshing(false);
+      if (mountedRef.current) {
+        setRefreshing(false);
+      }
 
     }
+
   };
 
 
@@ -408,113 +676,152 @@ function AttendanceManagement() {
   // =======================================================
 
   const normalizeAttendance =
-    (item) => {
+    useCallback(
+      (item = {}) => {
 
-      return {
+        const bookingId =
+          item.booking_id ??
+          item.bookingId ??
+          item.booking?.id ??
+          null;
 
-        ...item,
+        const eventId =
+          item.event_id ??
+          item.eventId ??
+          item.event?.id ??
+          null;
 
-        attendanceId:
-          item.attendance_id ||
-          item.id,
-
-        bookingId:
-          item.booking_id,
-
-        eventId:
-          item.event_id,
-
-        attendanceCode:
-          item.attendance_code ||
-          item.attendanceCode ||
-          "N/A",
-
-        attendanceStatus:
+        const attendanceStatus =
           String(
-            item.attendance_status ||
-            item.attendanceStatus ||
+            item.attendance_status ??
+            item.attendanceStatus ??
+            item.status ??
             "not_present"
-          ).toLowerCase(),
+          ).toLowerCase();
 
-        markedAt:
-          item.marked_at ||
-          item.markedAt ||
-          null,
+        return {
 
-        markedBy:
-          item.marked_by ||
-          item.markedBy ||
-          null,
+          ...item,
 
-        bookingCode:
-          item.booking_code ||
-          item.bookingCode ||
-          "N/A",
+          attendanceId:
+            item.attendance_id ??
+            item.attendanceId ??
+            item.id ??
+            null,
 
-        bookingStatus:
-          item.booking_status ||
-          item.bookingStatus ||
-          "pending",
+          bookingId,
 
-        fullName:
-          item.full_name ||
-          item.fullName ||
-          item.username ||
-          "Unknown User",
+          eventId,
 
-        username:
-          item.username ||
-          "",
+          attendanceCode:
+            item.attendance_code ??
+            item.attendanceCode ??
+            item.attendance?.attendance_code ??
+            "N/A",
 
-        email:
-          item.email ||
-          "",
+          attendanceStatus,
 
-        mobile:
-          item.mobile ||
-          item.phone ||
-          "",
+          markedAt:
+            item.marked_at ??
+            item.markedAt ??
+            item.attendance?.marked_at ??
+            null,
 
-        profileImageUrl:
-          item.profile_image_url ||
-          item.profileImageUrl ||
-          "",
+          markedBy:
+            item.marked_by ??
+            item.markedBy ??
+            item.attendance?.marked_by ??
+            null,
 
-        eventName:
-          item.event_name ||
-          item.eventName ||
-          "Event",
+          bookingCode:
+            item.booking_code ??
+            item.bookingCode ??
+            item.booking?.booking_code ??
+            "N/A",
 
-        eventDate:
-          item.event_date ||
-          item.eventDate ||
-          null,
+          bookingStatus:
+            item.booking_status ??
+            item.bookingStatus ??
+            item.booking?.status ??
+            "pending",
 
-        startTime:
-          item.start_time ||
-          item.startTime ||
-          null,
+          fullName:
+            item.full_name ??
+            item.fullName ??
+            item.user_name ??
+            item.name ??
+            item.username ??
+            "Unknown User",
 
-        endTime:
-          item.end_time ||
-          item.endTime ||
-          null,
+          username:
+            item.username ??
+            item.user?.username ??
+            "",
 
-        venue:
-          item.venue ||
-          "",
+          email:
+            item.email ??
+            item.user?.email ??
+            "",
 
-        eventMode:
-          item.event_mode ||
-          item.eventMode ||
-          "",
-      };
+          mobile:
+            item.mobile ??
+            item.phone ??
+            item.user?.mobile ??
+            item.user?.phone ??
+            "",
 
-    };
+          profileImageUrl:
+            item.profile_image_url ??
+            item.profileImageUrl ??
+            item.user?.profile_image_url ??
+            "",
+
+          eventName:
+            item.event_name ??
+            item.eventName ??
+            item.event?.title ??
+            item.event?.name ??
+            "Event",
+
+          eventDate:
+            item.event_date ??
+            item.eventDate ??
+            item.event?.event_date ??
+            item.event?.date ??
+            null,
+
+          startTime:
+            item.start_time ??
+            item.startTime ??
+            item.event?.start_time ??
+            null,
+
+          endTime:
+            item.end_time ??
+            item.endTime ??
+            item.event?.end_time ??
+            null,
+
+          venue:
+            item.venue ??
+            item.event?.venue ??
+            item.event?.location ??
+            "",
+
+          eventMode:
+            item.event_mode ??
+            item.eventMode ??
+            item.event?.mode ??
+            "",
+        };
+
+      },
+      []
+    );
 
 
   // =======================================================
-  // NORMALIZED DATA
+  // NORMALIZED ATTENDANCE
   // =======================================================
 
   const normalizedAttendance =
@@ -523,7 +830,10 @@ function AttendanceManagement() {
         attendance.map(
           normalizeAttendance
         ),
-      [attendance]
+      [
+        attendance,
+        normalizeAttendance,
+      ]
     );
 
 
@@ -542,47 +852,26 @@ function AttendanceManagement() {
       return normalizedAttendance.filter(
         (item) => {
 
+          const searchableText = [
+            item.fullName,
+            item.username,
+            item.email,
+            item.mobile,
+            item.bookingCode,
+            item.attendanceCode,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
           const matchesSearch =
             !query ||
-            String(
-              item.fullName
-            )
-              .toLowerCase()
-              .includes(query) ||
-
-            String(
-              item.username
-            )
-              .toLowerCase()
-              .includes(query) ||
-
-            String(
-              item.email
-            )
-              .toLowerCase()
-              .includes(query) ||
-
-            String(
-              item.mobile
-            )
-              .toLowerCase()
-              .includes(query) ||
-
-            String(
-              item.bookingCode
-            )
-              .toLowerCase()
-              .includes(query) ||
-
-            String(
-              item.attendanceCode
-            )
-              .toLowerCase()
-              .includes(query);
+            searchableText.includes(
+              query
+            );
 
           const matchesStatus =
-            statusFilter ===
-              "all" ||
+            statusFilter === "all" ||
             item.attendanceStatus ===
               statusFilter;
 
@@ -590,6 +879,7 @@ function AttendanceManagement() {
             matchesSearch &&
             matchesStatus
           );
+
         }
       );
 
@@ -609,12 +899,8 @@ function AttendanceManagement() {
 
       return events.find(
         (event) =>
-          String(
-            event.id
-          ) ===
-          String(
-            selectedEventId
-          )
+          String(event.id) ===
+          String(selectedEventId)
       );
 
     }, [
@@ -645,6 +931,7 @@ function AttendanceManagement() {
     ) {
 
       return String(value);
+
     }
 
     return date.toLocaleDateString(
@@ -655,6 +942,7 @@ function AttendanceManagement() {
         year: "numeric",
       }
     );
+
   };
 
 
@@ -680,6 +968,7 @@ function AttendanceManagement() {
     ) {
 
       return String(value);
+
     }
 
     return date.toLocaleString(
@@ -692,32 +981,12 @@ function AttendanceManagement() {
         minute: "2-digit",
       }
     );
+
   };
 
 
   // =======================================================
-  // FORMAT TIME
-  // =======================================================
-
-  const formatTime = (
-    value
-  ) => {
-
-    if (!value) {
-      return "";
-    }
-
-    return String(
-      value
-    ).slice(
-      0,
-      5
-    );
-  };
-
-
-  // =======================================================
-  // COPY ATTENDANCE CODE
+  // COPY CODE
   // =======================================================
 
   const copyCode = async (
@@ -742,7 +1011,11 @@ function AttendanceManagement() {
       );
 
       setTimeout(() => {
-        setCopiedCode("");
+
+        if (mountedRef.current) {
+          setCopiedCode("");
+        }
+
       }, 1800);
 
     } catch (error) {
@@ -755,7 +1028,9 @@ function AttendanceManagement() {
       setError(
         "Unable to copy attendance code."
       );
+
     }
+
   };
 
 
@@ -763,22 +1038,32 @@ function AttendanceManagement() {
   // HANDLE ATTENDANCE SUCCESS
   // =======================================================
 
-  const handleAttendanceSuccess = async (
-    response
-  ) => {
+  const handleAttendanceSuccess =
+    async (
+      response
+    ) => {
 
-    const data =
-      response?.data || {};
+      const data =
+        response?.data ||
+        {};
 
-    if (
-      data.success
-    ) {
+      if (!data.success) {
+
+        setError(
+          data.message ||
+          "Unable to process attendance."
+        );
+
+        return false;
+
+      }
 
       if (
         data.alreadyPresent
       ) {
 
         setSuccess(
+          data.message ||
           "This attendee is already marked present."
         );
 
@@ -788,38 +1073,44 @@ function AttendanceManagement() {
           data.message ||
           "Attendance marked present successfully."
         );
+
       }
 
       setScanMessage("");
 
+      const currentEventId =
+        selectedEventIdRef.current;
+
       await Promise.all([
-        loadAttendance(true),
-        loadStats(),
+        loadAttendance(
+          currentEventId,
+          true
+        ),
+        loadStats(
+          currentEventId
+        ),
       ]);
 
       if (
-        data.attendance
+        data.attendance &&
+        mountedRef.current
       ) {
 
         setSelectedAttendance(
-          data.attendance
+          normalizeAttendance(
+            data.attendance
+          )
         );
+
       }
 
       return true;
-    }
 
-    setError(
-      data.message ||
-      "Unable to process attendance."
-    );
-
-    return false;
-  };
+    };
 
 
   // =======================================================
-  // MANUAL CODE VERIFY
+  // VERIFY MANUAL CODE
   // =======================================================
 
   const verifyManualCode =
@@ -841,6 +1132,7 @@ function AttendanceManagement() {
         );
 
         return;
+
       }
 
       if (!selectedEventId) {
@@ -850,15 +1142,16 @@ function AttendanceManagement() {
         );
 
         return;
+
       }
 
       try {
 
+        setError("");
+
         setScanMessage(
           "Verifying attendance code..."
         );
-
-        setError("");
 
         const response =
           await api.post(
@@ -879,13 +1172,12 @@ function AttendanceManagement() {
             response
           );
 
-        if (
-          successResult
-        ) {
+        if (successResult) {
 
           setManualCode("");
 
-          stopScanner();
+          await stopScanner();
+
         }
 
       } catch (error) {
@@ -898,11 +1190,14 @@ function AttendanceManagement() {
         setScanMessage("");
 
         setError(
-          error.response?.data
-            ?.message ||
-          "Invalid or expired attendance code."
+          getApiErrorMessage(
+            error,
+            "Invalid or expired attendance code."
+          )
         );
+
       }
+
     };
 
 
@@ -924,6 +1219,7 @@ function AttendanceManagement() {
         );
 
         return;
+
       }
 
       try {
@@ -934,17 +1230,8 @@ function AttendanceManagement() {
           "Starting camera..."
         );
 
-        /*
-        -----------------------------------------------------
-        DYNAMIC IMPORT
-        -----------------------------------------------------
-
-        Install:
-
-        npm install html5-qrcode
-
-        -----------------------------------------------------
-        */
+        scannerProcessingRef.current =
+          false;
 
         const module =
           await import(
@@ -955,22 +1242,25 @@ function AttendanceManagement() {
           module.Html5Qrcode ||
           module.default;
 
-        if (
-          !Html5Qrcode
-        ) {
+        if (!Html5Qrcode) {
 
           throw new Error(
             "QR scanner library is unavailable."
           );
+
         }
 
+        /*
+         * Make sure an old scanner
+         * instance does not remain alive.
+         */
+
         if (
-          !scannerRef.current
+          scannerInstanceRef.current
         ) {
 
-          throw new Error(
-            "QR scanner container not found."
-          );
+          await stopScanner();
+
         }
 
         const scanner =
@@ -981,12 +1271,9 @@ function AttendanceManagement() {
         scannerInstanceRef.current =
           scanner;
 
-        setScanning(true);
-
-        setScanMessage(
-          "Point the camera at the attendee QR code."
-        );
-
+        if (mountedRef.current) {
+          setScanning(true);
+        }
 
         await scanner.start(
 
@@ -1003,8 +1290,8 @@ function AttendanceManagement() {
               height: 250,
             },
 
-            aspectRatio:
-              1.0,
+            aspectRatio: 1.0,
+
           },
 
           async (
@@ -1012,24 +1299,71 @@ function AttendanceManagement() {
           ) => {
 
             /*
-            -------------------------------------------------
-            QR DETECTED
-            -------------------------------------------------
-            */
+             * html5-qrcode can call the
+             * success callback multiple times
+             * for the same QR.
+             *
+             * Lock processing until the
+             * current request finishes.
+             */
 
-            await handleQrResult(
-              decodedText
-            );
+            if (
+              scannerProcessingRef.current
+            ) {
+
+              return;
+
+            }
+
+            scannerProcessingRef.current =
+              true;
+
+            try {
+
+              await handleQrResult(
+                decodedText
+              );
+
+            } finally {
+
+              /*
+               * Unlock only when QR
+               * verification failed.
+               *
+               * On success the scanner
+               * is stopped.
+               */
+
+              if (
+                scannerInstanceRef.current ===
+                scanner
+              ) {
+
+                scannerProcessingRef.current =
+                  false;
+
+              }
+
+            }
 
           },
 
           () => {
             /*
-            QR scan frame errors are ignored.
-            */
+             * Frame-level scan errors are
+             * intentionally ignored.
+             */
           }
 
         );
+
+        if (mountedRef.current) {
+
+          setScanMessage(
+            "Point the camera at the attendee QR code."
+          );
+
+        }
 
       } catch (error) {
 
@@ -1038,18 +1372,29 @@ function AttendanceManagement() {
           error
         );
 
-        setScanning(false);
-
         scannerInstanceRef.current =
           null;
 
-        setScanMessage("");
+        scannerProcessingRef.current =
+          false;
 
-        setError(
-          error.message ||
-          "Unable to start QR scanner. Please allow camera access."
-        );
+        if (mountedRef.current) {
+
+          setScanning(false);
+
+          setScanMessage("");
+
+          setError(
+            getApiErrorMessage(
+              error,
+              "Unable to start QR scanner. Please allow camera access."
+            )
+          );
+
+        }
+
       }
+
     };
 
 
@@ -1063,11 +1408,20 @@ function AttendanceManagement() {
       const scanner =
         scannerInstanceRef.current;
 
+      scannerInstanceRef.current =
+        null;
+
+      scannerProcessingRef.current =
+        false;
+
       if (!scanner) {
 
-        setScanning(false);
+        if (mountedRef.current) {
+          setScanning(false);
+        }
 
         return;
+
       }
 
       try {
@@ -1093,14 +1447,17 @@ function AttendanceManagement() {
           "QR scanner clear warning:",
           error
         );
+
       }
 
-      scannerInstanceRef.current =
-        null;
+      if (mountedRef.current) {
 
-      setScanning(false);
+        setScanning(false);
 
-      setScanMessage("");
+        setScanMessage("");
+
+      }
+
     };
 
 
@@ -1117,16 +1474,17 @@ function AttendanceManagement() {
         return;
       }
 
-      /*
-      Prevent repeated QR callback
-      while request is processing.
-      */
+      const eventId =
+        selectedEventIdRef.current;
 
-      if (
-        scanMessage ===
-        "Verifying QR..."
-      ) {
+      if (!eventId) {
+
+        setError(
+          "Please select an event first."
+        );
+
         return;
+
       }
 
       try {
@@ -1141,10 +1499,18 @@ function AttendanceManagement() {
           decodedText;
 
         /*
-        -----------------------------------------------------
-        TRY PARSE JSON
-        -----------------------------------------------------
-        */
+         * Event pass QR normally contains JSON.
+         *
+         * Example:
+         *
+         * {
+         *   type: "SNICT_EVENT_PASS",
+         *   bookingId: 21,
+         *   eventId: 5,
+         *   passCode: "...",
+         *   passToken: "..."
+         * }
+         */
 
         try {
 
@@ -1153,27 +1519,18 @@ function AttendanceManagement() {
               decodedText
             );
 
-        } catch (
-          parseError
-        ) {
-
+        } catch {
           /*
-          QR may contain direct
-          attendance code.
-          */
+           * If QR only contains a string,
+           * treat it as attendance code.
+           */
 
           qrData = {
             attendanceCode:
-              decodedText,
+              decodedText.trim(),
           };
+
         }
-
-
-        /*
-        -----------------------------------------------------
-        SEND TO BACKEND
-        -----------------------------------------------------
-        */
 
         const response =
           await api.post(
@@ -1182,24 +1539,28 @@ function AttendanceManagement() {
               qrData,
 
               eventId:
-                Number(
-                  selectedEventId
-                ),
+                Number(eventId),
             }
           );
-
 
         const successResult =
           await handleAttendanceSuccess(
             response
           );
 
-
-        if (
-          successResult
-        ) {
+        if (successResult) {
 
           await stopScanner();
+
+        } else {
+
+          /*
+           * Allow another scan if
+           * backend rejected the QR.
+           */
+
+          scannerProcessingRef.current =
+            false;
 
         }
 
@@ -1212,12 +1573,18 @@ function AttendanceManagement() {
 
         setScanMessage("");
 
+        scannerProcessingRef.current =
+          false;
+
         setError(
-          error.response?.data
-            ?.message ||
-          "Unable to verify QR code."
+          getApiErrorMessage(
+            error,
+            "Unable to verify QR code."
+          )
         );
+
       }
+
     };
 
 
@@ -1230,22 +1597,31 @@ function AttendanceManagement() {
       item
     ) => {
 
-      if (!item.bookingId) {
+      const bookingId =
+        item?.bookingId ??
+        item?.booking_id;
+
+      if (!bookingId) {
 
         setError(
           "Booking ID is missing."
         );
 
-        return;
+        return false;
+
       }
 
-      if (!selectedEventId) {
+      const eventId =
+        selectedEventIdRef.current;
+
+      if (!eventId) {
 
         setError(
           "Please select an event."
         );
 
-        return;
+        return false;
+
       }
 
       try {
@@ -1258,18 +1634,19 @@ function AttendanceManagement() {
 
         const response =
           await api.post(
-            `/attendance/${item.bookingId}/mark-present`,
+            `/attendance/${bookingId}/mark-present`,
             {
               eventId:
-                Number(
-                  selectedEventId
-                ),
+                Number(eventId),
             }
           );
 
-        await handleAttendanceSuccess(
-          response
-        );
+        const result =
+          await handleAttendanceSuccess(
+            response
+          );
+
+        return result;
 
       } catch (error) {
 
@@ -1281,11 +1658,16 @@ function AttendanceManagement() {
         setScanMessage("");
 
         setError(
-          error.response?.data
-            ?.message ||
-          "Unable to mark attendance."
+          getApiErrorMessage(
+            error,
+            "Unable to mark attendance."
+          )
         );
+
+        return false;
+
       }
+
     };
 
 
@@ -1298,11 +1680,54 @@ function AttendanceManagement() {
     setSelectedAttendance(
       null
     );
+
   };
 
 
   // =======================================================
-  // LOADING
+  // EVENT CHANGE
+  // =======================================================
+
+  const handleEventChange =
+    async (
+      event
+    ) => {
+
+      await stopScanner();
+
+      const value =
+        event.target.value;
+
+      setSelectedEventId(
+        value
+      );
+
+      selectedEventIdRef.current =
+        value;
+
+      setSearch("");
+
+      setStatusFilter(
+        "all"
+      );
+
+      setManualCode("");
+
+      setSelectedAttendance(
+        null
+      );
+
+      setError("");
+
+      setSuccess("");
+
+      setScanMessage("");
+
+    };
+
+
+  // =======================================================
+  // LOADING SCREEN
   // =======================================================
 
   if (
@@ -1325,6 +1750,7 @@ function AttendanceManagement() {
 
       </main>
     );
+
   }
 
 
@@ -1392,7 +1818,7 @@ function AttendanceManagement() {
 
 
         {/* =================================================
-            ALERTS
+            ERROR
         ================================================= */}
 
         {error && (
@@ -1424,6 +1850,10 @@ function AttendanceManagement() {
 
         )}
 
+
+        {/* =================================================
+            SUCCESS
+        ================================================= */}
 
         {success && (
 
@@ -1469,6 +1899,7 @@ function AttendanceManagement() {
 
           </div>
 
+
           <div className="attendance-event-selector-content">
 
             <label htmlFor="attendance-event">
@@ -1480,25 +1911,9 @@ function AttendanceManagement() {
               value={
                 selectedEventId
               }
-              onChange={(event) => {
-
-                stopScanner();
-
-                setSelectedEventId(
-                  event.target.value
-                );
-
-                setSearch("");
-
-                setStatusFilter(
-                  "all"
-                );
-
-                setSelectedAttendance(
-                  null
-                );
-
-              }}
+              onChange={
+                handleEventChange
+              }
             >
 
               <option value="">
@@ -1516,10 +1931,12 @@ function AttendanceManagement() {
                       event.id
                     }
                   >
-                    {
-                      event.title ||
-                      event.name
-                    }
+
+                    {event.title ||
+                      event.name ||
+                      event.event_name ||
+                      `Event #${event.id}`}
+
                   </option>
 
                 )
@@ -1537,11 +1954,18 @@ function AttendanceManagement() {
               <strong>
                 {
                   selectedEvent.title ||
-                  selectedEvent.name
+                  selectedEvent.name ||
+                  selectedEvent.event_name ||
+                  "Event"
                 }
               </strong>
 
-              {selectedEvent.event_date && (
+
+              {(
+                selectedEvent.event_date ||
+                selectedEvent.eventDate ||
+                selectedEvent.date
+              ) && (
 
                 <span>
 
@@ -1550,14 +1974,20 @@ function AttendanceManagement() {
                   />
 
                   {formatDate(
-                    selectedEvent.event_date
+                    selectedEvent.event_date ||
+                    selectedEvent.eventDate ||
+                    selectedEvent.date
                   )}
 
                 </span>
 
               )}
 
-              {selectedEvent.venue && (
+
+              {(
+                selectedEvent.venue ||
+                selectedEvent.location
+              ) && (
 
                 <span>
 
@@ -1566,7 +1996,8 @@ function AttendanceManagement() {
                   />
 
                   {
-                    selectedEvent.venue
+                    selectedEvent.venue ||
+                    selectedEvent.location
                   }
 
                 </span>
@@ -1581,7 +2012,7 @@ function AttendanceManagement() {
 
 
         {/* =================================================
-            SCANNER SECTION
+            SCANNER
         ================================================= */}
 
         <section className="attendance-scanner-section">
@@ -1605,6 +2036,7 @@ function AttendanceManagement() {
 
             </div>
 
+
             <div className="attendance-scanner-status">
 
               <ShieldCheck
@@ -1620,7 +2052,9 @@ function AttendanceManagement() {
 
           <div className="attendance-scanner-content">
 
-            {/* QR CAMERA */}
+            {/* =================================================
+                CAMERA
+            ================================================= */}
 
             <div className="attendance-camera-wrapper">
 
@@ -1662,7 +2096,9 @@ function AttendanceManagement() {
             </div>
 
 
-            {/* SCANNER CONTROLS */}
+            {/* =================================================
+                CONTROLS
+            ================================================= */}
 
             <div className="attendance-scanner-controls">
 
@@ -1671,7 +2107,6 @@ function AttendanceManagement() {
                 {scanning ? (
 
                   <>
-
                     <Camera
                       size={19}
                     />
@@ -1679,13 +2114,11 @@ function AttendanceManagement() {
                     <strong>
                       Camera is active
                     </strong>
-
                   </>
 
                 ) : (
 
                   <>
-
                     <CameraOff
                       size={19}
                     />
@@ -1693,7 +2126,6 @@ function AttendanceManagement() {
                     <strong>
                       Camera is inactive
                     </strong>
-
                   </>
 
                 )}
@@ -1758,6 +2190,10 @@ function AttendanceManagement() {
               )}
 
 
+              {/* =================================================
+                  OR
+              ================================================= */}
+
               <div className="attendance-scanner-divider">
 
                 <span>
@@ -1767,7 +2203,9 @@ function AttendanceManagement() {
               </div>
 
 
-              {/* MANUAL CODE */}
+              {/* =================================================
+                  MANUAL CODE
+              ================================================= */}
 
               <form
                 className="attendance-manual-form"
@@ -1810,10 +2248,17 @@ function AttendanceManagement() {
                     ) =>
                       setManualCode(
                         event.target.value
+                          .toUpperCase()
+                          .replace(
+                            /\s/g,
+                            ""
+                          )
                       )
                     }
                     autoComplete="off"
+                    spellCheck="false"
                   />
+
 
                   <button
                     type="submit"
@@ -1862,6 +2307,8 @@ function AttendanceManagement() {
 
         <section className="attendance-stats-grid">
 
+          {/* TOTAL */}
+
           <div className="attendance-stat-card">
 
             <div className="attendance-stat-icon">
@@ -1886,6 +2333,8 @@ function AttendanceManagement() {
 
           </div>
 
+
+          {/* PRESENT */}
 
           <div className="attendance-stat-card attendance-stat-present">
 
@@ -1912,6 +2361,8 @@ function AttendanceManagement() {
           </div>
 
 
+          {/* NOT PRESENT */}
+
           <div className="attendance-stat-card attendance-stat-absent">
 
             <div className="attendance-stat-icon">
@@ -1936,6 +2387,8 @@ function AttendanceManagement() {
 
           </div>
 
+
+          {/* PERCENTAGE */}
 
           <div className="attendance-stat-card attendance-stat-percentage">
 
@@ -1969,7 +2422,7 @@ function AttendanceManagement() {
 
 
         {/* =================================================
-            ATTENDANCE TABLE
+            ATTENDANCE LIST
         ================================================= */}
 
         <section className="attendance-list-section">
@@ -2002,7 +2455,9 @@ function AttendanceManagement() {
           </div>
 
 
-          {/* FILTERS */}
+          {/* =================================================
+              FILTERS
+          ================================================= */}
 
           <div className="attendance-list-toolbar">
 
@@ -2060,8 +2515,23 @@ function AttendanceManagement() {
           </div>
 
 
-          {filteredAttendance.length ===
-          0 ? (
+          {/* =================================================
+              LOADING
+          ================================================= */}
+
+          {loading ? (
+
+            <div className="attendance-empty">
+
+              <div className="attendance-loading-spinner" />
+
+              <h3>
+                Loading attendance...
+              </h3>
+
+            </div>
+
+          ) : filteredAttendance.length === 0 ? (
 
             <div className="attendance-empty">
 
@@ -2163,6 +2633,7 @@ function AttendanceManagement() {
 
                               </div>
 
+
                               <div>
 
                                 <strong>
@@ -2221,6 +2692,7 @@ function AttendanceManagement() {
                                 }
                               </code>
 
+
                               {item.attendanceCode !==
                                 "N/A" && (
 
@@ -2235,7 +2707,9 @@ function AttendanceManagement() {
                                 >
 
                                   {copiedCode ===
-                                  item.attendanceCode ? (
+                                    String(
+                                      item.attendanceCode
+                                    ) ? (
 
                                     <Check
                                       size={14}
@@ -2376,7 +2850,7 @@ function AttendanceManagement() {
 
 
       {/* =====================================================
-          ATTENDANCE DETAILS MODAL
+          DETAILS MODAL
       ===================================================== */}
 
       {selectedAttendance && (
@@ -2405,7 +2879,9 @@ function AttendanceManagement() {
             aria-modal="true"
           >
 
-            {/* HEADER */}
+            {/* =================================================
+                MODAL HEADER
+            ================================================= */}
 
             <header className="attendance-modal-header">
 
@@ -2425,11 +2901,13 @@ function AttendanceManagement() {
 
               </div>
 
+
               <button
                 type="button"
                 onClick={
                   closeDetails
                 }
+                aria-label="Close"
               >
 
                 <X
@@ -2441,7 +2919,9 @@ function AttendanceManagement() {
             </header>
 
 
-            {/* BODY */}
+            {/* =================================================
+                MODAL BODY
+            ================================================= */}
 
             <div className="attendance-modal-body">
 
@@ -2451,7 +2931,8 @@ function AttendanceManagement() {
                 className={
                   String(
                     selectedAttendance.attendanceStatus ||
-                    selectedAttendance.attendance_status
+                    selectedAttendance.attendance_status ||
+                    "not_present"
                   ).toLowerCase() ===
                   "present"
                     ? "attendance-modal-status present"
@@ -2461,7 +2942,8 @@ function AttendanceManagement() {
 
                 {String(
                   selectedAttendance.attendanceStatus ||
-                  selectedAttendance.attendance_status
+                  selectedAttendance.attendance_status ||
+                  "not_present"
                 ).toLowerCase() ===
                 "present" ? (
 
@@ -2512,7 +2994,9 @@ function AttendanceManagement() {
               </div>
 
 
-              {/* USER */}
+              {/* =================================================
+                  ATTENDEE INFORMATION
+              ================================================= */}
 
               <div className="attendance-modal-section">
 
@@ -2610,7 +3094,9 @@ function AttendanceManagement() {
               </div>
 
 
-              {/* BOOKING */}
+              {/* =================================================
+                  BOOKING INFORMATION
+              ================================================= */}
 
               <div className="attendance-modal-section">
 
@@ -2682,7 +3168,9 @@ function AttendanceManagement() {
               </div>
 
 
-              {/* ATTENDANCE */}
+              {/* =================================================
+                  ATTENDANCE VERIFICATION
+              ================================================= */}
 
               <div className="attendance-modal-section">
 
@@ -2713,6 +3201,7 @@ function AttendanceManagement() {
                         "—"
                       }
 
+
                       {(selectedAttendance.attendanceCode ||
                         selectedAttendance.attendance_code) && (
 
@@ -2727,10 +3216,10 @@ function AttendanceManagement() {
                         >
 
                           {copiedCode ===
-                          String(
-                            selectedAttendance.attendanceCode ||
-                            selectedAttendance.attendance_code
-                          ) ? (
+                            String(
+                              selectedAttendance.attendanceCode ||
+                              selectedAttendance.attendance_code
+                            ) ? (
 
                             <Check
                               size={13}
@@ -2795,7 +3284,9 @@ function AttendanceManagement() {
               </div>
 
 
-              {/* EVENT */}
+              {/* =================================================
+                  EVENT INFORMATION
+              ================================================= */}
 
               <div className="attendance-modal-section">
 
@@ -2876,11 +3367,14 @@ function AttendanceManagement() {
               </div>
 
 
-              {/* ACTION */}
+              {/* =================================================
+                  MARK PRESENT FROM MODAL
+              ================================================= */}
 
               {String(
                 selectedAttendance.attendanceStatus ||
-                selectedAttendance.attendance_status
+                selectedAttendance.attendance_status ||
+                "not_present"
               ).toLowerCase() !==
                 "present" && (
 
@@ -2889,13 +3383,16 @@ function AttendanceManagement() {
                   className="attendance-modal-mark-btn"
                   onClick={async () => {
 
-                    await markPresent(
-                      normalizeAttendance(
+                    const result =
+                      await markPresent(
                         selectedAttendance
-                      )
-                    );
+                      );
 
-                    closeDetails();
+                    if (result) {
+
+                      closeDetails();
+
+                    }
 
                   }}
                 >
@@ -2922,5 +3419,9 @@ function AttendanceManagement() {
   );
 }
 
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 export default AttendanceManagement;
