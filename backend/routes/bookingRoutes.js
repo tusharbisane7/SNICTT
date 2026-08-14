@@ -1,85 +1,46 @@
 const express = require("express");
 
-const router = express.Router();
-
-
 // =========================================================
-// CONTROLLER
+// CONTROLLERS
 // =========================================================
 
 const {
   createBooking,
   getMyBookings,
   getMyBookingById,
-
+  getMyPass,
   getAllBookings,
   getAdminBookingById,
-
   updateBookingStatus,
-  confirmPayment,
-
   deleteBooking,
 } = require("../controllers/bookingController");
-
 
 // =========================================================
 // MIDDLEWARE
 // =========================================================
 
-// User authentication
 const authMiddleware =
   require("../middleware/authMiddleware");
 
-// Admin authentication
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-
 // =========================================================
-// USER BOOKING ROUTES
-// =========================================================
-
-
-// ---------------------------------------------------------
-// CREATE EVENT BOOKING
-// POST /api/bookings/event/:eventId
-// ---------------------------------------------------------
-
-router.post(
-  "/event/:eventId",
-  authMiddleware,
-  createBooking
-);
-
-
-// ---------------------------------------------------------
-// GET MY BOOKINGS
-// GET /api/bookings
-// ---------------------------------------------------------
-
-router.get(
-  "/",
-  authMiddleware,
-  getMyBookings
-);
-
-
-// ---------------------------------------------------------
-// GET MY SINGLE BOOKING
-// GET /api/bookings/:id
-// ---------------------------------------------------------
-
-router.get(
-  "/:id",
-  authMiddleware,
-  getMyBookingById
-);
-
-
-// =========================================================
-// ADMIN BOOKING ROUTES
+// ROUTER
 // =========================================================
 
+const router = express.Router();
+
+// =========================================================
+// ADMIN BOOKINGS
+// IMPORTANT:
+// DO NOT USE authMiddleware HERE.
+//
+// Admin authentication uses:
+// snict_admin_token
+//
+// adminMiddleware should verify the admin token.
+// =========================================================
 
 // ---------------------------------------------------------
 // GET ALL BOOKINGS
@@ -92,7 +53,6 @@ router.get(
   getAllBookings
 );
 
-
 // ---------------------------------------------------------
 // GET SINGLE BOOKING
 // GET /api/bookings/admin/:id
@@ -104,9 +64,8 @@ router.get(
   getAdminBookingById
 );
 
-
 // ---------------------------------------------------------
-// UPDATE BOOKING / PAYMENT STATUS
+// UPDATE BOOKING STATUS
 // PUT /api/bookings/admin/:id/status
 // ---------------------------------------------------------
 
@@ -115,19 +74,6 @@ router.put(
   adminMiddleware,
   updateBookingStatus
 );
-
-
-// ---------------------------------------------------------
-// CONFIRM PAYMENT
-// PUT /api/bookings/admin/:id/confirm-payment
-// ---------------------------------------------------------
-
-router.put(
-  "/admin/:id/confirm-payment",
-  adminMiddleware,
-  confirmPayment
-);
-
 
 // ---------------------------------------------------------
 // DELETE BOOKING
@@ -140,6 +86,56 @@ router.delete(
   deleteBooking
 );
 
+// =========================================================
+// USER BOOKINGS
+// =========================================================
+
+// ---------------------------------------------------------
+// GET MY BOOKINGS
+// GET /api/bookings
+// ---------------------------------------------------------
+
+router.get(
+  "/",
+  authMiddleware,
+  getMyBookings
+);
+
+// ---------------------------------------------------------
+// CREATE BOOKING
+// POST /api/bookings/event/:eventId
+// ---------------------------------------------------------
+
+router.post(
+  "/event/:eventId",
+  authMiddleware,
+  createBooking
+);
+
+// ---------------------------------------------------------
+// GET SINGLE USER BOOKING
+// GET /api/bookings/:id
+// ---------------------------------------------------------
+
+router.get(
+  "/:id",
+  authMiddleware,
+  getMyBookingById
+);
+
+// ---------------------------------------------------------
+// GET MY EVENT PASS
+// GET /api/bookings/:id/pass
+//
+// Only the logged-in user who owns the booking
+// can access the pass.
+// ---------------------------------------------------------
+
+router.get(
+  "/:id/pass",
+  authMiddleware,
+  getMyPass
+);
 
 // =========================================================
 // EXPORT
