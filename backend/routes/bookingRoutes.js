@@ -71,18 +71,19 @@ router.get(
 // PUT /api/bookings/admin/:id/confirm-payment
 //
 // Example:
-// PUT /api/bookings/admin/18/confirm-payment
+// PUT /api/bookings/admin/20/confirm-payment
 //
 // No body required.
 //
 // Flow:
+//
 // payment submitted
-//       ↓
+//        ↓
 // payment verified
-//       ↓
+//        ↓
 // booking confirmed
-//       ↓
-// event pass generated
+//        ↓
+// existing pass reused OR new pass generated
 // ---------------------------------------------------------
 
 router.put(
