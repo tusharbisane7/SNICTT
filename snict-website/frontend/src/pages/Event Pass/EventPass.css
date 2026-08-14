@@ -1,0 +1,1872 @@
+/* =========================================================
+   SNICT EVENT PASS
+   Premium Event Pass UI
+   Matches SNICT Event Booking Theme
+========================================================= */
+
+.event-pass-page {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(20, 184, 166, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 25%,
+      rgba(59, 130, 246, 0.07),
+      transparent 30%
+    ),
+    #f6f9fc;
+
+  padding: 40px 24px 80px;
+
+  color: #102a43;
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.pass-topbar {
+  width: min(1080px, 100%);
+
+  margin: 0 auto 28px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+}
+
+.back-button,
+.print-button {
+  min-height: 44px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 16px;
+
+  border-radius: 11px;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.back-button {
+  border: 1px solid #d5dfe7;
+
+  background: #ffffff;
+
+  color: #40566a;
+
+  box-shadow:
+    0 8px 25px
+    rgba(16, 42, 67, 0.06);
+}
+
+.print-button {
+  border: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0f766e,
+      #0d9488
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 10px 25px
+    rgba(15, 118, 110, 0.20);
+}
+
+.back-button:hover,
+.print-button:hover {
+  transform: translateY(-2px);
+}
+
+.back-button:hover {
+  border-color: #0f766e;
+
+  color: #0f766e;
+}
+
+.print-button:hover {
+  box-shadow:
+    0 14px 30px
+    rgba(15, 118, 110, 0.28);
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.pass-container {
+  width: min(1080px, 100%);
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   EVENT PASS CARD
+========================================================= */
+
+.event-pass-card {
+  position: relative;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #dfe8ee;
+
+  border-radius: 28px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 25px 70px
+    rgba(16, 42, 67, 0.11);
+
+  animation:
+    eventPassIn
+    0.7s
+    cubic-bezier(.22,1,.36,1)
+    both;
+}
+
+@keyframes eventPassIn {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(20px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+/* =========================================================
+   TOP ACCENT
+========================================================= */
+
+.event-pass-card::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  top: 0;
+
+  width: 100%;
+
+  height: 5px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #0f766e,
+      #14b8a6,
+      #3b82f6
+    );
+
+  z-index: 5;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.pass-header {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 28px 34px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #102a43,
+      #163b56
+    );
+
+  color: #ffffff;
+}
+
+.brand-area {
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+}
+
+.brand-logo {
+  width: 48px;
+
+  height: 48px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0f766e,
+      #14b8a6
+    );
+
+  color: #ffffff;
+
+  font-size: 23px;
+
+  font-weight: 900;
+
+  box-shadow:
+    0 10px 25px
+    rgba(20, 184, 166, 0.25);
+}
+
+.brand-name {
+  font-size: 21px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.8px;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+
+  color: #b8c9d6;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 1.4px;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
+.confirmed-badge,
+.pending-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 34px;
+
+  padding: 0 13px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.8px;
+}
+
+.confirmed-badge {
+  border:
+    1px solid
+    rgba(110, 231, 183, 0.25);
+
+  background:
+    rgba(16, 185, 129, 0.14);
+
+  color: #86efac;
+}
+
+.pending-badge {
+  border:
+    1px solid
+    rgba(251, 191, 36, 0.30);
+
+  background:
+    rgba(245, 158, 11, 0.13);
+
+  color: #fde68a;
+}
+
+.confirmed-badge span,
+.pending-badge span {
+  width: 18px;
+
+  height: 18px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 10px;
+}
+
+.confirmed-badge span {
+  background: #10b981;
+
+  color: #ffffff;
+}
+
+.pending-badge span {
+  background: #f59e0b;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   MAIN BODY
+========================================================= */
+
+.pass-body {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    300px;
+
+  gap: 45px;
+
+  padding: 42px 40px;
+}
+
+
+/* =========================================================
+   LEFT CONTENT
+========================================================= */
+
+.pass-label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #0f766e;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.7px;
+}
+
+.event-title {
+  max-width: 650px;
+
+  margin: 0 0 10px;
+
+  color: #102a43;
+
+  font-size: clamp(
+    30px,
+    4vw,
+    45px
+  );
+
+  line-height: 1.12;
+
+  letter-spacing: -1.4px;
+}
+
+.welcome-text {
+  margin: 0 0 30px;
+
+  color: #66788a;
+
+  font-size: 15px;
+
+  line-height: 1.6;
+}
+
+.welcome-text strong {
+  color: #20364b;
+}
+
+
+/* =========================================================
+   EVENT INFO GRID
+========================================================= */
+
+.event-info-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 13px;
+
+  margin-bottom: 27px;
+}
+
+.info-item {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 11px;
+
+  min-width: 0;
+
+  padding: 15px;
+
+  border:
+    1px solid
+    #e1e8ee;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f8fafc
+    );
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.info-item:hover {
+  transform: translateY(-2px);
+
+  border-color: #cfe4e0;
+
+  box-shadow:
+    0 10px 25px
+    rgba(16, 42, 67, 0.06);
+}
+
+.info-icon {
+  width: 38px;
+
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background: #ecfdf5;
+
+  color: #0f766e;
+
+  font-size: 16px;
+}
+
+.info-item > div:last-child {
+  min-width: 0;
+}
+
+.info-label {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #8494a3;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.info-item strong {
+  display: block;
+
+  color: #20364b;
+
+  font-size: 13px;
+
+  line-height: 1.45;
+
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   BOOKING DETAILS
+========================================================= */
+
+.booking-details {
+  padding-top: 18px;
+
+  border-top:
+    1px solid
+    #e5ebef;
+}
+
+.detail-row {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 8px 0;
+
+  font-size: 13px;
+}
+
+.detail-row span {
+  color: #718096;
+}
+
+.detail-row strong {
+  max-width: 60%;
+
+  color: #20364b;
+
+  text-align: right;
+
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   QR SECTION
+========================================================= */
+
+.qr-section {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  text-align: center;
+}
+
+.qr-container {
+  position: relative;
+
+  padding: 14px;
+
+  border:
+    1px solid
+    #dfe7ec;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 15px 35px
+    rgba(16, 42, 67, 0.08);
+
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.qr-container:hover {
+  transform:
+    translateY(-4px)
+    scale(1.015);
+
+  box-shadow:
+    0 20px 45px
+    rgba(16, 42, 67, 0.12);
+}
+
+.qr-container svg {
+  display: block;
+}
+
+.qr-title {
+  margin:
+    17px 0 4px;
+
+  color: #20364b;
+
+  font-size: 15px;
+
+  font-weight: 800;
+}
+
+.qr-description {
+  max-width: 230px;
+
+  margin: 0;
+
+  color: #718096;
+
+  font-size: 11px;
+
+  line-height: 1.55;
+}
+
+
+/* =========================================================
+   MANUAL ATTENDANCE CODE
+========================================================= */
+
+.manual-code-section {
+  width: 100%;
+
+  margin-top: 21px;
+}
+
+.manual-code-divider {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 14px;
+}
+
+.manual-code-divider::before,
+.manual-code-divider::after {
+  content: "";
+
+  flex: 1;
+
+  height: 1px;
+
+  background: #e2e8ee;
+}
+
+.manual-code-divider span {
+  color: #95a3af;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.manual-code-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #708292;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.attendance-code {
+  padding: 12px 10px;
+
+  border:
+    1px solid
+    #bde9e2;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ecfdf5,
+      #f0fdfa
+    );
+
+  color: #0f766e;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 14px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.2px;
+
+  line-height: 1.2;
+
+  word-break: break-all;
+
+  text-align: center;
+}
+
+.attendance-code.unavailable {
+  border-color: #dbe3e8;
+
+  background: #f8fafc;
+
+  color: #8b99a6;
+}
+
+.manual-code-help {
+  max-width: 230px;
+
+  margin: 8px auto 0;
+
+  color: #7b8b99;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+}
+
+.manual-code-help.warning {
+  color: #b45309;
+}
+
+
+/* =========================================================
+   PERFORATION
+========================================================= */
+
+.perforation {
+  position: relative;
+
+  height: 1px;
+
+  margin:
+    0 34px;
+
+  border-top:
+    2px dashed
+    #dce5eb;
+}
+
+.perforation span {
+  position: absolute;
+
+  top: -12px;
+
+  width: 24px;
+
+  height: 24px;
+
+  border:
+    1px solid
+    #e2e8ee;
+
+  border-radius: 50%;
+
+  background: #f6f9fc;
+}
+
+.perforation span:nth-child(1) {
+  left: -12px;
+}
+
+.perforation span:nth-child(2) {
+  left: 14%;
+}
+
+.perforation span:nth-child(3) {
+  left: 28%;
+}
+
+.perforation span:nth-child(4) {
+  left: 42%;
+}
+
+.perforation span:nth-child(5) {
+  left: 56%;
+}
+
+.perforation span:nth-child(6) {
+  left: 70%;
+}
+
+.perforation span:nth-child(7) {
+  left: 84%;
+}
+
+.perforation span:nth-child(8) {
+  right: -12px;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.pass-footer {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 20px;
+
+  padding:
+    23px 40px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f7fafc,
+      #f2f7f8
+    );
+}
+
+.pass-footer > div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.footer-label {
+  color: #8998a5;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.pass-footer strong {
+  color: #20364b;
+
+  font-size: 12px;
+
+  word-break: break-word;
+}
+
+.status-text {
+  color: #0f766e !important;
+}
+
+.payment-status {
+  color: #15803d !important;
+}
+
+
+/* =========================================================
+   VALIDITY BAR
+========================================================= */
+
+.validity-bar {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  padding: 12px 20px;
+
+  background:
+    #ecfdf5;
+
+  color: #5f7183;
+
+  font-size: 10px;
+}
+
+.validity-bar strong {
+  color: #0f766e;
+}
+
+
+/* =========================================================
+   INSTRUCTIONS
+========================================================= */
+
+.pass-instructions {
+  margin-top: 22px;
+
+  padding: 24px;
+
+  border:
+    1px solid
+    #e1e8ee;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 15px 40px
+    rgba(16, 42, 67, 0.06);
+}
+
+.pass-instructions h3 {
+  margin:
+    0 0 12px;
+
+  color: #20364b;
+
+  font-size: 16px;
+}
+
+.pass-instructions ul {
+  margin: 0;
+
+  padding-left: 20px;
+
+  color: #66788a;
+
+  font-size: 13px;
+
+  line-height: 1.8;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.pass-loading {
+  width: min(
+    500px,
+    100%
+  );
+
+  margin:
+    12vh auto 0;
+
+  padding: 50px 30px;
+
+  border:
+    1px solid
+    #e1e8ee;
+
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 55px
+    rgba(16, 42, 67, 0.08);
+}
+
+.loading-spinner {
+  width: 38px;
+
+  height: 38px;
+
+  margin:
+    0 auto 18px;
+
+  border:
+    3px solid
+    #dce6eb;
+
+  border-top-color:
+    #0f766e;
+
+  border-radius: 50%;
+
+  animation:
+    eventPassSpin
+    0.8s linear infinite;
+}
+
+@keyframes eventPassSpin {
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.pass-error-card {
+  width: min(
+    570px,
+    100%
+  );
+
+  margin:
+    80px auto;
+
+  padding:
+    45px 30px;
+
+  border:
+    1px solid
+    #e4eaef;
+
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 55px
+    rgba(16, 42, 67, 0.08);
+}
+
+.error-icon {
+  width: 58px;
+
+  height: 58px;
+
+  margin:
+    0 auto 17px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #fff5f5;
+
+  color: #dc2626;
+
+  font-size: 25px;
+
+  font-weight: 900;
+}
+
+.pass-error-card h1 {
+  margin:
+    0 0 10px;
+
+  color: #102a43;
+
+  font-size: 28px;
+}
+
+.pass-error-card p {
+  max-width: 430px;
+
+  margin:
+    0 auto 25px;
+
+  color: #718096;
+
+  font-size: 14px;
+
+  line-height: 1.7;
+}
+
+.error-actions {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 46px;
+
+  padding:
+    0 18px;
+
+  border-radius: 11px;
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+
+  background: #0f766e;
+
+  color: #ffffff;
+}
+
+.secondary-button {
+  border:
+    1px solid
+    #d5dfe7;
+
+  background: #ffffff;
+
+  color: #40566a;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 850px) {
+
+  .pass-body {
+    grid-template-columns: 1fr;
+
+    gap: 30px;
+  }
+
+  .qr-section {
+    order: -1;
+  }
+
+}
+
+
+@media (max-width: 640px) {
+
+  .event-pass-page {
+    padding:
+      25px 14px 50px;
+  }
+
+  .pass-topbar {
+    margin-bottom: 20px;
+  }
+
+  .pass-header {
+    padding:
+      22px 20px;
+  }
+
+  .brand-logo {
+    width: 42px;
+
+    height: 42px;
+
+    font-size: 20px;
+  }
+
+  .brand-name {
+    font-size: 18px;
+  }
+
+  .brand-subtitle {
+    font-size: 9px;
+  }
+
+  .confirmed-badge,
+  .pending-badge {
+    min-height: 30px;
+
+    padding:
+      0 9px;
+
+    font-size: 9px;
+  }
+
+  .pass-body {
+    padding:
+      28px 20px;
+  }
+
+  .event-title {
+    font-size: 30px;
+  }
+
+  .event-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pass-footer {
+    grid-template-columns: 1fr;
+
+    gap: 15px;
+
+    padding:
+      20px;
+  }
+
+  .perforation {
+    margin:
+      0 20px;
+  }
+
+  .pass-instructions {
+    padding: 20px;
+  }
+
+}
+
+
+@media (max-width: 420px) {
+
+  .event-pass-page {
+    padding:
+      18px 10px 40px;
+  }
+
+  .pass-topbar {
+    align-items: stretch;
+  }
+
+  .back-button,
+  .print-button {
+    min-height: 41px;
+
+    padding:
+      0 12px;
+
+    font-size: 12px;
+  }
+
+  .pass-header {
+    align-items: flex-start;
+  }
+
+  .confirmed-badge,
+  .pending-badge {
+    font-size: 8px;
+  }
+
+  .pass-body {
+    padding:
+      24px 16px;
+  }
+
+  .event-title {
+    font-size: 27px;
+  }
+
+  .qr-container {
+    padding: 11px;
+  }
+
+  .attendance-code {
+    font-size: 12px;
+  }
+
+}
+
+
+/* =========================================================
+   =========================================================
+   PRINT VERSION
+   =========================================================
+========================================================= */
+
+@media print {
+
+  /* -------------------------------------------------------
+     PAGE
+  ------------------------------------------------------- */
+
+  @page {
+    size: A4 portrait;
+
+    margin: 8mm;
+  }
+
+  html,
+  body {
+    width: 100%;
+
+    min-height: 100%;
+
+    margin: 0;
+
+    padding: 0;
+
+    background: #ffffff !important;
+  }
+
+
+  /* -------------------------------------------------------
+     REMOVE SCREEN UI
+  ------------------------------------------------------- */
+
+  .event-pass-page {
+    width: 100%;
+
+    min-height: auto;
+
+    margin: 0;
+
+    padding: 0;
+
+    background: #ffffff !important;
+
+    color: #102a43;
+
+    overflow: visible;
+  }
+
+  .pass-topbar {
+    display: none !important;
+  }
+
+  .pass-instructions {
+    display: none !important;
+  }
+
+
+  /* -------------------------------------------------------
+     PASS CONTAINER
+  ------------------------------------------------------- */
+
+  .pass-container {
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 0;
+  }
+
+
+  /* -------------------------------------------------------
+     EVENT PASS
+  ------------------------------------------------------- */
+
+  .event-pass-card {
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    border:
+      1px solid
+      #cbd5df;
+
+    border-radius: 10px;
+
+    box-shadow: none !important;
+
+    overflow: hidden;
+
+    animation: none !important;
+
+    transform: none !important;
+  }
+
+
+  /* -------------------------------------------------------
+     HEADER
+  ------------------------------------------------------- */
+
+  .pass-header {
+    padding:
+      17px 22px;
+
+    background:
+      #102a43 !important;
+
+    color: #ffffff !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+  .brand-logo {
+    width: 37px;
+
+    height: 37px;
+
+    border-radius: 10px;
+
+    background:
+      #0f766e !important;
+
+    color: #ffffff !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+
+    box-shadow: none !important;
+  }
+
+  .brand-name {
+    font-size: 17px;
+  }
+
+  .brand-subtitle {
+    font-size: 8px;
+
+    color: #cbd5e1 !important;
+  }
+
+  .confirmed-badge,
+  .pending-badge {
+    min-height: 27px;
+
+    background:
+      transparent !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+
+  /* -------------------------------------------------------
+     BODY
+  ------------------------------------------------------- */
+
+  .pass-body {
+    grid-template-columns:
+      minmax(0, 1fr)
+      225px;
+
+    gap: 25px;
+
+    padding:
+      25px 27px;
+  }
+
+
+  /* -------------------------------------------------------
+     EVENT TITLE
+  ------------------------------------------------------- */
+
+  .pass-label {
+    margin-bottom: 6px;
+
+    font-size: 8px;
+  }
+
+  .event-title {
+    margin-bottom: 6px;
+
+    font-size: 27px;
+
+    letter-spacing: -0.7px;
+  }
+
+  .welcome-text {
+    margin-bottom: 20px;
+
+    font-size: 11px;
+  }
+
+
+  /* -------------------------------------------------------
+     EVENT INFORMATION
+  ------------------------------------------------------- */
+
+  .event-info-grid {
+    gap: 9px;
+
+    margin-bottom: 17px;
+  }
+
+  .info-item {
+    padding: 10px;
+
+    border-radius: 9px;
+
+    box-shadow: none !important;
+
+    break-inside: avoid;
+
+    page-break-inside: avoid;
+  }
+
+  .info-item:hover {
+    transform: none;
+  }
+
+  .info-icon {
+    width: 29px;
+
+    height: 29px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+
+    background:
+      #ecfdf5 !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+  .info-label {
+    margin-bottom: 2px;
+
+    font-size: 7px;
+  }
+
+  .info-item strong {
+    font-size: 10px;
+
+    line-height: 1.3;
+  }
+
+
+  /* -------------------------------------------------------
+     BOOKING DETAILS
+  ------------------------------------------------------- */
+
+  .booking-details {
+    padding-top: 11px;
+  }
+
+  .detail-row {
+    padding: 5px 0;
+
+    font-size: 9px;
+  }
+
+  .detail-row strong {
+    max-width: 65%;
+  }
+
+
+  /* -------------------------------------------------------
+     QR
+  ------------------------------------------------------- */
+
+  .qr-section {
+    order: initial;
+
+    justify-content: flex-start;
+  }
+
+  .qr-container {
+    padding: 9px;
+
+    border-radius: 11px;
+
+    box-shadow: none !important;
+
+    break-inside: avoid;
+
+    page-break-inside: avoid;
+  }
+
+  .qr-container:hover {
+    transform: none;
+  }
+
+  .qr-container svg {
+    width: 165px !important;
+
+    height: 165px !important;
+  }
+
+  .qr-title {
+    margin:
+      10px 0 3px;
+
+    font-size: 11px;
+  }
+
+  .qr-description {
+    max-width: 190px;
+
+    font-size: 8px;
+  }
+
+
+  /* -------------------------------------------------------
+     MANUAL ATTENDANCE CODE
+  ------------------------------------------------------- */
+
+  .manual-code-section {
+    margin-top: 12px;
+  }
+
+  .manual-code-divider {
+    margin-bottom: 8px;
+  }
+
+  .manual-code-divider span {
+    font-size: 7px;
+  }
+
+  .manual-code-label {
+    margin-bottom: 5px;
+
+    font-size: 7px;
+  }
+
+  .attendance-code {
+    padding:
+      8px 6px;
+
+    border-radius: 7px;
+
+    background:
+      #ecfdf5 !important;
+
+    border-color:
+      #99dcd3 !important;
+
+    color:
+      #0f766e !important;
+
+    font-size: 10px;
+
+    letter-spacing: 0.7px;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+
+    break-inside: avoid;
+
+    page-break-inside: avoid;
+  }
+
+  .manual-code-help {
+    margin-top: 5px;
+
+    font-size: 7px;
+
+    line-height: 1.35;
+  }
+
+
+  /* -------------------------------------------------------
+     PERFORATION
+  ------------------------------------------------------- */
+
+  .perforation {
+    margin:
+      0 20px;
+  }
+
+  .perforation span {
+    width: 17px;
+
+    height: 17px;
+
+    top: -9px;
+
+    background:
+      #ffffff !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+
+  /* -------------------------------------------------------
+     FOOTER
+  ------------------------------------------------------- */
+
+  .pass-footer {
+    gap: 15px;
+
+    padding:
+      14px 27px;
+
+    background:
+      #f7fafc !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+  .footer-label {
+    font-size: 7px;
+  }
+
+  .pass-footer strong {
+    font-size: 9px;
+  }
+
+
+  /* -------------------------------------------------------
+     VALIDITY
+  ------------------------------------------------------- */
+
+  .validity-bar {
+    padding:
+      8px 15px;
+
+    background:
+      #ecfdf5 !important;
+
+    font-size: 8px;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+
+  /* -------------------------------------------------------
+     REMOVE ANIMATIONS
+  ------------------------------------------------------- */
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+
+    transition: none !important;
+  }
+
+
+  /* -------------------------------------------------------
+     PRINT COLOR
+  ------------------------------------------------------- */
+
+  .event-pass-card::before {
+    background:
+      linear-gradient(
+        90deg,
+        #0f766e,
+        #14b8a6,
+        #3b82f6
+      ) !important;
+
+    -webkit-print-color-adjust: exact;
+
+    print-color-adjust: exact;
+  }
+
+
+  /* -------------------------------------------------------
+     AVOID PAGE BREAKS
+  ------------------------------------------------------- */
+
+  .event-pass-card,
+  .pass-header,
+  .pass-body,
+  .pass-footer,
+  .qr-section,
+  .manual-code-section {
+    break-inside: avoid;
+
+    page-break-inside: avoid;
+  }
+
+}
+
+
+/* =========================================================
+   PRINT — SMALLER PAPER
+   Useful for thermal / compact printers
+========================================================= */
+
+@media print and (max-width: 600px) {
+
+  @page {
+    size: auto;
+
+    margin: 5mm;
+  }
+
+  .pass-body {
+    grid-template-columns:
+      1fr
+      190px;
+
+    gap: 18px;
+
+    padding:
+      18px;
+  }
+
+  .event-title {
+    font-size: 23px;
+  }
+
+  .qr-container svg {
+    width: 135px !important;
+
+    height: 135px !important;
+  }
+
+}

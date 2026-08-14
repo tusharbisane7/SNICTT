@@ -1,3 +1,4 @@
+
 import {
   useCallback,
   useEffect,
@@ -21,11 +22,9 @@ import {
   XCircle,
   Ticket,
   UserCircle,
-  X,
-  Printer,
   QrCode,
   UserCheck,
-  Copy,
+  Circle,
 } from "lucide-react";
 
 import {
@@ -47,30 +46,25 @@ function BookingHistory() {
 
   const { user } = useAuth();
 
-  // =======================================================
+  // =========================================================
   // STATE
-  // =======================================================
+  // =========================================================
 
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] =
+    useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [error, setError] = useState("");
-
-  const [selectedPass, setSelectedPass] = useState(null);
-
-  const [printingPass, setPrintingPass] =
-    useState(false);
+  const [error, setError] =
+    useState("");
 
   const [refreshing, setRefreshing] =
     useState(false);
 
-  const [copiedAttendanceCode, setCopiedAttendanceCode] =
-    useState(false);
-
-  // =======================================================
+  // =========================================================
   // LOAD BOOKINGS
-  // =======================================================
+  // =========================================================
 
   const loadBookings = useCallback(
     async (showFullLoader = true) => {
@@ -81,11 +75,14 @@ function BookingHistory() {
 
         setError("");
 
-        const response = await api.get(
-          "/bookings"
-        );
+        const response =
+          await api.get(
+            "/bookings"
+          );
 
-        if (response.data?.success) {
+        if (
+          response.data?.success
+        ) {
           setBookings(
             Array.isArray(
               response.data.bookings
@@ -101,14 +98,15 @@ function BookingHistory() {
               "Unable to load bookings."
           );
         }
-      } catch (err) {
+      } catch (error) {
         console.error(
           "Booking history error:",
-          err
+          error
         );
 
         if (
-          err.response?.status === 401
+          error.response?.status ===
+          401
         ) {
           navigate(
             "/login",
@@ -124,7 +122,7 @@ function BookingHistory() {
         }
 
         setError(
-          err.response?.data?.message ||
+          error.response?.data?.message ||
             "Unable to load booking history."
         );
       } finally {
@@ -136,45 +134,52 @@ function BookingHistory() {
     [navigate]
   );
 
-  // =======================================================
+  // =========================================================
   // INITIAL LOAD
-  // =======================================================
+  // =========================================================
 
   useEffect(() => {
     loadBookings(true);
   }, [loadBookings]);
 
-  // =======================================================
+  // =========================================================
   // REFRESH
-  // =======================================================
+  // =========================================================
 
-  const handleRefresh = async () => {
-    try {
-      setRefreshing(true);
+  const handleRefresh =
+    async () => {
+      try {
+        setRefreshing(true);
 
-      await loadBookings(false);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+        await loadBookings(false);
+      } finally {
+        setRefreshing(false);
+      }
+    };
 
-  // =======================================================
+  // =========================================================
   // FORMAT DATE
-  // =======================================================
+  // =========================================================
 
-  const formatDate = (date) => {
+  const formatDate = (
+    date
+  ) => {
     if (!date) {
       return "-";
     }
 
-    const value = String(date).slice(
-      0,
-      10
-    );
+    const value =
+      String(date).slice(
+        0,
+        10
+      );
 
-    const parts = value.split("-");
+    const parts =
+      value.split("-");
 
-    if (parts.length !== 3) {
+    if (
+      parts.length !== 3
+    ) {
       return value;
     }
 
@@ -184,19 +189,12 @@ function BookingHistory() {
       day,
     ] = parts;
 
-    const dateObject = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day)
-    );
-
-    if (
-      Number.isNaN(
-        dateObject.getTime()
-      )
-    ) {
-      return value;
-    }
+    const dateObject =
+      new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day)
+      );
 
     return dateObject.toLocaleDateString(
       "en-IN",
@@ -208,31 +206,41 @@ function BookingHistory() {
     );
   };
 
-  // =======================================================
+  // =========================================================
   // FORMAT TIME
-  // =======================================================
+  // =========================================================
 
-  const formatTime = (time) => {
+  const formatTime = (
+    time
+  ) => {
     if (!time) {
       return "-";
     }
 
-    const value = String(time).slice(
-      0,
-      5
-    );
+    const value =
+      String(time).slice(
+        0,
+        5
+      );
 
-    const parts = value.split(":");
+    const parts =
+      value.split(":");
 
-    if (parts.length < 2) {
+    if (
+      parts.length < 2
+    ) {
       return value;
     }
 
-    let hour = Number(parts[0]);
+    let hour =
+      Number(parts[0]);
 
-    const minute = parts[1];
+    const minute =
+      parts[1];
 
-    if (Number.isNaN(hour)) {
+    if (
+      Number.isNaN(hour)
+    ) {
       return value;
     }
 
@@ -241,32 +249,27 @@ function BookingHistory() {
         ? "PM"
         : "AM";
 
-    hour = hour % 12 || 12;
+    hour =
+      hour % 12 || 12;
 
     return `${hour}:${minute} ${suffix}`;
   };
 
-  // =======================================================
+  // =========================================================
   // FORMAT DATETIME
-  // =======================================================
+  // =========================================================
 
-  const formatDateTime = (value) => {
+  const formatDateTime = (
+    value
+  ) => {
     if (!value) {
       return "-";
     }
 
     try {
-      const date = new Date(value);
-
-      if (
-        Number.isNaN(
-          date.getTime()
-        )
-      ) {
-        return String(value);
-      }
-
-      return date.toLocaleString(
+      return new Date(
+        value
+      ).toLocaleString(
         "en-IN",
         {
           day: "2-digit",
@@ -281,17 +284,22 @@ function BookingHistory() {
     }
   };
 
-  // =======================================================
+  // =========================================================
   // FORMAT STATUS
-  // =======================================================
+  // =========================================================
 
-  const formatStatus = (status) => {
+  const formatStatus = (
+    status
+  ) => {
     if (!status) {
       return "Unknown";
     }
 
     return String(status)
-      .replaceAll("_", " ")
+      .replaceAll(
+        "_",
+        " "
+      )
       .replace(
         /\b\w/g,
         (letter) =>
@@ -299,237 +307,247 @@ function BookingHistory() {
       );
   };
 
-  // =======================================================
+  // =========================================================
   // EVENT STATUS
-  // =======================================================
+  // =========================================================
 
-  const getEventStatus = (booking) => {
-    if (booking?.event_status) {
-      return booking.event_status;
-    }
-
-    if (!booking?.event_date) {
-      return null;
-    }
-
-    try {
-      const date = String(
-        booking.event_date
-      ).slice(0, 10);
-
-      const start = String(
-        booking.start_time ||
-          "00:00:00"
-      ).slice(0, 8);
-
-      const end = String(
-        booking.end_time ||
-          "23:59:59"
-      ).slice(0, 8);
-
-      const eventStart = new Date(
-        `${date}T${start}+05:30`
-      );
-
-      const eventEnd = new Date(
-        `${date}T${end}+05:30`
-      );
-
-      const now = new Date();
-
-      if (now < eventStart) {
-        return "upcoming";
+  const getEventStatus =
+    (booking) => {
+      if (
+        booking?.event_status
+      ) {
+        return booking.event_status;
       }
 
       if (
-        now >= eventStart &&
-        now <= eventEnd
+        !booking?.event_date
       ) {
-        return "ongoing";
+        return null;
       }
 
-      return "past";
-    } catch {
-      return null;
-    }
-  };
+      try {
+        const date =
+          String(
+            booking.event_date
+          ).slice(
+            0,
+            10
+          );
 
-  // =======================================================
+        const start =
+          String(
+            booking.start_time ||
+              "00:00:00"
+          ).slice(
+            0,
+            8
+          );
+
+        const end =
+          String(
+            booking.end_time ||
+              "23:59:59"
+          ).slice(
+            0,
+            8
+          );
+
+        const eventStart =
+          new Date(
+            `${date}T${start}+05:30`
+          );
+
+        const eventEnd =
+          new Date(
+            `${date}T${end}+05:30`
+          );
+
+        const now =
+          new Date();
+
+        if (
+          now < eventStart
+        ) {
+          return "upcoming";
+        }
+
+        if (
+          now >= eventStart &&
+          now <= eventEnd
+        ) {
+          return "ongoing";
+        }
+
+        return "past";
+      } catch {
+        return null;
+      }
+    };
+
+  // =========================================================
   // PAYMENT STATE
-  // =======================================================
+  // =========================================================
 
-  const getPaymentState = (booking) => {
-    const paymentStatus =
-      String(
-        booking?.payment_status ||
-          booking?.paymentStatus ||
-          "pending"
-      ).toLowerCase();
+  const getPaymentState =
+    (booking) => {
+      const paymentStatus =
+        String(
+          booking?.payment_status ||
+            "pending"
+        ).toLowerCase();
 
-    const bookingStatus =
-      String(
-        booking?.booking_status ||
-          ""
-      ).toLowerCase();
+      const bookingStatus =
+        String(
+          booking?.booking_status ||
+            ""
+        ).toLowerCase();
 
-    if (
-      paymentStatus ===
-        "verified" ||
-      paymentStatus ===
-        "confirmed" ||
-      paymentStatus ===
-        "paid" ||
-      bookingStatus ===
-        "confirmed"
-    ) {
-      return "verified";
-    }
+      // VERIFIED
+      if (
+        paymentStatus ===
+          "verified" ||
+        paymentStatus ===
+          "paid" ||
+        bookingStatus ===
+          "confirmed"
+      ) {
+        return "verified";
+      }
 
-    if (
-      paymentStatus ===
-      "submitted"
-    ) {
-      return "verification";
-    }
+      // SUBMITTED
+      if (
+        paymentStatus ===
+        "submitted"
+      ) {
+        return "verification";
+      }
 
-    if (
-      paymentStatus ===
-        "rejected" ||
-      bookingStatus ===
-        "rejected"
-    ) {
-      return "rejected";
-    }
+      // REJECTED
+      if (
+        paymentStatus ===
+          "rejected" ||
+        bookingStatus ===
+          "rejected"
+      ) {
+        return "rejected";
+      }
 
-    return "pending";
-  };
+      return "pending";
+    };
 
-  // =======================================================
+  // =========================================================
   // PAYMENT COMPLETED
-  // =======================================================
+  // =========================================================
 
-  const isPaymentCompleted = (
-    booking
-  ) => {
-    return (
-      getPaymentState(
-        booking
-      ) === "verified"
-    );
-  };
+  const isPaymentCompleted =
+    (booking) => {
+      return (
+        getPaymentState(
+          booking
+        ) === "verified"
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // ATTENDANCE STATUS
-  // =======================================================
+  // =========================================================
 
-  const getAttendanceStatus = (
-    booking
-  ) => {
-    const status =
-      String(
-        booking?.attendance_status ??
-          booking?.attendanceStatus ??
-          booking?.attendance?.attendance_status ??
-          booking?.attendance?.status ??
-          "not_present"
-      ).toLowerCase();
+  const getAttendanceStatus =
+    (booking) => {
+      const status =
+        String(
+          booking?.attendance_status ||
+            booking?.attendanceStatus ||
+            booking?.attendance?.status ||
+            "not_present"
+        ).toLowerCase();
 
-    if (
-      status === "present" ||
-      status === "marked_present"
-    ) {
-      return "present";
-    }
+      if (
+        status === "present" ||
+        status === "marked_present"
+      ) {
+        return "present";
+      }
 
-    return "not_present";
-  };
+      return "not_present";
+    };
 
-  // =======================================================
+  // =========================================================
   // ATTENDANCE CODE
-  // =======================================================
+  // =========================================================
 
-  const getAttendanceCode = (
-    booking
-  ) => {
-    return (
-      booking?.attendance_code ||
-      booking?.attendanceCode ||
-      booking?.attendance?.attendance_code ||
-      booking?.attendance?.attendanceCode ||
-      booking?.attendance?.code ||
-      ""
-    );
-  };
+  const getAttendanceCode =
+    (booking) => {
+      return (
+        booking?.attendance_code ||
+        booking?.attendanceCode ||
+        booking?.attendance?.code ||
+        booking?.attendance?.attendanceCode ||
+        ""
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // ATTENDANCE MARKED TIME
-  // =======================================================
+  // =========================================================
 
-  const getAttendanceMarkedAt = (
-    booking
-  ) => {
-    return (
-      booking?.attendance_marked_at ||
-      booking?.attendanceMarkedAt ||
-      booking?.attendance?.marked_at ||
-      booking?.attendance?.markedAt ||
-      null
-    );
-  };
+  const getAttendanceMarkedAt =
+    (booking) => {
+      return (
+        booking?.attendance_marked_at ||
+        booking?.attendanceMarkedAt ||
+        booking?.attendance?.markedAt ||
+        booking?.attendance?.marked_at ||
+        null
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // ATTENDANCE OBJECT
-  // =======================================================
+  // =========================================================
 
-  const getAttendance = (
-    booking
-  ) => {
-    return (
-      booking?.attendance ||
-      booking?.attendanceDetails ||
-      null
-    );
-  };
+  const getAttendance =
+    (booking) => {
+      return (
+        booking?.attendance ||
+        null
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // USER NAME
-  // =======================================================
+  // =========================================================
 
-  const getUserName = (
-    pass = null
-  ) => {
-    return (
-      pass?.full_name ||
-      pass?.fullName ||
-      pass?.user_name ||
-      pass?.userName ||
-      pass?.user?.full_name ||
-      pass?.user?.fullName ||
-      user?.fullName ||
-      user?.name ||
-      "SNICT Member"
-    );
-  };
+  const getUserName =
+    (pass = null) => {
+      return (
+        pass?.full_name ||
+        pass?.fullName ||
+        pass?.user_name ||
+        pass?.userName ||
+        user?.fullName ||
+        user?.name ||
+        "SNICT Member"
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // USER ID
-  // =======================================================
+  // =========================================================
 
-  const getUserId = (
-    pass = null
-  ) => {
-    return (
-      pass?.user_id ||
-      pass?.userId ||
-      pass?.user?.id ||
-      user?.id ||
-      ""
-    );
-  };
+  const getUserId =
+    (pass = null) => {
+      return (
+        pass?.user_id ||
+        pass?.userId ||
+        user?.id ||
+        ""
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // PROFILE IMAGE
-  // =======================================================
+  // =========================================================
 
   const getProfileImage = (
     pass = null
@@ -537,8 +555,6 @@ function BookingHistory() {
     return (
       pass?.profile_image_url ||
       pass?.profileImageUrl ||
-      pass?.user?.profile_image_url ||
-      pass?.user?.profileImageUrl ||
       user?.profileImageUrl ||
       user?.profile_image_url ||
       user?.photoUrl ||
@@ -548,631 +564,306 @@ function BookingHistory() {
     );
   };
 
-  // =======================================================
+  // =========================================================
   // EVENT ID
-  // =======================================================
+  // =========================================================
 
-  const getEventId = (
-    pass
-  ) => {
-    return (
-      pass?.event_id ||
-      pass?.eventId ||
-      pass?.event?.id ||
-      pass?.booking?.event_id ||
-      pass?.booking?.eventId ||
-      ""
-    );
-  };
+  const getEventId =
+    (pass) => {
+      return (
+        pass?.event_id ||
+        pass?.eventId ||
+        pass?.event?.id ||
+        ""
+      );
+    };
 
-  // =======================================================
+  // =========================================================
   // BOOKING ID
-  // =======================================================
+  // =========================================================
 
-  const getBookingId = (
-    pass
-  ) => {
-    return (
-      pass?.booking_id ||
-      pass?.bookingId ||
-      pass?.booking?.id ||
-      pass?.id ||
-      ""
-    );
-  };
-
-  // =======================================================
-  // AMOUNT
-  // =======================================================
-
-  const getBookingAmount = (
-    booking
-  ) => {
-    const amount =
-      booking?.amount ??
-      booking?.payment_amount ??
-      booking?.paymentAmount ??
-      booking?.payment?.amount ??
-      booking?.price ??
-      booking?.event_price ??
-      booking?.eventPrice ??
-      booking?.event?.price ??
-      0;
-
-    const numericAmount =
-      Number(amount);
-
-    return Number.isFinite(
-      numericAmount
-    )
-      ? numericAmount
-      : 0;
-  };
-
-  // =======================================================
-  // PASS CODE
-  // =======================================================
-
-  const getPassCode = (
-    pass
-  ) => {
-    return (
-      pass?.pass_code ||
-      pass?.passCode ||
-      pass?.pass?.pass_code ||
-      pass?.pass?.passCode ||
-      ""
-    );
-  };
-
-  // =======================================================
-  // PASS TOKEN
-  // =======================================================
-
-  const getPassToken = (
-    pass
-  ) => {
-    return (
-      pass?.pass_token ||
-      pass?.passToken ||
-      pass?.pass?.pass_token ||
-      pass?.pass?.passToken ||
-      pass?.token ||
-      ""
-    );
-  };
-
-  // =======================================================
-  // BOOKING CODE
-  // =======================================================
-
-  const getBookingCode = (
-    pass
-  ) => {
-    return (
-      pass?.booking_code ||
-      pass?.bookingCode ||
-      pass?.booking?.booking_code ||
-      pass?.booking?.bookingCode ||
-      ""
-    );
-  };
-
-  // =======================================================
-  // COPY ATTENDANCE CODE
-  // =======================================================
-
-  const copyAttendanceCode = async (
-    code
-  ) => {
-    if (!code) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(
-        code
+  const getBookingId =
+    (pass) => {
+      return (
+        pass?.booking_id ||
+        pass?.bookingId ||
+        pass?.id ||
+        ""
       );
+    };
 
-      setCopiedAttendanceCode(
-        true
-      );
+  // =========================================================
+  // BOOKING / PAYMENT AMOUNT
+  // =========================================================
 
-      setTimeout(() => {
-        setCopiedAttendanceCode(
-          false
+  const getBookingAmount =
+    (booking) => {
+      const amount =
+        booking?.amount ??
+        booking?.payment_amount ??
+        booking?.paymentAmount ??
+        booking?.price ??
+        booking?.event_price ??
+        booking?.eventPrice ??
+        booking?.event?.price ??
+        0;
+
+      const numericAmount =
+        Number(amount);
+
+      return Number.isFinite(
+        numericAmount
+      )
+        ? numericAmount
+        : 0;
+    };
+
+  // =========================================================
+  // ATTENDANCE CODE COPY
+  // =========================================================
+
+  const copyAttendanceCode =
+    async (code) => {
+      if (!code) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(
+          code
         );
-      }, 2000);
-    } catch (err) {
-      console.error(
-        "Attendance code copy error:",
-        err
-      );
-    }
-  };
 
-  // =======================================================
+        setCopiedAttendanceCode(
+          true
+        );
+
+        setTimeout(() => {
+          setCopiedAttendanceCode(
+            false
+          );
+        }, 2000);
+      } catch (error) {
+        console.error(
+          "Attendance code copy error:",
+          error
+        );
+      }
+    };
+
+  // =========================================================
   // QR PAYLOAD
-  // =======================================================
+  // =========================================================
   //
-  // IMPORTANT:
+  // This is the important part for the new
+  // attendance system.
   //
-  // This QR contains:
+  // Admin scanner will receive:
   //
   // type
   // bookingId
   // eventId
-  // passCode
   // passToken
   // attendanceCode
   //
-  // The attendance controller can validate
-  // the Event Pass against event_passes.
-  //
-  // =======================================================
+  // =========================================================
 
-  const getQrPayload = (
-    pass
-  ) => {
-    if (!pass) {
-      return "";
-    }
-
-    // =====================================================
-    // IF BACKEND ALREADY PROVIDED QR PAYLOAD
-    // =====================================================
-
-    if (
-      pass.qr_payload &&
-      typeof pass.qr_payload ===
-        "string"
-    ) {
-      return pass.qr_payload;
-    }
-
-    if (
-      pass.qrPayload &&
-      typeof pass.qrPayload ===
-        "string"
-    ) {
-      return pass.qrPayload;
-    }
-
-    // =====================================================
-    // IF BACKEND PROVIDED QR OBJECT
-    // =====================================================
-
-    if (pass.qr_data) {
-      try {
-        return JSON.stringify(
-          pass.qr_data
-        );
-      } catch {
-        // Continue and build payload
+  const getQrPayload =
+    (pass) => {
+      if (!pass) {
+        return "";
       }
-    }
 
-    if (pass.qrData) {
-      try {
-        return JSON.stringify(
-          pass.qrData
-        );
-      } catch {
-        // Continue and build payload
+      // =====================================================
+      // BACKEND GENERATED PAYLOAD
+      // =====================================================
+
+      if (
+        pass.qr_payload
+      ) {
+        return pass.qr_payload;
       }
-    }
 
-    // =====================================================
-    // VALUES
-    // =====================================================
+      if (
+        pass.qrPayload
+      ) {
+        return pass.qrPayload;
+      }
 
-    const bookingId =
-      getBookingId(pass);
+      // =====================================================
+      // BACKEND QR OBJECT
+      // =====================================================
 
-    const eventId =
-      getEventId(pass);
+      if (
+        pass.qr_data
+      ) {
+        try {
+          return JSON.stringify(
+            pass.qr_data
+          );
+        } catch {
+          return "";
+        }
+      }
 
-    const passCode =
-      getPassCode(pass);
+      if (
+        pass.qrData
+      ) {
+        try {
+          return JSON.stringify(
+            pass.qrData
+          );
+        } catch {
+          return "";
+        }
+      }
 
-    const passToken =
-      getPassToken(pass);
+      // =====================================================
+      // VALUES
+      // =====================================================
 
-    const attendanceCode =
-      getAttendanceCode(pass);
+      const attendanceCode =
+        getAttendanceCode(
+          pass
+        ) ||
+        pass?.attendance?.attendance_code ||
+        "";
 
-    const bookingCode =
-      getBookingCode(pass);
+      const bookingId =
+        getBookingId(
+          pass
+        );
 
-    const eventName =
-      pass?.event_name ||
-      pass?.event_title ||
-      pass?.title ||
-      pass?.event?.title ||
-      pass?.booking?.event_name ||
-      "";
+      const eventId =
+        getEventId(
+          pass
+        );
 
-    // =====================================================
-    // FINAL QR PAYLOAD
-    // =====================================================
+      const passToken =
+        pass?.pass_token ||
+        pass?.passToken ||
+        pass?.token ||
+        "";
 
-    const payload = {
-      type:
-        "SNICT_EVENT_PASS",
+      const bookingCode =
+        pass?.booking_code ||
+        pass?.bookingCode ||
+        pass?.booking?.booking_code ||
+        "";
 
-      bookingId,
+      const eventName =
+        pass?.event_name ||
+        pass?.event_title ||
+        pass?.title ||
+        pass?.event?.title ||
+        "";
 
-      eventId,
+      // =====================================================
+      // NEW ATTENDANCE QR PAYLOAD
+      // =====================================================
 
-      // IMPORTANT
-      passCode,
+      const payload = {
+        type:
+          "SNICT_EVENT_PASS",
 
-      passToken,
+        bookingId,
 
-      attendanceCode,
+        eventId,
 
-      bookingCode,
+        passToken,
 
-      userId:
-        getUserId(pass),
+        attendanceCode,
 
-      userName:
-        getUserName(pass),
+        bookingCode,
 
-      eventName,
+        userId:
+          getUserId(
+            pass
+          ),
 
-      eventDate:
-        pass?.event_date ||
-        pass?.eventDate ||
-        pass?.event?.event_date ||
-        "",
+        userName:
+          getUserName(
+            pass
+          ),
 
-      startTime:
-        pass?.start_time ||
-        pass?.startTime ||
-        pass?.event?.start_time ||
-        "",
+        eventName,
 
-      endTime:
-        pass?.end_time ||
-        pass?.endTime ||
-        pass?.event?.end_time ||
-        "",
+        eventDate:
+          pass?.event_date ||
+          "",
 
-      venue:
-        pass?.venue ||
-        pass?.event?.venue ||
-        "",
+        startTime:
+          pass?.start_time ||
+          "",
+
+        endTime:
+          pass?.end_time ||
+          "",
+
+        venue:
+          pass?.venue ||
+          "",
+      };
+
+      return JSON.stringify(
+        payload
+      );
     };
 
-    return JSON.stringify(
-      payload
-    );
-  };
+  // =========================================================
+  // QR IMAGE
+  // =========================================================
 
-  // =======================================================
-  // QR IMAGE URL
-  // =======================================================
+  const getQrImageUrl =
+    (pass) => {
+      const payload =
+        getQrPayload(
+          pass
+        );
 
-  const getQrImageUrl = (
-    pass
-  ) => {
-    const payload =
-      getQrPayload(pass);
+      if (!payload) {
+        return "";
+      }
 
-    if (!payload) {
-      return "";
+      return (
+        "https://api.qrserver.com/v1/create-qr-code/" +
+        "?size=300x300" +
+        "&margin=10" +
+        "&data=" +
+        encodeURIComponent(
+          payload
+        )
+      );
+    };
+
+  // =========================================================
+  // OPEN EVENT PASS PAGE
+  // =========================================================
+
+  const handleViewPass = (booking) => {
+    if (!isPaymentCompleted(booking)) {
+      return;
     }
 
-    return (
-      "https://api.qrserver.com/v1/create-qr-code/" +
-      "?size=300x300" +
-      "&margin=10" +
-      "&data=" +
-      encodeURIComponent(
-        payload
-      )
-    );
-  };
-
-  // =======================================================
-  // FETCH LATEST PASS
-  // =======================================================
-
-  const fetchPass = async (
-    booking
-  ) => {
     const bookingId =
       booking?.id ||
       booking?.booking_id ||
       booking?.bookingId;
 
     if (!bookingId) {
-      throw new Error(
-        "Booking ID is missing."
-      );
-    }
-
-    const response =
-      await api.get(
-        `/bookings/${bookingId}/pass`
-      );
-
-    if (
-      !response.data?.success ||
-      !response.data?.pass
-    ) {
-      throw new Error(
-        response.data?.message ||
-          "Unable to load event pass."
-      );
-    }
-
-    const pass =
-      response.data.pass || {};
-
-    const payment =
-      response.data.payment ||
-      response.data.paymentDetails ||
-      pass.payment ||
-      null;
-
-    const attendance =
-      response.data.attendance ||
-      response.data.attendanceDetails ||
-      pass.attendance ||
-      null;
-
-    // =====================================================
-    // MERGE EVERYTHING
-    // =====================================================
-
-    const mergedPass = {
-      ...booking,
-      ...response.data,
-      ...pass,
-
-      payment,
-
-      attendance,
-
-      // ---------------------------------------------------
-      // PAYMENT
-      // ---------------------------------------------------
-
-      payment_status:
-        payment?.payment_status ??
-        payment?.paymentStatus ??
-        pass?.payment_status ??
-        pass?.paymentStatus ??
-        booking?.payment_status,
-
-      payment_amount:
-        payment?.amount ??
-        pass?.payment_amount ??
-        booking?.payment_amount,
-
-      transaction_id:
-        payment?.transaction_id ??
-        payment?.transactionId ??
-        pass?.transaction_id ??
-        booking?.transaction_id,
-
-      payment_proof_url:
-        payment?.payment_proof_url ??
-        payment?.paymentProofUrl ??
-        pass?.payment_proof_url ??
-        booking?.payment_proof_url,
-
-      // ---------------------------------------------------
-      // ATTENDANCE
-      // ---------------------------------------------------
-
-      attendance_code:
-        attendance?.attendance_code ??
-        attendance?.attendanceCode ??
-        pass?.attendance_code ??
-        pass?.attendanceCode ??
-        booking?.attendance_code ??
-        booking?.attendanceCode,
-
-      attendance_status:
-        attendance?.attendance_status ??
-        attendance?.attendanceStatus ??
-        pass?.attendance_status ??
-        pass?.attendanceStatus ??
-        booking?.attendance_status ??
-        booking?.attendanceStatus,
-
-      attendance_marked_at:
-        attendance?.marked_at ??
-        attendance?.markedAt ??
-        pass?.attendance_marked_at ??
-        booking?.attendance_marked_at,
-
-      // ---------------------------------------------------
-      // PASS
-      // ---------------------------------------------------
-
-      pass_code:
-        pass?.pass_code ??
-        pass?.passCode ??
-        response.data?.pass_code ??
-        response.data?.passCode ??
-        booking?.pass_code ??
-        booking?.passCode,
-
-      pass_token:
-        pass?.pass_token ??
-        pass?.passToken ??
-        response.data?.pass_token ??
-        response.data?.passToken ??
-        booking?.pass_token ??
-        booking?.passToken,
-
-      booking_id:
-        pass?.booking_id ??
-        pass?.bookingId ??
-        booking?.booking_id ??
-        booking?.id,
-
-      event_id:
-        pass?.event_id ??
-        pass?.eventId ??
-        booking?.event_id ??
-        booking?.eventId,
-    };
-
-    return mergedPass;
-  };
-
-  // =======================================================
-  // VIEW PASS
-  // =======================================================
-
-  const handleViewPass = async (
-    booking
-  ) => {
-    if (
-      !isPaymentCompleted(
-        booking
-      )
-    ) {
+      setError("Booking ID is missing.");
       return;
     }
 
-    try {
-      setError("");
+    setError("");
 
-      const pass =
-        await fetchPass(
-          booking
-        );
-
-      setSelectedPass(
-        pass
-      );
-    } catch (err) {
-      console.error(
-        "View pass error:",
-        err
-      );
-
-      if (
-        err.response?.status ===
-        401
-      ) {
-        navigate(
-          "/login",
-          {
-            state: {
-              from:
-                "/booking-history",
-            },
-          }
-        );
-
-        return;
-      }
-
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Unable to load event pass."
-      );
-    }
+    navigate(`/event-pass/${bookingId}`, {
+      state: { booking },
+    });
   };
 
-  // =======================================================
-  // PRINT PASS
-  // =======================================================
-
-  const handlePrintPass = async (
-    booking
-  ) => {
-    if (
-      !isPaymentCompleted(
-        booking
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setPrintingPass(
-        true
-      );
-
-      setError("");
-
-      const pass =
-        await fetchPass(
-          booking
-        );
-
-      setSelectedPass(
-        pass
-      );
-
-      setTimeout(() => {
-        window.print();
-
-        setPrintingPass(
-          false
-        );
-      }, 700);
-    } catch (err) {
-      console.error(
-        "Print pass error:",
-        err
-      );
-
-      setPrintingPass(
-        false
-      );
-
-      if (
-        err.response?.status ===
-        401
-      ) {
-        navigate(
-          "/login",
-          {
-            state: {
-              from:
-                "/booking-history",
-            },
-          }
-        );
-
-        return;
-      }
-
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Unable to print event pass."
-      );
-    }
-  };
-
-  // =======================================================
-  // CLOSE PASS
-  // =======================================================
-
-  const closePass = () => {
-    setSelectedPass(
-      null
-    );
-
-    setCopiedAttendanceCode(
-      false
-    );
-  };
-
-  // =======================================================
+  // =========================================================
   // PAYMENT BADGE
-  // =======================================================
+  // =========================================================
 
   const PaymentBadge = ({
     booking,
@@ -1183,7 +874,8 @@ function BookingHistory() {
       );
 
     if (
-      state === "verified"
+      state ===
+      "verified"
     ) {
       return (
         <div className="booking-payment-badge verified">
@@ -1205,7 +897,8 @@ function BookingHistory() {
     }
 
     if (
-      state === "verification"
+      state ===
+      "verification"
     ) {
       return (
         <div className="booking-payment-badge verification">
@@ -1227,7 +920,8 @@ function BookingHistory() {
     }
 
     if (
-      state === "rejected"
+      state ===
+      "rejected"
     ) {
       return (
         <div className="booking-payment-badge rejected">
@@ -1267,9 +961,9 @@ function BookingHistory() {
     );
   };
 
-  // =======================================================
+  // =========================================================
   // ATTENDANCE BADGE
-  // =======================================================
+  // =========================================================
 
   const AttendanceBadge = ({
     booking,
@@ -1293,7 +987,8 @@ function BookingHistory() {
       );
 
     if (
-      status === "present"
+      status ===
+      "present"
     ) {
       return (
         <div className="booking-attendance-badge present">
@@ -1337,9 +1032,9 @@ function BookingHistory() {
     );
   };
 
-  // =======================================================
+  // =========================================================
   // SUMMARY
-  // =======================================================
+  // =========================================================
 
   const summary =
     useMemo(() => {
@@ -1348,7 +1043,8 @@ function BookingHistory() {
           (booking) =>
             getPaymentState(
               booking
-            ) === "verified"
+            ) ===
+            "verified"
         ).length;
 
       const waiting =
@@ -1356,7 +1052,8 @@ function BookingHistory() {
           (booking) =>
             getPaymentState(
               booking
-            ) === "verification"
+            ) ===
+            "verification"
         ).length;
 
       const pending =
@@ -1364,7 +1061,8 @@ function BookingHistory() {
           (booking) =>
             getPaymentState(
               booking
-            ) === "pending"
+            ) ===
+            "pending"
         ).length;
 
       const present =
@@ -1372,7 +1070,8 @@ function BookingHistory() {
           (booking) =>
             getAttendanceStatus(
               booking
-            ) === "present"
+            ) ===
+            "present"
         ).length;
 
       return {
@@ -1383,9 +1082,9 @@ function BookingHistory() {
       };
     }, [bookings]);
 
-  // =======================================================
+  // =========================================================
   // LOADING
-  // =======================================================
+  // =========================================================
 
   if (loading) {
     return (
@@ -1433,16 +1132,16 @@ function BookingHistory() {
     );
   }
 
-  // =======================================================
+  // =========================================================
   // MAIN
-  // =======================================================
+  // =========================================================
 
   return (
     <main className="booking-history-page">
 
-      {/* ===================================================
+      {/* =====================================================
           HERO
-      =================================================== */}
+      ===================================================== */}
 
       <section className="booking-history-hero">
 
@@ -1468,20 +1167,19 @@ function BookingHistory() {
 
       </section>
 
-      {/* ===================================================
+      {/* =====================================================
           CONTENT
-      =================================================== */}
+      ===================================================== */}
 
       <section className="booking-history-container">
 
-        {/* =================================================
+        {/* ===================================================
             TOOLBAR
-        ================================================= */}
+        =================================================== */}
 
         <div className="booking-history-toolbar">
 
           <div>
-
             <span>
               EVENT REGISTRATIONS
             </span>
@@ -1489,7 +1187,6 @@ function BookingHistory() {
             <h2>
               Booking History
             </h2>
-
           </div>
 
           <button
@@ -1518,9 +1215,9 @@ function BookingHistory() {
 
         </div>
 
-        {/* =================================================
+        {/* ===================================================
             ERROR
-        ================================================= */}
+        =================================================== */}
 
         {error && (
           <div className="booking-history-state error">
@@ -1540,9 +1237,7 @@ function BookingHistory() {
             <button
               type="button"
               onClick={() =>
-                loadBookings(
-                  true
-                )
+                loadBookings(true)
               }
             >
               <RefreshCw
@@ -1555,9 +1250,9 @@ function BookingHistory() {
           </div>
         )}
 
-        {/* =================================================
+        {/* ===================================================
             EMPTY
-        ================================================= */}
+        =================================================== */}
 
         {!error &&
           bookings.length ===
@@ -1599,9 +1294,9 @@ function BookingHistory() {
             </div>
           )}
 
-        {/* =================================================
+        {/* ===================================================
             BOOKING LIST
-        ================================================= */}
+        =================================================== */}
 
         {!error &&
           bookings.length >
@@ -1711,9 +1406,9 @@ function BookingHistory() {
                       }
                     >
 
-                      {/* =====================================
+                      {/* =========================================
                           EVENT ICON
-                      ===================================== */}
+                      ========================================= */}
 
                       <div className="booking-history-event-icon">
 
@@ -1723,9 +1418,9 @@ function BookingHistory() {
 
                       </div>
 
-                      {/* =====================================
+                      {/* =========================================
                           MAIN
-                      ===================================== */}
+                      ========================================= */}
 
                       <div className="booking-history-main">
 
@@ -1733,7 +1428,6 @@ function BookingHistory() {
 
                           <span className="booking-code">
                             {booking.booking_code ||
-                              booking.bookingCode ||
                               `BOOKING #${booking.id}`}
                           </span>
 
@@ -1753,7 +1447,6 @@ function BookingHistory() {
                           {booking.title ||
                             booking.event_title ||
                             booking.event_name ||
-                            booking.eventName ||
                             "SNICT Event"}
                         </h2>
 
@@ -1884,9 +1577,9 @@ function BookingHistory() {
 
                       </div>
 
-                      {/* =====================================
+                      {/* =========================================
                           RIGHT SIDE
-                      ===================================== */}
+                      ========================================= */}
 
                       <div className="booking-history-payment">
 
@@ -1948,58 +1641,22 @@ function BookingHistory() {
                           booking
                         ) ? (
 
-                          <div className="booking-pass-actions">
+                          <button
+                            type="button"
+                            className="booking-history-view booking-pass-button"
+                            onClick={() =>
+                              handleViewPass(booking)
+                            }
+                          >
+                            <Ticket size={16} />
 
-                            <button
-                              type="button"
-                              className="booking-history-view booking-pass-button"
-                              onClick={() =>
-                                handleViewPass(
-                                  booking
-                                )
-                              }
-                            >
+                            <span>
+                              View Event Pass
+                            </span>
 
-                              <Ticket
-                                size={16}
-                              />
+                            <ArrowRight size={15} />
+                          </button>
 
-                              <span>
-                                View Event Pass
-                              </span>
-
-                              <ArrowRight
-                                size={15}
-                              />
-
-                            </button>
-
-                            <button
-                              type="button"
-                              className="booking-history-view booking-pass-print-button"
-                              onClick={() =>
-                                handlePrintPass(
-                                  booking
-                                )
-                              }
-                              disabled={
-                                printingPass
-                              }
-                            >
-
-                              <Printer
-                                size={16}
-                              />
-
-                              <span>
-                                {printingPass
-                                  ? "Preparing..."
-                                  : "Print Pass"}
-                              </span>
-
-                            </button>
-
-                          </div>
 
                         ) : (
 
@@ -2040,518 +1697,6 @@ function BookingHistory() {
           )}
 
       </section>
-
-      {/* =====================================================
-          EVENT PASS MODAL
-      ===================================================== */}
-
-      {selectedPass && (
-        <div
-          className="booking-pass-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="event-pass-title"
-          onClick={
-            closePass
-          }
-        >
-
-          <div
-            className="booking-pass-card"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
-            <div className="booking-pass-header">
-
-              <div className="booking-pass-header-top">
-
-                <div>
-
-                  <span className="booking-pass-eyebrow">
-                    SNICT EVENT PASS
-                  </span>
-
-                  <h2
-                    id="event-pass-title"
-                  >
-                    {selectedPass.event_name ||
-                      selectedPass.event_title ||
-                      selectedPass.title ||
-                      selectedPass.event?.title ||
-                      "SNICT Event"}
-                  </h2>
-
-                </div>
-
-                <button
-                  type="button"
-                  className="booking-pass-close"
-                  onClick={
-                    closePass
-                  }
-                  aria-label="Close event pass"
-                >
-                  <X
-                    size={20}
-                  />
-                </button>
-
-              </div>
-
-            </div>
-
-            {/* =================================================
-                BODY
-            ================================================= */}
-
-            <div className="booking-pass-body">
-
-              {/* =================================================
-                  USER
-              ================================================= */}
-
-              <div className="booking-pass-user">
-
-                {getProfileImage(
-                  selectedPass
-                ) ? (
-
-                  <img
-                    src={getProfileImage(
-                      selectedPass
-                    )}
-                    alt={
-                      getUserName(
-                        selectedPass
-                      )
-                    }
-                    className="booking-pass-user-image"
-                  />
-
-                ) : (
-
-                  <div className="booking-pass-user-placeholder">
-
-                    <UserCircle
-                      size={42}
-                    />
-
-                  </div>
-
-                )}
-
-                <div>
-
-                  <span className="booking-pass-field-label">
-                    MEMBER
-                  </span>
-
-                  <strong className="booking-pass-user-name">
-                    {getUserName(
-                      selectedPass
-                    )}
-                  </strong>
-
-                  {(selectedPass.username ||
-                    user?.username) && (
-                    <span className="booking-pass-username">
-                      @
-                      {selectedPass.username ||
-                        user?.username}
-                    </span>
-                  )}
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  EVENT INFORMATION
-              ================================================= */}
-
-              <div className="booking-pass-grid">
-
-                <div className="booking-pass-field">
-
-                  <span>
-                    EVENT ID
-                  </span>
-
-                  <strong>
-                    {getEventId(
-                      selectedPass
-                    ) || "-"}
-                  </strong>
-
-                </div>
-
-                <div className="booking-pass-field">
-
-                  <span>
-                    BOOKING ID
-                  </span>
-
-                  <strong>
-                    {getBookingCode(
-                      selectedPass
-                    ) ||
-                      `#${getBookingId(
-                        selectedPass
-                      )}`}
-                  </strong>
-
-                </div>
-
-                <div className="booking-pass-field">
-
-                  <span>
-                    DATE
-                  </span>
-
-                  <strong>
-                    {formatDate(
-                      selectedPass.event_date ||
-                        selectedPass.eventDate
-                    )}
-                  </strong>
-
-                </div>
-
-                <div className="booking-pass-field">
-
-                  <span>
-                    TIME
-                  </span>
-
-                  <strong>
-                    {formatTime(
-                      selectedPass.start_time ||
-                        selectedPass.startTime
-                    )}
-
-                    {(selectedPass.end_time ||
-                      selectedPass.endTime) &&
-                      ` - ${formatTime(
-                        selectedPass.end_time ||
-                          selectedPass.endTime
-                      )}`}
-                  </strong>
-
-                </div>
-
-                <div className="booking-pass-field">
-
-                  <span>
-                    AMOUNT PAID
-                  </span>
-
-                  <strong>
-                    ₹
-                    {Number(
-                      getBookingAmount(
-                        selectedPass
-                      )
-                    ).toLocaleString(
-                      "en-IN"
-                    )}
-                  </strong>
-
-                </div>
-
-                <div className="booking-pass-field">
-
-                  <span>
-                    VENUE
-                  </span>
-
-                  <strong>
-                    {selectedPass.venue ||
-                      selectedPass.event?.venue ||
-                      "SNICT Event Venue"}
-                  </strong>
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  QR CODE
-              ================================================= */}
-
-              <div className="booking-pass-qr-section">
-
-                <div className="booking-pass-qr-heading">
-
-                  <QrCode
-                    size={20}
-                  />
-
-                  <div>
-
-                    <strong>
-                      EVENT ENTRY QR
-                    </strong>
-
-                    <span>
-                      Scan this QR code at the
-                      event entrance
-                    </span>
-
-                  </div>
-
-                </div>
-
-                <div className="booking-pass-qr-box">
-
-                  {getQrImageUrl(
-                    selectedPass
-                  ) ? (
-
-                    <img
-                      src={getQrImageUrl(
-                        selectedPass
-                      )}
-                      alt="SNICT Event Pass QR Code"
-                      className="booking-pass-qr-image"
-                    />
-
-                  ) : (
-
-                    <div className="booking-pass-qr-error">
-
-                      <QrCode
-                        size={70}
-                      />
-
-                      <span>
-                        QR unavailable
-                      </span>
-
-                    </div>
-
-                  )}
-
-                </div>
-
-                {/* =================================================
-                    PASS CODE
-                ================================================= */}
-
-                {getPassCode(
-                  selectedPass
-                ) && (
-                  <div className="booking-pass-attendance-code">
-
-                    <div className="booking-pass-attendance-code-header">
-
-                      <span>
-                        PASS CODE
-                      </span>
-
-                    </div>
-
-                    <strong>
-                      {getPassCode(
-                        selectedPass
-                      )}
-                    </strong>
-
-                  </div>
-                )}
-
-                {/* =================================================
-                    ATTENDANCE CODE
-                ================================================= */}
-
-                <div className="booking-pass-attendance-code">
-
-                  <div className="booking-pass-attendance-code-header">
-
-                    <span>
-                      ATTENDANCE CODE
-                    </span>
-
-                    {getAttendanceCode(
-                      selectedPass
-                    ) && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          copyAttendanceCode(
-                            getAttendanceCode(
-                              selectedPass
-                            )
-                          )
-                        }
-                      >
-                        <Copy
-                          size={14}
-                        />
-
-                        {copiedAttendanceCode
-                          ? "Copied"
-                          : "Copy"}
-                      </button>
-                    )}
-
-                  </div>
-
-                  <strong>
-                    {getAttendanceCode(
-                      selectedPass
-                    ) ||
-                      "Not generated"}
-                  </strong>
-
-                  <small>
-                    If QR scanning is unavailable,
-                    provide this unique code to
-                    the event administrator.
-                  </small>
-
-                </div>
-
-                {/* =================================================
-                    ATTENDANCE STATUS
-                ================================================= */}
-
-                <div
-                  className={`booking-pass-attendance-status ${
-                    getAttendanceStatus(
-                      selectedPass
-                    ) === "present"
-                      ? "present"
-                      : "not-present"
-                  }`}
-                >
-
-                  {getAttendanceStatus(
-                    selectedPass
-                  ) === "present" ? (
-                    <UserCheck
-                      size={20}
-                    />
-                  ) : (
-                    <QrCode
-                      size={20}
-                    />
-                  )}
-
-                  <div>
-
-                    <strong>
-                      {getAttendanceStatus(
-                        selectedPass
-                      ) === "present"
-                        ? "ATTENDANCE MARKED"
-                        : "ATTENDANCE NOT MARKED"}
-                    </strong>
-
-                    <span>
-                      {getAttendanceStatus(
-                        selectedPass
-                      ) === "present"
-                        ? getAttendanceMarkedAt(
-                            selectedPass
-                          )
-                          ? `Present — ${formatDateTime(
-                              getAttendanceMarkedAt(
-                                selectedPass
-                              )
-                            )}`
-                          : "You are marked present."
-                        : "Show this QR code at the event entrance to mark your attendance."}
-                    </span>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  VALIDITY
-              ================================================= */}
-
-              <div className="booking-pass-validity">
-
-                <CheckCircle2
-                  size={20}
-                />
-
-                <div>
-
-                  <strong>
-                    PAYMENT VERIFIED
-                  </strong>
-
-                  <span>
-                    {selectedPass.valid_from &&
-                    selectedPass.valid_until
-                      ? `Valid from ${formatDateTime(
-                          selectedPass.valid_from
-                        )} to ${formatDateTime(
-                          selectedPass.valid_until
-                        )}`
-                      : selectedPass.event_date
-                        ? `Valid for ${formatDate(
-                            selectedPass.event_date
-                          )}`
-                        : "Valid for registered event"}
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  FOOTER
-              ================================================= */}
-
-              <div className="booking-pass-footer">
-
-                <div>
-
-                  <span className="booking-pass-field-label">
-                    PASS STATUS
-                  </span>
-
-                  <strong className="booking-pass-valid">
-                    VALID
-                  </strong>
-
-                </div>
-
-                <button
-                  type="button"
-                  className="booking-pass-print"
-                  onClick={() =>
-                    window.print()
-                  }
-                >
-
-                  <Printer
-                    size={15}
-                  />
-
-                  Print / Save Pass
-
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
 
     </main>
   );

@@ -23,7 +23,7 @@ import EventDetails from "./pages/EventDetails/EventDetails";
 import Membership from "./pages/Membership/Membership";
 import Contact from "./pages/Contact/Contact";
 import Members from "./pages/Members/Members";
-
+import EventPass from "./pages/Event Pass/EventPass";
 import PlacementCommittee
   from "./pages/PlacementCommittee/PlacementCommittee";
 
@@ -414,7 +414,10 @@ function App() {
           path="/admin/attendance"
           element={<AttendanceManagement />}
         />
-
+<Route
+  path="/event-pass/:bookingId"
+  element={<EventPass />}
+/>
 
       </Routes>
 
