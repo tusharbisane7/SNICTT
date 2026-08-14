@@ -6,21 +6,12 @@ const express = require("express");
 
 const {
   createBooking,
-  submitPayment,
-
   getMyBookings,
   getMyBookingById,
   getMyPass,
-
   getAllBookings,
   getAdminBookingById,
-
   updateBookingStatus,
-  confirmPayment,
-
-  getAdminPasses,
-  getAdminPassByBookingId,
-
   deleteBooking,
 } = require("../controllers/bookingController");
 
@@ -41,7 +32,14 @@ const adminMiddleware =
 const router = express.Router();
 
 // =========================================================
-// ADMIN ROUTES
+// ADMIN BOOKINGS
+// IMPORTANT:
+// DO NOT USE authMiddleware HERE.
+//
+// Admin authentication uses:
+// snict_admin_token
+//
+// adminMiddleware should verify the admin token.
 // =========================================================
 
 // ---------------------------------------------------------
@@ -56,58 +54,7 @@ router.get(
 );
 
 // ---------------------------------------------------------
-// GET ALL EVENT PASSES
-// GET /api/bookings/admin/passes
-// ---------------------------------------------------------
-
-router.get(
-  "/admin/passes",
-  adminMiddleware,
-  getAdminPasses
-);
-
-// ---------------------------------------------------------
-// CONFIRM PAYMENT
-// PUT /api/bookings/admin/:id/confirm-payment
-//
-// Example:
-// PUT /api/bookings/admin/20/confirm-payment
-//
-// No body required.
-//
-// Flow:
-//
-// payment submitted
-//        ↓
-// payment verified
-//        ↓
-// booking confirmed
-//        ↓
-// existing pass reused OR new pass generated
-// ---------------------------------------------------------
-
-router.put(
-  "/admin/:id/confirm-payment",
-  adminMiddleware,
-  confirmPayment
-);
-
-// ---------------------------------------------------------
-// GET ADMIN PASS
-// GET /api/bookings/admin/:id/pass
-//
-// IMPORTANT:
-// Must come BEFORE /admin/:id
-// ---------------------------------------------------------
-
-router.get(
-  "/admin/:id/pass",
-  adminMiddleware,
-  getAdminPassByBookingId
-);
-
-// ---------------------------------------------------------
-// GET SINGLE ADMIN BOOKING
+// GET SINGLE BOOKING
 // GET /api/bookings/admin/:id
 // ---------------------------------------------------------
 
@@ -140,19 +87,8 @@ router.delete(
 );
 
 // =========================================================
-// USER ROUTES
+// USER BOOKINGS
 // =========================================================
-
-// ---------------------------------------------------------
-// CREATE BOOKING
-// POST /api/bookings/event/:eventId
-// ---------------------------------------------------------
-
-router.post(
-  "/event/:eventId",
-  authMiddleware,
-  createBooking
-);
 
 // ---------------------------------------------------------
 // GET MY BOOKINGS
@@ -166,32 +102,18 @@ router.get(
 );
 
 // ---------------------------------------------------------
-// SUBMIT PAYMENT
-// POST /api/bookings/:id/payment
+// CREATE BOOKING
+// POST /api/bookings/event/:eventId
 // ---------------------------------------------------------
 
 router.post(
-  "/:id/payment",
+  "/event/:eventId",
   authMiddleware,
-  submitPayment
+  createBooking
 );
 
 // ---------------------------------------------------------
-// GET MY EVENT PASS
-// GET /api/bookings/:id/pass
-//
-// IMPORTANT:
-// Must come BEFORE /:id
-// ---------------------------------------------------------
-
-router.get(
-  "/:id/pass",
-  authMiddleware,
-  getMyPass
-);
-
-// ---------------------------------------------------------
-// GET MY SINGLE BOOKING
+// GET SINGLE USER BOOKING
 // GET /api/bookings/:id
 // ---------------------------------------------------------
 
@@ -199,6 +121,20 @@ router.get(
   "/:id",
   authMiddleware,
   getMyBookingById
+);
+
+// ---------------------------------------------------------
+// GET MY EVENT PASS
+// GET /api/bookings/:id/pass
+//
+// Only the logged-in user who owns the booking
+// can access the pass.
+// ---------------------------------------------------------
+
+router.get(
+  "/:id/pass",
+  authMiddleware,
+  getMyPass
 );
 
 // =========================================================
