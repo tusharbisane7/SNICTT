@@ -2,17 +2,13 @@ const express = require("express");
 
 const router = express.Router();
 
-
 // =========================================================
 // MIDDLEWARE
 // =========================================================
 
-const authMiddleware =
-  require("../middleware/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
-const adminMiddleware =
-  require("../middleware/adminMiddleware");
-
+const adminMiddleware = require("../middleware/adminMiddleware");
 
 // =========================================================
 // CONTROLLER
@@ -24,88 +20,39 @@ const {
   getAdminPassByBookingId,
 } = require("../controllers/eventPassController");
 
-
 // =========================================================
 // USER EVENT PASS
 // =========================================================
 //
-// GET /api/bookings/:id/pass
+// Base route:
+//
+// /api/event-passes
+//
+// Final route:
+//
+// GET /api/event-passes/booking/:bookingId
 //
 // Example:
 //
-// GET /api/bookings/21/pass
+// GET /api/event-passes/booking/23
 //
-// User can only access his own booking pass.
-//
-// Authentication required.
+// This is the MAIN USER EVENT PASS endpoint.
 //
 // =========================================================
 
 router.get(
-  "/:id/pass",
+  "/booking/:bookingId",
   authMiddleware,
   getMyPass
 );
-
-
-// =========================================================
-// USER EVENT PASS - COMPATIBILITY ROUTE
-// =========================================================
-//
-// GET /api/bookings/event-pass/booking/:bookingId
-//
-// Example:
-//
-// GET /api/bookings/event-pass/booking/21
-//
-// This route is provided so frontend code using
-// the event-pass/booking/:bookingId structure also works.
-//
-// Authentication required.
-//
-// =========================================================
-
-router.get(
-  "/event-pass/booking/:bookingId",
-  authMiddleware,
-  getMyPass
-);
-
-
-// =========================================================
-// USER EVENT PASS - ALTERNATIVE ROUTE
-// =========================================================
-//
-// GET /api/bookings/booking/:bookingId/pass
-//
-// Example:
-//
-// GET /api/bookings/booking/21/pass
-//
-// Optional compatibility endpoint.
-//
-// =========================================================
-
-router.get(
-  "/booking/:bookingId/pass",
-  authMiddleware,
-  getMyPass
-);
-
 
 // =========================================================
 // ADMIN - GET ALL EVENT PASSES
 // =========================================================
 //
-// GET /api/bookings/admin/passes
+// Final route:
 //
-// Example:
-//
-// GET /api/bookings/admin/passes
-//
-// Returns all generated event passes.
-//
-// Admin authentication required.
+// GET /api/event-passes/admin/passes
 //
 // =========================================================
 
@@ -115,32 +62,28 @@ router.get(
   getAdminPasses
 );
 
-
 // =========================================================
-// ADMIN - GET PASS BY BOOKING ID
+// ADMIN - GET EVENT PASS BY BOOKING ID
 // =========================================================
 //
-// GET /api/bookings/admin/:id/pass
+// Final route:
+//
+// GET /api/event-passes/admin/booking/:bookingId
 //
 // Example:
 //
-// GET /api/bookings/admin/21/pass
-//
-// Returns event pass details for a particular booking.
-//
-// Admin authentication required.
+// GET /api/event-passes/admin/booking/23
 //
 // =========================================================
 
 router.get(
-  "/admin/:id/pass",
+  "/admin/booking/:bookingId",
   adminMiddleware,
   getAdminPassByBookingId
 );
 
-
 // =========================================================
-// EXPORT ROUTER
+// EXPORT
 // =========================================================
 
 module.exports = router;
