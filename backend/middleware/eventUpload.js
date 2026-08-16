@@ -6,6 +6,12 @@ const cloudinary = require("../config/cloudinary");
 // =========================================================
 // STORAGE
 // =========================================================
+//
+// Use memory storage because files are uploaded directly
+// to Cloudinary.
+//
+// No temporary files are created on the server.
+//
 
 const storage =
   multer.memoryStorage();
@@ -16,11 +22,19 @@ const storage =
 // =========================================================
 
 const getExtension =
-  (filename = "") =>
+  (
+    filename = ""
+  ) =>
     path
-      .extname(filename)
+      .extname(
+        filename
+      )
       .toLowerCase();
 
+
+// =========================================================
+// CLOUDINARY BUFFER UPLOAD
+// =========================================================
 
 const uploadToCloudinary =
   (
@@ -38,15 +52,20 @@ const uploadToCloudinary =
           const stream =
             cloudinary.uploader.upload_stream(
               options,
+
               (
                 error,
                 result
               ) => {
 
-                if (error) {
+                if (
+                  error
+                ) {
+
                   return reject(
                     error
                   );
+
                 }
 
                 resolve(
@@ -76,7 +95,7 @@ const uploadToCloudinary =
 
 
 // =========================================================
-// ERROR HANDLER
+// COMMON UPLOAD ERROR HANDLER
 // =========================================================
 
 const sendUploadError =
@@ -103,9 +122,9 @@ const sendUploadError =
     );
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // FILE SIZE
-    // -------------------------------------------------------
+    // =======================================================
 
     if (
       error?.code ===
@@ -126,9 +145,9 @@ const sendUploadError =
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // FILE COUNT
-    // -------------------------------------------------------
+    // =======================================================
 
     if (
       error?.code ===
@@ -149,9 +168,9 @@ const sendUploadError =
     }
 
 
-    // -------------------------------------------------------
+    // =======================================================
     // UNEXPECTED FILE
-    // -------------------------------------------------------
+    // =======================================================
 
     if (
       error?.code ===
@@ -172,6 +191,10 @@ const sendUploadError =
 
     }
 
+
+    // =======================================================
+    // GENERAL ERROR
+    // =======================================================
 
     return res.status(
       400
@@ -209,6 +232,17 @@ const sendUploadError =
 //
 // image
 //
+// Allowed:
+//
+// JPG
+// JPEG
+// PNG
+// WEBP
+//
+// Maximum:
+//
+// 5 MB
+//
 // =========================================================
 
 const coverImageMimeTypes = [
@@ -237,6 +271,10 @@ const coverImageExtensions = [
 ];
 
 
+// =========================================================
+// COVER IMAGE FILTER
+// =========================================================
+
 const coverImageFilter =
   (
     req,
@@ -257,10 +295,13 @@ const coverImageFilter =
     ) {
 
       return cb(
+
         new Error(
           "Only JPG, JPEG, PNG and WEBP images are allowed for event cover image."
         ),
+
         false
+
       );
 
     }
@@ -273,10 +314,13 @@ const coverImageFilter =
     ) {
 
       return cb(
+
         new Error(
           "Only JPG, JPEG, PNG and WEBP images are allowed for event cover image."
         ),
+
         false
+
       );
 
     }
@@ -289,6 +333,10 @@ const coverImageFilter =
 
   };
 
+
+// =========================================================
+// COVER IMAGE MULTER
+// =========================================================
 
 const coverUpload =
   multer({
@@ -319,11 +367,27 @@ const coverUpload =
 // IMAGE
 // DOCUMENT
 //
+// Image:
+//
+// JPG
+// JPEG
+// PNG
+// WEBP
+// GIF
+//
+// Documents:
+//
+// PDF
+// DOC
+// DOCX
+// PPT
+// PPTX
+//
 // NOT SUPPORTED:
 //
 // VIDEO FILE
 //
-// Videos must be added through:
+// Videos are added through YouTube URL.
 //
 // POST /api/events/admin/:id/media/youtube
 //
@@ -408,6 +472,10 @@ const mediaExtensions = [
 ];
 
 
+// =========================================================
+// EVENT MEDIA FILTER
+// =========================================================
+
 const mediaFileFilter =
   (
     req,
@@ -428,10 +496,13 @@ const mediaFileFilter =
     ) {
 
       return cb(
+
         new Error(
           "Unsupported file type. Allowed: JPG, JPEG, PNG, WEBP, GIF, PDF, DOC, DOCX, PPT and PPTX."
         ),
+
         false
+
       );
 
     }
@@ -444,10 +515,13 @@ const mediaFileFilter =
     ) {
 
       return cb(
+
         new Error(
           "Unsupported file extension."
         ),
+
         false
+
       );
 
     }
@@ -461,6 +535,24 @@ const mediaFileFilter =
   };
 
 
+// =========================================================
+// EVENT MEDIA MULTER
+// =========================================================
+//
+// Field:
+//
+// files
+//
+// Maximum:
+//
+// 20 files
+//
+// Maximum per file:
+//
+// 100 MB
+//
+// =========================================================
+
 const mediaUploadParser =
   multer({
 
@@ -471,16 +563,8 @@ const mediaUploadParser =
 
     limits: {
 
-      // ---------------------------------------------------
-      // 100 MB PER FILE
-      // ---------------------------------------------------
-
       fileSize:
         100 * 1024 * 1024,
-
-      // ---------------------------------------------------
-      // MAX 20 FILES
-      // ---------------------------------------------------
 
       files: 20,
 
@@ -495,15 +579,19 @@ const mediaUploadParser =
 // =========================================================
 // GET CLOUDINARY RESOURCE TYPE
 // =========================================================
+//
+// Images:
+// image
+//
+// Documents:
+// raw
+//
+// =========================================================
 
 const getMediaResourceType =
   (
     mimetype = ""
   ) => {
-
-    // -------------------------------------------------------
-    // IMAGE
-    // -------------------------------------------------------
 
     if (
       mimetype.startsWith(
@@ -515,13 +603,6 @@ const getMediaResourceType =
 
     }
 
-
-    // -------------------------------------------------------
-    // DOCUMENT
-    //
-    // PDF/DOC/DOCX/PPT/PPTX
-    // are uploaded as RAW.
-    // -------------------------------------------------------
 
     return "raw";
 
@@ -553,6 +634,7 @@ const eventUpload =
     )(
       req,
       res,
+
       async (
         error
       ) => {
@@ -575,7 +657,7 @@ const eventUpload =
 
 
         // =================================================
-        // NO IMAGE
+        // NO COVER IMAGE
         //
         // Cover image is optional.
         // =================================================
@@ -592,12 +674,13 @@ const eventUpload =
         try {
 
           // =================================================
-          // CLOUDINARY
+          // UPLOAD COVER IMAGE TO CLOUDINARY
           // =================================================
 
           const result =
             await uploadToCloudinary(
               req.file.buffer,
+
               {
 
                 folder:
@@ -717,15 +800,18 @@ const eventUpload =
 // FormData:
 //
 // files = one or more files
-// type  = image / document
+//
+// type = image
+// OR
+// type = document
 //
 // IMPORTANT:
 //
 // This middleware uploads files to Cloudinary ONCE.
 //
-// The controller should NOT upload them again.
+// The controller must NOT upload them again.
 //
-// Cloudinary result is passed through:
+// Results are passed to controller through:
 //
 // req.eventMedia
 //
@@ -741,6 +827,7 @@ const eventMediaUpload =
     mediaUploadParser(
       req,
       res,
+
       async (
         error
       ) => {
@@ -972,6 +1059,7 @@ const eventMediaUpload =
             const result =
               await uploadToCloudinary(
                 file.buffer,
+
                 {
 
                   folder,
@@ -1025,7 +1113,7 @@ const eventMediaUpload =
 
 
               // -------------------------------------------
-              // CLOUDINARY INFO
+              // CLOUDINARY INFORMATION
               // -------------------------------------------
 
               resourceType:
@@ -1036,7 +1124,6 @@ const eventMediaUpload =
 
               bytes:
                 result.bytes,
-
 
               cloudinary:
                 result,
@@ -1122,6 +1209,10 @@ const eventMediaUpload =
 // PPT
 // PPTX
 //
+// Maximum:
+//
+// 20 MB
+//
 // Optional.
 //
 // =========================================================
@@ -1148,6 +1239,10 @@ const registrationExtensions = [
 ];
 
 
+// =========================================================
+// REGISTRATION PRESENTATION FILTER
+// =========================================================
+
 const registrationPresentationFilter =
   (
     req,
@@ -1168,10 +1263,13 @@ const registrationPresentationFilter =
     ) {
 
       return cb(
+
         new Error(
           "Only PDF, PPT and PPTX files are allowed for event registration."
         ),
+
         false
+
       );
 
     }
@@ -1184,10 +1282,13 @@ const registrationPresentationFilter =
     ) {
 
       return cb(
+
         new Error(
           "Only .pdf, .ppt and .pptx files are allowed for event registration."
         ),
+
         false
+
       );
 
     }
@@ -1200,6 +1301,20 @@ const registrationPresentationFilter =
 
   };
 
+
+// =========================================================
+// REGISTRATION MULTER
+// =========================================================
+//
+// Field:
+//
+// presentation
+//
+// Maximum:
+//
+// 1 file
+//
+// =========================================================
 
 const registrationUploadParser =
   multer({
@@ -1233,6 +1348,10 @@ const registrationUploadParser =
 //
 // presentation
 //
+// The uploaded presentation is stored in Cloudinary
+// as RAW and its URL/public_id are passed to the
+// registration controller.
+//
 // =========================================================
 
 const eventRegistrationUpload =
@@ -1245,6 +1364,7 @@ const eventRegistrationUpload =
     registrationUploadParser(
       req,
       res,
+
       async (
         error
       ) => {
@@ -1282,12 +1402,13 @@ const eventRegistrationUpload =
         try {
 
           // =================================================
-          // CLOUDINARY
+          // UPLOAD TO CLOUDINARY
           // =================================================
 
           const result =
             await uploadToCloudinary(
               req.file.buffer,
+
               {
 
                 folder:
@@ -1399,8 +1520,15 @@ const eventRegistrationUpload =
 // ALIASES
 // =========================================================
 //
-// Keep these aliases because your routes/controller may use
-// either naming convention.
+// Keep both names so routes can use either:
+//
+// eventUpload.mediaUpload
+//
+// OR
+//
+// eventUpload.eventMediaUpload
+//
+// Same for registration.
 //
 // =========================================================
 

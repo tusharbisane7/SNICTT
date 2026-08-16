@@ -1,6 +1,5 @@
 const express = require("express");
 
-
 // =========================================================
 // CONTROLLERS
 // =========================================================
@@ -13,13 +12,11 @@ const {
   getEvents,
   getEventById,
 
-
   // =======================================================
   // EVENT REGISTRATION
   // =======================================================
 
   registerForEvent,
-
 
   // =======================================================
   // ADMIN EVENT CONTROLLERS
@@ -30,13 +27,11 @@ const {
   updateEvent,
   deleteEvent,
 
-
   // =======================================================
   // PUBLIC EVENT MEDIA
   // =======================================================
 
   getPublicEventMedia,
-
 
   // =======================================================
   // ADMIN EVENT MEDIA
@@ -45,9 +40,15 @@ const {
   getEventMedia,
   uploadEventMedia,
 
-  // NEW:
-  // YouTube URL based video
+  // =======================================================
+  // YOUTUBE VIDEO
+  // =======================================================
+
   addYouTubeVideo,
+
+  // =======================================================
+  // DELETE MEDIA
+  // =======================================================
 
   deleteEventMedia,
 
@@ -61,10 +62,8 @@ const {
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-
 const authMiddleware =
   require("../middleware/authMiddleware");
-
 
 const eventUpload =
   require("../middleware/eventUpload");
@@ -105,7 +104,9 @@ router.get(
 // NOT REQUIRED
 //
 // IMPORTANT:
-// This MUST be before /:id
+// This route MUST come before:
+//
+// GET /api/events/:id
 //
 // =========================================================
 
@@ -125,7 +126,8 @@ router.get(
 // ADMIN REQUIRED
 //
 // IMPORTANT:
-// Admin routes must come before /:id
+// Admin routes are defined before the public
+// dynamic /:id route.
 //
 // =========================================================
 
@@ -145,7 +147,25 @@ router.get(
 // Content-Type:
 // multipart/form-data
 //
-// Cover image field:
+// Fields:
+//
+// title
+// eventType
+// description
+// doctorName
+// specialization
+// eventDate
+// startTime
+// endTime
+// venue
+// eventMode
+// price
+// maxSlots
+// bookingEnabled
+// published
+//
+// Cover image:
+//
 // image
 //
 // Authentication:
@@ -170,7 +190,7 @@ router.post(
 // Content-Type:
 // multipart/form-data
 //
-// Cover image field:
+// Cover image:
 // image
 //
 // Authentication:
@@ -192,6 +212,12 @@ router.put(
 //
 // GET /api/events/admin/:id/media
 //
+// Returns:
+//
+// gallery
+// videos
+// documents
+//
 // Authentication:
 // ADMIN REQUIRED
 //
@@ -205,7 +231,7 @@ router.get(
 
 
 // =========================================================
-// ADMIN - UPLOAD IMAGES / DOCUMENTS
+// ADMIN - UPLOAD EVENT MEDIA
 // =========================================================
 //
 // POST /api/events/admin/:id/media
@@ -213,16 +239,27 @@ router.get(
 // Content-Type:
 // multipart/form-data
 //
-// type:
+// Supported media:
+//
 // image
 // document
 //
-// files:
-// actual files
+// NOT supported:
 //
-// IMPORTANT:
+// video file
 //
-// Videos are NO LONGER uploaded here.
+// Videos are now added through YouTube URL.
+//
+// FormData:
+//
+// type = image
+// OR
+// type = document
+//
+// files = actual files
+//
+// Authentication:
+// ADMIN REQUIRED
 //
 // =========================================================
 
@@ -254,7 +291,17 @@ router.post(
 //   "description": "Event highlights"
 // }
 //
-// NO FILE UPLOAD.
+// Supported YouTube formats:
+//
+// https://www.youtube.com/watch?v=VIDEO_ID
+//
+// https://youtu.be/VIDEO_ID
+//
+// https://www.youtube.com/shorts/VIDEO_ID
+//
+// https://www.youtube.com/embed/VIDEO_ID
+//
+// NO VIDEO FILE UPLOAD.
 //
 // =========================================================
 
@@ -285,6 +332,9 @@ router.post(
 //
 // DELETE /api/events/admin/5/media/12?type=document
 //
+// Authentication:
+// ADMIN REQUIRED
+//
 // =========================================================
 
 router.delete(
@@ -304,7 +354,12 @@ router.delete(
 // ADMIN REQUIRED
 //
 // IMPORTANT:
-// Keep this AFTER all /admin/:id/media routes.
+// This MUST remain AFTER:
+//
+// /admin/:id/media
+// /admin/:id/media/:mediaId
+//
+// Otherwise route matching can cause conflicts.
 //
 // =========================================================
 
@@ -327,7 +382,7 @@ router.delete(
 // Authentication:
 // USER REQUIRED
 //
-// Fields:
+// Required fields:
 //
 // name
 // email
@@ -336,6 +391,22 @@ router.delete(
 // Optional:
 //
 // presentation
+//
+// Allowed presentation files:
+//
+// PDF
+// PPT
+// PPTX
+//
+// The registrationUpload middleware uploads the
+// presentation to Cloudinary.
+//
+// Controller receives:
+//
+// presentationUrl
+// presentationPublicId
+//
+// and stores them with the event booking.
 //
 // =========================================================
 
