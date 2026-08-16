@@ -9,10 +9,11 @@ import {
   IndianRupee,
   UserRound,
   Video,
+  Image,
+  FileText,
+  PlayCircle,
+  Files,
 } from "lucide-react";
-
-import { Link } from "react-router-dom";
-import LoginRequiredModal from "../../components/LoginRequiredModal";
 
 import api from "../../services/api";
 
@@ -29,11 +30,13 @@ const calculateEventStatus = (
   startTime,
   endTime
 ) => {
+
   if (!eventDate) {
     return "upcoming";
   }
 
   try {
+
     const dateString =
       eventDate
         .toString()
@@ -78,6 +81,7 @@ const calculateEventStatus = (
         end.getTime()
       )
     ) {
+
       return "upcoming";
     }
 
@@ -91,6 +95,7 @@ const calculateEventStatus = (
       now >= start &&
       now <= end
     ) {
+
       return "ongoing";
     }
 
@@ -110,59 +115,354 @@ const calculateEventStatus = (
 
 
 // =========================================================
-// IMAGE URL HELPER
-// =========================================================
-// Backend may return:
-// 1. Full URL: https://snict.net/uploads/events/...
-// 2. Relative URL: /uploads/events/...
-// 3. Legacy relative URL: uploads/events/...
-//
-// Keep full URLs unchanged and attach relative URLs to the
-// backend origin instead of the frontend domain.
+// BACKEND ORIGIN
 // =========================================================
 
 const getBackendOrigin = () => {
+
   const apiUrl =
     import.meta.env.VITE_API_URL ||
     "https://snict-backend.onrender.com/api";
 
   try {
-    return new URL(apiUrl).origin;
+
+    return new URL(
+      apiUrl
+    ).origin;
+
   } catch {
+
     return "https://snict-backend.onrender.com/";
   }
 };
 
-const getEventImageUrl = (imageUrl) => {
+
+// =========================================================
+// IMAGE / MEDIA URL HELPER
+// =========================================================
+//
+// Supports:
+//
+// https://...
+// http://...
+// blob:...
+// data:...
+// /uploads/...
+// uploads/...
+//
+// Cloudinary URLs are returned unchanged.
+// =========================================================
+
+const getEventImageUrl = (
+  imageUrl
+) => {
+
   if (!imageUrl) {
     return "";
   }
 
-  const value = String(imageUrl).trim();
+  const value =
+    String(imageUrl).trim();
 
   if (!value) {
     return "";
   }
 
-  // Full external URL
+
   if (
     value.startsWith("http://") ||
     value.startsWith("https://") ||
     value.startsWith("blob:") ||
     value.startsWith("data:")
   ) {
+
     return value;
   }
 
-  const backendOrigin = getBackendOrigin();
 
-  // Relative backend upload path
+  const backendOrigin =
+    getBackendOrigin();
+
+
   if (value.startsWith("/")) {
+
     return `${backendOrigin}${value}`;
   }
 
+
   return `${backendOrigin}/${value}`;
 };
+
+
+// =========================================================
+// GENERIC MEDIA URL HELPER
+// =========================================================
+
+const getMediaUrl = (
+  url
+) => {
+
+  if (!url) {
+    return "";
+  }
+
+  const value =
+    String(url).trim();
+
+  if (!value) {
+    return "";
+  }
+
+
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("blob:") ||
+    value.startsWith("data:")
+  ) {
+
+    return value;
+  }
+
+
+  const backendOrigin =
+    getBackendOrigin();
+
+
+  if (value.startsWith("/")) {
+
+    return `${backendOrigin}${value}`;
+  }
+
+
+  return `${backendOrigin}/${value}`;
+};
+
+
+// =========================================================
+// GET EVENT MEDIA ARRAY
+// =========================================================
+//
+// Supports multiple possible backend field names
+// so the frontend remains compatible with the
+// existing event API.
+// =========================================================
+
+const getMediaArray = (
+  event,
+  type
+) => {
+
+  if (!event) {
+    return [];
+  }
+
+
+  if (type === "gallery") {
+
+    const gallery =
+      event.gallery ||
+      event.images ||
+      event.gallery_images ||
+      event.galleryImages ||
+      [];
+
+    return Array.isArray(
+      gallery
+    )
+      ? gallery
+      : [];
+  }
+
+
+  if (type === "videos") {
+
+    const videos =
+      event.videos ||
+      event.event_videos ||
+      event.eventVideos ||
+      [];
+
+    return Array.isArray(
+      videos
+    )
+      ? videos
+      : [];
+  }
+
+
+  if (type === "documents") {
+
+    const documents =
+      event.documents ||
+      event.event_documents ||
+      event.eventDocuments ||
+      [];
+
+    return Array.isArray(
+      documents
+    )
+      ? documents
+      : [];
+  }
+
+
+  return [];
+};
+
+
+// =========================================================
+// GET MEDIA ITEM URL
+// =========================================================
+
+const getMediaItemUrl = (
+  item
+) => {
+
+  if (!item) {
+    return "";
+  }
+
+
+  if (
+    typeof item ===
+    "string"
+  ) {
+
+    return getMediaUrl(
+      item
+    );
+  }
+
+
+  return getMediaUrl(
+    item.url ||
+    item.secure_url ||
+    item.secureUrl ||
+    item.file_url ||
+    item.fileUrl ||
+    item.path ||
+    item.image_url ||
+    item.imageUrl ||
+    item.video_url ||
+    item.videoUrl ||
+    item.document_url ||
+    item.documentUrl
+  );
+};
+
+
+// =========================================================
+// GET MEDIA ITEM NAME
+// =========================================================
+
+const getMediaItemName = (
+  item
+) => {
+
+  if (!item) {
+    return "Event Media";
+  }
+
+
+  if (
+    typeof item ===
+    "string"
+  ) {
+
+    const parts =
+      item.split("/");
+
+    return (
+      parts[
+        parts.length - 1
+      ] ||
+      "Event Media"
+    );
+  }
+
+
+  return (
+    item.name ||
+    item.original_name ||
+    item.originalName ||
+    item.filename ||
+    item.file_name ||
+    item.fileName ||
+    item.title ||
+    item.public_id ||
+    "Event Media"
+  );
+};
+
+
+// =========================================================
+// GET FILE EXTENSION
+// =========================================================
+
+const getFileExtension = (
+  name
+) => {
+
+  if (!name) {
+    return "";
+  }
+
+
+  const parts =
+    String(name).split(".");
+
+
+  if (
+    parts.length < 2
+  ) {
+
+    return "";
+  }
+
+
+  return (
+    parts[
+      parts.length - 1
+    ] || ""
+  ).toUpperCase();
+};
+
+
+// =========================================================
+// GET MEDIA COUNT
+// =========================================================
+
+const getEventMediaCount = (
+  event
+) => {
+
+  const gallery =
+    getMediaArray(
+      event,
+      "gallery"
+    );
+
+  const videos =
+    getMediaArray(
+      event,
+      "videos"
+    );
+
+  const documents =
+    getMediaArray(
+      event,
+      "documents"
+    );
+
+
+  return (
+    gallery.length +
+    videos.length +
+    documents.length
+  );
+};
+
 
 // =========================================================
 // COMPONENT
@@ -170,76 +470,56 @@ const getEventImageUrl = (imageUrl) => {
 
 function Events() {
 
-  const [events, setEvents] =
-    useState([]);
+  const [
+    events,
+    setEvents
+  ] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [
+    loading,
+    setLoading
+  ] = useState(true);
 
-  const [search, setSearch] =
-    useState("");
 
-  const [statusFilter, setStatusFilter] =
-    useState("all");
+  const [
+    error,
+    setError
+  ] = useState("");
 
-  const [typeFilter, setTypeFilter] =
-    useState("all");
 
-  // =========================================================
-  // AUTHENTICATION / LOGIN REQUIRED MODAL
-  // Events require the user to be logged in.
-  // =========================================================
+  const [
+    search,
+    setSearch
+  ] = useState("");
 
-  const [user, setUser] =
-    useState(null);
 
-  const [authChecked, setAuthChecked] =
-    useState(false);
+  const [
+    statusFilter,
+    setStatusFilter
+  ] = useState("all");
 
-  const [showLoginModal, setShowLoginModal] =
-    useState(false);
 
-  useEffect(() => {
-    checkUserAuthentication();
-  }, []);
+  const [
+    typeFilter,
+    setTypeFilter
+  ] = useState("all");
 
-  const checkUserAuthentication = async () => {
-    try {
-      const response =
-        await api.get("/auth/profile");
-
-      if (response.data?.success) {
-        setUser(
-          response.data.user ||
-          response.data.member ||
-          response.data.data ||
-          null
-        );
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setAuthChecked(true);
-    }
-  };
 
   // =========================================================
   // OPEN EVENT
-  // Login is compulsory for event access.
+  // =========================================================
+  //
+  // Login is NOT required on this page.
+  //
+  // Clicking View Event directly opens the event details.
   // =========================================================
 
-  const handleEventClick = (event) => {
-    if (!authChecked) {
-      return;
-    }
+  const handleEventClick = (
+    event
+  ) => {
 
-    if (!user) {
-      setShowLoginModal(true);
+    if (!event?.id) {
       return;
     }
 
@@ -253,73 +533,135 @@ function Events() {
   // =========================================================
 
   useEffect(() => {
+
     loadEvents();
+
   }, []);
 
 
-  const loadEvents = async () => {
+  const loadEvents =
+    async () => {
 
-    try {
+      try {
 
-      setLoading(true);
-      setError("");
+        setLoading(true);
+
+        setError("");
 
 
-      const response =
-        await api.get(
-          "/events"
+        const response =
+          await api.get(
+            "/events"
+          );
+
+
+        const backendEvents =
+          response.data?.events ||
+          response.data?.data ||
+          [];
+
+
+        /*
+         * Normalize all event data on frontend.
+         *
+         * This also preserves:
+         *
+         * gallery
+         * videos
+         * documents
+         */
+
+        const normalizedEvents =
+          backendEvents.map(
+            (event) => {
+
+              const gallery =
+                getMediaArray(
+                  event,
+                  "gallery"
+                );
+
+
+              const videos =
+                getMediaArray(
+                  event,
+                  "videos"
+                );
+
+
+              const documents =
+                getMediaArray(
+                  event,
+                  "documents"
+                );
+
+
+              return {
+
+                ...event,
+
+
+                status:
+                  calculateEventStatus(
+                    event.event_date,
+                    event.start_time,
+                    event.end_time
+                  ),
+
+
+                gallery,
+
+                videos,
+
+                documents,
+
+
+                mediaCounts: {
+
+                  gallery:
+                    gallery.length,
+
+                  videos:
+                    videos.length,
+
+                  documents:
+                    documents.length,
+
+                  total:
+                    gallery.length +
+                    videos.length +
+                    documents.length,
+
+                },
+
+              };
+
+            }
+          );
+
+
+        setEvents(
+          normalizedEvents
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Events loading error:",
+          error
         );
 
 
-      const backendEvents =
-        response.data?.events || [];
-
-
-      /*
-       * Recalculate status on frontend.
-       *
-       * This prevents incorrect Past/Upcoming
-       * values caused by timezone conversion.
-       */
-
-      const normalizedEvents =
-        backendEvents.map(
-          (event) => ({
-            ...event,
-
-            status:
-              calculateEventStatus(
-                event.event_date,
-                event.start_time,
-                event.end_time
-              ),
-          })
-        );
-
-
-      setEvents(
-        normalizedEvents
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Events loading error:",
-        error
-      );
-
-
-      setError(
-        error.response?.data?.message ||
+        setError(
+          error.response?.data?.message ||
           "Unable to load events."
-      );
+        );
 
-    } finally {
+      } finally {
 
-      setLoading(false);
-
-    }
-  };
+        setLoading(false);
+      }
+    };
 
 
   // =========================================================
@@ -448,6 +790,7 @@ function Events() {
     if (
       parts.length !== 3
     ) {
+
       return dateString;
     }
 
@@ -483,6 +826,7 @@ function Events() {
       monthIndex < 0 ||
       monthIndex > 11
     ) {
+
       return dateString;
     }
 
@@ -517,6 +861,7 @@ function Events() {
     if (
       parts.length < 2
     ) {
+
       return value;
     }
 
@@ -532,6 +877,7 @@ function Events() {
     if (
       Number.isNaN(hour)
     ) {
+
       return value;
     }
 
@@ -555,8 +901,8 @@ function Events() {
   // =========================================================
 
   return (
-    <main className="events-page">
 
+    <main className="events-page">
 
       {/* =====================================================
           HERO
@@ -566,13 +912,11 @@ function Events() {
 
         <div className="events-hero-glow"></div>
 
-
         <div className="events-hero-content">
 
           <span className="events-label">
             SNICT EVENTS & CME
           </span>
-
 
           <h1>
             Learn.
@@ -580,7 +924,6 @@ function Events() {
             <br />
             Advance.
           </h1>
-
 
           <p>
             Explore professional meetings,
@@ -601,7 +944,6 @@ function Events() {
       <section className="events-filter-section">
 
         <div className="events-filter-container">
-
 
           {/* SEARCH */}
 
@@ -632,15 +974,12 @@ function Events() {
             <button
               type="button"
               className={
-                statusFilter ===
-                "all"
+                statusFilter === "all"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setStatusFilter(
-                  "all"
-                )
+                setStatusFilter("all")
               }
             >
               All
@@ -650,15 +989,12 @@ function Events() {
             <button
               type="button"
               className={
-                statusFilter ===
-                "upcoming"
+                statusFilter === "upcoming"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setStatusFilter(
-                  "upcoming"
-                )
+                setStatusFilter("upcoming")
               }
             >
               Upcoming
@@ -668,15 +1004,12 @@ function Events() {
             <button
               type="button"
               className={
-                statusFilter ===
-                "ongoing"
+                statusFilter === "ongoing"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setStatusFilter(
-                  "ongoing"
-                )
+                setStatusFilter("ongoing")
               }
             >
               Ongoing
@@ -686,15 +1019,12 @@ function Events() {
             <button
               type="button"
               className={
-                statusFilter ===
-                "past"
+                statusFilter === "past"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setStatusFilter(
-                  "past"
-                )
+                setStatusFilter("past")
               }
             >
               Past
@@ -706,9 +1036,7 @@ function Events() {
           {/* EVENT TYPE */}
 
           <select
-            value={
-              typeFilter
-            }
+            value={typeFilter}
             onChange={(e) =>
               setTypeFilter(
                 e.target.value
@@ -749,8 +1077,9 @@ function Events() {
 
         <div className="events-list-container">
 
-
-          {/* LOADING */}
+          {/* =================================================
+              LOADING
+          ================================================= */}
 
           {loading && (
 
@@ -769,7 +1098,9 @@ function Events() {
           )}
 
 
-          {/* ERROR */}
+          {/* =================================================
+              ERROR
+          ================================================= */}
 
           {!loading &&
             error && (
@@ -782,9 +1113,7 @@ function Events() {
 
                 <button
                   type="button"
-                  onClick={
-                    loadEvents
-                  }
+                  onClick={loadEvents}
                 >
                   Try Again
                 </button>
@@ -794,12 +1123,13 @@ function Events() {
             )}
 
 
-          {/* EMPTY */}
+          {/* =================================================
+              EMPTY
+          ================================================= */}
 
           {!loading &&
             !error &&
-            filteredEvents.length ===
-              0 && (
+            filteredEvents.length === 0 && (
 
               <div className="events-state">
 
@@ -821,7 +1151,9 @@ function Events() {
             )}
 
 
-          {/* EVENTS */}
+          {/* =================================================
+              EVENT CARDS
+          ================================================= */}
 
           {!loading &&
             !error &&
@@ -833,35 +1165,40 @@ function Events() {
                   key={event.id}
                 >
 
-
-                  {/* IMAGE */}
+                  {/* =========================================
+                      EVENT IMAGE
+                  ========================================= */}
 
                   <div className="event-image">
 
                     {getEventImageUrl(
                       event.image_url ||
-                        event.imageUrl ||
-                        event.image ||
-                        event.photo_url ||
-                        event.photoUrl
+                      event.imageUrl ||
+                      event.image ||
+                      event.photo_url ||
+                      event.photoUrl
                     ) ? (
 
                       <img
-                        src={getEventImageUrl(
-                          event.image_url ||
+                        src={
+                          getEventImageUrl(
+                            event.image_url ||
                             event.imageUrl ||
                             event.image ||
                             event.photo_url ||
                             event.photoUrl
-                        )}
+                          )
+                        }
                         alt={
                           event.title ||
                           "SNICT Event"
                         }
                         loading="lazy"
                         onError={(e) => {
+
                           e.currentTarget.style.display =
                             "none";
+
 
                           const placeholder =
                             e.currentTarget
@@ -870,10 +1207,16 @@ function Events() {
                                 ".event-image-placeholder"
                               );
 
-                          if (placeholder) {
+
+                          if (
+                            placeholder
+                          ) {
+
                             placeholder.style.display =
                               "flex";
+
                           }
+
                         }}
                       />
 
@@ -889,20 +1232,24 @@ function Events() {
 
                     )}
 
-                    {/* Hidden fallback placeholder for failed image */}
+
+                    {/* FALLBACK */}
+
                     <div
                       className="event-image-placeholder"
                       style={{
                         display: "none",
                       }}
                     >
+
                       <CalendarDays
                         size={42}
                       />
+
                     </div>
 
 
-                    {/* STATUS */}
+                    {/* EVENT STATUS */}
 
                     <span
                       className={`event-status ${event.status}`}
@@ -913,12 +1260,13 @@ function Events() {
                   </div>
 
 
-                  {/* CONTENT */}
+                  {/* =========================================
+                      EVENT CONTENT
+                  ========================================= */}
 
                   <div className="event-card-content">
 
-
-                    {/* TYPE */}
+                    {/* EVENT TYPE */}
 
                     <span className="event-type">
 
@@ -928,7 +1276,7 @@ function Events() {
                     </span>
 
 
-                    {/* TITLE */}
+                    {/* EVENT TITLE */}
 
                     <h2>
                       {event.title}
@@ -969,10 +1317,11 @@ function Events() {
                     </p>
 
 
-                    {/* META */}
+                    {/* =====================================
+                        EVENT META
+                    ===================================== */}
 
                     <div className="event-meta">
-
 
                       {/* DATE */}
 
@@ -1039,10 +1388,109 @@ function Events() {
                     </div>
 
 
-                    {/* BOTTOM */}
+                    {/* =====================================
+                        MEDIA SUMMARY
+                    ===================================== */}
+
+                    {getEventMediaCount(
+                      event
+                    ) > 0 && (
+
+                      <div className="event-media-summary">
+
+                        {/* GALLERY */}
+
+                        {getMediaArray(
+                          event,
+                          "gallery"
+                        ).length > 0 && (
+
+                          <span>
+
+                            <Image
+                              size={14}
+                            />
+
+                            {
+                              getMediaArray(
+                                event,
+                                "gallery"
+                              ).length
+                            }
+
+                            {" "}
+                            Photos
+
+                          </span>
+
+                        )}
+
+
+                        {/* VIDEOS */}
+
+                        {getMediaArray(
+                          event,
+                          "videos"
+                        ).length > 0 && (
+
+                          <span>
+
+                            <PlayCircle
+                              size={14}
+                            />
+
+                            {
+                              getMediaArray(
+                                event,
+                                "videos"
+                              ).length
+                            }
+
+                            {" "}
+                            Videos
+
+                          </span>
+
+                        )}
+
+
+                        {/* DOCUMENTS */}
+
+                        {getMediaArray(
+                          event,
+                          "documents"
+                        ).length > 0 && (
+
+                          <span>
+
+                            <FileText
+                              size={14}
+                            />
+
+                            {
+                              getMediaArray(
+                                event,
+                                "documents"
+                              ).length
+                            }
+
+                            {" "}
+                            Documents
+
+                          </span>
+
+                        )}
+
+                      </div>
+
+                    )}
+
+
+                    {/* =====================================
+                        CARD BOTTOM
+                    ===================================== */}
 
                     <div className="event-card-bottom">
-
 
                       {/* PRICE */}
 
@@ -1075,15 +1523,16 @@ function Events() {
                       </div>
 
 
-                      {/* VIEW */}
+                      {/* VIEW EVENT */}
 
                       <button
                         type="button"
                         className="event-view-btn"
                         onClick={() =>
-                          handleEventClick(event)
+                          handleEventClick(
+                            event
+                          )
                         }
-                        disabled={!authChecked}
                       >
 
                         View Event
@@ -1107,20 +1556,13 @@ function Events() {
 
       </section>
 
-      {/* =====================================================
-          LOGIN REQUIRED MODAL
-          Events require login before viewing/booking.
-      ===================================================== */}
-
-      <LoginRequiredModal
-        isOpen={showLoginModal}
-        onClose={() =>
-          setShowLoginModal(false)
-        }
-      />
-
     </main>
   );
 }
+
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 export default Events;

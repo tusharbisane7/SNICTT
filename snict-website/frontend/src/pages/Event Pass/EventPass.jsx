@@ -13,7 +13,7 @@ import {
 import QRCode from "react-qr-code";
 
 import api from "../../services/api";
-
+import "./EventPass.css";
 // =========================================================
 // EVENT PASS
 // =========================================================
@@ -260,32 +260,22 @@ const EventPass = () => {
       // from booking controller/routes.
       // =================================================
 
-      let response;
+      // =================================================
+      // DEDICATED EVENT PASS API
+      //
+      // Backend:
+      // app.use("/api/event-passes", eventPassRoutes)
+      //
+      // Route:
+      // GET /api/event-passes/booking/:bookingId
+      //
+      // Event-pass logic is now completely separate from
+      // booking controller/routes.
+      // =================================================
 
-      try {
-        response = await api.get(
-          `/event-passes/booking/${bookingId}`
-        );
-      } catch (passError) {
-        /*
-         * Compatibility fallback.
-         *
-         * If backend is still exposing the pass through
-         * booking route, this prevents the frontend from
-         * breaking immediately.
-         */
-
-        if (
-          passError?.response?.status === 404 ||
-          passError?.response?.status === 405
-        ) {
-          response = await api.get(
-            `/bookings/${bookingId}/pass`
-          );
-        } else {
-          throw passError;
-        }
-      }
+      const response = await api.get(
+        `/event-passes/booking/${bookingId}`
+      );
 
       const passData =
         normalizePassResponse(
@@ -500,16 +490,34 @@ const EventPass = () => {
   // ATTENDANCE CODE
   // =======================================================
 
+  // =======================================================
+  // ATTENDANCE / MANUAL UNIQUE CODE
+  //
+  // Backend returns:
+  // attendance_code
+  //
+  // Also support nested attendance objects for compatibility.
+  // =======================================================
+
+  const nestedAttendance =
+    booking?.attendance ||
+    booking?.eventAttendance ||
+    booking?.event_attendance ||
+    nestedPass?.attendance ||
+    nestedPass?.eventAttendance ||
+    nestedPass?.event_attendance ||
+    null;
+
   const attendanceCode =
     firstValue(
       booking,
       [
         "attendance_code",
         "attendanceCode",
-        "verification_code",
-        "verificationCode",
         "manual_attendance_code",
         "manualAttendanceCode",
+        "verification_code",
+        "verificationCode",
       ],
       ""
     ) ||
@@ -518,8 +526,23 @@ const EventPass = () => {
       [
         "attendance_code",
         "attendanceCode",
+        "manual_attendance_code",
+        "manualAttendanceCode",
         "verification_code",
         "verificationCode",
+      ],
+      ""
+    ) ||
+    firstValue(
+      nestedAttendance,
+      [
+        "attendance_code",
+        "attendanceCode",
+        "manual_attendance_code",
+        "manualAttendanceCode",
+        "verification_code",
+        "verificationCode",
+        "code",
       ],
       ""
     );
@@ -767,6 +790,9 @@ const EventPass = () => {
       attendanceCode:
         attendanceCode || null,
 
+      manualAttendanceCode:
+        attendanceCode || null,
+
       eventName,
 
       userName,
@@ -905,7 +931,7 @@ const EventPass = () => {
             ← Back
           </button>
 
-          <div className="topbar-actions">
+          {/* <div className="topbar-actions">
             <button
               type="button"
               className="print-button"
@@ -913,7 +939,7 @@ const EventPass = () => {
             >
               🖨 Print Pass
             </button>
-          </div>
+          </div> */}
 
         </div>
 
@@ -934,23 +960,19 @@ const EventPass = () => {
 
             <div className="pass-header">
 
-              <div className="brand-area">
+             <div className="brand-area">
+  <div>
+    <div className="brand-name">
+      SNICT
+    </div>
 
-                <div className="brand-logo">
-                  S
-                </div>
+    <div className="brand-subtitle">
+      Event Pass
+    </div>
+  </div>
+</div>
 
-                <div>
-                  <div className="brand-name">
-                    SNICT
-                  </div>
-
-                  <div className="brand-subtitle">
-                    Event Pass
-                  </div>
-                </div>
-
-              </div>
+            
 
               <div
                 className={
@@ -1226,10 +1248,9 @@ const EventPass = () => {
                       </div>
 
                       <p className="manual-code-help warning">
-                        Manual verification
-                        code has not been
-                        generated for this
-                        booking yet.
+                        Manual verification code is not available
+                        in the event-pass response. Please refresh
+                        the pass or contact the event coordinator.
                       </p>
                     </>
                   )}

@@ -440,12 +440,78 @@ const getCommitteeImage = (member) => {
 // Backend returns memberName
 // =========================================================
 
+// =========================================================
+// GET COMMITTEE NAME
+// =========================================================
+// Updated SNICT committee structure:
+//
+// 1. Commercial Course Director Faculty
+// 2. Office Bearers
+// 3. Organizing Committee
+// 4. Scientific Committee
+//
+// Supports both the new database names and the old names/slugs
+// so existing committee records continue to display correctly.
+// =========================================================
+
 const getCommitteeName = (
   member
 ) => {
-  return (
+  const rawName =
     member?.committeeName ||
     member?.committee_name ||
+    member?.committee ||
+    "";
+
+  const normalizedName = String(rawName)
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+
+  const committeeMap = {
+    // NEW NAMES
+    "commercial course director faculty":
+      "COMMERCIAL COURSE DIRECTOR FACULTY",
+
+    "office bearers":
+      "OFFICE BEARERS",
+
+    "organizing committee":
+      "ORGANIZING COMMITTEE",
+
+    "scientific committee":
+      "SCIENTIFIC COMMITTEE",
+
+    // OLD NAMES -> NEW DISPLAY NAMES
+    "placement":
+      "COMMERCIAL COURSE DIRECTOR FACULTY",
+
+    "placement committee":
+      "COMMERCIAL COURSE DIRECTOR FACULTY",
+
+    "working":
+      "OFFICE BEARERS",
+
+    "working committee":
+      "OFFICE BEARERS",
+
+    "academic":
+      "ORGANIZING COMMITTEE",
+
+    "academic committee":
+      "ORGANIZING COMMITTEE",
+
+    "compliance":
+      "SCIENTIFIC COMMITTEE",
+
+    "compliance committee":
+      "SCIENTIFIC COMMITTEE",
+  };
+
+  return (
+    committeeMap[normalizedName] ||
+    rawName ||
     "SNICT Committee"
   );
 };
@@ -1246,27 +1312,6 @@ function Home() {
       committeeMembers,
     ]);
 
-  // =========================================================
-  // PROTECTED EVENT NAVIGATION
-  // =========================================================
-  // Event booking is available only to logged-in users.
-  // If the visitor is not logged in, show the login/signup
-  // popup instead of opening the event page.
-  // =========================================================
-
-  const handleProtectedEventNavigation = (path) => {
-
-    if (authLoading) {
-      return;
-    }
-
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
-
-    navigate(path);
-  };
 
   // =========================================================
   // PROTECTED MEMBERSHIP NAVIGATION
@@ -2044,6 +2089,7 @@ function Home() {
 
       {/* =====================================================
           EVENTS
+          Public: visible to logged-in and logged-out users
       ===================================================== */}
 
       <section className="home-events-section">
@@ -2082,13 +2128,6 @@ function Home() {
             <Link
               to="/events"
               className="home-events-view-all"
-              onClick={(eventClick) => {
-                if (authLoading || !user) {
-                  eventClick.preventDefault();
-                  setShowLoginModal(true);
-                  return;
-                }
-              }}
             >
 
               View All Events
@@ -2381,13 +2420,6 @@ function Home() {
                             <Link
                               to={`/events/${event.id}`}
                               className="home-event-link"
-                              onClick={(eventClick) => {
-                                if (authLoading || !user) {
-                                  eventClick.preventDefault();
-                                  setShowLoginModal(true);
-                                  return;
-                                }
-                              }}
                             >
 
                               View Event
@@ -2446,10 +2478,11 @@ function Home() {
 
               <p>
 
-                Meet the professionals working
-                together to strengthen SNICT
-                through education, innovation
-                and collaboration.
+                Meet the professionals leading
+                SNICT through education,
+                professional development,
+                scientific collaboration
+                and innovation.
 
               </p>
 
@@ -2742,13 +2775,6 @@ function Home() {
           <Link
             to="/events"
             className="events-btn"
-            onClick={(eventClick) => {
-              if (authLoading || !user) {
-                eventClick.preventDefault();
-                setShowLoginModal(true);
-                return;
-              }
-            }}
           >
 
             Explore Events

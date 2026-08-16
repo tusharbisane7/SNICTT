@@ -1307,7 +1307,7 @@ function BookingHistory() {
                   SUMMARY
               ================================================= */}
 
-              <div className="booking-history-summary">
+              {/* <div className="booking-history-summary">
 
                 <div>
                   <span>
@@ -1359,7 +1359,7 @@ function BookingHistory() {
                   </strong>
                 </div>
 
-              </div>
+              </div> */}
 
               {/* =================================================
                   CARDS
@@ -1525,7 +1525,7 @@ function BookingHistory() {
 
                         {/* ATTENDANCE */}
 
-                        {isPaymentCompleted(
+                        {/* {isPaymentCompleted(
                           booking
                         ) && (
                           <div
@@ -1573,7 +1573,7 @@ function BookingHistory() {
                             </div>
 
                           </div>
-                        )}
+                        )} */}
 
                       </div>
 
@@ -1629,11 +1629,11 @@ function BookingHistory() {
 
                         {/* ATTENDANCE */}
 
-                        <AttendanceBadge
+                        {/* <AttendanceBadge
                           booking={
                             booking
                           }
-                        />
+                        /> */}
 
                         {/* ACTIONS */}
 

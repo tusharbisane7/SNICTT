@@ -35,7 +35,11 @@ import ComplianceCommittee
 
 import WorkingCommittee
   from "./pages/WorkingCommittee/WorkingCommittee";
+import MembershipPayment
+  from "./pages/MembershipPayment/MembershipPayment";
 
+import EventRegistration
+  from "./pages/EventRegistration/EventRegistration";
 
 // =====================================================
 // USER AUTHENTICATION
@@ -84,6 +88,8 @@ import MembershipManagement
 import SliderManagement
   from "./pages/Admin/Slider/SliderManagement";
 
+import RegisteredEventUsers
+  from "./pages/Admin/Events/RegisteredEventUsers";
 
 // =====================================================
 // PAYMENT MANAGEMENT
@@ -100,7 +106,7 @@ import PaymentManagement
 import AttendanceManagement
   from "./pages/Admin/Attendance/AttendanceManagement";
 
-
+import ContactManagement from "./pages/Admin/ContactManagement/ContactManagement";
 // =====================================================
 // ADMIN PROFILE
 // =====================================================
@@ -199,7 +205,7 @@ function App() {
           element={<Events />}
         />
 
-
+        {/* Public event details */}
         <Route
           path="/events/:id"
           element={<EventDetails />}
@@ -215,6 +221,11 @@ function App() {
           element={<Membership />}
         />
 
+
+<Route
+  path="/membership-payment"
+  element={<MembershipPayment />}
+/>
 
         {/* =====================================================
             CONTACT
@@ -282,8 +293,58 @@ function App() {
         />
 
 
+{/* =====================================================
+    ADMIN CONTACT MANAGEMENT
+===================================================== */}
+
+<Route
+  path="/admin/contacts"
+  element={<ContactManagement />}
+/>
+
+<Route
+  path="/admin/contact"
+  element={<ContactManagement />}
+/>
+
         {/* =====================================================
-            EVENT BOOKING
+            EVENT REGISTRATION
+        =====================================================
+
+        Flow:
+
+        Event Details
+              ↓
+        Register for Event
+              ↓
+        Event Registration Preview
+              ↓
+        Optional PDF / PPT / PPTX upload
+              ↓
+        Event Payment
+              ↓
+        Booking / Registration Confirmation
+
+        IMPORTANT:
+        This route intentionally stays outside ProtectedRoute.
+        EventRegistration can check authentication and redirect
+        the user to /login while preserving the event URL.
+        ===================================================== */}
+
+        <Route
+          path="/events/registration/:id"
+          element={<EventRegistration />}
+        />
+
+
+        {/* =====================================================
+            LEGACY EVENT BOOKING
+        =====================================================
+
+        Kept for existing bookings / old links.
+        New registrations should use:
+
+        /events/registration/:id
         ===================================================== */}
 
         <Route
@@ -295,6 +356,10 @@ function App() {
           }
         />
 
+
+        {/* =====================================================
+            BOOKING HISTORY
+        ===================================================== */}
 
         <Route
           path="/booking-history"
@@ -345,6 +410,13 @@ function App() {
           element={<EventManagement />}
         />
 
+
+<Route
+  path="/admin/events/registered-users"
+  element={
+    <RegisteredEventUsers />
+  }
+/>
 
         {/* =====================================================
             ADMIN BOOKING MANAGEMENT

@@ -1,11 +1,33 @@
 const express = require("express");
 
+// =========================================================
+// CONTROLLERS
+// =========================================================
+
 const {
+  // =======================================================
+  // USER PAYMENT
+  // =======================================================
+
   submitPayment,
+
+  // =======================================================
+  // ADMIN PAYMENT VIEW
+  // =======================================================
+
   getAllPayments,
   getPaymentById,
+
+  // =======================================================
+  // ADMIN PAYMENT CONFIRM / REJECT
+  // =======================================================
+
   verifyPayment,
 } = require("../controllers/paymentController");
+
+// =========================================================
+// MIDDLEWARE
+// =========================================================
 
 const authMiddleware =
   require("../middleware/authMiddleware");
@@ -13,15 +35,50 @@ const authMiddleware =
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-const router = express.Router();
+// =========================================================
+// ROUTER
+// =========================================================
 
+const router = express.Router();
 
 // =========================================================
 // USER PAYMENT
 // =========================================================
-
-// Submit UPI payment
+//
 // POST /api/payments/:bookingId
+//
+// Example:
+//
+// POST /api/payments/31
+//
+// Body:
+//
+// {
+//   "transactionId": "123456789012",
+//   "paymentMethod": "upi",
+//   "paymentProofUrl": "optional-url"
+// }
+//
+// Authentication:
+// USER REQUIRED
+//
+// Flow:
+//
+// Event Booking
+//      ↓
+// Payment Page
+//      ↓
+// UPI QR
+//      ↓
+// User enters UTR
+//      ↓
+// POST /api/payments/:bookingId
+//      ↓
+// Payment = submitted
+//      ↓
+// Waiting for Admin
+//
+// =========================================================
 
 router.post(
   "/:bookingId",
@@ -29,19 +86,36 @@ router.post(
   submitPayment
 );
 
-
 // =========================================================
 // ADMIN PAYMENT MANAGEMENT
 // =========================================================
-
+//
+// Payment Management is responsible for:
+//
+// ✅ View payments
+// ✅ View payment details
+// ✅ Confirm payment
+// ✅ Reject payment
+//
+// Booking Management is responsible for:
+//
+// ✅ Confirm booking
+// ✅ Reject/cancel booking
+//
 // IMPORTANT:
-// Admin routes use adminMiddleware.
-// Do NOT use authMiddleware here if your admin login
-// has a separate admin session/cookie.
+//
+// Confirming payment here should NOT automatically
+// confirm the booking.
+//
+// =========================================================
 
-
-// Get all payments
+// ---------------------------------------------------------
+// GET ALL PAYMENTS
+//
 // GET /api/payments/admin
+//
+// ADMIN ONLY
+// ---------------------------------------------------------
 
 router.get(
   "/admin",
@@ -49,9 +123,13 @@ router.get(
   getAllPayments
 );
 
-
-// Get single payment
+// ---------------------------------------------------------
+// GET SINGLE PAYMENT
+//
 // GET /api/payments/admin/:id
+//
+// ADMIN ONLY
+// ---------------------------------------------------------
 
 router.get(
   "/admin/:id",
@@ -59,9 +137,43 @@ router.get(
   getPaymentById
 );
 
-
-// Verify / reject payment
+// =========================================================
+// CONFIRM / REJECT PAYMENT
+// =========================================================
+//
 // PUT /api/payments/admin/:id/verify
+//
+// ADMIN ONLY
+//
+// Confirm:
+//
+// {
+//   "status": "confirmed"
+// }
+//
+// Reject:
+//
+// {
+//   "status": "rejected"
+// }
+//
+// IMPORTANT:
+//
+// This route is used by:
+//
+// ADMIN → PAYMENT MANAGEMENT
+//
+// It should update ONLY the payment status.
+//
+// It should NOT automatically change:
+//
+// booking_status = confirmed
+//
+// Booking confirmation is handled separately from:
+//
+// PUT /api/bookings/admin/:id/status
+//
+// =========================================================
 
 router.put(
   "/admin/:id/verify",
@@ -69,5 +181,8 @@ router.put(
   verifyPayment
 );
 
+// =========================================================
+// EXPORT
+// =========================================================
 
 module.exports = router;

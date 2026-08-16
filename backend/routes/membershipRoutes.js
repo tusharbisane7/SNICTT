@@ -17,6 +17,7 @@ const {
   renewMembership,
   verifyMembership,
 
+
   // =======================================================
   // ADMIN - MEMBERSHIP
   // =======================================================
@@ -26,12 +27,21 @@ const {
   approveMembership,
   rejectMembership,
 
+
   // =======================================================
   // ADMIN - PAYMENT VERIFICATION
   // =======================================================
 
   markPaymentReceived,
   markPaymentNotReceived,
+
+
+  // =======================================================
+  // ADMIN - WHATSAPP
+  // =======================================================
+
+  resendApprovalWhatsApp,
+
 
   // =======================================================
   // ADMIN - MEMBERSHIP PLANS
@@ -41,6 +51,7 @@ const {
   createMembershipPlan,
   updateMembershipPlan,
   deleteMembershipPlan,
+
 
   // =======================================================
   // PAYMENT SETTINGS
@@ -118,7 +129,12 @@ const router =
 
 // =========================================================
 // GET MY MEMBERSHIP
+//
 // GET /api/membership/me
+//
+// Authentication:
+// USER REQUIRED
+//
 // =========================================================
 
 router.get(
@@ -130,8 +146,8 @@ router.get(
 
 // =========================================================
 // GET MEMBERSHIP PLANS
+//
 // GET /api/membership/plans
-// =========================================================
 //
 // Public route.
 //
@@ -151,12 +167,13 @@ router.get(
 
 // =========================================================
 // APPLY FOR MEMBERSHIP
+//
 // POST /api/membership/apply
-// =========================================================
 //
-// Authentication required.
+// Authentication:
+// USER REQUIRED
 //
-// Example body:
+// Body:
 //
 // {
 //   "planId": 1
@@ -173,12 +190,13 @@ router.post(
 
 // =========================================================
 // SUBMIT PAYMENT / UTR
+//
 // POST /api/membership/payment
-// =========================================================
 //
-// Authentication required.
+// Authentication:
+// USER REQUIRED
 //
-// Example body:
+// Body:
 //
 // {
 //   "membershipId": 1,
@@ -196,12 +214,13 @@ router.post(
 
 // =========================================================
 // RENEW MEMBERSHIP
+//
 // POST /api/membership/renew
-// =========================================================
 //
-// Authentication required.
+// Authentication:
+// USER REQUIRED
 //
-// Example:
+// Body:
 //
 // {
 //   "planId": 1
@@ -223,14 +242,14 @@ router.post(
 
 // =========================================================
 // VERIFY MEMBERSHIP
+//
 // GET /api/membership/verify/:membershipNumber
-// =========================================================
 //
 // Public route.
 //
 // Login is NOT required.
 //
-// Membership verification QR can open this URL.
+// Used by membership QR.
 //
 // =========================================================
 
@@ -247,18 +266,18 @@ router.get(
 
 // =========================================================
 // GET PAYMENT SETTINGS
+//
 // GET /api/membership/payment-settings
-// =========================================================
 //
 // Public.
-//
-// Used by membership payment page.
 //
 // Returns:
 //
 // - UPI ID
 // - Account Name
-// - QR Code Cloudinary URL
+// - QR Code
+//
+// Used by membership payment page.
 //
 // =========================================================
 
@@ -274,18 +293,28 @@ router.get(
 //
 // IMPORTANT:
 //
-// These routes must remain BEFORE:
+// These routes MUST remain before:
 //
 // /admin/:id
 //
-// Otherwise "plans" could be treated as an ID.
+// Otherwise:
+//
+// /admin/plans
+//
+// could potentially be treated as:
+//
+// /admin/:id
 //
 // =========================================================
 
 
 // =========================================================
 // GET ALL MEMBERSHIP PLANS
+//
 // GET /api/membership/admin/plans
+//
+// ADMIN ONLY
+//
 // =========================================================
 
 router.get(
@@ -297,10 +326,12 @@ router.get(
 
 // =========================================================
 // CREATE MEMBERSHIP PLAN
-// POST /api/membership/admin/plans
-// =========================================================
 //
-// Example:
+// POST /api/membership/admin/plans
+//
+// ADMIN ONLY
+//
+// Body:
 //
 // {
 //   "name": "1 Year Membership",
@@ -319,10 +350,12 @@ router.post(
 
 // =========================================================
 // UPDATE MEMBERSHIP PLAN
-// PUT /api/membership/admin/plans/:id
-// =========================================================
 //
-// Example:
+// PUT /api/membership/admin/plans/:id
+//
+// ADMIN ONLY
+//
+// Body:
 //
 // {
 //   "name": "1 Year Membership",
@@ -342,8 +375,10 @@ router.put(
 
 // =========================================================
 // DISABLE MEMBERSHIP PLAN
+//
 // DELETE /api/membership/admin/plans/:id
-// =========================================================
+//
+// ADMIN ONLY
 //
 // Soft delete.
 //
@@ -365,10 +400,10 @@ router.delete(
 
 // =========================================================
 // GET PAYMENT SETTINGS
-// GET /api/membership/admin/payment-settings
-// =========================================================
 //
-// Admin only.
+// GET /api/membership/admin/payment-settings
+//
+// ADMIN ONLY
 //
 // =========================================================
 
@@ -381,10 +416,10 @@ router.get(
 
 // =========================================================
 // UPDATE PAYMENT SETTINGS
-// PUT /api/membership/admin/payment-settings
-// =========================================================
 //
-// IMPORTANT:
+// PUT /api/membership/admin/payment-settings
+//
+// ADMIN ONLY
 //
 // Content-Type:
 //
@@ -396,7 +431,7 @@ router.get(
 // upiId
 // qrCode
 //
-// QR upload flow:
+// QR upload:
 //
 // Desktop
 //    ↓
@@ -404,19 +439,15 @@ router.get(
 //    ↓
 // multer.memoryStorage()
 //    ↓
-// req.file.buffer
-//    ↓
-// Cloudinary upload_stream()
+// Cloudinary
 //    ↓
 // req.file.path
 //    ↓
 // membershipController
-//    ↓
-// database qr_code
 //
 // IMPORTANT:
 //
-// DO NOT use:
+// Do NOT use:
 //
 // qrUpload.single("qrCode")
 //
@@ -441,10 +472,12 @@ router.put(
 
 // =========================================================
 // GET ALL MEMBERSHIPS
-// GET /api/membership/admin
-// =========================================================
 //
-// Admin can see:
+// GET /api/membership/admin
+//
+// ADMIN ONLY
+//
+// Returns:
 //
 // - User
 // - User information
@@ -455,6 +488,7 @@ router.put(
 // - Membership status
 // - Start date
 // - Expiry date
+// - WhatsApp status
 //
 // =========================================================
 
@@ -467,7 +501,11 @@ router.get(
 
 // =========================================================
 // GET SINGLE MEMBERSHIP
+//
 // GET /api/membership/admin/:id
+//
+// ADMIN ONLY
+//
 // =========================================================
 
 router.get(
@@ -484,24 +522,20 @@ router.get(
 
 // =========================================================
 // MARK PAYMENT RECEIVED
+//
 // PUT /api/membership/admin/:id/payment-received
-// =========================================================
 //
-// Admin checks the UTR/payment and confirms:
+// ADMIN ONLY
 //
-// PAYMENT RECEIVED
+// Flow:
 //
-// This changes:
-//
-// payment_status
-//      ↓
-// received
-//
-// IMPORTANT:
-//
-// Membership is NOT automatically approved.
-//
-// Admin must separately approve membership.
+// Payment submitted
+//       ↓
+// Admin checks UTR
+//       ↓
+// Payment received
+//       ↓
+// Admin approves membership separately
 //
 // =========================================================
 
@@ -514,16 +548,10 @@ router.put(
 
 // =========================================================
 // MARK PAYMENT NOT RECEIVED
+//
 // PUT /api/membership/admin/:id/payment-not-received
-// =========================================================
 //
-// Changes:
-//
-// payment_status
-//      ↓
-// not_received
-//
-// Membership remains pending.
+// ADMIN ONLY
 //
 // =========================================================
 
@@ -541,22 +569,26 @@ router.put(
 
 // =========================================================
 // APPROVE MEMBERSHIP
+//
 // PUT /api/membership/admin/:id/approve
-// =========================================================
+//
+// ADMIN ONLY
 //
 // Requirements:
 //
-// 1. Membership status must be pending
-// 2. UTR number must exist
-// 3. Payment must be received
+// 1. Membership status = pending
+// 2. UTR number exists
+// 3. Payment status = received
 //
 // Then:
 //
 // - Generate membership number
-// - Set membership start date
-// - Calculate expiry date
-// - Generate verification QR
-// - Set membership status approved
+// - Generate verification token
+// - Generate QR
+// - Set start date
+// - Set expiry date
+// - Set membership status = approved
+// - Send WhatsApp approval notification
 //
 // =========================================================
 
@@ -574,10 +606,12 @@ router.put(
 
 // =========================================================
 // REJECT MEMBERSHIP
-// PUT /api/membership/admin/:id/reject
-// =========================================================
 //
-// Example body:
+// PUT /api/membership/admin/:id/reject
+//
+// ADMIN ONLY
+//
+// Body:
 //
 // {
 //   "reason": "Payment could not be verified"
@@ -589,6 +623,29 @@ router.put(
   "/admin/:id/reject",
   adminMiddleware,
   rejectMembership
+);
+
+
+// =========================================================
+// ADMIN - RESEND WHATSAPP
+// =========================================================
+//
+// POST /api/membership/admin/:id/whatsapp
+//
+// ADMIN ONLY
+//
+// Used when:
+//
+// - Membership is already approved
+// - WhatsApp was not delivered
+// - Admin wants to send the approval message again
+//
+// =========================================================
+
+router.post(
+  "/admin/:id/whatsapp",
+  adminMiddleware,
+  resendApprovalWhatsApp
 );
 
 

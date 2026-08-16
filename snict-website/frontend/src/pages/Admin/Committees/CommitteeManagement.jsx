@@ -23,10 +23,10 @@ import "./CommitteeManagement.css";
 // =========================================================
 
 const COMMITTEES = [
-  "Placement Committee",
-  "Academic Committee",
-  "Compliance Committee",
-  "Working Committee",
+  "COMMERCIAL COURSE DIRECTOR FACULTY",
+  "OFFICE BEARERS",
+  "ORGANIZING COMMITTEE",
+  "SCIENTIFIC COMMITTEE",
 ];
 
 
@@ -1073,11 +1073,7 @@ function CommitteeManagement() {
             Committee Management
           </h1>
 
-          <p>
-            Manage Placement, Academic,
-            Compliance and Working Committee
-            members from one place.
-          </p>
+         
 
         </div>
 

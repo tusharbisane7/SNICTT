@@ -1,50 +1,89 @@
 const express = require("express");
 
+
 // =========================================================
 // CONTROLLERS
 // =========================================================
 
 const {
+  // =======================================================
+  // USER BOOKINGS
+  // =======================================================
+
   createBooking,
   getMyBookings,
   getMyBookingById,
   getMyPass,
+
+
+  // =======================================================
+  // ADMIN BOOKINGS
+  // =======================================================
+
   getAllBookings,
   getAdminBookingById,
   updateBookingStatus,
+
+
+  // =======================================================
+  // ADMIN DELETE
+  // =======================================================
+
   deleteBooking,
-} = require("../controllers/bookingController");
+
+} = require(
+  "../controllers/bookingController"
+);
+
 
 // =========================================================
 // MIDDLEWARE
 // =========================================================
 
 const authMiddleware =
-  require("../middleware/authMiddleware");
+  require(
+    "../middleware/authMiddleware"
+  );
+
 
 const adminMiddleware =
-  require("../middleware/adminMiddleware");
+  require(
+    "../middleware/adminMiddleware"
+  );
+
 
 // =========================================================
 // ROUTER
 // =========================================================
 
-const router = express.Router();
+const router =
+  express.Router();
+
 
 // =========================================================
 // ADMIN BOOKINGS
-// IMPORTANT:
-// DO NOT USE authMiddleware HERE.
+// =========================================================
 //
-// Admin authentication uses:
+// IMPORTANT:
+//
+// Admin routes use:
+//
 // snict_admin_token
 //
-// adminMiddleware should verify the admin token.
+// Therefore:
+//
+// DO NOT use authMiddleware here.
+//
+// adminMiddleware handles admin authentication.
 // =========================================================
+
 
 // ---------------------------------------------------------
 // GET ALL BOOKINGS
+//
 // GET /api/bookings/admin
+//
+// ADMIN ONLY
 // ---------------------------------------------------------
 
 router.get(
@@ -53,9 +92,13 @@ router.get(
   getAllBookings
 );
 
+
 // ---------------------------------------------------------
 // GET SINGLE BOOKING
+//
 // GET /api/bookings/admin/:id
+//
+// ADMIN ONLY
 // ---------------------------------------------------------
 
 router.get(
@@ -64,9 +107,38 @@ router.get(
   getAdminBookingById
 );
 
+
 // ---------------------------------------------------------
 // UPDATE BOOKING STATUS
+//
 // PUT /api/bookings/admin/:id/status
+//
+// Example:
+//
+// {
+//   "status": "confirmed"
+// }
+//
+// IMPORTANT:
+//
+// This endpoint is ONLY responsible for
+// booking status.
+//
+// Payment must already be verified from:
+//
+// PUT /api/payments/admin/:id/verify
+//
+// Flow:
+//
+// PAYMENT MANAGEMENT
+//        ↓
+// payment = verified
+//        ↓
+// BOOKING MANAGEMENT
+//        ↓
+// booking = confirmed
+//        ↓
+// Event Pass generated
 // ---------------------------------------------------------
 
 router.put(
@@ -75,9 +147,13 @@ router.put(
   updateBookingStatus
 );
 
+
 // ---------------------------------------------------------
 // DELETE BOOKING
+//
 // DELETE /api/bookings/admin/:id
+//
+// ADMIN ONLY
 // ---------------------------------------------------------
 
 router.delete(
@@ -86,13 +162,18 @@ router.delete(
   deleteBooking
 );
 
+
 // =========================================================
 // USER BOOKINGS
 // =========================================================
 
+
 // ---------------------------------------------------------
 // GET MY BOOKINGS
+//
 // GET /api/bookings
+//
+// USER ONLY
 // ---------------------------------------------------------
 
 router.get(
@@ -101,9 +182,13 @@ router.get(
   getMyBookings
 );
 
+
 // ---------------------------------------------------------
 // CREATE BOOKING
+//
 // POST /api/bookings/event/:eventId
+//
+// USER ONLY
 // ---------------------------------------------------------
 
 router.post(
@@ -112,9 +197,16 @@ router.post(
   createBooking
 );
 
+
 // ---------------------------------------------------------
 // GET SINGLE USER BOOKING
+//
 // GET /api/bookings/:id
+//
+// USER ONLY
+//
+// The controller verifies that the booking
+// belongs to the logged-in user.
 // ---------------------------------------------------------
 
 router.get(
@@ -123,12 +215,25 @@ router.get(
   getMyBookingById
 );
 
+
 // ---------------------------------------------------------
 // GET MY EVENT PASS
+//
 // GET /api/bookings/:id/pass
 //
-// Only the logged-in user who owns the booking
-// can access the pass.
+// USER ONLY
+//
+// The controller verifies:
+//
+// booking.user_id = logged-in user
+//
+// AND:
+//
+// booking_status = confirmed
+//
+// AND:
+//
+// payment_status = verified
 // ---------------------------------------------------------
 
 router.get(
@@ -137,8 +242,10 @@ router.get(
   getMyPass
 );
 
+
 // =========================================================
 // EXPORT
 // =========================================================
 
-module.exports = router;
+module.exports =
+  router;

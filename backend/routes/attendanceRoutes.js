@@ -1,8 +1,7 @@
 const express = require("express");
 
-
 // =========================================================
-// CONTROLLER
+// CONTROLLERS
 // =========================================================
 
 const {
@@ -15,7 +14,6 @@ const {
   markPresent,
 } = require("../controllers/attendanceController");
 
-
 // =========================================================
 // MIDDLEWARE
 // =========================================================
@@ -23,21 +21,15 @@ const {
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-
 // =========================================================
 // ROUTER
 // =========================================================
 
 const router = express.Router();
 
-
 // =========================================================
 // ADMIN - GET ALL ATTENDANCE
 // GET /api/attendance/admin
-// =========================================================
-//
-// Returns all attendance records.
-//
 // =========================================================
 
 router.get(
@@ -46,17 +38,14 @@ router.get(
   getAllAttendance
 );
 
-
 // =========================================================
 // ADMIN - GET EVENT ATTENDANCE STATS
+//
 // GET /api/attendance/event/:eventId/stats
-// =========================================================
 //
 // IMPORTANT:
-// This MUST come before:
-//
+// This MUST stay before:
 // /event/:eventId
-//
 // =========================================================
 
 router.get(
@@ -65,28 +54,16 @@ router.get(
   getEventAttendanceStats
 );
 
-
 // =========================================================
 // ADMIN - GET EVENT ATTENDANCE
+//
 // GET /api/attendance/event/:eventId
-// =========================================================
 //
 // Optional query:
 //
-// ?search=tushar
-//
 // ?status=present
-//
 // ?status=not_present
-//
-// Example:
-//
-// GET /api/attendance/event/3
-//
-// GET /api/attendance/event/3?status=present
-//
-// GET /api/attendance/event/3?search=tushar
-//
+// ?search=tushar
 // =========================================================
 
 router.get(
@@ -95,16 +72,14 @@ router.get(
   getEventAttendance
 );
 
-
 // =========================================================
-// ADMIN - GET ATTENDANCE BY BOOKING
+// ADMIN - GET BOOKING ATTENDANCE
+//
 // GET /api/attendance/booking/:bookingId
-// =========================================================
 //
 // Example:
 //
-// GET /api/attendance/booking/21
-//
+// GET /api/attendance/booking/23
 // =========================================================
 
 router.get(
@@ -113,11 +88,10 @@ router.get(
   getBookingAttendance
 );
 
-
 // =========================================================
 // ADMIN - VERIFY ATTENDANCE CODE
+//
 // POST /api/attendance/verify-code
-// =========================================================
 //
 // Body:
 //
@@ -125,6 +99,14 @@ router.get(
 //   "attendanceCode": "SNICT-ATT-XXXXXXXXXXXX",
 //   "eventId": 3
 // }
+//
+// The controller will:
+//
+// 1. Validate attendance code
+// 2. Find booking
+// 3. Check event
+// 4. Check booking status
+// 5. Mark attendee PRESENT
 //
 // =========================================================
 
@@ -134,18 +116,17 @@ router.post(
   verifyAttendanceCode
 );
 
-
 // =========================================================
 // ADMIN - VERIFY QR CODE
+//
 // POST /api/attendance/verify-qr
-// =========================================================
 //
 // Supports Event Pass QR:
 //
 // {
 //   "qrData": {
 //     "type": "SNICT_EVENT_PASS",
-//     "bookingId": 21,
+//     "bookingId": 23,
 //     "eventId": 3,
 //     "passCode": "SNICT-PASS-XXXX",
 //     "passToken": "XXXX"
@@ -153,9 +134,7 @@ router.post(
 //   "eventId": 3
 // }
 //
-//
-//
-// Also supports Attendance Code QR:
+// Supports Attendance Code QR:
 //
 // {
 //   "qrData": {
@@ -164,14 +143,26 @@ router.post(
 //   "eventId": 3
 // }
 //
-//
-//
-// Or plain attendance-code QR:
+// Supports plain text QR:
 //
 // {
 //   "qrData": "SNICT-ATT-XXXXXXXXXXXX",
 //   "eventId": 3
 // }
+//
+// Flow:
+//
+// SCAN
+//   ↓
+// VERIFY QR
+//   ↓
+// CHECK EVENT
+//   ↓
+// CHECK BOOKING
+//   ↓
+// CHECK PASS / ATTENDANCE CODE
+//   ↓
+// MARK PRESENT
 //
 // =========================================================
 
@@ -181,11 +172,10 @@ router.post(
   verifyQrCode
 );
 
-
 // =========================================================
 // ADMIN - MANUALLY MARK PRESENT
+//
 // POST /api/attendance/:bookingId/mark-present
-// =========================================================
 //
 // Body:
 //
@@ -195,7 +185,7 @@ router.post(
 //
 // Example:
 //
-// POST /api/attendance/21/mark-present
+// POST /api/attendance/23/mark-present
 //
 // =========================================================
 
@@ -205,9 +195,8 @@ router.post(
   markPresent
 );
 
-
 // =========================================================
-// EXPORT ROUTER
+// EXPORT
 // =========================================================
 
 module.exports = router;

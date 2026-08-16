@@ -189,90 +189,7 @@ function ComplianceCommittee() {
       <div className="compliance-glow compliance-glow-two" />
 
 
-      {/* =====================================================
-          HERO
-          ===================================================== */}
-
-      <section className="compliance-hero">
-
-        <div className="compliance-container">
-
-          <div className="compliance-hero-content">
-
-            <div className="compliance-icon">
-              <ShieldCheck size={37} />
-            </div>
-
-
-            <span>
-              SNICT COMMITTEE
-            </span>
-
-
-            <h1>
-              Compliance
-              <strong>
-                {" "}Committee
-              </strong>
-            </h1>
-
-
-            <p>
-              Supporting professional standards,
-              governance, ethical practices and
-              regulatory compliance.
-            </p>
-
-
-            <div className="compliance-stat">
-
-              <Users size={19} />
-
-              <strong>
-                {members.length}
-              </strong>
-
-              <span>
-                Committee Members
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {/* =================================================
-              HERO VISUAL
-              ================================================= */}
-
-          <div className="compliance-visual">
-
-            <div className="compliance-ring compliance-ring-one" />
-
-            <div className="compliance-ring compliance-ring-two" />
-
-            <div className="compliance-core">
-
-              <ShieldCheck
-                size={65}
-                strokeWidth={1.2}
-              />
-
-              <strong>
-                SNICT
-              </strong>
-
-              <span>
-                COMPLIANCE
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+      
 
 
       {/* =====================================================
@@ -285,22 +202,16 @@ function ComplianceCommittee() {
 
           <header className="compliance-heading">
 
-            <span>
-              PROFESSIONAL GOVERNANCE
-            </span>
+            
 
             <h2>
-              Compliance
+              SCIENTIFIC 
               <strong>
-                {" "}Committee
+                {" "}COMMITTEE
               </strong>
             </h2>
 
-            <p>
-              Meet the members responsible for
-              supporting professional standards
-              and compliance.
-            </p>
+         
 
           </header>
 
@@ -381,7 +292,7 @@ function ComplianceCommittee() {
                 </h3>
 
                 <p>
-                  Compliance Committee members
+                   Committee members
                   will appear here.
                 </p>
 
@@ -500,7 +411,7 @@ function ComplianceCommittee() {
                         <div className="compliance-member-content">
 
                           <small>
-                            COMPLIANCE COMMITTEE
+                            SCIENTIFIC COMMITTEE
                           </small>
 
 

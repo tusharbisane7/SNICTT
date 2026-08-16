@@ -190,172 +190,7 @@ function PlacementCommittee() {
       />
 
 
-      {/* =====================================================
-          HERO
-      ===================================================== */}
-
-      <section className="placement-hero">
-
-        <div className="placement-container">
-
-          <div className="placement-hero-content">
-
-
-            {/* ICON */}
-
-            <div className="placement-icon">
-
-              <BriefcaseBusiness
-                size={38}
-                strokeWidth={1.7}
-              />
-
-            </div>
-
-
-            {/* LABEL */}
-
-            <span className="placement-label">
-
-              SNICT COMMITTEE
-
-            </span>
-
-
-            {/* TITLE */}
-
-            <h1>
-
-              Placement
-
-              <span>
-                {" "}Committee
-              </span>
-
-            </h1>
-
-
-            {/* DESCRIPTION */}
-
-            <p>
-
-              Supporting SNICT members with
-              professional opportunities,
-              career development and industry
-              connections.
-
-            </p>
-
-
-            {/* =================================================
-                STATS
-            ================================================= */}
-
-            <div className="placement-stats">
-
-
-              {/* MEMBERS */}
-
-              <div className="placement-stat">
-
-                <div className="placement-stat-icon">
-
-                  <Users
-                    size={20}
-                  />
-
-                </div>
-
-                <div>
-
-                  <span>
-                    {members.length}
-                  </span>
-
-                  <small>
-                    Members
-                  </small>
-
-                </div>
-
-              </div>
-
-
-              {/* STATUS */}
-
-              <div className="placement-stat">
-
-                <div className="placement-stat-icon">
-
-                  <ShieldCheck
-                    size={20}
-                  />
-
-                </div>
-
-                <div>
-
-                  <span>
-                    Active
-                  </span>
-
-                  <small>
-                    Committee
-                  </small>
-
-                </div>
-
-              </div>
-
-
-            </div>
-
-          </div>
-
-
-          {/* =================================================
-              HERO VISUAL
-          ================================================= */}
-
-          <div className="placement-hero-visual">
-
-            <div
-              className="
-                placement-orbit
-                placement-orbit-one
-              "
-            />
-
-            <div
-              className="
-                placement-orbit
-                placement-orbit-two
-              "
-            />
-
-
-            <div className="placement-core">
-
-              <BriefcaseBusiness
-                size={68}
-                strokeWidth={1.15}
-              />
-
-              <strong>
-                SNICT
-              </strong>
-
-              <span>
-                PLACEMENT
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+    
 
 
       {/* =====================================================
@@ -382,7 +217,7 @@ function PlacementCommittee() {
               Meet the{" "}
 
               <strong>
-                Placement Committee
+                COMMERCIAL COURSE DIRECTOR FACULTY
               </strong>
 
             </h2>
@@ -726,36 +561,7 @@ function PlacementCommittee() {
 
             <div className="placement-container">
 
-              <div className="placement-bottom-card">
-
-                <div>
-
-                  <span>
-                    SNICT PLACEMENT
-                  </span>
-
-                  <h2>
-                    Building careers.
-                    <strong>
-                      Creating opportunities.
-                    </strong>
-                  </h2>
-
-                  <p>
-                    Our Placement Committee
-                    works towards connecting
-                    members with meaningful
-                    professional opportunities.
-                  </p>
-
-                </div>
-
-                <BriefcaseBusiness
-                  size={55}
-                  strokeWidth={1.1}
-                />
-
-              </div>
+             
 
             </div>
 

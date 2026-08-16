@@ -15,7 +15,7 @@ import {
 
 import { Link } from "react-router-dom";
 
-import snictLogo from "../assets/snict-logo.png";
+import snictLogo from "../assets/snict-logo.jpeg";
 
 import "./Footer.css";
 
@@ -53,6 +53,7 @@ function Footer() {
               />
 
             </div>
+
 
             {/* BRAND CONTENT */}
 
@@ -93,7 +94,7 @@ function Footer() {
             <a
               href="https://www.instagram.com/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="Instagram"
               className="snict-social-link"
             >
@@ -106,7 +107,7 @@ function Footer() {
             <a
               href="https://www.facebook.com/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="Facebook"
               className="snict-social-link"
             >
@@ -119,7 +120,7 @@ function Footer() {
             <a
               href="https://www.linkedin.com/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="LinkedIn"
               className="snict-social-link"
             >
@@ -130,7 +131,7 @@ function Footer() {
             {/* EMAIL */}
 
             <a
-              href="mailto:info@snict.org"
+              href="mailto:support@snict.net"
               aria-label="Email"
               className="snict-social-link"
             >
@@ -181,9 +182,6 @@ function Footer() {
             </Link>
 
 
-           
-
-
             <Link to="/contact">
               <span>
                 Contact
@@ -195,9 +193,6 @@ function Footer() {
           </nav>
 
         </div>
-
-
-   
 
 
         {/* =================================================
@@ -212,7 +207,9 @@ function Footer() {
 
           <div className="snict-footer-contact">
 
-            {/* EMAIL */}
+            {/* =================================================
+                EMAIL
+            ================================================= */}
 
             <div className="snict-footer-contact-item">
 
@@ -220,14 +217,16 @@ function Footer() {
                 <Mail size={18} />
               </div>
 
-              <a href="mailto:info@snict.org">
-                support@snict.org
+              <a href="mailto:support@snict.net">
+                support@snict.net
               </a>
 
             </div>
 
 
-            {/* PHONE */}
+            {/* =================================================
+                PHONE
+            ================================================= */}
 
             <div className="snict-footer-contact-item">
 
@@ -242,18 +241,43 @@ function Footer() {
             </div>
 
 
-            {/* LOCATION */}
+            {/* =================================================
+                OFFICE ADDRESS
+            ================================================= */}
 
-            <div className="snict-footer-contact-item">
+            <div className="snict-footer-contact-item snict-footer-address-item">
 
               <div className="snict-footer-contact-icon">
                 <MapPin size={18} />
               </div>
 
-              <span>
-                45/25 Socitey of Neo Interventional Cardiovascular Technologites,
-                1-1/Pelleru, Chrjerla, SPSR, Nellore, Andhra Pradesh - 524309
-              </span>
+              <address className="snict-footer-address">
+
+                <span className="snict-footer-office-title">
+                  SNICT Office
+                </span>
+
+                <span>
+                  45/25, Society of Neo Interventional
+                </span>
+
+                <span>
+                  Cardiovascular Technologists
+                </span>
+
+                <span>
+                  1-1/Pelleru, Chrjerla
+                </span>
+
+                <span>
+                  SPSR Nellore
+                </span>
+
+                <span>
+                  Andhra Pradesh - 524309
+                </span>
+
+              </address>
 
             </div>
 
@@ -273,7 +297,25 @@ function Footer() {
         {/* COPYRIGHT */}
 
         <p>
-          © {currentYear} SNICT. All rights reserved. Made with ❤ by Tushar.
+          © {currentYear} SNICT. All rights reserved.
+        </p>
+
+
+        {/* POWERED BY */}
+
+        <p className="snict-footer-powered-by">
+
+          Powered by{" "}
+
+          <a
+            href="http://www.utfindia.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="snict-footer-company-link"
+          >
+            UTF Technologies
+          </a>
+
         </p>
 
 

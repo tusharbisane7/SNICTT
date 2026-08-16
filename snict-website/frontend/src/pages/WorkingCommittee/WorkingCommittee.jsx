@@ -161,84 +161,7 @@ function WorkingCommittee() {
       <div className="working-glow working-glow-two" />
 
 
-      {/* =================================================
-          HERO
-      ================================================= */}
-
-      <section className="working-hero">
-
-        <div className="working-container">
-
-          <div className="working-hero-content">
-
-            <div className="working-icon">
-              <ClipboardCheck size={37} />
-            </div>
-
-            <span>
-              SNICT COMMITTEE
-            </span>
-
-            <h1>
-              Working
-              <strong> Committee</strong>
-            </h1>
-
-            <p>
-              Coordinating SNICT activities,
-              initiatives, member engagement
-              and organizational operations.
-            </p>
-
-            <div className="working-stat">
-
-              <Users size={19} />
-
-              <strong>
-                {members.length}
-              </strong>
-
-              <span>
-                Committee Members
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {/* =================================================
-              HERO VISUAL
-          ================================================= */}
-
-          <div className="working-visual">
-
-            <div className="working-orbit working-orbit-one" />
-
-            <div className="working-orbit working-orbit-two" />
-
-            <div className="working-core">
-
-              <ClipboardCheck
-                size={65}
-                strokeWidth={1.2}
-              />
-
-              <strong>
-                SNICT
-              </strong>
-
-              <span>
-                WORKING
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+   
 
 
       {/* =================================================
@@ -260,8 +183,8 @@ function WorkingCommittee() {
             </span>
 
             <h2>
-              Working
-              <strong> Committee</strong>
+              Office
+              <strong> Bearers</strong>
             </h2>
 
             <p>
@@ -350,10 +273,7 @@ function WorkingCommittee() {
                   No members available
                 </h3>
 
-                <p>
-                  Working Committee members
-                  will appear here.
-                </p>
+               
 
               </div>
 
@@ -523,7 +443,7 @@ function WorkingCommittee() {
                         <div className="working-member-content">
 
                           <small>
-                            WORKING COMMITTEE
+                          Office Bearers
                           </small>
 
 

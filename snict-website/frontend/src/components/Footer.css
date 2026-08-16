@@ -534,6 +534,34 @@
   line-height: 1.5;
 }
 
+/* =========================================================
+   ADDRESS — CLEAN MULTI-LINE ALIGNMENT
+========================================================= */
+
+.snict-footer-address-item {
+  align-items: flex-start;
+}
+
+.snict-footer-address-item .snict-footer-contact-icon {
+  margin-top: 2px;
+}
+
+.snict-footer-address {
+  flex: 1;
+  min-width: 0;
+}
+
+.snict-footer-address span {
+  display: block;
+  color: #58737a;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.7;
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
 
 /* =========================================================
    CONTACT ICON
@@ -822,6 +850,17 @@
 
 }
 
+
+/* =========================================================
+   ADDRESS RESPONSIVE TUNING
+========================================================= */
+
+@media (max-width: 900px) {
+  .snict-footer-address span {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+}
 
 /* =========================================================
    MOBILE
@@ -1540,5 +1579,211 @@
   .snict-social-link:hover,
   .snict-footer-admin-link:hover {
     transform: none !important;
+  }
+}
+
+
+/* =========================================================
+   UTF TECHNOLOGIES — POWERED BY
+   ========================================================= */
+
+.snict-footer-powered-by {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.snict-footer-company-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #087f8c;
+  font-weight: 750;
+  text-decoration: none;
+  transition:
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.snict-footer-company-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  border-radius: 2px;
+  background: #087f8c;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.snict-footer-company-link:hover {
+  color: #075f69;
+  transform: translateY(-1px);
+}
+
+.snict-footer-company-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+
+/* =========================================================
+   OFFICE ADDRESS — FINAL ALIGNMENT
+   ========================================================= */
+
+.snict-footer-address {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-style: normal;
+  text-align: left;
+}
+
+.snict-footer-office-title {
+  margin-bottom: 3px;
+  color: #16383e !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.snict-footer-address span {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: #58737a;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.snict-footer-address-item {
+  align-items: flex-start;
+}
+
+.snict-footer-address-item
+.snict-footer-contact-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+
+/* =========================================================
+   BOTTOM BAR — THREE SECTION ALIGNMENT
+   ========================================================= */
+
+.snict-footer-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+
+.snict-footer-bottom > p:first-child {
+  justify-self: start;
+}
+
+.snict-footer-powered-by {
+  justify-self: center;
+}
+
+.snict-footer-bottom-links {
+  justify-self: end;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .snict-footer-bottom {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 18px;
+  }
+
+  .snict-footer-bottom > p:first-child {
+    justify-self: start;
+  }
+
+  .snict-footer-powered-by {
+    justify-self: end;
+  }
+
+  .snict-footer-bottom-links {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+  .snict-footer-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .snict-footer-bottom > p:first-child,
+  .snict-footer-powered-by,
+  .snict-footer-bottom-links {
+    width: 100%;
+    justify-self: auto;
+  }
+
+  .snict-footer-powered-by {
+    justify-content: flex-start;
+    white-space: normal;
+  }
+
+  .snict-footer-bottom-links {
+    justify-content: flex-start;
+  }
+
+  .snict-footer-address span {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .snict-footer-office-title {
+    font-size: 13px !important;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 400px) {
+  .snict-footer-powered-by {
+    font-size: 13px;
+  }
+
+  .snict-footer-company-link {
+    font-weight: 750;
+  }
+
+  .snict-footer-address span {
+    font-size: 13px;
+    line-height: 1.6;
   }
 }

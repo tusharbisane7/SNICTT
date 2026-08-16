@@ -1,0 +1,1820 @@
+/* =========================================================
+   SNICT CONTACT MANAGEMENT
+   PREMIUM ADMIN UI
+   ========================================================= */
+
+.contact-management-page {
+  min-height: 100vh;
+  padding: 32px;
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(31, 111, 235, 0.08),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(14, 165, 233, 0.06),
+      transparent 25%
+    ),
+    #f6f8fc;
+  color: #162033;
+}
+
+
+/* =========================================================
+   CONTAINER
+   ========================================================= */
+
+.contact-management-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.contact-management-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.contact-management-label {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.contact-management-header h1 {
+  margin: 0;
+  color: #101828;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.contact-management-header p {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   REFRESH BUTTON
+   ========================================================= */
+
+.contact-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-width: 112px;
+  height: 44px;
+  padding: 0 17px;
+
+  border: 1px solid #d9e1ec;
+  border-radius: 12px;
+
+  background: #ffffff;
+  color: #344054;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px rgba(16, 24, 40, 0.04);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.contact-refresh-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #2563eb;
+  color: #2563eb;
+
+  box-shadow:
+    0 10px 25px rgba(37, 99, 235, 0.12);
+}
+
+.contact-refresh-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   ALERTS
+   ========================================================= */
+
+.contact-management-alert {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  min-height: 48px;
+  margin-bottom: 20px;
+  padding: 12px 15px;
+
+  border-radius: 12px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  animation: contactAlertIn 0.35s ease both;
+}
+
+.contact-management-alert span {
+  flex: 1;
+}
+
+.contact-management-alert button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  cursor: pointer;
+}
+
+.contact-management-alert.error {
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #b42318;
+}
+
+.contact-management-alert.error button {
+  color: #b42318;
+}
+
+.contact-management-alert.success {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.contact-management-alert.success button {
+  color: #15803d;
+}
+
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
+
+.contact-stat-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.contact-stat-card {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  min-height: 105px;
+  padding: 18px;
+
+  overflow: hidden;
+
+  border: 1px solid #e6eaf0;
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 8px 24px rgba(16, 24, 40, 0.045);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.contact-stat-card::after {
+  content: "";
+
+  position: absolute;
+  right: -35px;
+  bottom: -35px;
+
+  width: 90px;
+  height: 90px;
+
+  border-radius: 50%;
+
+  background: rgba(37, 99, 235, 0.035);
+}
+
+.contact-stat-card:hover {
+  transform: translateY(-4px);
+
+  border-color: #d9e2f0;
+
+  box-shadow:
+    0 15px 35px rgba(16, 24, 40, 0.08);
+}
+
+.contact-stat-icon {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+
+  border-radius: 13px;
+}
+
+.contact-stat-icon.total {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.contact-stat-icon.new {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.contact-stat-icon.read {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.contact-stat-icon.replied {
+  background: #ecfdf3;
+  color: #16a34a;
+}
+
+.contact-stat-icon.closed {
+  background: #f3f4f6;
+  color: #667085;
+}
+
+.contact-stat-card div:last-child {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-stat-card span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.contact-stat-card strong {
+  color: #101828;
+  font-size: 25px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   FILTER CARD
+   ========================================================= */
+
+.contact-filter-card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  margin-bottom: 22px;
+  padding: 15px;
+
+  border: 1px solid #e6eaf0;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 25px rgba(16, 24, 40, 0.04);
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.contact-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: min(430px, 100%);
+  height: 44px;
+  padding: 0 13px;
+
+  border: 1px solid #dfe5ed;
+  border-radius: 11px;
+
+  background: #f9fafb;
+  color: #98a2b3;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.contact-search-box:focus-within {
+  border-color: #2563eb;
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.contact-search-box input {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #101828;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.contact-search-box input::placeholder {
+  color: #98a2b3;
+}
+
+.contact-search-box > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 27px;
+  height: 27px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: #e4e7ec;
+  color: #667085;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   STATUS FILTER
+   ========================================================= */
+
+.contact-status-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.contact-status-filter button {
+  height: 36px;
+  padding: 0 12px;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #667085;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.contact-status-filter button:hover {
+  background: #f2f4f7;
+  color: #344054;
+}
+
+.contact-status-filter button.active {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.contact-clear-filter {
+  height: 36px;
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #fff1f2;
+  color: #e11d48;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contact-clear-filter:hover {
+  transform: translateY(-1px);
+  background: #ffe4e6;
+}
+
+
+/* =========================================================
+   TABLE CARD
+   ========================================================= */
+
+.contact-table-card {
+  overflow: hidden;
+
+  border: 1px solid #e6eaf0;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 30px rgba(16, 24, 40, 0.045);
+}
+
+.contact-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 82px;
+  padding: 18px 22px;
+
+  border-bottom: 1px solid #edf0f4;
+}
+
+.contact-table-header h2 {
+  margin: 0;
+
+  color: #101828;
+
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.contact-table-header p {
+  margin: 5px 0 0;
+
+  color: #98a2b3;
+
+  font-size: 12px;
+}
+
+.contact-table-header p strong {
+  color: #475467;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+   ========================================================= */
+
+.contact-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.contact-management-table {
+  width: 100%;
+  min-width: 1100px;
+
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.contact-management-table thead {
+  background: #f8fafc;
+}
+
+.contact-management-table th {
+  padding: 13px 18px;
+
+  border-bottom: 1px solid #e8edf3;
+
+  color: #667085;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.contact-management-table td {
+  padding: 15px 18px;
+
+  border-bottom: 1px solid #eef1f5;
+
+  vertical-align: middle;
+}
+
+.contact-management-table tbody tr {
+  transition:
+    background 0.2s ease;
+}
+
+.contact-management-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.contact-management-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+
+/* =========================================================
+   PERSON CELL
+   ========================================================= */
+
+.contact-person-cell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 170px;
+}
+
+.contact-person-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 38px;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eff6ff,
+      #dbeafe
+    );
+
+  color: #2563eb;
+}
+
+.contact-person-cell > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.contact-person-cell strong {
+  max-width: 180px;
+
+  overflow: hidden;
+
+  color: #344054;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-person-cell small {
+  color: #98a2b3;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   CONTACT DETAILS
+   ========================================================= */
+
+.contact-details-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-details-cell a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  max-width: 230px;
+
+  color: #475467;
+
+  font-size: 11px;
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease;
+}
+
+.contact-details-cell a:hover {
+  color: #2563eb;
+}
+
+.contact-details-cell a span {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   SUBJECT
+   ========================================================= */
+
+.contact-subject {
+  display: inline-block;
+
+  max-width: 190px;
+
+  color: #344054;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+.contact-message-preview {
+  width: 210px;
+  margin: 0;
+
+  color: #667085;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+
+/* =========================================================
+   DATE
+   ========================================================= */
+
+.contact-date {
+  display: block;
+
+  min-width: 130px;
+
+  color: #667085;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   STATUS BADGE
+   ========================================================= */
+
+.contact-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  min-width: 78px;
+  padding: 6px 9px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.contact-status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+}
+
+.contact-status-badge.new {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.contact-status-badge.new
+.contact-status-dot {
+  background: #f97316;
+}
+
+.contact-status-badge.read {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.contact-status-badge.read
+.contact-status-dot {
+  background: #3b82f6;
+}
+
+.contact-status-badge.replied {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.contact-status-badge.replied
+.contact-status-dot {
+  background: #22c55e;
+}
+
+.contact-status-badge.closed {
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.contact-status-badge.closed
+.contact-status-dot {
+  background: #98a2b3;
+}
+
+
+/* =========================================================
+   ROW ACTIONS
+   ========================================================= */
+
+.contact-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contact-row-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid #e4e7ec;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.contact-row-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.contact-row-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contact-action-view {
+  color: #2563eb;
+}
+
+.contact-action-view:hover {
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+}
+
+.contact-action-reply {
+  color: #16a34a;
+}
+
+.contact-action-reply:hover {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+}
+
+.contact-action-delete {
+  color: #dc2626;
+}
+
+.contact-action-delete:hover {
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.contact-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 340px;
+  padding: 40px;
+  text-align: center;
+}
+
+.contact-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+
+  border-radius: 18px;
+
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.contact-empty-state h3 {
+  margin: 0 0 7px;
+
+  color: #344054;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.contact-empty-state p {
+  max-width: 400px;
+  margin: 0 0 18px;
+
+  color: #98a2b3;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.contact-empty-state button {
+  height: 38px;
+  padding: 0 15px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.contact-empty-state button:hover {
+  transform: translateY(-2px);
+  background: #1d4ed8;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.contact-management-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 70vh;
+
+  color: #667085;
+}
+
+.contact-loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 14px;
+
+  border: 3px solid #e4e7ec;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+
+  animation:
+    contactSpin 0.8s linear infinite;
+}
+
+.contact-management-loading p {
+  margin: 0;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   MODAL BACKDROP
+   ========================================================= */
+
+.contact-modal-backdrop {
+  position: fixed;
+  z-index: 9999;
+
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 23, 42, 0.58);
+
+  backdrop-filter: blur(8px);
+
+  animation:
+    contactModalFade 0.25s ease both;
+}
+
+
+/* =========================================================
+   ENQUIRY MODAL
+   ========================================================= */
+
+.contact-enquiry-modal {
+  width: min(720px, 100%);
+  max-height: min(780px, 90vh);
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.22);
+
+  animation:
+    contactModalUp 0.3s ease both;
+}
+
+
+/* =========================================================
+   MODAL HEADER
+   ========================================================= */
+
+.contact-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 23px 25px;
+
+  border-bottom: 1px solid #edf0f4;
+}
+
+.contact-modal-header > div {
+  min-width: 0;
+}
+
+.contact-modal-header span {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #2563eb;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.13em;
+}
+
+.contact-modal-header h2 {
+  margin: 0;
+
+  color: #101828;
+
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.contact-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #667085;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contact-modal-close:hover {
+  transform: rotate(4deg);
+  background: #f2f4f7;
+  color: #101828;
+}
+
+
+/* =========================================================
+   MODAL BODY
+   ========================================================= */
+
+.contact-modal-body {
+  max-height: 58vh;
+
+  overflow-y: auto;
+
+  padding: 23px 25px;
+}
+
+.contact-modal-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.contact-modal-body::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.contact-modal-body::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background: #d0d5dd;
+}
+
+
+/* =========================================================
+   MODAL CONTACT GRID
+   ========================================================= */
+
+.contact-modal-contact-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+
+  margin-bottom: 22px;
+}
+
+.contact-modal-info-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+  padding: 14px;
+
+  border: 1px solid #e6eaf0;
+  border-radius: 13px;
+
+  background: #fafbfc;
+
+  color: #2563eb;
+
+  text-decoration: none;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.contact-modal-info-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.contact-modal-info-card > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-modal-info-card span {
+  color: #98a2b3;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.1em;
+}
+
+.contact-modal-info-card strong {
+  overflow: hidden;
+
+  color: #344054;
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   MODAL FIELDS
+   ========================================================= */
+
+.contact-modal-field {
+  margin-bottom: 20px;
+}
+
+.contact-modal-field label,
+.contact-modal-status-section label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #475467;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.contact-modal-subject {
+  padding: 13px 14px;
+
+  border: 1px solid #e6eaf0;
+  border-radius: 11px;
+
+  background: #fafbfc;
+
+  color: #344054;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.contact-modal-message {
+  min-height: 130px;
+  padding: 15px;
+
+  border: 1px solid #e6eaf0;
+  border-radius: 12px;
+
+  background: #fafbfc;
+
+  color: #475467;
+
+  font-size: 13px;
+  line-height: 1.75;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   META
+   ========================================================= */
+
+.contact-modal-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 22px;
+  padding: 13px 14px;
+
+  border-radius: 11px;
+
+  background: #f8fafc;
+}
+
+.contact-modal-meta span {
+  color: #98a2b3;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.contact-modal-meta strong {
+  color: #475467;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   STATUS BUTTONS
+   ========================================================= */
+
+.contact-status-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contact-status-buttons button {
+  min-height: 36px;
+  padding: 0 13px;
+
+  border: 1px solid #e4e7ec;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #667085;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.contact-status-buttons button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #f8fafc;
+  color: #344054;
+}
+
+.contact-status-buttons button.active.new {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.contact-status-buttons button.active.read {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.contact-status-buttons button.active.replied {
+  border-color: #bbf7d0;
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.contact-status-buttons button.active.closed {
+  border-color: #d0d5dd;
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.contact-status-buttons button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MODAL FOOTER
+   ========================================================= */
+
+.contact-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+
+  padding: 17px 25px;
+
+  border-top: 1px solid #edf0f4;
+
+  background: #fcfcfd;
+}
+
+.contact-modal-footer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 39px;
+  padding: 0 14px;
+
+  border-radius: 9px;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.contact-modal-footer button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.contact-modal-footer button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.contact-modal-secondary-btn {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #475467;
+}
+
+.contact-modal-primary-btn {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.contact-modal-primary-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.contact-modal-danger-btn {
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #dc2626;
+}
+
+.contact-modal-danger-btn:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+
+/* =========================================================
+   DELETE MODAL
+   ========================================================= */
+
+.contact-delete-backdrop {
+  z-index: 10000;
+}
+
+.contact-delete-modal {
+  width: min(410px, 100%);
+
+  padding: 27px;
+
+  border: 1px solid #eaecf0;
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.24);
+
+  animation:
+    contactModalUp 0.25s ease both;
+}
+
+.contact-delete-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 56px;
+  height: 56px;
+
+  margin: 0 auto 16px;
+
+  border-radius: 16px;
+
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.contact-delete-modal h3 {
+  margin: 0 0 8px;
+
+  color: #101828;
+
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.contact-delete-modal p {
+  margin: 0 auto 23px;
+
+  color: #667085;
+
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.contact-delete-actions {
+  display: flex;
+  gap: 9px;
+}
+
+.contact-delete-actions button {
+  flex: 1;
+
+  height: 41px;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.contact-delete-cancel {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #475467;
+}
+
+.contact-delete-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  border: 1px solid #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.contact-delete-confirm:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.contact-delete-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SPINNERS / ANIMATIONS
+   ========================================================= */
+
+.contact-spin {
+  animation:
+    contactSpin 0.8s linear infinite;
+}
+
+.contact-small-spinner {
+  width: 13px;
+  height: 13px;
+
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+
+  border-radius: 50%;
+
+  animation:
+    contactSpin 0.7s linear infinite;
+}
+
+@keyframes contactSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes contactAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes contactModalFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contactModalUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE - 1200px
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .contact-stat-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 900px
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .contact-management-page {
+    padding: 24px;
+  }
+
+  .contact-management-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .contact-refresh-btn {
+    align-self: flex-start;
+  }
+
+  .contact-stat-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-filter-card {
+    align-items: stretch;
+  }
+
+  .contact-search-box {
+    width: 100%;
+  }
+
+  .contact-status-filter {
+    width: 100%;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 650px
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+  .contact-management-page {
+    padding: 16px;
+  }
+
+  .contact-management-header {
+    margin-bottom: 21px;
+  }
+
+  .contact-management-header h1 {
+    font-size: 28px;
+  }
+
+  .contact-management-header p {
+    font-size: 13px;
+  }
+
+  .contact-refresh-btn {
+    width: 100%;
+  }
+
+  .contact-stat-grid {
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 10px;
+  }
+
+  .contact-stat-card {
+    min-height: 90px;
+    padding: 13px;
+    gap: 10px;
+  }
+
+  .contact-stat-icon {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .contact-stat-card span {
+    font-size: 10px;
+  }
+
+  .contact-stat-card strong {
+    font-size: 20px;
+  }
+
+  .contact-filter-card {
+    padding: 11px;
+  }
+
+  .contact-status-filter {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+
+    padding-bottom: 3px;
+  }
+
+  .contact-status-filter button {
+    flex: 0 0 auto;
+  }
+
+  .contact-table-header {
+    padding: 16px;
+  }
+
+  .contact-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .contact-enquiry-modal {
+    width: 100%;
+    max-height: 94vh;
+
+    border-radius:
+      20px 20px 0 0;
+  }
+
+  .contact-modal-header,
+  .contact-modal-body,
+  .contact-modal-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .contact-modal-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-modal-footer {
+    justify-content: stretch;
+  }
+
+  .contact-modal-footer button {
+    flex: 1;
+  }
+
+  .contact-delete-backdrop {
+    align-items: center;
+    padding: 18px;
+  }
+
+  .contact-delete-modal {
+    width: 100%;
+    padding: 22px;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 420px
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+  .contact-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-stat-card {
+    min-height: 80px;
+  }
+
+  .contact-management-header h1 {
+    font-size: 25px;
+  }
+
+  .contact-modal-header h2 {
+    font-size: 19px;
+  }
+
+  .contact-modal-footer {
+    flex-direction: column;
+  }
+
+  .contact-modal-footer button {
+    width: 100%;
+    flex: auto;
+  }
+
+  .contact-delete-actions {
+    flex-direction: column;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .contact-management-page *,
+  .contact-management-page *::before,
+  .contact-management-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+}

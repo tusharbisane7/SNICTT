@@ -2782,3 +2782,10 @@
     transition: none !important;
   }
 }
+.mm-whatsapp-success {
+  color: #15803d;
+}
+
+.mm-whatsapp-failed {
+  color: #dc2626;
+}

@@ -19,16 +19,29 @@ import {
   AlertCircle,
   CheckCircle2,
   KeyRound,
+  FileDown,
+  Briefcase,
+  FileText,
+  CreditCard,
 } from "lucide-react";
 
 import api from "../../../services/api";
 
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 import "./UserManagement.css";
 
+
+// =========================================================
+// USER MANAGEMENT
+// =========================================================
+
 function UserManagement() {
-  // =========================================================
+
+  // =======================================================
   // STATE
-  // =========================================================
+  // =======================================================
 
   const [members, setMembers] = useState([]);
 
@@ -56,9 +69,10 @@ function UserManagement() {
   const [actionLoading, setActionLoading] =
     useState(false);
 
-  // =========================================================
-  // RESET USER PASSWORD
-  // =========================================================
+
+  // =======================================================
+  // RESET PASSWORD
+  // =======================================================
 
   const [resetPasswordMember, setResetPasswordMember] =
     useState(null);
@@ -72,14 +86,17 @@ function UserManagement() {
   const [showResetPassword, setShowResetPassword] =
     useState(false);
 
-  // =========================================================
+
+  // =======================================================
   // LOAD MEMBERS
-  // =========================================================
+  // =======================================================
 
   const loadMembers = async (
     showRefresh = false
   ) => {
+
     try {
+
       if (showRefresh) {
         setRefreshing(true);
       } else {
@@ -92,18 +109,23 @@ function UserManagement() {
         await api.get("/admin/members");
 
       if (response.data?.success) {
+
         setMembers(
           response.data.members || []
         );
+
       } else {
+
         setMembers([]);
 
         setError(
           response.data?.message ||
-            "Unable to load members."
+          "Unable to load members."
         );
       }
+
     } catch (error) {
+
       console.error(
         "Load members error:",
         error
@@ -113,155 +135,273 @@ function UserManagement() {
         error.response?.status === 401 ||
         error.response?.status === 403
       ) {
+
         setError(
           "Admin authentication expired. Please login again."
         );
+
       } else {
+
         setError(
           error.response?.data?.message ||
-            "Unable to load members."
+          "Unable to load members."
         );
       }
+
     } finally {
+
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  // =========================================================
+
+  // =======================================================
   // INITIAL LOAD
-  // =========================================================
+  // =======================================================
 
   useEffect(() => {
+
     loadMembers();
+
   }, []);
 
-  // =========================================================
-  // SUCCESS MESSAGE
-  // =========================================================
+
+  // =======================================================
+  // SUCCESS MESSAGE AUTO HIDE
+  // =======================================================
 
   useEffect(() => {
+
     if (!success) {
       return;
     }
 
-    const timer = setTimeout(() => {
-      setSuccess("");
-    }, 3500);
+    const timer =
+      setTimeout(() => {
+        setSuccess("");
+      }, 3500);
 
-    return () => clearTimeout(timer);
+    return () =>
+      clearTimeout(timer);
+
   }, [success]);
 
-  // =========================================================
+
+  // =======================================================
   // HELPERS
-  // =========================================================
+  // =======================================================
 
   const getMemberId = (member) => {
+
     return (
-      member.id ||
-      member.user_id ||
+      member?.id ||
+      member?.user_id ||
+      member?.userId ||
       null
     );
   };
 
+
   const getName = (member) => {
+
     return (
-      member.full_name ||
-      member.fullName ||
-      member.username ||
+      member?.full_name ||
+      member?.fullName ||
+      member?.name ||
+      member?.username ||
       "Unknown Member"
     );
   };
 
+
   const getUsername = (member) => {
+
     return (
-      member.username ||
+      member?.username ||
       "—"
     );
   };
+
 
   const getEmail = (member) => {
+
     return (
-      member.email ||
+      member?.email ||
       "—"
     );
   };
+
 
   const getMobile = (member) => {
+
     return (
-      member.mobile ||
-      member.phone ||
+      member?.mobile ||
+      member?.phone ||
       "—"
     );
   };
+
 
   const getAge = (member) => {
+
     return (
-      member.age ??
+      member?.age ??
       "—"
     );
   };
+
 
   const getSex = (member) => {
+
     return (
-      member.sex ||
+      member?.sex ||
+      member?.gender ||
       "—"
     );
   };
+
 
   const getAddress = (member) => {
+
     return (
-      member.address ||
+      member?.address ||
       "—"
     );
   };
+
 
   const getBloodGroup = (member) => {
+
     return (
-      member.blood_group ||
-      member.bloodGroup ||
+      member?.blood_group ||
+      member?.bloodGroup ||
       "—"
     );
   };
 
-  // =========================================================
+
+  // =======================================================
+  // DESIGNATION
+  // =======================================================
+
+  const getDesignation = (member) => {
+
+    return (
+      member?.designation ||
+      member?.job_title ||
+      member?.jobTitle ||
+      "—"
+    );
+  };
+
+
+  // =======================================================
+  // BIO
+  // =======================================================
+
+  const getBio = (member) => {
+
+    return (
+      member?.bio ||
+      member?.about ||
+      "—"
+    );
+  };
+
+
+  // =======================================================
+  // AADHAAR
+  // =======================================================
+  //
+  // IMPORTANT:
+  //
+  // Never expose the complete Aadhaar number.
+  //
+  // Supported backend fields:
+  //
+  // aadhaar_masked
+  // aadhaarMasked
+  // aadhaar_last4
+  // aadhaarLast4
+  //
+  // =======================================================
+
+  const getAadhaar = (member) => {
+
+    if (
+      member?.aadhaar_masked
+    ) {
+      return String(
+        member.aadhaar_masked
+      );
+    }
+
+    if (
+      member?.aadhaarMasked
+    ) {
+      return String(
+        member.aadhaarMasked
+      );
+    }
+
+    const last4 =
+      member?.aadhaar_last4 ||
+      member?.aadhaarLast4;
+
+    if (last4) {
+
+      return `XXXX XXXX ${String(last4).slice(-4)}`;
+    }
+
+    return "Not available";
+  };
+
+
+  // =======================================================
   // PROFILE IMAGE
-  // =========================================================
-  // The backend returns the actual uploaded profile image in:
-  //
-  //   profile_image
-  //
-  // The admin panel does NOT accept or construct a manual
-  // image URL. The value comes directly from the authenticated
-  // backend member record.
-  // =========================================================
+  // =======================================================
 
   const getProfileImage = (member) => {
-    if (!member?.profile_image) {
+
+    if (
+      !member?.profile_image_url &&
+      !member?.profile_image &&
+      !member?.profileImage &&
+      !member?.profileImageUrl
+    ) {
       return "";
     }
 
     return String(
-      member.profile_image
+      member?.profile_image_url ||
+      member?.profile_image ||
+      member?.profileImageUrl ||
+      member?.profileImage ||
+      ""
     ).trim();
   };
 
-  // =========================================================
+
+  // =======================================================
   // DATE FORMAT
-  // =========================================================
+  // =======================================================
 
   const formatDate = (value) => {
+
     if (!value) {
       return "—";
     }
 
-    const date = new Date(value);
+    const date =
+      new Date(value);
 
     if (
       Number.isNaN(
         date.getTime()
       )
     ) {
+
       return String(value);
     }
 
@@ -275,18 +415,26 @@ function UserManagement() {
     );
   };
 
+
+  // =======================================================
+  // DATE TIME FORMAT
+  // =======================================================
+
   const formatDateTime = (value) => {
+
     if (!value) {
       return "—";
     }
 
-    const date = new Date(value);
+    const date =
+      new Date(value);
 
     if (
       Number.isNaN(
         date.getTime()
       )
     ) {
+
       return String(value);
     }
 
@@ -302,11 +450,13 @@ function UserManagement() {
     );
   };
 
-  // =========================================================
+
+  // =======================================================
   // FILTER MEMBERS
-  // =========================================================
+  // =======================================================
 
   const filteredMembers = useMemo(() => {
+
     const query =
       search
         .trim()
@@ -318,6 +468,7 @@ function UserManagement() {
 
     return members.filter(
       (member) => {
+
         const name =
           String(
             getName(member)
@@ -343,25 +494,40 @@ function UserManagement() {
             getBloodGroup(member)
           ).toLowerCase();
 
+        const designation =
+          String(
+            getDesignation(member)
+          ).toLowerCase();
+
+        const bio =
+          String(
+            getBio(member)
+          ).toLowerCase();
+
         return (
           name.includes(query) ||
           username.includes(query) ||
           email.includes(query) ||
           mobile.includes(query) ||
-          bloodGroup.includes(query)
+          bloodGroup.includes(query) ||
+          designation.includes(query) ||
+          bio.includes(query)
         );
       }
     );
+
   }, [
     members,
     search,
   ]);
 
-  // =========================================================
+
+  // =======================================================
   // STATISTICS
-  // =========================================================
+  // =======================================================
 
   const stats = useMemo(() => {
+
     const total =
       members.length;
 
@@ -369,7 +535,9 @@ function UserManagement() {
       members.filter(
         (member) =>
           String(
-            member.sex || ""
+            member?.sex ||
+            member?.gender ||
+            ""
           ).toLowerCase() ===
           "male"
       ).length;
@@ -378,7 +546,9 @@ function UserManagement() {
       members.filter(
         (member) =>
           String(
-            member.sex || ""
+            member?.sex ||
+            member?.gender ||
+            ""
           ).toLowerCase() ===
           "female"
       ).length;
@@ -388,19 +558,23 @@ function UserManagement() {
       male,
       female,
     };
+
   }, [members]);
 
-  // =========================================================
+
+  // =======================================================
   // VIEW MEMBER
-  // =========================================================
+  // =======================================================
 
   const viewMember = async (
     member
   ) => {
+
     const id =
       getMemberId(member);
 
     if (!id) {
+
       setError(
         "Invalid member ID."
       );
@@ -409,6 +583,7 @@ function UserManagement() {
     }
 
     try {
+
       setError("");
 
       const response =
@@ -419,70 +594,96 @@ function UserManagement() {
       if (
         response.data?.success
       ) {
+
         setSelectedMember(
           response.data.member
         );
+
       } else {
+
         setError(
           response.data?.message ||
-            "Unable to load member."
+          "Unable to load member."
         );
       }
+
     } catch (error) {
+
       console.error(
         "View member error:",
         error
       );
 
       setError(
-        error.response?.data
-          ?.message ||
-          "Unable to load member details."
+        error.response?.data?.message ||
+        "Unable to load member details."
       );
     }
   };
 
-  // =========================================================
+
+  // =======================================================
   // EDIT MEMBER
-  // =========================================================
+  // =======================================================
 
   const startEdit = (
     member
   ) => {
+
     setEditingMember({
-      id: getMemberId(member),
+
+      id:
+        getMemberId(member),
 
       fullName:
-        member.full_name ||
+        member?.full_name ||
+        member?.fullName ||
         "",
 
       username:
-        member.username ||
+        member?.username ||
         "",
 
       email:
-        member.email ||
+        member?.email ||
         "",
 
       mobile:
-        member.mobile ||
+        member?.mobile ||
+        member?.phone ||
         "",
 
       age:
-        member.age ??
+        member?.age ??
         "",
 
       sex:
-        member.sex ||
+        member?.sex ||
+        member?.gender ||
         "",
 
       address:
-        member.address ||
+        member?.address ||
         "",
 
       bloodGroup:
-        member.blood_group ||
+        member?.blood_group ||
+        member?.bloodGroup ||
         "",
+
+      designation:
+        member?.designation ||
+        "",
+
+      bio:
+        member?.bio ||
+        "",
+
+      aadhaarNumber:
+        member?.aadhaar_number ||
+        member?.aadhaarNumber ||
+        "",
+
     });
 
     setSelectedMember(null);
@@ -490,13 +691,15 @@ function UserManagement() {
     setError("");
   };
 
-  // =========================================================
+
+  // =======================================================
   // HANDLE EDIT CHANGE
-  // =========================================================
+  // =======================================================
 
   const handleEditChange = (
     event
   ) => {
+
     const {
       name,
       value,
@@ -510,12 +713,14 @@ function UserManagement() {
     );
   };
 
-  // =========================================================
+
+  // =======================================================
   // UPDATE MEMBER
-  // =========================================================
+  // =======================================================
 
   const updateMember =
     async (event) => {
+
       event.preventDefault();
 
       if (
@@ -526,6 +731,7 @@ function UserManagement() {
       }
 
       try {
+
         setActionLoading(true);
 
         setError("");
@@ -534,6 +740,7 @@ function UserManagement() {
           await api.put(
             `/admin/members/${editingMember.id}`,
             {
+
               fullName:
                 editingMember.fullName,
 
@@ -557,34 +764,51 @@ function UserManagement() {
 
               bloodGroup:
                 editingMember.bloodGroup,
+
+              designation:
+                editingMember.designation,
+
+              bio:
+                editingMember.bio,
+
+              aadhaarNumber:
+                editingMember.aadhaarNumber,
+
             }
           );
 
         if (
           !response.data?.success
         ) {
+
           throw new Error(
-            response.data
-              ?.message ||
-              "Unable to update member."
+            response.data?.message ||
+            "Unable to update member."
           );
         }
 
         setMembers(
           (previous) =>
             previous.map(
-              (member) =>
-                String(
-                  getMemberId(
-                    member
+              (member) => {
+
+                if (
+                  String(
+                    getMemberId(member)
+                  ) ===
+                  String(
+                    editingMember.id
                   )
-                ) ===
-                String(
-                  editingMember.id
-                )
-                  ? response.data
-                      .member
-                  : member
+                ) {
+
+                  return {
+                    ...member,
+                    ...response.data.member,
+                  };
+                }
+
+                return member;
+              }
             )
         );
 
@@ -593,29 +817,34 @@ function UserManagement() {
         setSuccess(
           "Member updated successfully."
         );
+
       } catch (error) {
+
         console.error(
           "Update member error:",
           error
         );
 
         setError(
-          error.response?.data
-            ?.message ||
-            error.message ||
-            "Unable to update member."
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to update member."
         );
+
       } finally {
+
         setActionLoading(false);
       }
     };
 
-  // =========================================================
+
+  // =======================================================
   // DELETE MEMBER
-  // =========================================================
+  // =======================================================
 
   const deleteMember =
     async (member) => {
+
       if (actionLoading) {
         return;
       }
@@ -624,6 +853,7 @@ function UserManagement() {
         getMemberId(member);
 
       if (!id) {
+
         setError(
           "Invalid member ID."
         );
@@ -643,6 +873,7 @@ function UserManagement() {
       }
 
       try {
+
         setActionLoading(true);
 
         setError("");
@@ -655,10 +886,10 @@ function UserManagement() {
         if (
           !response.data?.success
         ) {
+
           throw new Error(
-            response.data
-              ?.message ||
-              "Unable to delete member."
+            response.data?.message ||
+            "Unable to delete member."
           );
         }
 
@@ -678,142 +909,516 @@ function UserManagement() {
         setSuccess(
           "Member account deleted successfully."
         );
+
       } catch (error) {
+
         console.error(
           "Delete member error:",
           error
         );
 
         setError(
-          error.response?.data
-            ?.message ||
-            error.message ||
-            "Unable to delete member."
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to delete member."
         );
+
       } finally {
+
         setActionLoading(false);
       }
     };
 
-  // =========================================================
-  // RESET USER PASSWORD
-  // =========================================================
 
-  const openResetPassword = (member) => {
-    const id = getMemberId(member);
+  // =======================================================
+  // RESET USER PASSWORD
+  // =======================================================
+
+  const openResetPassword = (
+    member
+  ) => {
+
+    const id =
+      getMemberId(member);
 
     if (!id) {
-      setError("Invalid member ID.");
+
+      setError(
+        "Invalid member ID."
+      );
+
       return;
     }
 
     setSelectedMember(null);
+
     setEditingMember(null);
-    setResetPasswordMember(member);
+
+    setResetPasswordMember(
+      member
+    );
+
     setResetPassword("");
+
     setResetPasswordConfirm("");
+
     setShowResetPassword(false);
+
     setError("");
   };
 
+
   const closeResetPassword = () => {
+
     if (!actionLoading) {
-      setResetPasswordMember(null);
+
+      setResetPasswordMember(
+        null
+      );
+
       setResetPassword("");
+
       setResetPasswordConfirm("");
+
       setShowResetPassword(false);
     }
   };
 
-  const handleResetPassword = async (event) => {
-    event.preventDefault();
 
-    if (actionLoading || !resetPasswordMember) {
-      return;
-    }
+  const handleResetPassword =
+    async (event) => {
 
-    if (resetPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
-      return;
-    }
+      event.preventDefault();
 
-    if (resetPassword !== resetPasswordConfirm) {
-      setError("New password and confirm password do not match.");
-      return;
-    }
+      if (
+        actionLoading ||
+        !resetPasswordMember
+      ) {
+        return;
+      }
 
-    const id = getMemberId(resetPasswordMember);
+      if (
+        resetPassword.length < 8
+      ) {
 
-    if (!id) {
-      setError("Invalid member ID.");
+        setError(
+          "New password must be at least 8 characters."
+        );
+
+        return;
+      }
+
+      if (
+        resetPassword !==
+        resetPasswordConfirm
+      ) {
+
+        setError(
+          "New password and confirm password do not match."
+        );
+
+        return;
+      }
+
+      const id =
+        getMemberId(
+          resetPasswordMember
+        );
+
+      if (!id) {
+
+        setError(
+          "Invalid member ID."
+        );
+
+        return;
+      }
+
+      try {
+
+        setActionLoading(true);
+
+        setError("");
+
+        const response =
+          await api.put(
+            `/admin/members/${id}/reset-password`,
+            {
+              newPassword:
+                resetPassword,
+            }
+          );
+
+        if (
+          !response.data?.success
+        ) {
+
+          throw new Error(
+            response.data?.message ||
+            "Unable to reset user password."
+          );
+        }
+
+        setSuccess(
+          `Password reset successfully for ${getName(
+            resetPasswordMember
+          )}.`
+        );
+
+        setResetPasswordMember(
+          null
+        );
+
+        setResetPassword("");
+
+        setResetPasswordConfirm("");
+
+        setShowResetPassword(false);
+
+      } catch (error) {
+
+        console.error(
+          "Reset user password error:",
+          error
+        );
+
+        setError(
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to reset user password."
+        );
+
+      } finally {
+
+        setActionLoading(false);
+      }
+    };
+
+
+  // =======================================================
+  // EXPORT MEMBERS AS PDF
+  // =======================================================
+
+  const exportMembersToPDF = () => {
+
+    if (
+      !filteredMembers.length
+    ) {
+
+      setError(
+        "There are no members to export."
+      );
+
       return;
     }
 
     try {
-      setActionLoading(true);
-      setError("");
 
-      const response = await api.put(
-        `/admin/members/${id}/reset-password`,
-        { newPassword: resetPassword }
+      const doc =
+        new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: "a4",
+        });
+
+      const generatedAt =
+        new Date();
+
+      // ---------------------------------------------------
+      // HEADER
+      // ---------------------------------------------------
+
+      doc.setFontSize(18);
+
+      doc.setFont(
+        "helvetica",
+        "bold"
       );
 
-      if (!response.data?.success) {
-        throw new Error(
-          response.data?.message ||
-            "Unable to reset user password."
+      doc.text(
+        "SNICT - Member Accounts",
+        14,
+        16
+      );
+
+      doc.setFontSize(9);
+
+      doc.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      doc.text(
+        `Generated: ${generatedAt.toLocaleString(
+          "en-IN"
+        )}`,
+        14,
+        22
+      );
+
+      doc.text(
+        `Total records: ${
+          filteredMembers.length
+        }${
+          search
+            ? ` | Search: ${search}`
+            : ""
+        }`,
+        14,
+        27
+      );
+
+
+      // ---------------------------------------------------
+      // TABLE ROWS
+      // ---------------------------------------------------
+
+      const rows =
+        filteredMembers.map(
+          (
+            member,
+            index
+          ) => [
+
+            index + 1,
+
+            getName(member),
+
+            getUsername(member),
+
+            getEmail(member),
+
+            getMobile(member),
+
+            `${getAge(member)} / ${getSex(member)}`,
+
+            getBloodGroup(member),
+
+            getDesignation(member),
+
+            getAadhaar(member),
+
+            getAddress(member),
+
+            formatDate(
+              member?.created_at ||
+              member?.createdAt
+            ),
+          ]
         );
-      }
+
+
+      // ---------------------------------------------------
+      // PDF TABLE
+      // ---------------------------------------------------
+
+      autoTable(
+        doc,
+        {
+
+          startY: 32,
+
+          head: [[
+
+            "#",
+
+            "Member",
+
+            "Username",
+
+            "Email",
+
+            "Mobile",
+
+            "Age / Gender",
+
+            "Blood",
+
+            "Designation",
+
+            "Aadhaar",
+
+            "Address",
+
+            "Joined",
+
+          ]],
+
+          body: rows,
+
+          theme: "grid",
+
+          styles: {
+
+            fontSize: 6.5,
+
+            cellPadding: 1.8,
+
+            overflow:
+              "linebreak",
+
+            valign:
+              "middle",
+          },
+
+          headStyles: {
+
+            fontStyle:
+              "bold",
+          },
+
+          columnStyles: {
+
+            0: {
+              cellWidth: 7,
+            },
+
+            1: {
+              cellWidth: 28,
+            },
+
+            2: {
+              cellWidth: 23,
+            },
+
+            3: {
+              cellWidth: 38,
+            },
+
+            4: {
+              cellWidth: 23,
+            },
+
+            5: {
+              cellWidth: 24,
+            },
+
+            6: {
+              cellWidth: 17,
+            },
+
+            7: {
+              cellWidth: 28,
+            },
+
+            8: {
+              cellWidth: 27,
+            },
+
+            9: {
+              cellWidth: 45,
+            },
+
+            10: {
+              cellWidth: 22,
+            },
+          },
+
+          didDrawPage: () => {
+
+            const pageHeight =
+              doc.internal.pageSize
+                .getHeight();
+
+            const pageWidth =
+              doc.internal.pageSize
+                .getWidth();
+
+            doc.setFontSize(8);
+
+            doc.setFont(
+              "helvetica",
+              "normal"
+            );
+
+            doc.text(
+              `SNICT Member Management | Page ${doc.internal.getNumberOfPages()}`,
+              14,
+              pageHeight - 8
+            );
+
+            doc.text(
+              "Confidential - Administrative Use Only",
+              pageWidth - 14,
+              pageHeight - 8,
+              {
+                align: "right",
+              }
+            );
+          },
+        }
+      );
+
+
+      // ---------------------------------------------------
+      // SAVE
+      // ---------------------------------------------------
+
+      const datePart =
+        generatedAt
+          .toISOString()
+          .slice(0, 10);
+
+      doc.save(
+        `SNICT-Members-${datePart}.pdf`
+      );
 
       setSuccess(
-        `Password reset successfully for ${getName(resetPasswordMember)}.`
+        `${filteredMembers.length} member record(s) exported successfully.`
       );
 
-      setResetPasswordMember(null);
-      setResetPassword("");
-      setResetPasswordConfirm("");
-      setShowResetPassword(false);
     } catch (error) {
+
       console.error(
-        "Reset user password error:",
+        "Export members PDF error:",
         error
       );
 
       setError(
-        error.response?.data?.message ||
-          error.message ||
-          "Unable to reset user password."
+        "Unable to export members as PDF."
       );
-    } finally {
-      setActionLoading(false);
     }
   };
 
-  // =========================================================
+
+  // =======================================================
   // CLOSE MODALS
-  // =========================================================
+  // =======================================================
 
   const closeViewModal = () => {
+
     setSelectedMember(null);
   };
 
+
   const closeEditModal = () => {
+
     if (!actionLoading) {
+
       setEditingMember(null);
     }
   };
 
-  // =========================================================
+
+  // =======================================================
   // LOADING
-  // =========================================================
+  // =======================================================
 
   if (loading) {
+
     return (
-      <main className="user-management-page">
 
-        <div className="user-management-loading">
+      <main
+        className="user-management-page"
+      >
 
-          <div className="user-loading-spinner" />
+        <div
+          className="user-management-loading"
+        >
+
+          <div
+            className="user-loading-spinner"
+          />
 
           <p>
             Loading member accounts...
@@ -825,24 +1430,34 @@ function UserManagement() {
     );
   }
 
-  // =========================================================
+
+  // =======================================================
   // UI
-  // =========================================================
+  // =======================================================
 
   return (
-    <main className="user-management-page">
 
-      <div className="user-management-container">
+    <main
+      className="user-management-page"
+    >
+
+      <div
+        className="user-management-container"
+      >
 
         {/* =================================================
             HEADER
         ================================================= */}
 
-        <header className="user-management-header">
+        <header
+          className="user-management-header"
+        >
 
           <div>
 
-            <span className="user-management-label">
+            <span
+              className="user-management-label"
+            >
               SNICT ADMINISTRATION
             </span>
 
@@ -858,41 +1473,77 @@ function UserManagement() {
 
           </div>
 
-          <button
-            type="button"
-            className="user-refresh-btn"
-            onClick={() =>
-              loadMembers(true)
-            }
-            disabled={
-              refreshing
-            }
+
+          <div
+            className="user-header-actions"
           >
 
-            <RefreshCw
-              size={16}
-              className={
-                refreshing
-                  ? "user-spin"
-                  : ""
+            <button
+              type="button"
+              className="user-refresh-btn"
+              onClick={() =>
+                loadMembers(true)
               }
-            />
+              disabled={
+                refreshing
+              }
+            >
 
-            {refreshing
-              ? "Refreshing..."
-              : "Refresh"}
+              <RefreshCw
+                size={16}
+                className={
+                  refreshing
+                    ? "user-spin"
+                    : ""
+                }
+              />
 
-          </button>
+              {refreshing
+                ? "Refreshing..."
+                : "Refresh"}
+
+            </button>
+
+
+            <button
+              type="button"
+              className="user-export-btn"
+              onClick={
+                exportMembersToPDF
+              }
+              disabled={
+                !filteredMembers.length ||
+                refreshing
+              }
+              title={
+                search
+                  ? "Export filtered members as PDF"
+                  : "Export all members as PDF"
+              }
+            >
+
+              <FileDown
+                size={16}
+              />
+
+              Export PDF
+
+            </button>
+
+          </div>
 
         </header>
 
 
         {/* =================================================
-            ALERT
+            ERROR
         ================================================= */}
 
         {error && (
-          <div className="user-management-alert error">
+
+          <div
+            className="user-management-alert error"
+          >
 
             <AlertCircle
               size={17}
@@ -908,7 +1559,11 @@ function UserManagement() {
                 setError("")
               }
             >
-              <X size={15} />
+
+              <X
+                size={15}
+              />
+
             </button>
 
           </div>
@@ -920,7 +1575,10 @@ function UserManagement() {
         ================================================= */}
 
         {success && (
-          <div className="user-management-alert success">
+
+          <div
+            className="user-management-alert success"
+          >
 
             <CheckCircle2
               size={17}
@@ -938,11 +1596,17 @@ function UserManagement() {
             STATS
         ================================================= */}
 
-        <section className="user-management-stats">
+        <section
+          className="user-management-stats"
+        >
 
-          <div className="user-stat-card">
+          <div
+            className="user-stat-card"
+          >
 
-            <div className="user-stat-icon">
+            <div
+              className="user-stat-icon"
+            >
               <Users size={20} />
             </div>
 
@@ -961,9 +1625,13 @@ function UserManagement() {
           </div>
 
 
-          <div className="user-stat-card">
+          <div
+            className="user-stat-card"
+          >
 
-            <div className="user-stat-icon">
+            <div
+              className="user-stat-icon"
+            >
               <User size={20} />
             </div>
 
@@ -982,9 +1650,13 @@ function UserManagement() {
           </div>
 
 
-          <div className="user-stat-card">
+          <div
+            className="user-stat-card"
+          >
 
-            <div className="user-stat-icon">
+            <div
+              className="user-stat-icon"
+            >
               <VenusAndMars
                 size={20}
               />
@@ -1005,9 +1677,13 @@ function UserManagement() {
           </div>
 
 
-          <div className="user-stat-card">
+          <div
+            className="user-stat-card"
+          >
 
-            <div className="user-stat-icon">
+            <div
+              className="user-stat-icon"
+            >
               <ShieldCheck
                 size={20}
               />
@@ -1034,15 +1710,19 @@ function UserManagement() {
             TOOLBAR
         ================================================= */}
 
-        <section className="user-management-toolbar">
+        <section
+          className="user-management-toolbar"
+        >
 
-          <div className="user-search">
+          <div
+            className="user-search"
+          >
 
             <Search size={17} />
 
             <input
               type="text"
-              placeholder="Search name, username, email, mobile..."
+              placeholder="Search name, username, email, mobile, designation..."
               value={search}
               onChange={(event) =>
                 setSearch(
@@ -1053,16 +1733,23 @@ function UserManagement() {
 
           </div>
 
+
           {search && (
-            <div className="user-search-result">
+
+            <div
+              className="user-search-result"
+            >
 
               Showing{" "}
+
               <strong>
                 {
                   filteredMembers.length
                 }
-              </strong>{" "}
-              of{" "}
+              </strong>
+
+              {" "}of{" "}
+
               <strong>
                 {members.length}
               </strong>
@@ -1077,10 +1764,11 @@ function UserManagement() {
             EMPTY
         ================================================= */}
 
-        {filteredMembers.length ===
-        0 ? (
+        {filteredMembers.length === 0 ? (
 
-          <div className="user-management-empty">
+          <div
+            className="user-management-empty"
+          >
 
             <Users
               size={44}
@@ -1097,6 +1785,7 @@ function UserManagement() {
             </p>
 
             {search && (
+
               <button
                 type="button"
                 onClick={() =>
@@ -1105,21 +1794,24 @@ function UserManagement() {
               >
                 Clear Search
               </button>
+
             )}
 
           </div>
 
         ) : (
 
-          /* =================================================
-             TABLE
-          ================================================= */
+          <section
+            className="user-table-wrapper"
+          >
 
-          <section className="user-table-wrapper">
+            <div
+              className="user-table-scroll"
+            >
 
-            <div className="user-table-scroll">
-
-              <table className="user-table">
+              <table
+                className="user-table"
+              >
 
                 <thead>
 
@@ -1135,6 +1827,10 @@ function UserManagement() {
 
                     <th>
                       Contact
+                    </th>
+
+                    <th>
+                      Designation
                     </th>
 
                     <th>
@@ -1157,6 +1853,7 @@ function UserManagement() {
 
                 </thead>
 
+
                 <tbody>
 
                   {filteredMembers.map(
@@ -1168,6 +1865,7 @@ function UserManagement() {
                         );
 
                       return (
+
                         <tr
                           key={id}
                         >
@@ -1176,46 +1874,67 @@ function UserManagement() {
 
                           <td>
 
-                            <div className="user-member-cell">
+                            <div
+                              className="user-member-cell"
+                            >
 
-                              <div className="user-member-avatar">
-                                {getProfileImage(member) ? (
+                              <div
+                                className="user-member-avatar"
+                              >
+
+                                {getProfileImage(
+                                  member
+                                ) ? (
+
                                   <img
-                                    src={getProfileImage(member)}
-                                    alt={getName(member)}
+                                    src={getProfileImage(
+                                      member
+                                    )}
+                                    alt={getName(
+                                      member
+                                    )}
                                     loading="lazy"
-                                    onError={(event) => {
+                                    onError={(
+                                      event
+                                    ) => {
+
                                       event.currentTarget.style.display =
                                         "none";
 
                                       const parent =
-                                        event.currentTarget.parentElement;
+                                        event.currentTarget
+                                          .parentElement;
 
                                       if (parent) {
+
                                         parent.classList.add(
                                           "user-avatar-image-error"
                                         );
                                       }
                                     }}
                                   />
+
                                 ) : (
-                                  <User size={16} />
+
+                                  <User
+                                    size={16}
+                                  />
+
                                 )}
+
                               </div>
+
 
                               <div>
 
                                 <strong>
-                                  {
-                                    getName(
-                                      member
-                                    )
-                                  }
+                                  {getName(
+                                    member
+                                  )}
                                 </strong>
 
                                 <span>
-                                  ID:{" "}
-                                  {id}
+                                  ID: {id}
                                 </span>
 
                               </div>
@@ -1229,13 +1948,13 @@ function UserManagement() {
 
                           <td>
 
-                            <span className="user-username">
+                            <span
+                              className="user-username"
+                            >
                               @
-                              {
-                                getUsername(
-                                  member
-                                )
-                              }
+                              {getUsername(
+                                member
+                              )}
                             </span>
 
                           </td>
@@ -1245,32 +1964,55 @@ function UserManagement() {
 
                           <td>
 
-                            <div className="user-contact-cell">
+                            <div
+                              className="user-contact-cell"
+                            >
 
                               <span>
+
                                 <Mail
                                   size={13}
                                 />
 
-                                {
-                                  getEmail(
-                                    member
-                                  )
-                                }
+                                {getEmail(
+                                  member
+                                )}
 
                               </span>
 
                               <span>
+
                                 <Phone
                                   size={13}
                                 />
 
-                                {
-                                  getMobile(
-                                    member
-                                  )
-                                }
+                                {getMobile(
+                                  member
+                                )}
 
+                              </span>
+
+                            </div>
+
+                          </td>
+
+
+                          {/* DESIGNATION */}
+
+                          <td>
+
+                            <div
+                              className="user-designation-cell"
+                            >
+
+                              <Briefcase
+                                size={14}
+                              />
+
+                              <span>
+                                {getDesignation(
+                                  member
+                                )}
                               </span>
 
                             </div>
@@ -1282,23 +2024,20 @@ function UserManagement() {
 
                           <td>
 
-                            <div className="user-basic-cell">
+                            <div
+                              className="user-basic-cell"
+                            >
 
                               <strong>
-                                {
-                                  getAge(
-                                    member
-                                  )
-                                }{" "}
-                                yrs
+                                {getAge(
+                                  member
+                                )} yrs
                               </strong>
 
                               <span>
-                                {
-                                  getSex(
-                                    member
-                                  )
-                                }
+                                {getSex(
+                                  member
+                                )}
                               </span>
 
                             </div>
@@ -1310,17 +2049,17 @@ function UserManagement() {
 
                           <td>
 
-                            <span className="user-blood-group">
+                            <span
+                              className="user-blood-group"
+                            >
 
                               <Droplets
                                 size={14}
                               />
 
-                              {
-                                getBloodGroup(
-                                  member
-                                )
-                              }
+                              {getBloodGroup(
+                                member
+                              )}
 
                             </span>
 
@@ -1331,14 +2070,17 @@ function UserManagement() {
 
                           <td>
 
-                            <span className="user-date">
+                            <span
+                              className="user-date"
+                            >
 
                               <CalendarDays
                                 size={14}
                               />
 
                               {formatDate(
-                                member.created_at
+                                member?.created_at ||
+                                member?.createdAt
                               )}
 
                             </span>
@@ -1350,7 +2092,9 @@ function UserManagement() {
 
                           <td>
 
-                            <div className="user-row-actions">
+                            <div
+                              className="user-row-actions"
+                            >
 
                               {/* VIEW */}
 
@@ -1398,14 +2142,20 @@ function UserManagement() {
                                 type="button"
                                 className="user-reset-password-btn"
                                 onClick={() =>
-                                  openResetPassword(member)
+                                  openResetPassword(
+                                    member
+                                  )
                                 }
                                 disabled={
                                   actionLoading
                                 }
                                 title="Reset password"
                               >
-                                <KeyRound size={15} />
+
+                                <KeyRound
+                                  size={15}
+                                />
+
                               </button>
 
 
@@ -1436,6 +2186,7 @@ function UserManagement() {
                           </td>
 
                         </tr>
+
                       );
                     }
                   )}
@@ -1467,6 +2218,7 @@ function UserManagement() {
               event.target ===
               event.currentTarget
             ) {
+
               closeViewModal();
             }
 
@@ -1481,7 +2233,9 @@ function UserManagement() {
 
             {/* HEADER */}
 
-            <header className="user-modal-header">
+            <header
+              className="user-modal-header"
+            >
 
               <div>
 
@@ -1490,14 +2244,13 @@ function UserManagement() {
                 </span>
 
                 <h2>
-                  {
-                    getName(
-                      selectedMember
-                    )
-                  }
+                  {getName(
+                    selectedMember
+                  )}
                 </h2>
 
               </div>
+
 
               <button
                 type="button"
@@ -1506,7 +2259,9 @@ function UserManagement() {
                 }
               >
 
-                <X size={19} />
+                <X
+                  size={19}
+                />
 
               </button>
 
@@ -1515,54 +2270,81 @@ function UserManagement() {
 
             {/* BODY */}
 
-            <div className="user-details-body">
+            <div
+              className="user-details-body"
+            >
 
               {/* PROFILE */}
 
-              <div className="user-profile-summary">
+              <div
+                className="user-profile-summary"
+              >
 
-                <div className="user-profile-avatar">
-                  {getProfileImage(selectedMember) ? (
+                <div
+                  className="user-profile-avatar"
+                >
+
+                  {getProfileImage(
+                    selectedMember
+                  ) ? (
+
                     <img
-                      src={getProfileImage(selectedMember)}
-                      alt={getName(selectedMember)}
-                      onError={(event) => {
+                      src={getProfileImage(
+                        selectedMember
+                      )}
+                      alt={getName(
+                        selectedMember
+                      )}
+                      onError={(
+                        event
+                      ) => {
+
                         event.currentTarget.style.display =
                           "none";
 
                         const parent =
-                          event.currentTarget.parentElement;
+                          event.currentTarget
+                            .parentElement;
 
                         if (parent) {
+
                           parent.classList.add(
                             "user-avatar-image-error"
                           );
                         }
                       }}
                     />
+
                   ) : (
-                    <User size={30} />
+
+                    <User
+                      size={30}
+                    />
+
                   )}
+
                 </div>
+
 
                 <div>
 
                   <h3>
-                    {
-                      getName(
-                        selectedMember
-                      )
-                    }
+                    {getName(
+                      selectedMember
+                    )}
                   </h3>
 
                   <span>
-                    @
-                    {
-                      getUsername(
-                        selectedMember
-                      )
-                    }
+                    @{getUsername(
+                      selectedMember
+                    )}
                   </span>
+
+                  <small>
+                    {getDesignation(
+                      selectedMember
+                    )}
+                  </small>
 
                 </div>
 
@@ -1571,11 +2353,17 @@ function UserManagement() {
 
               {/* PERSONAL */}
 
-              <div className="user-detail-section">
+              <div
+                className="user-detail-section"
+              >
 
-                <div className="user-detail-section-title">
+                <div
+                  className="user-detail-section-title"
+                >
 
-                  <User size={17} />
+                  <User
+                    size={17}
+                  />
 
                   <span>
                     PERSONAL INFORMATION
@@ -1584,7 +2372,9 @@ function UserManagement() {
                 </div>
 
 
-                <div className="user-detail-grid">
+                <div
+                  className="user-detail-grid"
+                >
 
                   <div>
 
@@ -1593,11 +2383,9 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getName(
-                          selectedMember
-                        )
-                      }
+                      {getName(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1611,11 +2399,9 @@ function UserManagement() {
 
                     <strong>
                       @
-                      {
-                        getUsername(
-                          selectedMember
-                        )
-                      }
+                      {getUsername(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1628,11 +2414,9 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getAge(
-                          selectedMember
-                        )
-                      }
+                      {getAge(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1645,11 +2429,9 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getSex(
-                          selectedMember
-                        )
-                      }
+                      {getSex(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1662,11 +2444,24 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getBloodGroup(
-                          selectedMember
-                        )
-                      }
+                      {getBloodGroup(
+                        selectedMember
+                      )}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Designation
+                    </span>
+
+                    <strong>
+                      {getDesignation(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1676,13 +2471,53 @@ function UserManagement() {
               </div>
 
 
+              {/* BIO */}
+
+              <div
+                className="user-detail-section"
+              >
+
+                <div
+                  className="user-detail-section-title"
+                >
+
+                  <FileText
+                    size={17}
+                  />
+
+                  <span>
+                    BIO
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="user-bio-box"
+                >
+
+                  {getBio(
+                    selectedMember
+                  )}
+
+                </div>
+
+              </div>
+
+
               {/* CONTACT */}
 
-              <div className="user-detail-section">
+              <div
+                className="user-detail-section"
+              >
 
-                <div className="user-detail-section-title">
+                <div
+                  className="user-detail-section-title"
+                >
 
-                  <Phone size={17} />
+                  <Phone
+                    size={17}
+                  />
 
                   <span>
                     CONTACT INFORMATION
@@ -1691,7 +2526,9 @@ function UserManagement() {
                 </div>
 
 
-                <div className="user-detail-grid">
+                <div
+                  className="user-detail-grid"
+                >
 
                   <div>
 
@@ -1700,11 +2537,9 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getEmail(
-                          selectedMember
-                        )
-                      }
+                      {getEmail(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1717,33 +2552,78 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getMobile(
-                          selectedMember
-                        )
-                      }
+                      {getMobile(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
 
 
-                  <div className="user-detail-full">
+                  <div
+                    className="user-detail-full"
+                  >
 
                     <span>
                       Address
                     </span>
 
                     <strong>
+
                       <MapPin
                         size={14}
                       />
 
-                      {
-                        getAddress(
-                          selectedMember
-                        )
-                      }
+                      {getAddress(
+                        selectedMember
+                      )}
 
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* IDENTITY */}
+
+              <div
+                className="user-detail-section"
+              >
+
+                <div
+                  className="user-detail-section-title"
+                >
+
+                  <CreditCard
+                    size={17}
+                  />
+
+                  <span>
+                    IDENTITY INFORMATION
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="user-detail-grid"
+                >
+
+                  <div
+                    className="user-detail-full"
+                  >
+
+                    <span>
+                      Aadhaar Number
+                    </span>
+
+                    <strong>
+                      {getAadhaar(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1755,9 +2635,13 @@ function UserManagement() {
 
               {/* ACCOUNT */}
 
-              <div className="user-detail-section">
+              <div
+                className="user-detail-section"
+              >
 
-                <div className="user-detail-section-title">
+                <div
+                  className="user-detail-section-title"
+                >
 
                   <ShieldCheck
                     size={17}
@@ -1770,7 +2654,9 @@ function UserManagement() {
                 </div>
 
 
-                <div className="user-detail-grid">
+                <div
+                  className="user-detail-grid"
+                >
 
                   <div>
 
@@ -1779,11 +2665,9 @@ function UserManagement() {
                     </span>
 
                     <strong>
-                      {
-                        getMemberId(
-                          selectedMember
-                        )
-                      }
+                      {getMemberId(
+                        selectedMember
+                      )}
                     </strong>
 
                   </div>
@@ -1797,7 +2681,8 @@ function UserManagement() {
 
                     <strong>
                       {formatDateTime(
-                        selectedMember.created_at
+                        selectedMember?.created_at ||
+                        selectedMember?.createdAt
                       )}
                     </strong>
 
@@ -1812,7 +2697,8 @@ function UserManagement() {
 
                     <strong>
                       {formatDateTime(
-                        selectedMember.updated_at
+                        selectedMember?.updated_at ||
+                        selectedMember?.updatedAt
                       )}
                     </strong>
 
@@ -1825,7 +2711,9 @@ function UserManagement() {
 
               {/* ACTIONS */}
 
-              <div className="user-modal-actions">
+              <div
+                className="user-modal-actions"
+              >
 
                 <button
                   type="button"
@@ -1858,8 +2746,13 @@ function UserManagement() {
                     actionLoading
                   }
                 >
-                  <KeyRound size={16} />
+
+                  <KeyRound
+                    size={16}
+                  />
+
                   Reset Password
+
                 </button>
 
 
@@ -1891,7 +2784,6 @@ function UserManagement() {
           </section>
 
         </div>
-
       )}
 
 
@@ -1909,6 +2801,7 @@ function UserManagement() {
               event.target ===
               event.currentTarget
             ) {
+
               closeEditModal();
             }
 
@@ -1921,7 +2814,9 @@ function UserManagement() {
             aria-modal="true"
           >
 
-            <header className="user-modal-header">
+            <header
+              className="user-modal-header"
+            >
 
               <div>
 
@@ -1935,6 +2830,7 @@ function UserManagement() {
 
               </div>
 
+
               <button
                 type="button"
                 onClick={
@@ -1945,7 +2841,9 @@ function UserManagement() {
                 }
               >
 
-                <X size={19} />
+                <X
+                  size={19}
+                />
 
               </button>
 
@@ -1961,7 +2859,9 @@ function UserManagement() {
 
               {/* FULL NAME */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Full Name
@@ -1984,7 +2884,9 @@ function UserManagement() {
 
               {/* USERNAME */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Username
@@ -2007,7 +2909,9 @@ function UserManagement() {
 
               {/* EMAIL */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Email
@@ -2030,7 +2934,9 @@ function UserManagement() {
 
               {/* MOBILE */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Mobile
@@ -2054,7 +2960,9 @@ function UserManagement() {
 
               {/* AGE */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Age
@@ -2079,7 +2987,9 @@ function UserManagement() {
 
               {/* GENDER */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Gender
@@ -2119,7 +3029,9 @@ function UserManagement() {
 
               {/* BLOOD GROUP */}
 
-              <div className="user-form-group">
+              <div
+                className="user-form-group"
+              >
 
                 <label>
                   Blood Group
@@ -2177,9 +3089,68 @@ function UserManagement() {
               </div>
 
 
+              {/* DESIGNATION */}
+
+              <div
+                className="user-form-group"
+              >
+
+                <label>
+                  Designation
+                </label>
+
+                <input
+                  type="text"
+                  name="designation"
+                  value={
+                    editingMember.designation
+                  }
+                  onChange={
+                    handleEditChange
+                  }
+                  placeholder="e.g. Software Engineer"
+                />
+
+              </div>
+
+
+              {/* AADHAAR */}
+
+              <div
+                className="user-form-group"
+              >
+
+                <label>
+                  Aadhaar Number
+                </label>
+
+                <input
+                  type="text"
+                  name="aadhaarNumber"
+                  value={
+                    editingMember.aadhaarNumber
+                  }
+                  onChange={
+                    handleEditChange
+                  }
+                  inputMode="numeric"
+                  maxLength={12}
+                  pattern="[0-9]{12}"
+                  placeholder="12 digit Aadhaar number"
+                />
+
+                <small>
+                  Aadhaar should contain exactly 12 digits.
+                </small>
+
+              </div>
+
+
               {/* ADDRESS */}
 
-              <div className="user-form-group user-form-full">
+              <div
+                className="user-form-group user-form-full"
+              >
 
                 <label>
                   Address
@@ -2200,9 +3171,46 @@ function UserManagement() {
               </div>
 
 
+              {/* BIO */}
+
+              <div
+                className="user-form-group user-form-full"
+              >
+
+                <label>
+                  Bio
+                </label>
+
+                <textarea
+                  name="bio"
+                  value={
+                    editingMember.bio
+                  }
+                  onChange={
+                    handleEditChange
+                  }
+                  rows={5}
+                  maxLength={300}
+                  placeholder="Enter member bio..."
+                />
+
+                <small>
+                  {
+                    String(
+                      editingMember.bio ||
+                      ""
+                    ).length
+                  } / 300 characters
+                </small>
+
+              </div>
+
+
               {/* FORM ACTIONS */}
 
-              <div className="user-edit-actions">
+              <div
+                className="user-edit-actions"
+              >
 
                 <button
                   type="button"
@@ -2239,88 +3247,172 @@ function UserManagement() {
           </section>
 
         </div>
-
       )}
+
 
       {/* =====================================================
           RESET USER PASSWORD MODAL
       ===================================================== */}
 
       {resetPasswordMember && (
+
         <div
           className="user-modal-overlay"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
+
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+
               closeResetPassword();
             }
+
           }}
         >
+
           <section
             className="user-reset-password-modal"
             role="dialog"
             aria-modal="true"
           >
-            <header className="user-modal-header">
+
+            <header
+              className="user-modal-header"
+            >
+
               <div>
-                <span>SECURITY MANAGEMENT</span>
-                <h2>Reset User Password</h2>
+
+                <span>
+                  SECURITY MANAGEMENT
+                </span>
+
+                <h2>
+                  Reset User Password
+                </h2>
+
               </div>
+
 
               <button
                 type="button"
-                onClick={closeResetPassword}
-                disabled={actionLoading}
+                onClick={
+                  closeResetPassword
+                }
+                disabled={
+                  actionLoading
+                }
               >
-                <X size={19} />
+
+                <X
+                  size={19}
+                />
+
               </button>
+
             </header>
+
 
             <form
               className="user-reset-password-form"
-              onSubmit={handleResetPassword}
+              onSubmit={
+                handleResetPassword
+              }
             >
-              <div className="reset-password-user-card">
-                <div className="user-member-avatar">
-                  {getProfileImage(resetPasswordMember) ? (
+
+              <div
+                className="reset-password-user-card"
+              >
+
+                <div
+                  className="user-member-avatar"
+                >
+
+                  {getProfileImage(
+                    resetPasswordMember
+                  ) ? (
+
                     <img
-                      src={getProfileImage(resetPasswordMember)}
-                      alt={getName(resetPasswordMember)}
+                      src={getProfileImage(
+                        resetPasswordMember
+                      )}
+                      alt={getName(
+                        resetPasswordMember
+                      )}
                     />
+
                   ) : (
-                    <User size={20} />
+
+                    <User
+                      size={20}
+                    />
+
                   )}
+
                 </div>
+
 
                 <div>
+
                   <strong>
-                    {getName(resetPasswordMember)}
+                    {getName(
+                      resetPasswordMember
+                    )}
                   </strong>
+
                   <span>
-                    @{getUsername(resetPasswordMember)}
+                    @
+                    {getUsername(
+                      resetPasswordMember
+                    )}
                   </span>
+
                 </div>
+
               </div>
 
-              <div className="reset-password-warning">
-                <ShieldCheck size={18} />
+
+              <div
+                className="reset-password-warning"
+              >
+
+                <ShieldCheck
+                  size={18}
+                />
+
                 <p>
-                  The existing password cannot be viewed.
-                  Enter a new password to replace it.
+                  The existing password cannot
+                  be viewed. Enter a new password
+                  to replace it.
                 </p>
+
               </div>
 
-              <div className="user-form-group">
-                <label>New Password</label>
 
-                <div className="reset-password-input-wrap">
+              <div
+                className="user-form-group"
+              >
+
+                <label>
+                  New Password
+                </label>
+
+                <div
+                  className="reset-password-input-wrap"
+                >
+
                   <input
                     type={
                       showResetPassword
                         ? "text"
                         : "password"
                     }
-                    value={resetPassword}
-                    onChange={(event) =>
+                    value={
+                      resetPassword
+                    }
+                    onChange={(
+                      event
+                    ) =>
                       setResetPassword(
                         event.target.value
                       )
@@ -2331,27 +3423,41 @@ function UserManagement() {
                     required
                   />
 
+
                   <button
                     type="button"
                     className="reset-password-toggle"
                     onClick={() =>
                       setShowResetPassword(
-                        (previous) => !previous
+                        (previous) =>
+                          !previous
                       )
                     }
                     tabIndex={-1}
                   >
-                    {showResetPassword ? "Hide" : "Show"}
+
+                    {showResetPassword
+                      ? "Hide"
+                      : "Show"}
+
                   </button>
+
                 </div>
 
                 <small>
                   Minimum 8 characters.
                 </small>
+
               </div>
 
-              <div className="user-form-group">
-                <label>Confirm New Password</label>
+
+              <div
+                className="user-form-group"
+              >
+
+                <label>
+                  Confirm New Password
+                </label>
 
                 <input
                   type={
@@ -2359,8 +3465,12 @@ function UserManagement() {
                       ? "text"
                       : "password"
                   }
-                  value={resetPasswordConfirm}
-                  onChange={(event) =>
+                  value={
+                    resetPasswordConfirm
+                  }
+                  onChange={(
+                    event
+                  ) =>
                     setResetPasswordConfirm(
                       event.target.value
                     )
@@ -2370,36 +3480,60 @@ function UserManagement() {
                   autoComplete="new-password"
                   required
                 />
+
               </div>
 
-              <div className="user-edit-actions">
+
+              <div
+                className="user-edit-actions"
+              >
+
                 <button
                   type="button"
                   className="user-form-cancel"
-                  onClick={closeResetPassword}
-                  disabled={actionLoading}
+                  onClick={
+                    closeResetPassword
+                  }
+                  disabled={
+                    actionLoading
+                  }
                 >
+
                   Cancel
+
                 </button>
+
 
                 <button
                   type="submit"
                   className="user-reset-submit"
-                  disabled={actionLoading}
+                  disabled={
+                    actionLoading
+                  }
                 >
-                  <KeyRound size={16} />
+
+                  <KeyRound
+                    size={16}
+                  />
+
                   {actionLoading
                     ? "Resetting..."
                     : "Reset Password"}
+
                 </button>
+
               </div>
+
             </form>
+
           </section>
+
         </div>
       )}
 
     </main>
   );
 }
+
 
 export default UserManagement;

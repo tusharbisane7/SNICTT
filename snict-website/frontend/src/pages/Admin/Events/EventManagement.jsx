@@ -11,24 +11,19 @@ import {
   Trash2,
   CalendarDays,
   X,
-  XCircle,
-  Users,
-  Eye,
-  EyeOff,
-  TicketCheck,
   Image as ImageIcon,
-  Search,
   RefreshCw,
-  CheckCircle2,
-  Clock3,
-  CreditCard,
-  User,
-  Mail,
-  Phone,
-  IndianRupee,
   MapPin,
+  Upload,
+  ExternalLink,
+  FolderOpen,
+  Video,
+  FileText,
   ReceiptText,
+  PlayCircle,
   AlertCircle,
+  CheckCircle2,
+  Eye,
 } from "lucide-react";
 
 import api from "../../../services/api";
@@ -37,7 +32,7 @@ import "./EventManagement.css";
 
 
 // =========================================================
-// INITIAL EVENT FORM
+// INITIAL FORM
 // =========================================================
 
 const initialForm = {
@@ -59,6 +54,17 @@ const initialForm = {
 
 
 // =========================================================
+// MEDIA TYPES
+// =========================================================
+
+const MEDIA_TYPES = {
+  IMAGE: "image",
+  VIDEO: "video",
+  DOCUMENT: "document",
+};
+
+
+// =========================================================
 // COMPONENT
 // =========================================================
 
@@ -73,7 +79,7 @@ function EventManagement() {
 
 
   // =======================================================
-  // EVENTS STATE
+  // EVENTS
   // =======================================================
 
   const [events, setEvents] =
@@ -118,7 +124,7 @@ function EventManagement() {
 
 
   // =======================================================
-  // GENERAL ERROR
+  // MESSAGES
   // =======================================================
 
   const [error, setError] =
@@ -129,86 +135,50 @@ function EventManagement() {
 
 
   // =======================================================
-  // REGISTERED USERS / BOOKINGS
+  // MEDIA MANAGEMENT
   // =======================================================
 
-  const [bookings, setBookings] =
-    useState([]);
-
-  const [bookingsLoading, setBookingsLoading] =
-    useState(false);
-
-  const [bookingsRefreshing, setBookingsRefreshing] =
-    useState(false);
-
-  const [bookingSearch, setBookingSearch] =
-    useState("");
-
-  const [bookingEventFilter, setBookingEventFilter] =
-    useState("all");
-
-  const [bookingPaymentFilter, setBookingPaymentFilter] =
-    useState("all");
-
-  const [bookingStatusFilter, setBookingStatusFilter] =
-    useState("all");
-
-  const [selectedBooking, setSelectedBooking] =
+  const [mediaEvent, setMediaEvent] =
     useState(null);
 
-  const [bookingActionLoading, setBookingActionLoading] =
+  const [mediaLoading, setMediaLoading] =
     useState(false);
 
+  const [mediaUploading, setMediaUploading] =
+    useState(false);
 
-  // =========================================================
+  const [mediaDeletingId, setMediaDeletingId] =
+    useState(null);
+
+  const [eventMedia, setEventMedia] =
+    useState({
+      gallery: [],
+      videos: [],
+      documents: [],
+    });
+
+  const [mediaType, setMediaType] =
+    useState(MEDIA_TYPES.IMAGE);
+
+  const [selectedMediaFiles, setSelectedMediaFiles] =
+    useState([]);
+
+  const mediaInputRef =
+    useRef(null);
+
+
+  // =======================================================
   // INITIAL LOAD
-  // =========================================================
+  // =======================================================
 
   useEffect(() => {
     loadEvents();
   }, []);
 
 
-  // =========================================================
-  // LOAD BOOKINGS WHEN TAB OPENED
-  // =========================================================
-
-  useEffect(() => {
-
-    if (activeTab === "registrations") {
-      loadBookings();
-    }
-
-  }, [activeTab]);
-
-
-  // =========================================================
-  // CLEAN IMAGE OBJECT URL
-  // =========================================================
-
-  useEffect(() => {
-
-    return () => {
-
-      if (
-        imagePreview &&
-        imagePreview.startsWith("blob:")
-      ) {
-
-        URL.revokeObjectURL(
-          imagePreview
-        );
-
-      }
-
-    };
-
-  }, [imagePreview]);
-
-
-  // =========================================================
-  // SUCCESS MESSAGE AUTO CLEAR
-  // =========================================================
+  // =======================================================
+  // SUCCESS AUTO CLEAR
+  // =======================================================
 
   useEffect(() => {
 
@@ -221,15 +191,58 @@ function EventManagement() {
         setSuccess("");
       }, 3500);
 
-    return () =>
-      clearTimeout(timer);
+    return () => clearTimeout(timer);
 
   }, [success]);
 
 
-  // =========================================================
+  // =======================================================
+  // IMAGE PREVIEW CLEANUP
+  // =======================================================
+
+  useEffect(() => {
+
+    return () => {
+
+      if (
+        imagePreview &&
+        imagePreview.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(imagePreview);
+      }
+
+    };
+
+  }, [imagePreview]);
+
+
+  // =======================================================
+  // MEDIA PREVIEW CLEANUP
+  // =======================================================
+
+  useEffect(() => {
+
+    return () => {
+
+      selectedMediaFiles.forEach((item) => {
+
+        if (
+          item?.preview &&
+          item.preview.startsWith("blob:")
+        ) {
+          URL.revokeObjectURL(item.preview);
+        }
+
+      });
+
+    };
+
+  }, [selectedMediaFiles]);
+
+
+  // =======================================================
   // LOAD EVENTS
-  // =========================================================
+  // =======================================================
 
   const loadEvents = async () => {
 
@@ -251,18 +264,15 @@ function EventManagement() {
           response.data.events || [];
 
         const normalizedEvents =
-          backendEvents.map(
-            (event) => ({
-              ...event,
-
-              status:
-                calculateEventStatus(
-                  event.event_date,
-                  event.start_time,
-                  event.end_time
-                ),
-            })
-          );
+          backendEvents.map((event) => ({
+            ...event,
+            status:
+              calculateEventStatus(
+                event.event_date,
+                event.start_time,
+                event.end_time
+              ),
+          }));
 
         setEvents(
           normalizedEvents
@@ -294,6 +304,7 @@ function EventManagement() {
 
         setError(
           error.response?.data?.message ||
+          error.message ||
           "Unable to load events."
         );
 
@@ -308,239 +319,9 @@ function EventManagement() {
   };
 
 
-  // =========================================================
-  // NORMALIZE ADMIN BOOKING RESPONSE
-  // =========================================================
-  //
-  // Backend /api/bookings/admin returns flat PostgreSQL fields:
-  //
-  // booking_id, booking_code, user_id, event_id, amount,
-  // booking_status, full_name, username, email, mobile,
-  // profile_image_url, event_name, event_date, start_time,
-  // end_time, venue, event_mode, payment_id,
-  // payment_status, transaction_id, pass_id, pass_code,
-  // pass_token, valid_from, valid_until, attendance_id,
-  // attendance_code, attendance_status, marked_at, marked_by
-  //
-  // Keep the original backend field names. This avoids creating
-  // a frontend shape that does not exist in the backend.
-  // =========================================================
-
-  const normalizeBooking = (booking) => ({
-    ...booking,
-
-    booking_id:
-      booking.booking_id ??
-      booking.id ??
-      null,
-
-    booking_code:
-      booking.booking_code ??
-      "",
-
-    user_id:
-      booking.user_id ??
-      null,
-
-    event_id:
-      booking.event_id ??
-      null,
-
-    amount:
-      booking.amount ??
-      0,
-
-    booking_status:
-      booking.booking_status ??
-      "payment_pending",
-
-    full_name:
-      booking.full_name ??
-      "",
-
-    username:
-      booking.username ??
-      "",
-
-    email:
-      booking.email ??
-      "",
-
-    mobile:
-      booking.mobile ??
-      "",
-
-    profile_image_url:
-      booking.profile_image_url ??
-      "",
-
-    event_name:
-      booking.event_name ??
-      "",
-
-    event_date:
-      booking.event_date ??
-      null,
-
-    start_time:
-      booking.start_time ??
-      null,
-
-    end_time:
-      booking.end_time ??
-      null,
-
-    venue:
-      booking.venue ??
-      "",
-
-    event_mode:
-      booking.event_mode ??
-      "",
-
-    payment_id:
-      booking.payment_id ??
-      null,
-
-    payment_status:
-      booking.payment_status ??
-      "pending",
-
-    transaction_id:
-      booking.transaction_id ??
-      "",
-
-    pass_id:
-      booking.pass_id ??
-      null,
-
-    pass_code:
-      booking.pass_code ??
-      "",
-
-    pass_token:
-      booking.pass_token ??
-      "",
-
-    valid_from:
-      booking.valid_from ??
-      null,
-
-    valid_until:
-      booking.valid_until ??
-      null,
-
-    attendance_id:
-      booking.attendance_id ??
-      null,
-
-    attendance_code:
-      booking.attendance_code ??
-      "",
-
-    attendance_status:
-      booking.attendance_status ??
-      "",
-
-    marked_at:
-      booking.marked_at ??
-      null,
-
-    marked_by:
-      booking.marked_by ??
-      null,
-  });
-
-
-  // =========================================================
-  // LOAD ALL BOOKINGS
-  // =========================================================
-
-  const loadBookings = async (
-    showRefresh = false
-  ) => {
-
-    try {
-
-      if (showRefresh) {
-        setBookingsRefreshing(true);
-      } else {
-        setBookingsLoading(true);
-      }
-
-      setError("");
-
-      const response =
-        await api.get(
-          "/bookings/admin"
-        );
-
-      if (
-        response.data?.success
-      ) {
-
-        const backendBookings =
-          Array.isArray(
-            response.data.bookings
-          )
-            ? response.data.bookings
-            : [];
-
-        setBookings(
-          backendBookings.map(
-            normalizeBooking
-          )
-        );
-
-      } else {
-
-        setBookings([]);
-
-        setError(
-          response.data?.message ||
-          "Unable to load registered users."
-        );
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Load event registrations error:",
-        error
-      );
-
-      if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
-      ) {
-
-        setError(
-          "Admin authentication expired. Please login again."
-        );
-
-      } else {
-
-        setError(
-          error.response?.data?.message ||
-          "Unable to load registered users."
-        );
-
-      }
-
-    } finally {
-
-      setBookingsLoading(false);
-      setBookingsRefreshing(false);
-
-    }
-
-  };
-
-
-  // =========================================================
+  // =======================================================
   // EVENT STATUS
-  // =========================================================
+  // =======================================================
 
   const calculateEventStatus = (
     eventDate,
@@ -548,87 +329,360 @@ function EventManagement() {
     endTime
   ) => {
 
-    if (!eventDate) {
+    if (
+      !eventDate ||
+      !startTime ||
+      !endTime
+    ) {
       return "upcoming";
+    }
+
+    const start =
+      new Date(
+        `${eventDate}T${startTime}`
+      );
+
+    const end =
+      new Date(
+        `${eventDate}T${endTime}`
+      );
+
+    const now =
+      new Date();
+
+    if (
+      Number.isNaN(
+        start.getTime()
+      ) ||
+      Number.isNaN(
+        end.getTime()
+      )
+    ) {
+      return "upcoming";
+    }
+
+    if (
+      now < start
+    ) {
+      return "upcoming";
+    }
+
+    if (
+      now >= start &&
+      now <= end
+    ) {
+      return "ongoing";
+    }
+
+    return "past";
+  };
+
+
+  // =======================================================
+  // DATE
+  // =======================================================
+
+  const formatDate = (
+    value
+  ) => {
+
+    if (!value) {
+      return "-";
     }
 
     try {
 
-      const dateString =
-        eventDate
-          .toString()
-          .slice(0, 10);
-
-      const startTimeString =
-        startTime
-          ?.toString()
-          .slice(0, 8) ||
-        "00:00:00";
-
-      const endTimeString =
-        endTime
-          ?.toString()
-          .slice(0, 8) ||
-        "23:59:59";
-
-      const start =
-        new Date(
-          `${dateString}T${startTimeString}+05:30`
-        );
-
-      const end =
-        new Date(
-          `${dateString}T${endTimeString}+05:30`
-        );
-
-      const now =
-        new Date();
-
-      if (
-        Number.isNaN(
-          start.getTime()
-        ) ||
-        Number.isNaN(
-          end.getTime()
-        )
-      ) {
-
-        return "upcoming";
-
-      }
-
-      if (now < start) {
-        return "upcoming";
-      }
-
-      if (
-        now >= start &&
-        now <= end
-      ) {
-
-        return "ongoing";
-
-      }
-
-      return "past";
-
-    } catch (error) {
-
-      console.error(
-        "Event status calculation error:",
-        error
+      return new Date(
+        value
+      ).toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
       );
 
-      return "upcoming";
+    } catch {
+
+      return "-";
 
     }
 
   };
 
 
-  // =========================================================
-  // EVENT FORM CHANGE
-  // =========================================================
+  // =======================================================
+  // TIME
+  // =======================================================
+
+  const formatTime = (
+    value
+  ) => {
+
+    if (!value) {
+      return "-";
+    }
+
+    const parts =
+      String(value).split(":");
+
+    if (
+      parts.length < 2
+    ) {
+      return value;
+    }
+
+    const hours =
+      Number(parts[0]);
+
+    const minutes =
+      Number(parts[1]);
+
+    const suffix =
+      hours >= 12
+        ? "PM"
+        : "AM";
+
+    const displayHour =
+      hours % 12 || 12;
+
+    return `${displayHour}:${String(
+      minutes
+    ).padStart(2, "0")} ${suffix}`;
+
+  };
+
+
+  // =======================================================
+  // CURRENCY
+  // =======================================================
+
+  const formatCurrency = (
+    value
+  ) => {
+
+    const amount =
+      Number(value || 0);
+
+    return new Intl.NumberFormat(
+      "en-IN",
+      {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }
+    ).format(amount);
+
+  };
+
+
+  // =======================================================
+  // DATE + TIME
+  // FIX: Previously missing
+  // =======================================================
+
+  const formatDateTime = (value) => {
+
+    if (!value) {
+      return "-";
+    }
+
+    try {
+
+      const date =
+        new Date(value);
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return "-";
+      }
+
+      return date.toLocaleString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }
+      );
+
+    } catch {
+
+      return "-";
+
+    }
+
+  };
+
+
+  // =======================================================
+  // FILE SIZE
+  // FIX: This fixes:
+  //
+  // ReferenceError:
+  // formatFileSize is not defined
+  // =======================================================
+
+  const formatFileSize = (
+    bytes
+  ) => {
+
+    if (
+      bytes === null ||
+      bytes === undefined ||
+      Number(bytes) <= 0
+    ) {
+      return "0 Bytes";
+    }
+
+    const size =
+      Number(bytes);
+
+    const units = [
+      "Bytes",
+      "KB",
+      "MB",
+      "GB",
+    ];
+
+    const index =
+      Math.floor(
+        Math.log(size) /
+        Math.log(1024)
+      );
+
+    const safeIndex =
+      Math.min(
+        index,
+        units.length - 1
+      );
+
+    const formattedSize =
+      size /
+      Math.pow(
+        1024,
+        safeIndex
+      );
+
+    return `${formattedSize.toFixed(
+      safeIndex === 0
+        ? 0
+        : 2
+    )} ${units[safeIndex]}`;
+
+  };
+
+
+  // =======================================================
+  // FILTERED EVENTS
+  // =======================================================
+
+  const filteredEvents =
+    useMemo(() => {
+
+      if (
+        filter === "all"
+      ) {
+        return events;
+      }
+
+      if (
+        filter === "published"
+      ) {
+        return events.filter(
+          (event) =>
+            Boolean(
+              event.published
+            )
+        );
+      }
+
+      if (
+        filter === "draft"
+      ) {
+        return events.filter(
+          (event) =>
+            !Boolean(
+              event.published
+            )
+        );
+      }
+
+      return events.filter(
+        (event) =>
+          event.status === filter
+      );
+
+    }, [
+      events,
+      filter,
+    ]);
+
+
+  // =======================================================
+  // EVENT COUNTS
+  // =======================================================
+
+  const eventCounts =
+    useMemo(() => {
+
+      return {
+
+        all:
+          events.length,
+
+        published:
+          events.filter(
+            (event) =>
+              Boolean(
+                event.published
+              )
+          ).length,
+
+        draft:
+          events.filter(
+            (event) =>
+              !Boolean(
+                event.published
+              )
+          ).length,
+
+        upcoming:
+          events.filter(
+            (event) =>
+              event.status ===
+              "upcoming"
+          ).length,
+
+        ongoing:
+          events.filter(
+            (event) =>
+              event.status ===
+              "ongoing"
+          ).length,
+
+        past:
+          events.filter(
+            (event) =>
+              event.status ===
+              "past"
+          ).length,
+
+      };
+
+    }, [events]);
+
+
+  // =======================================================
+  // HANDLE FORM CHANGE
+  // =======================================================
 
   const handleChange = (
     event
@@ -649,15 +703,16 @@ function EventManagement() {
           type === "checkbox"
             ? checked
             : value,
+
       })
     );
 
   };
 
 
-  // =========================================================
-  // IMAGE SELECT
-  // =========================================================
+  // =======================================================
+  // IMAGE CHANGE
+  // =======================================================
 
   const handleImageChange = (
     event
@@ -690,7 +745,6 @@ function EventManagement() {
       event.target.value = "";
 
       return;
-
     }
 
     if (
@@ -699,106 +753,71 @@ function EventManagement() {
     ) {
 
       setError(
-        "Event image must be 5 MB or smaller."
+        "Event cover image must be 5 MB or smaller."
       );
 
       event.target.value = "";
 
       return;
-
     }
 
     setError("");
 
-    if (
-      imagePreview &&
-      imagePreview.startsWith("blob:")
-    ) {
-
-      URL.revokeObjectURL(
-        imagePreview
-      );
-
-    }
-
     setImageFile(file);
 
-    const previewUrl =
+    const preview =
       URL.createObjectURL(file);
 
-    setImagePreview(
-      previewUrl
-    );
+    setImagePreview(preview);
 
   };
 
 
-  // =========================================================
-  // REMOVE IMAGE
-  // =========================================================
+  // =======================================================
+  // RESET FORM
+  // =======================================================
 
-  const removeSelectedImage =
-    () => {
-
-      if (
-        imagePreview &&
-        imagePreview.startsWith("blob:")
-      ) {
-
-        URL.revokeObjectURL(
-          imagePreview
-        );
-
-      }
-
-      setImageFile(null);
-      setImagePreview("");
-
-      if (
-        imageInputRef.current
-      ) {
-
-        imageInputRef.current.value =
-          "";
-
-      }
-
-    };
-
-
-  // =========================================================
-  // CREATE EVENT
-  // =========================================================
-
-  const openCreate = () => {
-
-    setEditingId(null);
+  const resetForm = () => {
 
     setForm({
       ...initialForm,
     });
 
+    setEditingId(null);
+
     setImageFile(null);
+
     setImagePreview("");
 
     if (
       imageInputRef.current
     ) {
-
-      imageInputRef.current.value =
-        "";
-
+      imageInputRef.current.value = "";
     }
-
-    setShowForm(true);
-    setError("");
 
   };
 
 
-  // =========================================================
-  // EDIT EVENT
-  // =========================================================
+  // =======================================================
+  // OPEN CREATE
+  // =======================================================
+
+  const openCreate = () => {
+
+    resetForm();
+
+    setError("");
+
+    setSuccess("");
+
+    setShowForm(true);
+
+  };
+
+
+  // =======================================================
+  // OPEN EDIT
+  // =======================================================
 
   const openEdit = (
     event
@@ -818,34 +837,34 @@ function EventManagement() {
         "CME",
 
       description:
-        event.description ||
-        "",
+        event.description || "",
 
       doctorName:
-        event.doctor_name ||
-        "",
+        event.doctor_name || "",
 
       specialization:
-        event.specialization ||
-        "",
+        event.specialization || "",
 
       eventDate:
         event.event_date
-          ?.toString()
-          .slice(0, 10) ||
-        "",
+          ? String(
+              event.event_date
+            ).slice(0, 10)
+          : "",
 
       startTime:
         event.start_time
-          ?.toString()
-          .slice(0, 5) ||
-        "",
+          ? String(
+              event.start_time
+            ).slice(0, 5)
+          : "",
 
       endTime:
         event.end_time
-          ?.toString()
-          .slice(0, 5) ||
-        "",
+          ? String(
+              event.end_time
+            ).slice(0, 5)
+          : "",
 
       venue:
         event.venue || "",
@@ -881,21 +900,21 @@ function EventManagement() {
     if (
       imageInputRef.current
     ) {
-
-      imageInputRef.current.value =
-        "";
-
+      imageInputRef.current.value = "";
     }
 
-    setShowForm(true);
     setError("");
+
+    setSuccess("");
+
+    setShowForm(true);
 
   };
 
 
-  // =========================================================
+  // =======================================================
   // CLOSE FORM
-  // =========================================================
+  // =======================================================
 
   const closeForm = () => {
 
@@ -903,157 +922,35 @@ function EventManagement() {
       return;
     }
 
-    if (
-      imagePreview &&
-      imagePreview.startsWith("blob:")
-    ) {
-
-      URL.revokeObjectURL(
-        imagePreview
-      );
-
-    }
-
     setShowForm(false);
 
-    setEditingId(null);
+    resetForm();
 
-    setForm({
-      ...initialForm,
-    });
+  };
+
+
+  // =======================================================
+  // REMOVE IMAGE
+  // =======================================================
+
+  const removeSelectedImage = () => {
 
     setImageFile(null);
+
     setImagePreview("");
 
     if (
       imageInputRef.current
     ) {
-
-      imageInputRef.current.value =
-        "";
-
+      imageInputRef.current.value = "";
     }
 
   };
 
 
-  // =========================================================
-  // VALIDATE EVENT
-  // =========================================================
-
-  const validateForm = () => {
-
-    if (!form.title.trim()) {
-
-      setError(
-        "Event title is required."
-      );
-
-      return false;
-
-    }
-
-    if (!form.eventDate) {
-
-      setError(
-        "Event date is required."
-      );
-
-      return false;
-
-    }
-
-    if (!form.startTime) {
-
-      setError(
-        "Start time is required."
-      );
-
-      return false;
-
-    }
-
-    if (!form.endTime) {
-
-      setError(
-        "End time is required."
-      );
-
-      return false;
-
-    }
-
-    const start =
-      new Date(
-        `${form.eventDate}T${form.startTime}:00`
-      );
-
-    const end =
-      new Date(
-        `${form.eventDate}T${form.endTime}:00`
-      );
-
-    if (
-      Number.isNaN(
-        start.getTime()
-      ) ||
-      Number.isNaN(
-        end.getTime()
-      )
-    ) {
-
-      setError(
-        "Invalid date or time."
-      );
-
-      return false;
-
-    }
-
-    if (end <= start) {
-
-      setError(
-        "End time must be after start time."
-      );
-
-      return false;
-
-    }
-
-    if (
-      form.price !== "" &&
-      Number(form.price) < 0
-    ) {
-
-      setError(
-        "Price cannot be negative."
-      );
-
-      return false;
-
-    }
-
-    if (
-      form.maxSlots !== "" &&
-      Number(form.maxSlots) <= 0
-    ) {
-
-      setError(
-        "Maximum slots must be greater than zero."
-      );
-
-      return false;
-
-    }
-
-    return true;
-
-  };
-
-
-  // =========================================================
-  // SAVE EVENT
-  // =========================================================
+  // =======================================================
+  // SUBMIT EVENT
+  // =======================================================
 
   const handleSubmit = async (
     event
@@ -1061,19 +958,13 @@ function EventManagement() {
 
     event.preventDefault();
 
-    if (saving) {
-      return;
-    }
-
-    setError("");
-
-    if (!validateForm()) {
-      return;
-    }
-
     try {
 
       setSaving(true);
+
+      setError("");
+
+      setSuccess("");
 
       const payload =
         new FormData();
@@ -1090,17 +981,17 @@ function EventManagement() {
 
       payload.append(
         "description",
-        form.description.trim()
+        form.description
       );
 
       payload.append(
         "doctorName",
-        form.doctorName.trim()
+        form.doctorName
       );
 
       payload.append(
         "specialization",
-        form.specialization.trim()
+        form.specialization
       );
 
       payload.append(
@@ -1120,7 +1011,7 @@ function EventManagement() {
 
       payload.append(
         "venue",
-        form.venue.trim()
+        form.venue
       );
 
       payload.append(
@@ -1130,25 +1021,19 @@ function EventManagement() {
 
       payload.append(
         "price",
-        form.price === ""
-          ? "0"
-          : String(
-              Number(
-                form.price
-              )
-            )
+        form.price || "0"
       );
 
-      payload.append(
-        "maxSlots",
-        form.maxSlots === ""
-          ? ""
-          : String(
-              Number(
-                form.maxSlots
-              )
-            )
-      );
+      if (
+        form.maxSlots !== ""
+      ) {
+
+        payload.append(
+          "maxSlots",
+          form.maxSlots
+        );
+
+      }
 
       payload.append(
         "bookingEnabled",
@@ -1164,6 +1049,29 @@ function EventManagement() {
         )
       );
 
+
+      // =====================================================
+      // EXISTING IMAGE DURING EDIT
+      // =====================================================
+
+      if (
+        !imageFile &&
+        editingId &&
+        imagePreview
+      ) {
+
+        payload.append(
+          "imageUrl",
+          imagePreview
+        );
+
+      }
+
+
+      // =====================================================
+      // NEW COVER IMAGE
+      // =====================================================
+
       if (imageFile) {
 
         payload.append(
@@ -1173,23 +1081,51 @@ function EventManagement() {
 
       }
 
+
+      let response;
+
+
+      // =====================================================
+      // UPDATE
+      // =====================================================
+
       if (editingId) {
 
-        await api.put(
-          `/events/admin/${editingId}`,
-          payload
-        );
+        response =
+          await api.put(
+            `/events/admin/${editingId}`,
+            payload
+          );
 
-      } else {
+      }
 
-        await api.post(
-          "/events/admin",
-          payload
+
+      // =====================================================
+      // CREATE
+      // =====================================================
+
+      else {
+
+        response =
+          await api.post(
+            "/events/admin",
+            payload
+          );
+
+      }
+
+
+      if (
+        !response.data?.success
+      ) {
+
+        throw new Error(
+          response.data?.message ||
+          "Unable to save event."
         );
 
       }
 
-      closeForm();
 
       setSuccess(
         editingId
@@ -1197,7 +1133,12 @@ function EventManagement() {
           : "Event created successfully."
       );
 
+      setShowForm(false);
+
+      resetForm();
+
       await loadEvents();
+
 
     } catch (error) {
 
@@ -1208,8 +1149,10 @@ function EventManagement() {
 
       setError(
         error.response?.data?.message ||
+        error.message ||
         "Unable to save event."
       );
+
 
     } finally {
 
@@ -1220,17 +1163,17 @@ function EventManagement() {
   };
 
 
-  // =========================================================
+  // =======================================================
   // DELETE EVENT
-  // =========================================================
+  // =======================================================
 
-  const deleteEvent = async (
-    id
+  const handleDeleteEvent = async (
+    event
   ) => {
 
     const confirmed =
       window.confirm(
-        "Are you sure you want to delete this event?"
+        `Are you sure you want to delete "${event.title}"?`
       );
 
     if (!confirmed) {
@@ -1239,12 +1182,27 @@ function EventManagement() {
 
     try {
 
-      setDeletingId(id);
+      setDeletingId(
+        event.id
+      );
+
       setError("");
 
-      await api.delete(
-        `/events/admin/${id}`
-      );
+      const response =
+        await api.delete(
+          `/events/admin/${event.id}`
+        );
+
+      if (
+        !response.data?.success
+      ) {
+
+        throw new Error(
+          response.data?.message ||
+          "Unable to delete event."
+        );
+
+      }
 
       setSuccess(
         "Event deleted successfully."
@@ -1261,6 +1219,7 @@ function EventManagement() {
 
       setError(
         error.response?.data?.message ||
+        error.message ||
         "Unable to delete event."
       );
 
@@ -1274,351 +1233,1421 @@ function EventManagement() {
 
 
   // =========================================================
-  // FILTER EVENTS
+  // OPEN MEDIA MANAGER
   // =========================================================
 
-  const filteredEvents =
-    events.filter(
-      (event) => {
-
-        if (filter === "all") {
-          return true;
-        }
-
-        if (
-          filter === "upcoming"
-        ) {
-
-          return (
-            event.status ===
-            "upcoming"
-          );
-
-        }
-
-        if (
-          filter === "ongoing"
-        ) {
-
-          return (
-            event.status ===
-            "ongoing"
-          );
-
-        }
-
-        if (
-          filter === "past"
-        ) {
-
-          return (
-            event.status ===
-            "past"
-          );
-
-        }
-
-        if (
-          filter === "published"
-        ) {
-
-          return (
-            event.published ===
-            true
-          );
-
-        }
-
-        if (
-          filter === "draft"
-        ) {
-
-          return (
-            event.published ===
-            false
-          );
-
-        }
-
-        return true;
-
-      }
-    );
-
-
-  // =========================================================
-  // BOOKING HELPERS
-  // =========================================================
-
-  const getBookingId = (
-    booking
+  const openMediaManager = async (
+    event
   ) => {
 
-    return (
-      booking.booking_code ||
-      booking.booking_id ||
-      booking.id ||
-      "N/A"
+    setMediaEvent(event);
+
+    setMediaType(
+      MEDIA_TYPES.IMAGE
+    );
+
+    setSelectedMediaFiles([]);
+
+    setError("");
+
+    await loadEventMedia(
+      event.id
     );
 
   };
 
 
-  const getDatabaseBookingId = (
-    booking
+  // =========================================================
+  // CLOSE MEDIA MANAGER
+  // =========================================================
+
+  const closeMediaManager = () => {
+
+    if (mediaUploading) {
+      return;
+    }
+
+    clearSelectedMedia();
+
+    setMediaEvent(null);
+
+    setEventMedia({
+      gallery: [],
+      videos: [],
+      documents: [],
+    });
+
+  };
+
+
+  // =========================================================
+  // LOAD EVENT MEDIA
+  // =========================================================
+
+  const loadEventMedia = async (
+    eventId
   ) => {
 
-    // Backend admin booking API returns:
-    // b.id AS booking_id
+    if (!eventId) {
+      return;
+    }
+
+    try {
+
+      setMediaLoading(true);
+
+      setError("");
+
+      const response =
+        await api.get(
+          `/events/admin/${eventId}/media`
+        );
+
+      if (
+        !response.data?.success
+      ) {
+
+        throw new Error(
+          response.data?.message ||
+          "Unable to load event media."
+        );
+
+      }
+
+      setEventMedia({
+
+        gallery:
+          Array.isArray(
+            response.data.gallery
+          )
+            ? response.data.gallery
+            : [],
+
+        videos:
+          Array.isArray(
+            response.data.videos
+          )
+            ? response.data.videos
+            : [],
+
+        documents:
+          Array.isArray(
+            response.data.documents
+          )
+            ? response.data.documents
+            : [],
+
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Load event media error:",
+        error
+      );
+
+      setError(
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to load event media."
+      );
+
+    } finally {
+
+      setMediaLoading(false);
+
+    }
+
+  };
+
+
+  // =========================================================
+  // ACTIVE MEDIA
+  // =========================================================
+
+  const activeMediaItems =
+    useMemo(() => {
+
+      if (
+        mediaType ===
+        MEDIA_TYPES.IMAGE
+      ) {
+
+        return eventMedia.gallery;
+
+      }
+
+      if (
+        mediaType ===
+        MEDIA_TYPES.VIDEO
+      ) {
+
+        return eventMedia.videos;
+
+      }
+
+      return eventMedia.documents;
+
+    }, [
+      mediaType,
+      eventMedia,
+    ]);
+
+
+  // =========================================================
+  // MEDIA COUNTS
+  // =========================================================
+
+  const mediaCounts = {
+
+    images:
+      eventMedia.gallery.length,
+
+    videos:
+      eventMedia.videos.length,
+
+    documents:
+      eventMedia.documents.length,
+
+  };
+
+
+  // =========================================================
+  // MEDIA ACCEPT
+  // =========================================================
+
+  const getMediaAccept = () => {
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.IMAGE
+    ) {
+
+      return [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+      ].join(",");
+
+    }
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.VIDEO
+    ) {
+
+      return [
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+      ].join(",");
+
+    }
+
+    return [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ].join(",");
+
+  };
+
+
+  // =========================================================
+  // MEDIA FILE VALIDATION
+  // =========================================================
+
+  const validateMediaFile = (
+    file
+  ) => {
+
+    if (!file) {
+      return false;
+    }
+
+
+    // -------------------------------------------------------
+    // IMAGE
+    // -------------------------------------------------------
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.IMAGE
+    ) {
+
+      const allowed = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+      ];
+
+      if (
+        !allowed.includes(
+          file.type
+        )
+      ) {
+
+        setError(
+          `"${file.name}" is not a supported image.`
+        );
+
+        return false;
+
+      }
+
+    }
+
+
+    // -------------------------------------------------------
+    // VIDEO
+    // -------------------------------------------------------
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.VIDEO
+    ) {
+
+      const allowed = [
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+      ];
+
+      if (
+        !allowed.includes(
+          file.type
+        )
+      ) {
+
+        setError(
+          `"${file.name}" is not a supported video. Use MP4, WEBM or MOV.`
+        );
+
+        return false;
+
+      }
+
+    }
+
+
+    // -------------------------------------------------------
+    // DOCUMENT
+    // -------------------------------------------------------
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.DOCUMENT
+    ) {
+
+      const extension =
+        file.name
+          .substring(
+            file.name.lastIndexOf(".")
+          )
+          .toLowerCase();
+
+      const allowedExtensions = [
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".ppt",
+        ".pptx",
+      ];
+
+      if (
+        !allowedExtensions.includes(
+          extension
+        )
+      ) {
+
+        setError(
+          `"${file.name}" is not a supported document.`
+        );
+
+        return false;
+
+      }
+
+    }
+
+
+    // -------------------------------------------------------
+    // FILE SIZE
+    // -------------------------------------------------------
+
+    if (
+      file.size >
+      100 * 1024 * 1024
+    ) {
+
+      setError(
+        `"${file.name}" exceeds the 100 MB limit.`
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  };
+
+
+  // =========================================================
+  // MEDIA FILE CHANGE
+  // =========================================================
+
+  const handleMediaFilesChange = (
+    event
+  ) => {
+
+    const files =
+      Array.from(
+        event.target.files || []
+      );
+
+    if (
+      files.length === 0
+    ) {
+      return;
+    }
+
+
+    // Backend supports maximum 20 files
+
+    if (
+      files.length > 20
+    ) {
+
+      setError(
+        "You can upload maximum 20 files at once."
+      );
+
+      event.target.value = "";
+
+      return;
+
+    }
+
+
+    setError("");
+
+    const validFiles = [];
+
+
+    files.forEach(
+      (file) => {
+
+        if (
+          validateMediaFile(
+            file
+          )
+        ) {
+
+          validFiles.push({
+
+            file,
+
+            preview:
+              file.type.startsWith(
+                "image/"
+              )
+                ? URL.createObjectURL(
+                    file
+                  )
+                : "",
+
+          });
+
+        }
+
+      }
+    );
+
+
+    if (
+      validFiles.length === 0
+    ) {
+
+      event.target.value = "";
+
+      return;
+
+    }
+
+
+    // Cleanup old previews
+
+    selectedMediaFiles.forEach(
+      (item) => {
+
+        if (
+          item?.preview &&
+          item.preview.startsWith(
+            "blob:"
+          )
+        ) {
+
+          URL.revokeObjectURL(
+            item.preview
+          );
+
+        }
+
+      }
+    );
+
+
+    setSelectedMediaFiles(
+      validFiles
+    );
+
+  };
+
+
+  // =========================================================
+  // REMOVE SELECTED MEDIA
+  // =========================================================
+
+  const removeSelectedMediaFile = (
+    index
+  ) => {
+
+    setSelectedMediaFiles(
+      (previous) => {
+
+        const item =
+          previous[index];
+
+        if (
+          item?.preview &&
+          item.preview.startsWith(
+            "blob:"
+          )
+        ) {
+
+          URL.revokeObjectURL(
+            item.preview
+          );
+
+        }
+
+        return previous.filter(
+          (_, itemIndex) =>
+            itemIndex !== index
+        );
+
+      }
+    );
+
+  };
+
+
+  // =========================================================
+  // CLEAR SELECTED MEDIA
+  // =========================================================
+
+  const clearSelectedMedia = () => {
+
+    selectedMediaFiles.forEach(
+      (item) => {
+
+        if (
+          item?.preview &&
+          item.preview.startsWith(
+            "blob:"
+          )
+        ) {
+
+          URL.revokeObjectURL(
+            item.preview
+          );
+
+        }
+
+      }
+    );
+
+    setSelectedMediaFiles([]);
+
+    if (
+      mediaInputRef.current
+    ) {
+
+      mediaInputRef.current.value = "";
+
+    }
+
+  };
+
+
+  // =========================================================
+  // UPLOAD EVENT MEDIA
+  // =========================================================
+
+  const uploadEventMediaFiles =
+    async () => {
+
+      if (
+        !mediaEvent?.id
+      ) {
+
+        setError(
+          "Please select an event first."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        selectedMediaFiles.length === 0
+      ) {
+
+        setError(
+          "Please select at least one file."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        setMediaUploading(true);
+
+        setError("");
+
+        setSuccess("");
+
+
+        const payload =
+          new FormData();
+
+
+        // Backend expects "type"
+
+        payload.append(
+          "type",
+          mediaType
+        );
+
+
+        // Backend expects "files"
+
+        selectedMediaFiles.forEach(
+          (item) => {
+
+            payload.append(
+              "files",
+              item.file
+            );
+
+          }
+        );
+
+
+        const response =
+          await api.post(
+            `/events/admin/${mediaEvent.id}/media`,
+            payload
+          );
+
+
+        if (
+          !response.data?.success
+        ) {
+
+          throw new Error(
+            response.data?.message ||
+            "Unable to upload event media."
+          );
+
+        }
+
+
+        setSuccess(
+          mediaType ===
+          MEDIA_TYPES.IMAGE
+            ? "Gallery images uploaded successfully."
+            : mediaType ===
+              MEDIA_TYPES.VIDEO
+              ? "Videos uploaded successfully."
+              : "Documents uploaded successfully."
+        );
+
+
+        clearSelectedMedia();
+
+
+        await loadEventMedia(
+          mediaEvent.id
+        );
+
+
+        await loadEvents();
+
+
+      } catch (error) {
+
+        console.error(
+          "Upload event media error:",
+          error
+        );
+
+        setError(
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to upload event media."
+        );
+
+
+      } finally {
+
+        setMediaUploading(false);
+
+      }
+
+    };
+
+
+  // =========================================================
+  // GET MEDIA ID
+  // =========================================================
+
+  const getMediaId = (
+    media
+  ) => {
+
     return (
-      booking.booking_id ||
-      booking.id ||
+      media?.id ||
+      media?.media_id ||
       null
     );
 
   };
 
 
-  const getUserName = (
-    booking
-  ) => {
+  // =========================================================
+  // GET MEDIA URL
+  // =========================================================
 
-    // Backend returns u.full_name
-    return (
-      booking.full_name ||
-      booking.user_name ||
-      booking.username ||
-      booking.user?.name ||
-      booking.user?.fullName ||
-      "Unknown User"
-    );
-
-  };
-
-
-  const getUsername = (
-    booking
+  const getMediaUrl = (
+    media
   ) => {
 
     return (
-      booking.username ||
-      booking.user?.username ||
-      "—"
-    );
-
-  };
-
-
-  const getEmail = (
-    booking
-  ) => {
-
-    return (
-      booking.email ||
-      booking.user_email ||
-      booking.user?.email ||
-      "—"
-    );
-
-  };
-
-
-  const getPhone = (
-    booking
-  ) => {
-
-    // Backend returns u.mobile
-    return (
-      booking.mobile ||
-      booking.phone ||
-      booking.user_phone ||
-      booking.user?.mobile ||
-      booking.user?.phone ||
-      "—"
-    );
-
-  };
-
-
-  const getEventId = (
-    booking
-  ) => {
-
-    return (
-      booking.event_id ||
-      booking.eventId ||
-      booking.event?.id ||
+      media?.image_url ||
+      media?.video_url ||
+      media?.file_url ||
+      media?.secure_url ||
+      media?.url ||
       ""
     );
 
   };
 
 
-  const getEventName = (
-    booking
+  // =========================================================
+  // GET MEDIA NAME
+  // =========================================================
+
+  const getMediaName = (
+    media
   ) => {
 
-    // Backend returns e.title AS event_name
     return (
-      booking.event_name ||
-      booking.event_title ||
-      booking.event?.title ||
-      booking.event?.name ||
-      booking.title ||
-      "Unknown Event"
+      media?.file_name ||
+      media?.original_name ||
+      media?.originalName ||
+      media?.title ||
+      media?.name ||
+      "Media File"
     );
 
   };
 
 
-  const getEventType = (
-    booking
+  // =========================================================
+  // GET DOCUMENT ICON
+  // =========================================================
+
+  const getDocumentIcon = (
+    media
   ) => {
 
-    // Current admin booking API returns event_mode,
-    // not event_type.
+    const name =
+      getMediaName(
+        media
+      ).toLowerCase();
+
+
+    if (
+      name.endsWith(".ppt") ||
+      name.endsWith(".pptx")
+    ) {
+
+      return (
+        <ReceiptText
+          size={30}
+        />
+      );
+
+    }
+
+
     return (
-      booking.event_type ||
-      booking.event?.event_type ||
-      booking.event_mode ||
+      <FileText
+        size={30}
+      />
+    );
+
+  };
+
+
+  // =========================================================
+  // OPEN MEDIA URL
+  // =========================================================
+
+  const openMediaUrl = (
+    media
+  ) => {
+
+    const url =
+      getMediaUrl(
+        media
+      );
+
+
+    if (!url) {
+
+      setError(
+        "Media URL is not available."
+      );
+
+      return;
+
+    }
+
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+  };
+
+
+  // =========================================================
+  // DELETE EVENT MEDIA
+  // =========================================================
+
+  const deleteEventMedia =
+    async (media) => {
+
+      if (
+        !mediaEvent?.id
+      ) {
+        return;
+      }
+
+
+      const mediaId =
+        getMediaId(
+          media
+        );
+
+
+      if (!mediaId) {
+
+        setError(
+          "Invalid media ID."
+        );
+
+        return;
+
+      }
+
+
+      const confirmed =
+        window.confirm(
+          `Are you sure you want to delete "${getMediaName(
+            media
+          )}"?`
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      try {
+
+        setMediaDeletingId(
+          mediaId
+        );
+
+        setError("");
+
+        setSuccess("");
+
+
+        const response =
+          await api.delete(
+            `/events/admin/${mediaEvent.id}/media/${encodeURIComponent(
+              mediaId
+            )}`,
+            {
+              params: {
+                type: mediaType,
+              },
+            }
+          );
+
+
+        if (
+          !response.data?.success
+        ) {
+
+          throw new Error(
+            response.data?.message ||
+            "Unable to delete media."
+          );
+
+        }
+
+
+        setSuccess(
+          "Media deleted successfully."
+        );
+
+
+        await loadEventMedia(
+          mediaEvent.id
+        );
+
+
+        await loadEvents();
+
+
+      } catch (error) {
+
+        console.error(
+          "Delete event media error:",
+          error
+        );
+
+        setError(
+          error.response?.data?.message ||
+          error.message ||
+          "Unable to delete media."
+        );
+
+
+      } finally {
+
+        setMediaDeletingId(null);
+
+      }
+
+    };
+
+
+  // =========================================================
+  // RENDER MEDIA PREVIEW
+  // =========================================================
+
+  const renderMediaPreview = (
+    media
+  ) => {
+
+    const url =
+      getMediaUrl(
+        media
+      );
+
+
+    // IMAGE
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.IMAGE
+    ) {
+
+      if (!url) {
+
+        return (
+          <div className="event-media-empty-preview">
+
+            <ImageIcon
+              size={30}
+            />
+
+            <span>
+              Preview unavailable
+            </span>
+
+          </div>
+        );
+
+      }
+
+
+      return (
+        <img
+          src={url}
+          alt={
+            getMediaName(
+              media
+            )
+          }
+        />
+      );
+
+    }
+
+
+    // VIDEO
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.VIDEO
+    ) {
+
+      if (!url) {
+
+        return (
+          <div className="event-media-empty-preview">
+
+            <Video
+              size={30}
+            />
+
+            <span>
+              Video unavailable
+            </span>
+
+          </div>
+        );
+
+      }
+
+
+      return (
+        <video
+          src={url}
+          controls
+          preload="metadata"
+        />
+      );
+
+    }
+
+
+    // DOCUMENT
+
+    return (
+      <div className="event-media-document-preview">
+
+        <div className="event-media-document-icon">
+
+          {getDocumentIcon(
+            media
+          )}
+
+        </div>
+
+        <strong
+          title={
+            getMediaName(
+              media
+            )
+          }
+        >
+          {getMediaName(
+            media
+          )}
+        </strong>
+
+      </div>
+    );
+
+  };
+    // =========================================================
+  // RENDER SELECTED FILE PREVIEW
+  // =========================================================
+
+  const renderSelectedFilePreview = (
+    item
+  ) => {
+
+    if (!item?.file) {
+      return null;
+    }
+
+    const file =
+      item.file;
+
+
+    // =======================================================
+    // IMAGE
+    // =======================================================
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.IMAGE
+    ) {
+
+      return (
+        <div className="event-selected-file-image">
+
+          {item.preview ? (
+            <img
+              src={item.preview}
+              alt={file.name}
+            />
+          ) : (
+            <ImageIcon
+              size={30}
+            />
+          )}
+
+        </div>
+      );
+
+    }
+
+
+    // =======================================================
+    // VIDEO
+    // =======================================================
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.VIDEO
+    ) {
+
+      return (
+        <div className="event-selected-file-video">
+
+          <Video
+            size={30}
+          />
+
+        </div>
+      );
+
+    }
+
+
+    // =======================================================
+    // DOCUMENT
+    // =======================================================
+
+    return (
+      <div className="event-selected-file-document">
+
+        {file.name
+          .toLowerCase()
+          .endsWith(".ppt") ||
+        file.name
+          .toLowerCase()
+          .endsWith(".pptx") ? (
+          <ReceiptText
+            size={30}
+          />
+        ) : (
+          <FileText
+            size={30}
+          />
+        )}
+
+      </div>
+    );
+
+  };
+
+
+  // =========================================================
+  // GET MEDIA TYPE LABEL
+  // =========================================================
+
+  const getMediaTypeLabel = () => {
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.IMAGE
+    ) {
+      return "Gallery Images";
+    }
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.VIDEO
+    ) {
+      return "Videos";
+    }
+
+    return "Documents";
+
+  };
+
+
+  // =========================================================
+  // GET MEDIA TYPE DESCRIPTION
+  // =========================================================
+
+  const getMediaTypeDescription = () => {
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.IMAGE
+    ) {
+
+      return "Upload event gallery photos.";
+
+    }
+
+    if (
+      mediaType ===
+      MEDIA_TYPES.VIDEO
+    ) {
+
+      return "Upload event videos.";
+
+    }
+
+    return "Upload PDF, Word or PowerPoint documents.";
+
+  };
+
+
+  // =========================================================
+  // MEDIA TAB CHANGE
+  // =========================================================
+
+  const handleMediaTypeChange = (
+    type
+  ) => {
+
+    if (
+      mediaUploading
+    ) {
+      return;
+    }
+
+    clearSelectedMedia();
+
+    setMediaType(
+      type
+    );
+
+    setError("");
+
+  };
+
+
+  // =========================================================
+  // EVENT IMAGE URL
+  // =========================================================
+
+  const getEventImage = (
+    event
+  ) => {
+
+    return (
+      event?.image_url ||
+      event?.imageUrl ||
+      event?.image ||
+      ""
+    );
+
+  };
+
+
+  // =========================================================
+  // GET EVENT TITLE
+  // =========================================================
+
+  const getEventTitle = (
+    event
+  ) => {
+
+    return (
+      event?.title ||
+      "Untitled Event"
+    );
+
+  };
+
+
+  // =========================================================
+  // GET EVENT TYPE
+  // =========================================================
+
+  const getEventType = (
+    event
+  ) => {
+
+    return (
+      event?.event_type ||
+      event?.eventType ||
       "EVENT"
     );
 
   };
 
 
-  const getEventDate = (
-    booking
+  // =========================================================
+  // GET EVENT VENUE
+  // =========================================================
+
+  const getEventVenue = (
+    event
   ) => {
+
     return (
-      booking.event_date ||
-      null
+      event?.venue ||
+      "Venue not specified"
     );
+
   };
 
 
-  const getEventTime = (
-    booking
+  // =========================================================
+  // GET EVENT PRICE
+  // =========================================================
+
+  const getEventPrice = (
+    event
   ) => {
-    const start =
-      formatTime(
-        booking.start_time
+
+    const price =
+      Number(
+        event?.price || 0
       );
 
-    const end =
-      formatTime(
-        booking.end_time
-      );
-
-    if (start && end) {
-      return `${start} - ${end}`;
+    if (
+      price <= 0
+    ) {
+      return "Free";
     }
 
-    return start || end || "—";
-  };
-
-
-  const getEventMode = (
-    booking
-  ) => {
-    return (
-      booking.event_mode ||
-      "—"
+    return formatCurrency(
+      price
     );
-  };
 
-
-  const getVenue = (
-    booking
-  ) => {
-    return (
-      booking.venue ||
-      "—"
-    );
-  };
-
-
-  const getAttendanceStatus = (
-    booking
-  ) => {
-    return (
-      booking.attendance_status ||
-      "not generated"
-    );
   };
 
 
   // =========================================================
-  // PAYMENT STATUS
+  // GET BOOKINGS COUNT
   // =========================================================
 
-  const getPaymentStatus = (
-    booking
-  ) => {
-
-    return String(
-      booking.payment_status ||
-      booking.paymentStatus ||
-      "pending"
-    ).toLowerCase();
-
-  };
-
-
-  const getBookingStatus = (
-    booking
-  ) => {
-
-    return String(
-      booking.booking_status ||
-      booking.status ||
-      "pending"
-    ).toLowerCase();
-
-  };
-
-
-  const getAmount = (
-    booking
+  const getBookingsCount = (
+    event
   ) => {
 
     return Number(
-      booking.amount ||
-      booking.payment_amount ||
-      booking.price ||
-      booking.event_price ||
+      event?.booking_count ||
+      event?.bookings_count ||
+      event?.registered_count ||
+      event?.total_bookings ||
       0
     );
 
   };
 
 
-  const getTransactionId = (
-    booking
+  // =========================================================
+  // GET MAX SLOTS
+  // =========================================================
+
+  const getMaxSlots = (
+    event
   ) => {
 
-    return (
-      booking.transaction_id ||
-      booking.transactionId ||
-      booking.utr ||
-      "—"
+    const value =
+      event?.max_slots ??
+      event?.maxSlots;
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return null;
+    }
+
+    return Number(
+      value
     );
 
   };
 
 
-  const getBookingDate = (
-    booking
+  // =========================================================
+  // GET PUBLISH STATUS
+  // =========================================================
+
+  const getPublishStatus = (
+    event
   ) => {
 
-    // The current admin booking API does not select b.created_at.
-    // Use the event date as the available date from the backend.
+    return Boolean(
+      event?.published
+    )
+      ? "published"
+      : "draft";
+
+  };
+
+
+  // =========================================================
+  // OPEN EVENT DETAILS
+  // =========================================================
+
+  const handleViewEvent = (
+    event
+  ) => {
+
+    if (!event?.id) {
+      return;
+    }
+
+    window.open(
+      `/events/${event.id}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+  };
+
+
+  // =========================================================
+  // MEDIA ITEM DATE
+  // =========================================================
+
+  const getMediaDate = (
+    media
+  ) => {
+
     return (
-      booking.event_date ||
-      booking.created_at ||
-      booking.createdAt ||
-      booking.booking_date ||
-      booking.booked_at ||
+      media?.created_at ||
+      media?.createdAt ||
+      media?.uploaded_at ||
+      media?.uploadedAt ||
       null
     );
 
@@ -1626,721 +2655,1698 @@ function EventManagement() {
 
 
   // =========================================================
-  // FORMAT DATE
+  // MEDIA MIME TYPE
   // =========================================================
 
-  const formatDate = (
-    value
+  const getMediaMimeType = (
+    media
   ) => {
-
-    if (!value) {
-      return "—";
-    }
-
-    const date =
-      new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return String(value);
-
-    }
-
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
-
-  };
-
-
-  // =========================================================
-  // FORMAT DATE TIME
-  // =========================================================
-
-  const formatDateTime = (
-    value
-  ) => {
-
-    if (!value) {
-      return "—";
-    }
-
-    const date =
-      new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return String(value);
-
-    }
-
-    return date.toLocaleString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
-
-  };
-
-
-  // =========================================================
-  // EVENT DATE
-  // =========================================================
-
-  const formatEventDate = (
-    value
-  ) => {
-
-    if (!value) {
-      return "—";
-    }
-
-    const date =
-      new Date(
-        `${String(value).slice(
-          0,
-          10
-        )}T00:00:00`
-      );
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return String(value);
-
-    }
-
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
-
-  };
-
-
-  // =========================================================
-  // FORMAT TIME
-  // =========================================================
-
-  const formatTime = (
-    value
-  ) => {
-
-    if (!value) {
-      return "";
-    }
-
-    return String(value)
-      .slice(0, 5);
-
-  };
-
-
-  // =========================================================
-  // EVENT LIST FOR BOOKING FILTER
-  // =========================================================
-
-  const bookingEvents =
-    useMemo(() => {
-
-      const eventMap =
-        new Map();
-
-      bookings.forEach(
-        (booking) => {
-
-          const id =
-            getEventId(
-              booking
-            );
-
-          const name =
-            getEventName(
-              booking
-            );
-
-          if (
-            id !== undefined &&
-            id !== null &&
-            id !== ""
-          ) {
-
-            eventMap.set(
-              String(id),
-              name
-            );
-
-          }
-
-        }
-      );
-
-      return Array.from(
-        eventMap.entries()
-      );
-
-    }, [bookings]);
-
-
-  // =========================================================
-  // FILTER BOOKINGS
-  // =========================================================
-
-  const filteredBookings =
-    useMemo(() => {
-
-      const query =
-        bookingSearch
-          .trim()
-          .toLowerCase();
-
-      return bookings.filter(
-        (booking) => {
-
-          const bookingId =
-            String(
-              getBookingId(
-                booking
-              )
-            ).toLowerCase();
-
-          const name =
-            String(
-              getUserName(
-                booking
-              )
-            ).toLowerCase();
-
-          const username =
-            String(
-              getUsername(
-                booking
-              )
-            ).toLowerCase();
-
-          const email =
-            String(
-              getEmail(
-                booking
-              )
-            ).toLowerCase();
-
-          const phone =
-            String(
-              getPhone(
-                booking
-              )
-            ).toLowerCase();
-
-          const eventName =
-            String(
-              getEventName(
-                booking
-              )
-            ).toLowerCase();
-
-          const eventId =
-            String(
-              getEventId(
-                booking
-              )
-            );
-
-          const paymentStatus =
-            getPaymentStatus(
-              booking
-            );
-
-          const bookingStatus =
-            getBookingStatus(
-              booking
-            );
-
-          const matchesSearch =
-            !query ||
-            bookingId.includes(
-              query
-            ) ||
-            name.includes(
-              query
-            ) ||
-            username.includes(
-              query
-            ) ||
-            email.includes(
-              query
-            ) ||
-            phone.includes(
-              query
-            ) ||
-            eventName.includes(
-              query
-            );
-
-          const matchesEvent =
-            bookingEventFilter ===
-              "all" ||
-            eventId ===
-              bookingEventFilter;
-
-          const matchesPayment =
-            bookingPaymentFilter ===
-              "all" ||
-            paymentStatus ===
-              bookingPaymentFilter;
-
-          const matchesStatus =
-            bookingStatusFilter ===
-              "all" ||
-            bookingStatus ===
-              bookingStatusFilter;
-
-          return (
-            matchesSearch &&
-            matchesEvent &&
-            matchesPayment &&
-            matchesStatus
-          );
-
-        }
-      );
-
-    }, [
-      bookings,
-      bookingSearch,
-      bookingEventFilter,
-      bookingPaymentFilter,
-      bookingStatusFilter,
-    ]);
-
-
-  // =========================================================
-  // BOOKING STATISTICS
-  // =========================================================
-
-  const bookingStats =
-    useMemo(() => {
-
-      const total =
-        bookings.length;
-
-      const confirmed =
-        bookings.filter(
-          (booking) =>
-            getBookingStatus(
-              booking
-            ) === "confirmed"
-        ).length;
-
-      const pending =
-        bookings.filter(
-          (booking) => {
-
-            const status =
-              getBookingStatus(
-                booking
-              );
-
-            return (
-              status === "pending" ||
-              status ===
-                "payment_pending"
-            );
-
-          }
-        ).length;
-
-      const paid =
-        bookings.filter(
-          (booking) => {
-
-            const status =
-              getPaymentStatus(
-                booking
-              );
-
-            return (
-              status === "paid" ||
-              status === "verified"
-            );
-
-          }
-        ).length;
-
-      return {
-        total,
-        confirmed,
-        pending,
-        paid,
-      };
-
-    }, [bookings]);
-
-
-  // =========================================================
-  // UPDATE BOOKING STATUS
-  // =========================================================
-
-  const updateBookingStatus =
-    async (
-      booking,
-      status
-    ) => {
-
-      if (bookingActionLoading) {
-        return;
-      }
-
-      const bookingId =
-        getDatabaseBookingId(
-          booking
-        );
-
-      if (!bookingId) {
-
-        setError(
-          "Invalid booking ID."
-        );
-
-        return;
-
-      }
-
-      try {
-
-        setBookingActionLoading(
-          true
-        );
-
-        setError("");
-
-        const response =
-          await api.put(
-            `/bookings/admin/${bookingId}/status`,
-            {
-              status,
-            }
-          );
-
-        if (
-          !response.data?.success
-        ) {
-
-          throw new Error(
-            response.data?.message ||
-            "Unable to update booking."
-          );
-
-        }
-
-        await loadBookings(
-          true
-        );
-
-        setSelectedBooking(
-          (previous) =>
-            previous
-              ? {
-                  ...previous,
-                  booking_status:
-                    status,
-                }
-              : null
-        );
-
-        setSuccess(
-          `Booking ${status.replace(
-            "_",
-            " "
-          )} successfully.`
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Update booking status error:",
-          error
-        );
-
-        setError(
-          error.response?.data?.message ||
-          error.message ||
-          "Unable to update booking status."
-        );
-
-      } finally {
-
-        setBookingActionLoading(
-          false
-        );
-
-      }
-
-    };
-
-
-  // =========================================================
-  // DELETE BOOKING
-  // =========================================================
-
-  const deleteBooking =
-    async (
-      booking
-    ) => {
-
-      if (bookingActionLoading) {
-        return;
-      }
-
-      const confirmed =
-        window.confirm(
-          "Are you sure you want to permanently delete this booking?"
-        );
-
-      if (!confirmed) {
-        return;
-      }
-
-      const bookingId =
-        getDatabaseBookingId(
-          booking
-        );
-
-      if (!bookingId) {
-
-        setError(
-          "Invalid booking ID."
-        );
-
-        return;
-
-      }
-
-      try {
-
-        setBookingActionLoading(
-          true
-        );
-
-        setError("");
-
-        const response =
-          await api.delete(
-            `/bookings/admin/${bookingId}`
-          );
-
-        if (
-          !response.data?.success
-        ) {
-
-          throw new Error(
-            response.data?.message ||
-            "Unable to delete booking."
-          );
-
-        }
-
-        setBookings(
-          (previous) =>
-            previous.filter(
-              (item) =>
-                String(
-                  getDatabaseBookingId(
-                    item
-                  )
-                ) !==
-                String(
-                  bookingId
-                )
-            )
-        );
-
-        setSelectedBooking(
-          null
-        );
-
-        setSuccess(
-          "Booking deleted successfully."
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Delete booking error:",
-          error
-        );
-
-        setError(
-          error.response?.data?.message ||
-          error.message ||
-          "Unable to delete booking."
-        );
-
-      } finally {
-
-        setBookingActionLoading(
-          false
-        );
-
-      }
-
-    };
-
-
-  // =========================================================
-  // LOADING EVENTS
-  // =========================================================
-
-  if (
-    activeTab === "events" &&
-    loading
-  ) {
 
     return (
-      <main className="admin-events-page">
+      media?.mime_type ||
+      media?.mimeType ||
+      media?.type ||
+      ""
+    );
 
-        <div className="admin-events-container">
+  };
 
-          <div className="admin-event-state">
 
-            <CalendarDays
-              size={38}
+  // =========================================================
+  // EVENT ROW
+  // =========================================================
+
+  const renderEventRow = (
+    event
+  ) => {
+
+    const image =
+      getEventImage(
+        event
+      );
+
+    const status =
+      event.status ||
+      calculateEventStatus(
+        event.event_date,
+        event.start_time,
+        event.end_time
+      );
+
+    const bookings =
+      getBookingsCount(
+        event
+      );
+
+    const maxSlots =
+      getMaxSlots(
+        event
+      );
+
+    const price =
+      getEventPrice(
+        event
+      );
+
+    const publishStatus =
+      getPublishStatus(
+        event
+      );
+
+
+    return (
+      <div
+        className="admin-event-row"
+        key={event.id}
+      >
+
+        {/* =================================================
+             IMAGE
+             ================================================= */}
+
+        <div className="admin-event-image">
+
+          {image ? (
+            <img
+              src={image}
+              alt={getEventTitle(event)}
             />
-
-            <h3>
-              Loading events...
-            </h3>
-
-          </div>
+          ) : (
+            <CalendarDays
+              size={25}
+            />
+          )}
 
         </div>
 
-      </main>
-    );
 
-  }
+        {/* =================================================
+             EVENT INFO
+             ================================================= */}
+
+        <div className="admin-event-row-info">
+
+          <span className="admin-event-type">
+            {getEventType(event)}
+          </span>
+
+          <h3
+            title={getEventTitle(event)}
+          >
+            {getEventTitle(event)}
+          </h3>
+
+          <p>
+            {formatDate(
+              event.event_date
+            )}
+
+            {" • "}
+
+            {formatTime(
+              event.start_time
+            )}
+
+            {" - "}
+
+            {formatTime(
+              event.end_time
+            )}
+          </p>
+
+          <small>
+            {getEventVenue(event)}
+          </small>
+
+        </div>
 
 
-  // =========================================================
-  // RENDER
-  // =========================================================
+        {/* =================================================
+             STATUS
+             ================================================= */}
 
-  return (
+        <div className="admin-event-status-wrapper">
 
-    <main className="admin-events-page">
+          <span
+            className={`admin-event-status ${status}`}
+          >
 
-      <div className="admin-events-container">
+            {status}
+
+          </span>
+
+          <span
+            className={`admin-publish-status ${publishStatus}`}
+          >
+
+            {publishStatus}
+
+          </span>
+
+        </div>
 
 
-        {/* ===================================================
-            HEADER
-        =================================================== */}
+        {/* =================================================
+             BOOKINGS
+             ================================================= */}
 
-        <header className="admin-events-header">
+        <div className="admin-event-bookings">
 
           <div>
 
-            <span className="admin-events-eyebrow">
-              ADMINISTRATION
-            </span>
+            <strong>
+              {bookings}
 
-            <h1>
-              Event Management
-            </h1>
+              {maxSlots !== null && (
+                <span>
+                  {" / "}
+                  {maxSlots}
+                </span>
+              )}
+            </strong>
 
-            <p>
-              Create and manage SNICT
-              events and monitor event
-              registrations.
-            </p>
+          </div>
+
+          <small>
+            Registrations
+          </small>
+
+          {event.booking_enabled && (
+            <div className="admin-event-booking-status">
+
+              <CheckCircle2
+                size={11}
+              />
+
+              Booking enabled
+
+            </div>
+          )}
+
+        </div>
+
+
+        {/* =================================================
+             PRICE
+             ================================================= */}
+
+        <div className="admin-event-row-price">
+
+          <small>
+            Entry
+          </small>
+
+          <strong>
+            {price}
+          </strong>
+
+        </div>
+
+
+        {/* =================================================
+             ACTIONS
+             ================================================= */}
+
+        <div className="admin-event-actions">
+
+          <button
+            type="button"
+            title="View event"
+            onClick={() =>
+              handleViewEvent(
+                event
+              )
+            }
+          >
+            <Eye
+              size={15}
+            />
+          </button>
+
+
+          <button
+            type="button"
+            title="Manage gallery, videos and documents"
+            onClick={() =>
+              openMediaManager(
+                event
+              )
+            }
+          >
+            <FolderOpen
+              size={15}
+            />
+          </button>
+
+
+          <button
+            type="button"
+            title="Edit event"
+            onClick={() =>
+              openEdit(
+                event
+              )
+            }
+          >
+            <Pencil
+              size={15}
+            />
+          </button>
+
+
+          <button
+            type="button"
+            title="Delete event"
+            className="delete"
+            disabled={
+              deletingId ===
+              event.id
+            }
+            onClick={() =>
+              handleDeleteEvent(
+                event
+              )
+            }
+          >
+
+            {deletingId ===
+            event.id ? (
+              <RefreshCw
+                size={15}
+                className="admin-event-spin"
+              />
+            ) : (
+              <Trash2
+                size={15}
+              />
+            )}
+
+          </button>
+
+        </div>
+
+      </div>
+    );
+
+  };
+
+
+  // =========================================================
+  // EVENT FORM
+  // =========================================================
+
+  const renderEventForm = () => {
+
+    if (!showForm) {
+      return null;
+    }
+
+
+    return (
+      <div
+        className="event-form-overlay"
+        onMouseDown={(event) => {
+
+          if (
+            event.target ===
+            event.currentTarget
+          ) {
+            closeForm();
+          }
+
+        }}
+      >
+
+        <div
+          className="event-form-modal"
+          onMouseDown={(event) =>
+            event.stopPropagation()
+          }
+        >
+
+          {/* ===============================================
+               HEADER
+               =============================================== */}
+
+          <div className="event-form-header">
+
+            <div>
+
+              <span>
+                EVENT MANAGEMENT
+              </span>
+
+              <h2>
+                {editingId
+                  ? "Edit Event"
+                  : "Create Event"}
+              </h2>
+
+            </div>
+
+            <button
+              type="button"
+              className="event-modal-close"
+              onClick={
+                closeForm
+              }
+              disabled={
+                saving
+              }
+            >
+              <X
+                size={18}
+              />
+            </button>
 
           </div>
 
 
-          <div className="admin-events-header-actions">
+          {/* ===============================================
+               FORM
+               =============================================== */}
 
-            {activeTab === "events" && (
+          <form
+            className="admin-event-form"
+            onSubmit={
+              handleSubmit
+            }
+          >
+
+            {/* =============================================
+                 BASIC INFORMATION
+                 ============================================= */}
+
+            <div className="form-row">
+
+              <div className="form-field">
+
+                <label>
+                  Event Title *
+                </label>
+
+                <input
+                  type="text"
+                  name="title"
+                  value={
+                    form.title
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="Enter event title"
+                  required
+                />
+
+              </div>
+
+
+              <div className="form-field">
+
+                <label>
+                  Event Type *
+                </label>
+
+                <select
+                  name="eventType"
+                  value={
+                    form.eventType
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  required
+                >
+
+                  <option value="CME">
+                    CME
+                  </option>
+
+                  <option value="Conference">
+                    Conference
+                  </option>
+
+                  <option value="Workshop">
+                    Workshop
+                  </option>
+
+                  <option value="Seminar">
+                    Seminar
+                  </option>
+
+                  <option value="Webinar">
+                    Webinar
+                  </option>
+
+                  <option value="Meeting">
+                    Meeting
+                  </option>
+
+                  <option value="Other">
+                    Other
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            {/* =============================================
+                 DESCRIPTION
+                 ============================================= */}
+
+            <div className="form-field full">
+
+              <label>
+                Description *
+              </label>
+
+              <textarea
+                name="description"
+                value={
+                  form.description
+                }
+                onChange={
+                  handleChange
+                }
+                placeholder="Describe the event..."
+                required
+              />
+
+            </div>
+
+
+            {/* =============================================
+                 DOCTOR
+                 ============================================= */}
+
+            <div className="form-row">
+
+              <div className="form-field">
+
+                <label>
+                  Doctor / Speaker
+                </label>
+
+                <input
+                  type="text"
+                  name="doctorName"
+                  value={
+                    form.doctorName
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="Doctor or speaker name"
+                />
+
+              </div>
+
+
+              <div className="form-field">
+
+                <label>
+                  Specialization
+                </label>
+
+                <input
+                  type="text"
+                  name="specialization"
+                  value={
+                    form.specialization
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="Specialization"
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* =============================================
+                 DATE / TIME
+                 ============================================= */}
+
+            <div className="form-row three">
+
+              <div className="form-field">
+
+                <label>
+                  Event Date *
+                </label>
+
+                <input
+                  type="date"
+                  name="eventDate"
+                  value={
+                    form.eventDate
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  required
+                />
+
+              </div>
+
+
+              <div className="form-field">
+
+                <label>
+                  Start Time *
+                </label>
+
+                <input
+                  type="time"
+                  name="startTime"
+                  value={
+                    form.startTime
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  required
+                />
+
+              </div>
+
+
+              <div className="form-field">
+
+                <label>
+                  End Time *
+                </label>
+
+                <input
+                  type="time"
+                  name="endTime"
+                  value={
+                    form.endTime
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  required
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* =============================================
+                 VENUE / MODE
+                 ============================================= */}
+
+            <div className="form-row">
+
+              <div className="form-field">
+
+                <label>
+                  Venue
+                </label>
+
+                <input
+                  type="text"
+                  name="venue"
+                  value={
+                    form.venue
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="Event venue"
+                />
+
+              </div>
+
+
+              <div className="form-field">
+
+                <label>
+                  Event Mode
+                </label>
+
+                <select
+                  name="eventMode"
+                  value={
+                    form.eventMode
+                  }
+                  onChange={
+                    handleChange
+                  }
+                >
+
+                  <option value="offline">
+                    Offline
+                  </option>
+
+                  <option value="online">
+                    Online
+                  </option>
+
+                  <option value="hybrid">
+                    Hybrid
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            {/* =============================================
+                 PRICE / SLOTS
+                 ============================================= */}
+
+            <div className="form-row">
+
+              <div className="form-field">
+
+                <label>
+                  Price
+                </label>
+
+                <input
+                  type="number"
+                  name="price"
+                  min="0"
+                  value={
+                    form.price
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="0"
+                />
+
+              </div>
+
+
+              <div className="form-field">
+
+                <label>
+                  Maximum Slots
+                </label>
+
+                <input
+                  type="number"
+                  name="maxSlots"
+                  min="1"
+                  value={
+                    form.maxSlots
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="Maximum registrations"
+                />
+
+              </div>
+
+            </div>
+
+
+            {/* =============================================
+                 COVER IMAGE
+                 ============================================= */}
+
+            <div className="form-field full">
+
+              <label>
+                Event Cover Image
+              </label>
+
+              <input
+                ref={
+                  imageInputRef
+                }
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={
+                  handleImageChange
+                }
+              />
+
+
+              {imagePreview && (
+                <div className="event-image-preview">
+
+                  <img
+                    src={
+                      imagePreview
+                    }
+                    alt="Event preview"
+                  />
+
+                  <button
+                    type="button"
+                    className="event-remove-image"
+                    onClick={
+                      removeSelectedImage
+                    }
+                  >
+                    <X
+                      size={15}
+                    />
+                  </button>
+
+                </div>
+              )}
+
+            </div>
+
+
+            {/* =============================================
+                 CHECKBOXES
+                 ============================================= */}
+
+            <div className="event-checkboxes">
+
+              <label>
+
+                <input
+                  type="checkbox"
+                  name="bookingEnabled"
+                  checked={
+                    form.bookingEnabled
+                  }
+                  onChange={
+                    handleChange
+                  }
+                />
+
+                <span>
+                  Enable Booking
+                </span>
+
+              </label>
+
+
+              <label>
+
+                <input
+                  type="checkbox"
+                  name="published"
+                  checked={
+                    form.published
+                  }
+                  onChange={
+                    handleChange
+                  }
+                />
+
+                <span>
+                  Publish Event
+                </span>
+
+              </label>
+
+            </div>
+
+
+            {/* =============================================
+                 ACTIONS
+                 ============================================= */}
+
+            <div className="event-form-actions">
 
               <button
                 type="button"
-                className="admin-add-event-btn"
-                onClick={openCreate}
+                onClick={
+                  closeForm
+                }
+                disabled={
+                  saving
+                }
+              >
+                Cancel
+              </button>
+
+
+              <button
+                type="submit"
+                disabled={
+                  saving
+                }
               >
 
-                <Plus size={18} />
+                {saving ? (
+                  <>
+                    <RefreshCw
+                      size={14}
+                      className="admin-event-spin"
+                    />
 
-                Create Event
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    {editingId
+                      ? "Update Event"
+                      : "Create Event"}
+                  </>
+                )}
 
               </button>
 
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+    );
+
+  };
+    // =========================================================
+  // MEDIA MANAGER
+  // =========================================================
+
+  const renderMediaManager = () => {
+
+    if (!mediaEvent) {
+      return null;
+    }
+
+
+    return (
+      <div
+        className="event-form-overlay"
+        onMouseDown={(event) => {
+
+          if (
+            event.target ===
+            event.currentTarget
+          ) {
+
+            closeMediaManager();
+
+          }
+
+        }}
+      >
+
+        <div
+          className="event-media-manager-modal"
+          onMouseDown={(event) =>
+            event.stopPropagation()
+          }
+        >
+
+          {/* =================================================
+               HEADER
+               ================================================= */}
+
+          <div className="event-form-header">
+
+            <div>
+
+              <span>
+                EVENT MEDIA MANAGEMENT
+              </span>
+
+              <h2>
+                {getEventTitle(
+                  mediaEvent
+                )}
+              </h2>
+
+              <p className="event-media-manager-subtitle">
+                Manage gallery images, videos and documents
+                for this event.
+              </p>
+
+            </div>
+
+
+            <button
+              type="button"
+              className="event-modal-close"
+              onClick={
+                closeMediaManager
+              }
+              disabled={
+                mediaUploading
+              }
+            >
+              <X
+                size={18}
+              />
+            </button>
+
+          </div>
+
+
+          {/* =================================================
+               MEDIA TABS
+               ================================================= */}
+
+          <div className="event-media-tabs">
+
+            <button
+              type="button"
+              className={
+                mediaType ===
+                MEDIA_TYPES.IMAGE
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                handleMediaTypeChange(
+                  MEDIA_TYPES.IMAGE
+                )
+              }
+              disabled={
+                mediaUploading
+              }
+            >
+
+              <ImageIcon
+                size={16}
+              />
+
+              <span>
+                Gallery
+              </span>
+
+              <strong>
+                {mediaCounts.images}
+              </strong>
+
+            </button>
+
+
+            <button
+              type="button"
+              className={
+                mediaType ===
+                MEDIA_TYPES.VIDEO
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                handleMediaTypeChange(
+                  MEDIA_TYPES.VIDEO
+                )
+              }
+              disabled={
+                mediaUploading
+              }
+            >
+
+              <Video
+                size={16}
+              />
+
+              <span>
+                Videos
+              </span>
+
+              <strong>
+                {mediaCounts.videos}
+              </strong>
+
+            </button>
+
+
+            <button
+              type="button"
+              className={
+                mediaType ===
+                MEDIA_TYPES.DOCUMENT
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                handleMediaTypeChange(
+                  MEDIA_TYPES.DOCUMENT
+                )
+              }
+              disabled={
+                mediaUploading
+              }
+            >
+
+              <FileText
+                size={16}
+              />
+
+              <span>
+                Documents
+              </span>
+
+              <strong>
+                {mediaCounts.documents}
+              </strong>
+
+            </button>
+
+          </div>
+
+
+          {/* =================================================
+               UPLOAD SECTION
+               ================================================= */}
+
+          <div className="event-media-upload-section">
+
+            <div className="event-media-upload-heading">
+
+              <div>
+
+                <h3>
+                  {getMediaTypeLabel()}
+                </h3>
+
+                <p>
+                  {getMediaTypeDescription()}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {/* =================================================
+                 DROP / SELECT AREA
+                 ================================================= */}
+
+            <div
+              className="event-media-upload-box"
+              onClick={() => {
+
+                if (
+                  mediaUploading
+                ) {
+                  return;
+                }
+
+                mediaInputRef.current?.click();
+
+              }}
+            >
+
+              <input
+                ref={
+                  mediaInputRef
+                }
+                type="file"
+                multiple
+                hidden
+                accept={
+                  getMediaAccept()
+                }
+                onChange={
+                  handleMediaFilesChange
+                }
+              />
+
+
+              <div className="event-media-upload-icon">
+
+                {mediaType ===
+                MEDIA_TYPES.IMAGE ? (
+                  <ImageIcon
+                    size={25}
+                  />
+                ) : mediaType ===
+                  MEDIA_TYPES.VIDEO ? (
+                  <Video
+                    size={25}
+                  />
+                ) : (
+                  <FileText
+                    size={25}
+                  />
+                )}
+
+              </div>
+
+
+              <h4>
+                Select files to upload
+              </h4>
+
+
+              <p>
+                Click here to browse your computer
+              </p>
+
+
+              <small>
+
+                {mediaType ===
+                MEDIA_TYPES.IMAGE
+                  ? "JPG, JPEG, PNG, WEBP or GIF • Maximum 100 MB each"
+                  : mediaType ===
+                    MEDIA_TYPES.VIDEO
+                    ? "MP4, WEBM or MOV • Maximum 100 MB each"
+                    : "PDF, DOC, DOCX, PPT or PPTX • Maximum 100 MB each"}
+
+              </small>
+
+            </div>
+
+
+            {/* =================================================
+                 SELECTED FILES
+                 ================================================= */}
+
+            {selectedMediaFiles.length >
+              0 && (
+
+              <div className="event-selected-media">
+
+                <div className="event-selected-media-header">
+
+                  <div>
+
+                    <strong>
+                      Selected Files
+                    </strong>
+
+                    <span>
+                      {selectedMediaFiles.length}
+                    </span>
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    onClick={
+                      clearSelectedMedia
+                    }
+                    disabled={
+                      mediaUploading
+                    }
+                  >
+                    Clear all
+                  </button>
+
+                </div>
+
+
+                <div className="event-selected-media-list">
+
+                  {selectedMediaFiles.map(
+                    (
+                      item,
+                      index
+                    ) => (
+
+                      <div
+                        className="event-selected-media-item"
+                        key={`${item.file.name}-${index}`}
+                      >
+
+                        {renderSelectedFilePreview(
+                          item
+                        )}
+
+
+                        <div className="event-selected-media-info">
+
+                          <strong
+                            title={
+                              item.file.name
+                            }
+                          >
+                            {item.file.name}
+                          </strong>
+
+                          <small>
+                            {formatFileSize(
+                              item.file.size
+                            )}
+                          </small>
+
+                        </div>
+
+
+                        <button
+                          type="button"
+                          className="event-selected-media-remove"
+                          onClick={() =>
+                            removeSelectedMediaFile(
+                              index
+                            )
+                          }
+                          disabled={
+                            mediaUploading
+                          }
+                        >
+                          <X
+                            size={15}
+                          />
+                        </button>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+
+                {/* =================================================
+                     UPLOAD BUTTON
+                     ================================================= */}
+
+                <div className="event-media-upload-actions">
+
+                  <button
+                    type="button"
+                    className="event-media-upload-btn"
+                    onClick={
+                      uploadEventMediaFiles
+                    }
+                    disabled={
+                      mediaUploading
+                    }
+                  >
+
+                    {mediaUploading ? (
+                      <>
+                        <RefreshCw
+                          size={15}
+                          className="admin-event-spin"
+                        />
+
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload
+                          size={15}
+                        />
+
+                        Upload{" "}
+                        {
+                          selectedMediaFiles.length
+                        }{" "}
+                        File
+                        {
+                          selectedMediaFiles.length !==
+                          1
+                            ? "s"
+                            : ""
+                        }
+                      </>
+                    )}
+
+                  </button>
+
+                </div>
+
+              </div>
+
             )}
 
+          </div>
 
-            {activeTab ===
-              "registrations" && (
+
+          {/* =================================================
+               MEDIA LIBRARY
+               ================================================= */}
+
+          <div className="event-media-library">
+
+            <div className="event-media-library-header">
+
+              <div>
+
+                <span>
+                  MEDIA LIBRARY
+                </span>
+
+                <h3>
+                  {getMediaTypeLabel()}
+                </h3>
+
+              </div>
+
 
               <button
                 type="button"
-                className="admin-add-event-btn"
+                className="event-media-refresh-btn"
                 onClick={() =>
-                  loadBookings(true)
+                  loadEventMedia(
+                    mediaEvent.id
+                  )
                 }
                 disabled={
-                  bookingsRefreshing
+                  mediaLoading ||
+                  mediaUploading
                 }
               >
 
                 <RefreshCw
-                  size={17}
+                  size={14}
                   className={
-                    bookingsRefreshing
+                    mediaLoading
                       ? "admin-event-spin"
                       : ""
                   }
                 />
 
-                {bookingsRefreshing
-                  ? "Refreshing..."
-                  : "Refresh"}
+                Refresh
 
               </button>
+
+            </div>
+
+
+            {/* =================================================
+                 LOADING
+                 ================================================= */}
+
+            {mediaLoading ? (
+
+              <div className="event-media-state">
+
+                <RefreshCw
+                  size={30}
+                  className="admin-event-spin"
+                />
+
+                <h3>
+                  Loading media...
+                </h3>
+
+                <p>
+                  Please wait while the media library
+                  is loaded.
+                </p>
+
+              </div>
+
+            ) : activeMediaItems.length ===
+              0 ? (
+
+              /* =================================================
+                   EMPTY
+                   ================================================= */
+
+              <div className="event-media-state">
+
+                {mediaType ===
+                MEDIA_TYPES.IMAGE ? (
+                  <ImageIcon
+                    size={35}
+                  />
+                ) : mediaType ===
+                  MEDIA_TYPES.VIDEO ? (
+                  <Video
+                    size={35}
+                  />
+                ) : (
+                  <FileText
+                    size={35}
+                  />
+                )}
+
+                <h3>
+                  No{" "}
+                  {mediaType ===
+                  MEDIA_TYPES.IMAGE
+                    ? "gallery images"
+                    : mediaType ===
+                      MEDIA_TYPES.VIDEO
+                      ? "videos"
+                      : "documents"}{" "}
+                  yet
+                </h3>
+
+                <p>
+                  Upload your first{" "}
+                  {mediaType ===
+                  MEDIA_TYPES.IMAGE
+                    ? "gallery image"
+                    : mediaType ===
+                      MEDIA_TYPES.VIDEO
+                      ? "video"
+                      : "document"}{" "}
+                  using the upload area above.
+                </p>
+
+              </div>
+
+            ) : (
+
+              /* =================================================
+                   MEDIA GRID
+                   ================================================= */
+
+              <div
+                className={
+                  mediaType ===
+                  MEDIA_TYPES.DOCUMENT
+                    ? "event-media-grid event-media-grid-documents"
+                    : "event-media-grid"
+                }
+              >
+
+                {activeMediaItems.map(
+                  (
+                    media,
+                    index
+                  ) => {
+
+                    const mediaId =
+                      getMediaId(
+                        media
+                      );
+
+                    const url =
+                      getMediaUrl(
+                        media
+                      );
+
+                    const name =
+                      getMediaName(
+                        media
+                      );
+
+                    const createdAt =
+                      getMediaDate(
+                        media
+                      );
+
+
+                    return (
+                      <div
+                        className={
+                          mediaType ===
+                          MEDIA_TYPES.DOCUMENT
+                            ? "event-media-card event-media-document-card"
+                            : "event-media-card"
+                        }
+                        key={
+                          mediaId ||
+                          `${name}-${index}`
+                        }
+                      >
+
+                        {/* =================================
+                             PREVIEW
+                             ================================= */}
+
+                        <div className="event-media-card-preview">
+
+                          {renderMediaPreview(
+                            media
+                          )}
+
+
+                          {/* =================================
+                               CARD OVERLAY
+                               ================================= */}
+
+                          <div className="event-media-card-overlay">
+
+                            {url && (
+                              <button
+                                type="button"
+                                title="Open"
+                                onClick={() =>
+                                  openMediaUrl(
+                                    media
+                                  )
+                                }
+                              >
+                                <ExternalLink
+                                  size={15}
+                                />
+                              </button>
+                            )}
+
+
+                            <button
+                              type="button"
+                              title="Delete"
+                              className="delete"
+                              disabled={
+                                mediaDeletingId ===
+                                mediaId
+                              }
+                              onClick={() =>
+                                deleteEventMedia(
+                                  media
+                                )
+                              }
+                            >
+
+                              {mediaDeletingId ===
+                              mediaId ? (
+                                <RefreshCw
+                                  size={15}
+                                  className="admin-event-spin"
+                                />
+                              ) : (
+                                <Trash2
+                                  size={15}
+                                />
+                              )}
+
+                            </button>
+
+                          </div>
+
+                        </div>
+
+
+                        {/* =================================
+                             CARD INFORMATION
+                             ================================= */}
+
+                        <div className="event-media-card-info">
+
+                          <strong
+                            title={name}
+                          >
+                            {name}
+                          </strong>
+
+
+                          <div className="event-media-card-meta">
+
+                            <span>
+                              {getMediaMimeType(
+                                media
+                              ) ||
+                                (
+                                  mediaType ===
+                                  MEDIA_TYPES.IMAGE
+                                    ? "Image"
+                                    : mediaType ===
+                                      MEDIA_TYPES.VIDEO
+                                      ? "Video"
+                                      : "Document"
+                                )}
+                            </span>
+
+
+                            {media.file_size && (
+                              <>
+                                <span>
+                                  •
+                                </span>
+
+                                <span>
+                                  {formatFileSize(
+                                    media.file_size
+                                  )}
+                                </span>
+                              </>
+                            )}
+
+                          </div>
+
+
+                          {createdAt && (
+                            <small>
+                              {formatDateTime(
+                                createdAt
+                              )}
+                            </small>
+                          )}
+
+                        </div>
+
+                      </div>
+                    );
+
+                  }
+                )}
+
+              </div>
 
             )}
 
           </div>
 
-        </header>
+
+          {/* =================================================
+               FOOTER
+               ================================================= */}
+
+          <div className="event-media-manager-footer">
+
+            <div>
+
+              <strong>
+                Total Media
+              </strong>
+
+              <span>
+                {mediaCounts.images +
+                  mediaCounts.videos +
+                  mediaCounts.documents}
+              </span>
+
+            </div>
 
 
-        {/* ===================================================
-            ERROR
-        =================================================== */}
+            <button
+              type="button"
+              className="registration-close-btn"
+              onClick={
+                closeMediaManager
+              }
+              disabled={
+                mediaUploading
+              }
+            >
+              Close
+            </button>
 
+          </div>
+
+        </div>
+
+      </div>
+    );
+
+  };
+
+
+  // =========================================================
+  // ALERT
+  // =========================================================
+
+  const renderAlerts = () => {
+
+    return (
+      <>
         {error && (
 
           <div className="admin-event-error">
@@ -2359,17 +4365,15 @@ function EventManagement() {
                 setError("")
               }
             >
-              <X size={15} />
+              <X
+                size={15}
+              />
             </button>
 
           </div>
 
         )}
 
-
-        {/* ===================================================
-            SUCCESS
-        =================================================== */}
 
         {success && (
 
@@ -2387,12 +4391,310 @@ function EventManagement() {
 
         )}
 
+      </>
+    );
+
+  };
+
+
+  // =========================================================
+  // EVENT FILTER TOOLBAR
+  // =========================================================
+
+  const renderEventToolbar = () => {
+
+    return (
+      <div className="admin-event-toolbar">
+
+        <div className="admin-event-filter-label">
+
+          <CalendarDays
+            size={16}
+          />
+
+          <span>
+            Event Status
+          </span>
+
+        </div>
+
+
+        <div className="admin-event-filters">
+
+          <button
+            type="button"
+            className={
+              filter === "all"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setFilter("all")
+            }
+          >
+
+            All
+
+            <span>
+              {eventCounts.all}
+            </span>
+
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              filter === "published"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setFilter(
+                "published"
+              )
+            }
+          >
+
+            Published
+
+            <span>
+              {eventCounts.published}
+            </span>
+
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              filter === "draft"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setFilter("draft")
+            }
+          >
+
+            Draft
+
+            <span>
+              {eventCounts.draft}
+            </span>
+
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              filter === "upcoming"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setFilter(
+                "upcoming"
+              )
+            }
+          >
+
+            Upcoming
+
+            <span>
+              {eventCounts.upcoming}
+            </span>
+
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              filter === "ongoing"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setFilter(
+                "ongoing"
+              )
+            }
+          >
+
+            Ongoing
+
+            <span>
+              {eventCounts.ongoing}
+            </span>
+
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              filter === "past"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setFilter("past")
+            }
+          >
+
+            Past
+
+            <span>
+              {eventCounts.past}
+            </span>
+
+          </button>
+
+        </div>
+
+      </div>
+    );
+
+  };
+
+
+  // =========================================================
+  // EVENTS LIST
+  // =========================================================
+
+  const renderEventsList = () => {
+
+    if (loading) {
+
+      return (
+        <div className="admin-event-state">
+
+          <RefreshCw
+            size={30}
+            className="admin-event-spin"
+          />
+
+          <h3>
+            Loading events...
+          </h3>
+
+          <p>
+            Please wait while events are being loaded.
+          </p>
+
+        </div>
+      );
+
+    }
+
+
+    if (
+      filteredEvents.length ===
+      0
+    ) {
+
+      return (
+        <div className="admin-event-state">
+
+          <CalendarDays
+            size={35}
+          />
+
+          <h3>
+            No events found
+          </h3>
+
+          <p>
+            Create an event to get started.
+          </p>
+
+        </div>
+      );
+
+    }
+
+
+    return (
+      <div className="admin-events-list">
+
+        {filteredEvents.map(
+          renderEventRow
+        )}
+
+      </div>
+    );
+
+  };
+    // =========================================================
+  // MAIN RENDER
+  // =========================================================
+
+  return (
+    <div className="admin-events-page">
+
+      <div className="admin-events-container">
 
         {/* ===================================================
-            MAIN TABS
-        =================================================== */}
+             HEADER
+             =================================================== */}
 
-        <section className="admin-event-main-tabs">
+        <div className="admin-events-header">
+
+          <div>
+
+            <span className="admin-events-eyebrow">
+              SNICT ADMIN PANEL
+            </span>
+
+            <h1>
+              Event Management
+            </h1>
+
+            <p>
+              Create, manage and publish events,
+              registrations and event media.
+            </p>
+
+          </div>
+
+
+          <div className="admin-events-header-actions">
+
+            <button
+              type="button"
+              className="admin-add-event-btn"
+              onClick={
+                openCreate
+              }
+            >
+
+              <Plus
+                size={16}
+              />
+
+              Add Event
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        {/* ===================================================
+             ALERTS
+             =================================================== */}
+
+        {renderAlerts()}
+
+
+        {/* ===================================================
+             MAIN TABS
+             =================================================== */}
+
+        <div className="admin-event-main-tabs">
 
           <button
             type="button"
@@ -2402,12 +4704,14 @@ function EventManagement() {
                 : ""
             }
             onClick={() =>
-              setActiveTab("events")
+              setActiveTab(
+                "events"
+              )
             }
           >
 
             <CalendarDays
-              size={18}
+              size={16}
             />
 
             Events
@@ -2422,976 +4726,62 @@ function EventManagement() {
           <button
             type="button"
             className={
-              activeTab ===
-              "registrations"
+              activeTab === "media"
                 ? "active"
                 : ""
             }
             onClick={() =>
               setActiveTab(
-                "registrations"
+                "media"
               )
             }
           >
 
-            <Users
-              size={18}
+            <FolderOpen
+              size={16}
             />
 
-            Registered Users
+            Media
 
             <span>
-              {bookings.length}
+              {events.reduce(
+                (
+                  total,
+                  event
+                ) =>
+                  total +
+                  Number(
+                    event.gallery_count ||
+                    0
+                  ) +
+                  Number(
+                    event.video_count ||
+                    0
+                  ) +
+                  Number(
+                    event.document_count ||
+                    0
+                  ),
+                0
+              )}
             </span>
 
           </button>
 
-        </section>
+        </div>
 
 
         {/* ===================================================
-            EVENTS TAB
-        =================================================== */}
+             EVENTS TAB
+             =================================================== */}
 
         {activeTab === "events" && (
 
           <>
 
-            {/* EVENT FILTERS */}
+            {renderEventToolbar()}
 
-            <section className="admin-event-toolbar">
-
-              <div className="admin-event-filter-label">
-
-                <CalendarDays
-                  size={18}
-                />
-
-                <span>
-                  Events
-                </span>
-
-              </div>
-
-
-              <div className="admin-event-filters">
-
-                <button
-                  type="button"
-                  className={
-                    filter === "all"
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setFilter("all")
-                  }
-                >
-                  All
-                  <span>
-                    {events.length}
-                  </span>
-                </button>
-
-
-                <button
-                  type="button"
-                  className={
-                    filter ===
-                    "upcoming"
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setFilter(
-                      "upcoming"
-                    )
-                  }
-                >
-                  Upcoming
-                  <span>
-                    {
-                      events.filter(
-                        (event) =>
-                          event.status ===
-                          "upcoming"
-                      ).length
-                    }
-                  </span>
-                </button>
-
-
-                <button
-                  type="button"
-                  className={
-                    filter ===
-                    "ongoing"
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setFilter(
-                      "ongoing"
-                    )
-                  }
-                >
-                  Ongoing
-                  <span>
-                    {
-                      events.filter(
-                        (event) =>
-                          event.status ===
-                          "ongoing"
-                      ).length
-                    }
-                  </span>
-                </button>
-
-
-                <button
-                  type="button"
-                  className={
-                    filter === "past"
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setFilter("past")
-                  }
-                >
-                  Past
-                  <span>
-                    {
-                      events.filter(
-                        (event) =>
-                          event.status ===
-                          "past"
-                      ).length
-                    }
-                  </span>
-                </button>
-
-
-                <button
-                  type="button"
-                  className={
-                    filter ===
-                    "published"
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setFilter(
-                      "published"
-                    )
-                  }
-                >
-                  Published
-                </button>
-
-
-                <button
-                  type="button"
-                  className={
-                    filter === "draft"
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setFilter("draft")
-                  }
-                >
-                  Drafts
-                </button>
-
-              </div>
-
-            </section>
-
-
-            {/* EVENT FORM */}
-
-            {showForm && (
-
-              <div className="event-form-overlay">
-
-                <div className="event-form-modal">
-
-                  <div className="event-form-header">
-
-                    <div>
-
-                      <span>
-                        {editingId
-                          ? "EDIT EVENT"
-                          : "NEW EVENT"}
-                      </span>
-
-                      <h2>
-                        {editingId
-                          ? "Update Event"
-                          : "Create Event"}
-                      </h2>
-
-                    </div>
-
-
-                    <button
-                      type="button"
-                      className="event-modal-close"
-                      onClick={
-                        closeForm
-                      }
-                    >
-
-                      <X size={21} />
-
-                    </button>
-
-                  </div>
-
-
-                  <form
-                    onSubmit={
-                      handleSubmit
-                    }
-                    className="admin-event-form"
-                  >
-
-                    <div className="form-field full">
-
-                      <label>
-                        Event Title *
-                      </label>
-
-                      <input
-                        name="title"
-                        value={
-                          form.title
-                        }
-                        onChange={
-                          handleChange
-                        }
-                        placeholder="Enter event title"
-                        required
-                      />
-
-                    </div>
-
-
-                    <div className="form-row">
-
-                      <div className="form-field">
-
-                        <label>
-                          Event Type
-                        </label>
-
-                        <select
-                          name="eventType"
-                          value={
-                            form.eventType
-                          }
-                          onChange={
-                            handleChange
-                          }
-                        >
-
-                          <option value="CME">
-                            CME
-                          </option>
-
-                          <option value="Workshop">
-                            Workshop
-                          </option>
-
-                          <option value="Conference">
-                            Conference
-                          </option>
-
-                          <option value="Consultation">
-                            Consultation
-                          </option>
-
-                          <option value="Seminar">
-                            Seminar
-                          </option>
-
-                          <option value="Other">
-                            Other
-                          </option>
-
-                        </select>
-
-                      </div>
-
-
-                      <div className="form-field">
-
-                        <label>
-                          Event Mode
-                        </label>
-
-                        <select
-                          name="eventMode"
-                          value={
-                            form.eventMode
-                          }
-                          onChange={
-                            handleChange
-                          }
-                        >
-
-                          <option value="offline">
-                            Offline
-                          </option>
-
-                          <option value="online">
-                            Online
-                          </option>
-
-                          <option value="hybrid">
-                            Hybrid
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="form-row three">
-
-                      <div className="form-field">
-
-                        <label>
-                          Event Date *
-                        </label>
-
-                        <input
-                          type="date"
-                          name="eventDate"
-                          value={
-                            form.eventDate
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          required
-                        />
-
-                      </div>
-
-
-                      <div className="form-field">
-
-                        <label>
-                          Start Time *
-                        </label>
-
-                        <input
-                          type="time"
-                          name="startTime"
-                          value={
-                            form.startTime
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          required
-                        />
-
-                      </div>
-
-
-                      <div className="form-field">
-
-                        <label>
-                          End Time *
-                        </label>
-
-                        <input
-                          type="time"
-                          name="endTime"
-                          value={
-                            form.endTime
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          required
-                        />
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="form-field full">
-
-                      <label>
-                        Venue
-                      </label>
-
-                      <input
-                        name="venue"
-                        value={
-                          form.venue
-                        }
-                        onChange={
-                          handleChange
-                        }
-                        placeholder="Event venue"
-                      />
-
-                    </div>
-
-
-                    <div className="form-row">
-
-                      <div className="form-field">
-
-                        <label>
-                          Price
-                        </label>
-
-                        <input
-                          type="number"
-                          min="0"
-                          name="price"
-                          value={
-                            form.price
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          placeholder="0"
-                        />
-
-                      </div>
-
-
-                      <div className="form-field">
-
-                        <label>
-                          Maximum Slots
-                        </label>
-
-                        <input
-                          type="number"
-                          min="1"
-                          name="maxSlots"
-                          value={
-                            form.maxSlots
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          placeholder="Unlimited"
-                        />
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="form-field full">
-
-                      <label>
-                        Description
-                      </label>
-
-                      <textarea
-                        name="description"
-                        value={
-                          form.description
-                        }
-                        onChange={
-                          handleChange
-                        }
-                        placeholder="Describe the event..."
-                        rows="5"
-                      />
-
-                    </div>
-
-
-                    <div className="form-row">
-
-                      <div className="form-field">
-
-                        <label>
-                          Doctor / Speaker
-                        </label>
-
-                        <input
-                          name="doctorName"
-                          value={
-                            form.doctorName
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          placeholder="Name"
-                        />
-
-                      </div>
-
-
-                      <div className="form-field">
-
-                        <label>
-                          Specialization
-                        </label>
-
-                        <input
-                          name="specialization"
-                          value={
-                            form.specialization
-                          }
-                          onChange={
-                            handleChange
-                          }
-                          placeholder="Specialization"
-                        />
-
-                      </div>
-
-                    </div>
-
-
-                    {/* IMAGE */}
-
-                    <div className="form-field full">
-
-                      <label>
-                        Event Image
-                      </label>
-
-                      <input
-                        ref={
-                          imageInputRef
-                        }
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        onChange={
-                          handleImageChange
-                        }
-                      />
-
-                      {imagePreview && (
-
-                        <div
-                          className="event-image-preview"
-                        >
-
-                          <img
-                            src={
-                              imagePreview
-                            }
-                            alt="Event preview"
-                          />
-
-                          <button
-                            type="button"
-                            className="event-remove-image"
-                            onClick={
-                              removeSelectedImage
-                            }
-                          >
-
-                            <X size={16} />
-
-                          </button>
-
-                        </div>
-
-                      )}
-
-                    </div>
-
-
-                    {/* OPTIONS */}
-
-                    <div className="event-checkboxes">
-
-                      <label>
-
-                        <input
-                          type="checkbox"
-                          name="bookingEnabled"
-                          checked={
-                            form.bookingEnabled
-                          }
-                          onChange={
-                            handleChange
-                          }
-                        />
-
-                        <span>
-                          Enable Booking
-                        </span>
-
-                      </label>
-
-
-                      <label>
-
-                        <input
-                          type="checkbox"
-                          name="published"
-                          checked={
-                            form.published
-                          }
-                          onChange={
-                            handleChange
-                          }
-                        />
-
-                        <span>
-                          Publish Event
-                        </span>
-
-                      </label>
-
-                    </div>
-
-
-                    {/* ACTIONS */}
-
-                    <div className="event-form-actions">
-
-                      <button
-                        type="button"
-                        onClick={
-                          closeForm
-                        }
-                        disabled={
-                          saving
-                        }
-                      >
-                        Cancel
-                      </button>
-
-
-                      <button
-                        type="submit"
-                        disabled={
-                          saving
-                        }
-                      >
-
-                        {saving
-                          ? "Saving..."
-                          : editingId
-                            ? "Update Event"
-                            : "Create Event"}
-
-                      </button>
-
-                    </div>
-
-                  </form>
-
-                </div>
-
-              </div>
-
-            )}
-
-
-            {/* EVENTS LIST */}
-
-            <section className="admin-events-list">
-
-              {filteredEvents.length ===
-              0 ? (
-
-                <div className="admin-event-state">
-
-                  <CalendarDays
-                    size={36}
-                  />
-
-                  <h3>
-                    No events found
-                  </h3>
-
-                  <p>
-                    Create an event or
-                    change the selected
-                    filter.
-                  </p>
-
-                </div>
-
-              ) : (
-
-                filteredEvents.map(
-                  (event) => (
-
-                    <article
-                      className="admin-event-row"
-                      key={
-                        event.id
-                      }
-                    >
-
-                      <div className="admin-event-image">
-
-                        {event.image_url ? (
-
-                          <img
-                            src={
-                              event.image_url
-                            }
-                            alt={
-                              event.title
-                            }
-                            onError={(
-                              e
-                            ) => {
-                              e.currentTarget.style.display =
-                                "none";
-                            }}
-                          />
-
-                        ) : (
-
-                          <CalendarDays
-                            size={27}
-                          />
-
-                        )}
-
-                      </div>
-
-
-                      <div className="admin-event-row-info">
-
-                        <div className="admin-event-type">
-                          {
-                            event.event_type
-                          }
-                        </div>
-
-                        <h3>
-                          {
-                            event.title
-                          }
-                        </h3>
-
-                        <p>
-
-                          {formatEventDate(
-                            event.event_date
-                          )}
-
-                          {" • "}
-
-                          {formatTime(
-                            event.start_time
-                          )}
-
-                          {" - "}
-
-                          {formatTime(
-                            event.end_time
-                          )}
-
-                        </p>
-
-                        {event.doctor_name && (
-
-                          <small>
-
-                            {
-                              event.doctor_name
-                            }
-
-                            {event.specialization &&
-                              ` • ${event.specialization}`}
-
-                          </small>
-
-                        )}
-
-                      </div>
-
-
-                      <div className="admin-event-status-wrapper">
-
-                        <span
-                          className={`admin-event-status ${event.status}`}
-                        >
-                          {
-                            event.status
-                          }
-                        </span>
-
-
-                        <span
-                          className={`admin-publish-status ${
-                            event.published
-                              ? "published"
-                              : "draft"
-                          }`}
-                        >
-
-                          {event.published ? (
-
-                            <>
-                              <Eye
-                                size={13}
-                              />
-                              Published
-                            </>
-
-                          ) : (
-
-                            <>
-                              <EyeOff
-                                size={13}
-                              />
-                              Draft
-                            </>
-
-                          )}
-
-                        </span>
-
-                      </div>
-
-
-                      <div className="admin-event-bookings">
-
-                        <div>
-
-                          <Users
-                            size={16}
-                          />
-
-                          <strong>
-
-                            {Number(
-                              event.booked_slots ||
-                              0
-                            )}
-
-                            {event.max_slots !==
-                              null &&
-                              event.max_slots !==
-                                undefined && (
-
-                                <span>
-                                  /
-                                  {
-                                    event.max_slots
-                                  }
-                                </span>
-
-                              )}
-
-                          </strong>
-
-                        </div>
-
-                        <small>
-                          Bookings
-                        </small>
-
-                      </div>
-
-
-                      <div className="admin-event-booking-status">
-
-                        <TicketCheck
-                          size={16}
-                        />
-
-                        <span>
-                          {
-                            event.booking_enabled
-                              ? "Booking On"
-                              : "Booking Off"
-                          }
-                        </span>
-
-                      </div>
-
-
-                      <div className="admin-event-row-price">
-
-                        <small>
-                          Fee
-                        </small>
-
-                        <strong>
-
-                          ₹
-                          {Number(
-                            event.price ||
-                            0
-                          ).toLocaleString(
-                            "en-IN"
-                          )}
-
-                        </strong>
-
-                      </div>
-
-
-                      <div className="admin-event-actions">
-
-                        <button
-                          type="button"
-                          title="Edit event"
-                          onClick={() =>
-                            openEdit(
-                              event
-                            )
-                          }
-                        >
-
-                          <Pencil
-                            size={16}
-                          />
-
-                        </button>
-
-
-                        <button
-                          type="button"
-                          className="delete"
-                          title="Delete event"
-                          disabled={
-                            deletingId ===
-                            event.id
-                          }
-                          onClick={() =>
-                            deleteEvent(
-                              event.id
-                            )
-                          }
-                        >
-
-                          <Trash2
-                            size={16}
-                          />
-
-                        </button>
-
-                      </div>
-
-                    </article>
-
-                  )
-                )
-
-              )}
-
-            </section>
+            {renderEventsList()}
 
           </>
 
@@ -3399,248 +4789,38 @@ function EventManagement() {
 
 
         {/* ===================================================
-            REGISTERED USERS TAB
-        =================================================== */}
+             MEDIA TAB
+             =================================================== */}
 
-        {activeTab ===
-          "registrations" && (
+        {activeTab === "media" && (
 
-          <section className="admin-event-registrations">
+          <div className="admin-event-media-overview">
 
+            <div className="admin-media-overview-header">
 
-            {/* REGISTRATION STATS */}
-
-            <div className="admin-registration-stats">
-
-              <div className="admin-registration-stat">
-
-                <div>
-                  <TicketCheck
-                    size={20}
-                  />
-                </div>
+              <div>
 
                 <span>
-                  Total Registrations
+                  EVENT MEDIA
                 </span>
 
-                <strong>
-                  {
-                    bookingStats.total
-                  }
-                </strong>
+                <h2>
+                  Gallery, Videos & Documents
+                </h2>
 
-              </div>
-
-
-              <div className="admin-registration-stat">
-
-                <div>
-                  <CheckCircle2
-                    size={20}
-                  />
-                </div>
-
-                <span>
-                  Confirmed
-                </span>
-
-                <strong>
-                  {
-                    bookingStats.confirmed
-                  }
-                </strong>
-
-              </div>
-
-
-              <div className="admin-registration-stat">
-
-                <div>
-                  <Clock3
-                    size={20}
-                  />
-                </div>
-
-                <span>
-                  Pending
-                </span>
-
-                <strong>
-                  {
-                    bookingStats.pending
-                  }
-                </strong>
-
-              </div>
-
-
-              <div className="admin-registration-stat">
-
-                <div>
-                  <CreditCard
-                    size={20}
-                  />
-                </div>
-
-                <span>
-                  Paid
-                </span>
-
-                <strong>
-                  {
-                    bookingStats.paid
-                  }
-                </strong>
+                <p>
+                  Select an event below to manage its
+                  gallery images, videos and documents.
+                </p>
 
               </div>
 
             </div>
 
 
-            {/* REGISTRATION TOOLBAR */}
+            {loading ? (
 
-            <div className="admin-registration-toolbar">
-
-              <div className="admin-registration-search">
-
-                <Search
-                  size={18}
-                />
-
-                <input
-                  type="text"
-                  placeholder="Search name, username, email, mobile, booking ID or event..."
-                  value={
-                    bookingSearch
-                  }
-                  onChange={(
-                    e
-                  ) =>
-                    setBookingSearch(
-                      e.target.value
-                    )
-                  }
-                />
-
-              </div>
-
-
-              <select
-                value={
-                  bookingEventFilter
-                }
-                onChange={(
-                  e
-                ) =>
-                  setBookingEventFilter(
-                    e.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  All Events
-                </option>
-
-                {bookingEvents.map(
-                  ([
-                    id,
-                    name,
-                  ]) => (
-
-                    <option
-                      key={id}
-                      value={id}
-                    >
-                      {name}
-                    </option>
-
-                  )
-                )}
-
-              </select>
-
-
-              <select
-                value={
-                  bookingPaymentFilter
-                }
-                onChange={(
-                  e
-                ) =>
-                  setBookingPaymentFilter(
-                    e.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  All Payments
-                </option>
-
-                <option value="pending">
-                  Payment Pending
-                </option>
-
-                <option value="submitted">
-                  Payment Submitted
-                </option>
-
-                <option value="paid">
-                  Paid
-                </option>
-
-                <option value="verified">
-                  Verified
-                </option>
-
-              </select>
-
-
-              <select
-                value={
-                  bookingStatusFilter
-                }
-                onChange={(
-                  e
-                ) =>
-                  setBookingStatusFilter(
-                    e.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  All Status
-                </option>
-
-                <option value="pending">
-                  Pending
-                </option>
-
-                <option value="confirmed">
-                  Confirmed
-                </option>
-
-                <option value="cancelled">
-                  Cancelled
-                </option>
-
-                <option value="rejected">
-                  Rejected
-                </option>
-
-              </select>
-
-            </div>
-
-
-            {/* REGISTRATION TABLE */}
-
-            {bookingsLoading ? (
-
-              <div className="admin-registration-loading">
+              <div className="admin-event-state">
 
                 <RefreshCw
                   size={30}
@@ -3648,949 +4828,215 @@ function EventManagement() {
                 />
 
                 <h3>
-                  Loading registered users...
+                  Loading events...
                 </h3>
 
               </div>
 
-            ) : filteredBookings.length ===
-              0 ? (
+            ) : events.length === 0 ? (
 
-              <div className="admin-registration-empty">
+              <div className="admin-event-state">
 
-                <Users
-                  size={42}
+                <FolderOpen
+                  size={35}
                 />
 
                 <h3>
-                  No registered users found
+                  No events available
                 </h3>
 
                 <p>
-                  Users who book an event
-                  will appear here.
+                  Create an event first to manage its media.
                 </p>
 
               </div>
 
             ) : (
 
-              <div className="admin-registration-table-wrapper">
+              <div className="admin-media-event-grid">
 
-                <table className="admin-registration-table">
+                {events.map(
+                  (event) => {
 
-                  <thead>
+                    const image =
+                      getEventImage(
+                        event
+                      );
 
-                    <tr>
+                    const galleryCount =
+                      Number(
+                        event.gallery_count ||
+                        0
+                      );
 
-                      <th>
-                        User
-                      </th>
+                    const videoCount =
+                      Number(
+                        event.video_count ||
+                        0
+                      );
 
-                      <th>
-                        Contact
-                      </th>
-
-                      <th>
-                        Event
-                      </th>
-
-                      <th>
-                        Booking ID
-                      </th>
-
-                      <th>
-                        Amount
-                      </th>
-
-                      <th>
-                        Payment
-                      </th>
-
-                      <th>
-                        Booking
-                      </th>
-
-                      <th>
-                        Event Date
-                      </th>
-
- 
-                    </tr>
-
-                  </thead>
+                    const documentCount =
+                      Number(
+                        event.document_count ||
+                        0
+                      );
 
 
-                  <tbody>
+                    return (
+                      <div
+                        className="admin-media-event-card"
+                        key={
+                          event.id
+                        }
+                      >
 
-                    {filteredBookings.map(
-                      (booking) => {
+                        {/* =================================
+                             IMAGE
+                             ================================= */}
 
-                        const paymentStatus =
-                          getPaymentStatus(
-                            booking
-                          );
+                        <div className="admin-media-event-image">
 
-                        const bookingStatus =
-                          getBookingStatus(
-                            booking
-                          );
+                          {image ? (
 
-                        return (
+                            <img
+                              src={
+                                image
+                              }
+                              alt={
+                                getEventTitle(
+                                  event
+                                )
+                              }
+                            />
 
-                          <tr
-                            key={
-                              getDatabaseBookingId(
-                                booking
-                              ) ||
-                              getBookingId(
-                                booking
-                              )
-                            }
+                          ) : (
+
+                            <CalendarDays
+                              size={30}
+                            />
+
+                          )}
+
+                        </div>
+
+
+                        {/* =================================
+                             CONTENT
+                             ================================= */}
+
+                        <div className="admin-media-event-content">
+
+                          <span>
+                            {getEventType(
+                              event
+                            )}
+                          </span>
+
+                          <h3>
+                            {getEventTitle(
+                              event
+                            )}
+                          </h3>
+
+                          <p>
+                            {formatDate(
+                              event.event_date
+                            )}
+                          </p>
+
+
+                          {/* =================================
+                               MEDIA COUNTS
+                               ================================= */}
+
+                          <div className="admin-media-event-counts">
+
+                            <div>
+
+                              <ImageIcon
+                                size={13}
+                              />
+
+                              <span>
+                                {galleryCount}
+                              </span>
+
+                              <small>
+                                Gallery
+                              </small>
+
+                            </div>
+
+
+                            <div>
+
+                              <Video
+                                size={13}
+                              />
+
+                              <span>
+                                {videoCount}
+                              </span>
+
+                              <small>
+                                Videos
+                              </small>
+
+                            </div>
+
+
+                            <div>
+
+                              <FileText
+                                size={13}
+                              />
+
+                              <span>
+                                {documentCount}
+                              </span>
+
+                              <small>
+                                Documents
+                              </small>
+
+                            </div>
+
+                          </div>
+
+
+                          {/* =================================
+                               MANAGE BUTTON
+                               ================================= */}
+
+                          <button
+                            type="button"
+                            className="admin-media-manage-btn"
                             onClick={() =>
-                              setSelectedBooking(
-                                booking
+                              openMediaManager(
+                                event
                               )
                             }
-                            style={{
-                              cursor:
-                                "pointer",
-                            }}
                           >
 
+                            <FolderOpen
+                              size={14}
+                            />
 
-                            {/* USER */}
+                            Manage Media
 
-                            <td>
+                          </button>
 
-                              <div className="admin-registration-user">
+                        </div>
 
-                                <div className="admin-registration-avatar">
+                      </div>
+                    );
 
-                                  <User
-                                    size={18}
-                                  />
-
-                                </div>
-
-                                <div>
-
-                                  <strong>
-                                    {
-                                      getUserName(
-                                        booking
-                                      )
-                                    }
-                                  </strong>
-
-                                  <small>
-                                    @
-                                    {
-                                      getUsername(
-                                        booking
-                                      )
-                                    }
-                                  </small>
-
-                                </div>
-
-                              </div>
-
-                            </td>
-
-
-                            {/* CONTACT */}
-
-                            <td>
-
-                              <div className="admin-registration-contact">
-
-                                <span>
-
-                                  <Mail
-                                    size={13}
-                                  />
-
-                                  {
-                                    getEmail(
-                                      booking
-                                    )
-                                  }
-
-                                </span>
-
-
-                                <span>
-
-                                  <Phone
-                                    size={13}
-                                  />
-
-                                  {
-                                    getPhone(
-                                      booking
-                                    )
-                                  }
-
-                                </span>
-
-                              </div>
-
-                            </td>
-
-
-                            {/* EVENT */}
-
-                            <td>
-
-                              <div className="admin-registration-event">
-
-                                <strong>
-                                  {
-                                    getEventName(
-                                      booking
-                                    )
-                                  }
-                                </strong>
-
-                                <small>
-                                  {
-                                    getEventType(
-                                      booking
-                                    )
-                                  }
-                                </small>
-
-                              </div>
-
-                            </td>
-
-
-                            {/* BOOKING ID */}
-
-                            <td>
-
-                              <span className="admin-registration-booking-id">
-
-                                #
-                                {
-                                  getBookingId(
-                                    booking
-                                  )
-                                }
-
-                              </span>
-
-                            </td>
-
-
-                            {/* AMOUNT */}
-
-                            <td>
-
-                              <strong className="admin-registration-amount">
-
-                                ₹
-                                {getAmount(
-                                  booking
-                                ).toLocaleString(
-                                  "en-IN"
-                                )}
-
-                              </strong>
-
-                            </td>
-
-
-                            {/* PAYMENT */}
-
-                            <td>
-
-                              <span
-                                className={`admin-registration-badge payment-${paymentStatus}`}
-                              >
-
-                                {paymentStatus}
-
-                              </span>
-
-                            </td>
-
-
-                            {/* BOOKING STATUS */}
-
-                            <td>
-
-                              <span
-                                className={`admin-registration-badge booking-${bookingStatus}`}
-                              >
-
-                                {bookingStatus}
-
-                              </span>
-
-                            </td>
-
-
-                            {/* REGISTERED */}
-
-                            <td>
-
-                              <span className="admin-registration-date">
-
-                                {
-                                  formatDateTime(
-                                    getBookingDate(
-                                      booking
-                                    )
-                                  )
-                                }
-
-                              </span>
-
-                            </td>
-
-
- 
-                          </tr>
-
-                        );
-
-                      }
-                    )}
-
-                  </tbody>
-
-                </table>
+                  }
+                )}
 
               </div>
 
             )}
-
-          </section>
-
-        )}
-
-
-        {/* ===================================================
-            REGISTERED USER DETAILS MODAL
-        =================================================== */}
-
-        {selectedBooking && (
-
-          <div
-            className="admin-registration-modal-overlay"
-            onClick={() =>
-              setSelectedBooking(
-                null
-              )
-            }
-          >
-
-            <div
-              className="admin-registration-modal"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
-            >
-
-              <div className="admin-registration-modal-header">
-
-                <div>
-
-                  <span>
-                    EVENT REGISTRATION
-                  </span>
-
-                  <h2>
-                    User Booking Details
-                  </h2>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedBooking(
-                      null
-                    )
-                  }
-                >
-
-                  <X size={20} />
-
-                </button>
-
-              </div>
-
-
-              <div className="admin-registration-details">
-
-                {/* USER */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <User
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Full Name
-                    </span>
-
-                    <strong>
-                      {
-                        getUserName(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* USERNAME */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <User
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Username
-                    </span>
-
-                    <strong>
-                      @
-                      {
-                        getUsername(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* EMAIL */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <Mail
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Email
-                    </span>
-
-                    <strong>
-                      {
-                        getEmail(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* MOBILE */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <Phone
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Mobile
-                    </span>
-
-                    <strong>
-                      {
-                        getPhone(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* EVENT */}
-
-                <div className="admin-registration-detail-card full">
-
-                  <div className="admin-registration-detail-icon">
-                    <CalendarDays
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Event
-                    </span>
-
-                    <strong>
-                      {
-                        getEventName(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* EVENT DATE */}
-
-                <div className="admin-registration-detail-card">
-                  <div className="admin-registration-detail-icon">
-                    <CalendarDays
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Event Date
-                    </span>
-
-                    <strong>
-                      {formatEventDate(
-                        getEventDate(
-                          selectedBooking
-                        )
-                      )}
-                    </strong>
-                  </div>
-                </div>
-
-
-                {/* EVENT TIME */}
-
-                <div className="admin-registration-detail-card">
-                  <div className="admin-registration-detail-icon">
-                    <Clock3
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Event Time
-                    </span>
-
-                    <strong>
-                      {getEventTime(
-                        selectedBooking
-                      )}
-                    </strong>
-                  </div>
-                </div>
-
-
-                {/* EVENT MODE */}
-
-                <div className="admin-registration-detail-card">
-                  <div className="admin-registration-detail-icon">
-                    <MapPin
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Event Mode
-                    </span>
-
-                    <strong>
-                      {getEventMode(
-                        selectedBooking
-                      )}
-                    </strong>
-                  </div>
-                </div>
-
-
-                {/* VENUE */}
-
-                <div className="admin-registration-detail-card full">
-                  <div className="admin-registration-detail-icon">
-                    <MapPin
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Venue
-                    </span>
-
-                    <strong>
-                      {getVenue(
-                        selectedBooking
-                      )}
-                    </strong>
-                  </div>
-                </div>
-
-
-                {/* BOOKING ID */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <TicketCheck
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Booking ID
-                    </span>
-
-                    <strong>
-                      #
-                      {
-                        getBookingId(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* AMOUNT */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <IndianRupee
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Amount
-                    </span>
-
-                    <strong>
-                      ₹
-                      {getAmount(
-                        selectedBooking
-                      ).toLocaleString(
-                        "en-IN"
-                      )}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* PAYMENT */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <CreditCard
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Payment Status
-                    </span>
-
-                    <strong>
-                      {
-                        getPaymentStatus(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* BOOKING STATUS */}
-
-                <div className="admin-registration-detail-card">
-
-                  <div className="admin-registration-detail-icon">
-                    <CheckCircle2
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Booking Status
-                    </span>
-
-                    <strong>
-                      {
-                        getBookingStatus(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* UTR */}
-
-                <div className="admin-registration-detail-card full">
-
-                  <div className="admin-registration-detail-icon">
-                    <ReceiptText
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Transaction / UTR
-                    </span>
-
-                    <strong>
-                      {
-                        getTransactionId(
-                          selectedBooking
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                {/* EVENT PASS */}
-
-                <div className="admin-registration-detail-card">
-                  <div className="admin-registration-detail-icon">
-                    <TicketCheck
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Event Pass
-                    </span>
-
-                    <strong>
-                      {selectedBooking.pass_code ||
-                        "Not generated"}
-                    </strong>
-                  </div>
-                </div>
-
-
-                {/* ATTENDANCE */}
-
-                <div className="admin-registration-detail-card">
-                  <div className="admin-registration-detail-icon">
-                    <Users
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Attendance
-                    </span>
-
-                    <strong>
-                      {getAttendanceStatus(
-                        selectedBooking
-                      )}
-                    </strong>
-                  </div>
-                </div>
-
-
-                {/* BOOKING DATE */}
-
-                <div className="admin-registration-detail-card full">
-
-                  <div className="admin-registration-detail-icon">
-                    <Clock3
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Event Date
-                    </span>
-
-                    <strong>
-                      {
-                        formatEventDate(
-                          getBookingDate(
-                            selectedBooking
-                          )
-                        )
-                      }
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              {/* MODAL ACTIONS */}
-
-              <div className="admin-registration-modal-actions">
-
-                {getBookingStatus(
-                  selectedBooking
-                ) !== "confirmed" && (
-
-                  <button
-                    type="button"
-                    className="registration-confirm-btn"
-                    disabled={
-                      bookingActionLoading
-                    }
-                    onClick={() =>
-                      updateBookingStatus(
-                        selectedBooking,
-                        "confirmed"
-                      )
-                    }
-                  >
-
-                    <CheckCircle2
-                      size={16}
-                    />
-
-                    Confirm Booking
-
-                  </button>
-
-                )}
-
-
-                {getBookingStatus(
-                  selectedBooking
-                ) !== "rejected" && (
-
-                  <button
-                    type="button"
-                    className="registration-reject-btn"
-                    disabled={
-                      bookingActionLoading
-                    }
-                    onClick={() =>
-                      updateBookingStatus(
-                        selectedBooking,
-                        "rejected"
-                      )
-                    }
-                  >
-
-                    <XCircle
-                      size={16}
-                    />
-
-                    Reject
-
-                  </button>
-
-                )}
-
-
-                <button
-                  type="button"
-                  className="registration-delete-btn"
-                  disabled={
-                    bookingActionLoading
-                  }
-                  onClick={() =>
-                    deleteBooking(
-                      selectedBooking
-                    )
-                  }
-                >
-
-                  <Trash2
-                    size={16}
-                  />
-
-                  Delete
-
-                </button>
-
-
-                <button
-                  type="button"
-                  className="registration-close-btn"
-                  onClick={() =>
-                    setSelectedBooking(
-                      null
-                    )
-                  }
-                >
-                  Close
-                </button>
-
-              </div>
-
-            </div>
 
           </div>
 
@@ -4598,11 +5044,28 @@ function EventManagement() {
 
       </div>
 
-    </main>
 
+      {/* ===================================================
+           EVENT FORM MODAL
+           =================================================== */}
+
+      {renderEventForm()}
+
+
+      {/* ===================================================
+           MEDIA MANAGER MODAL
+           =================================================== */}
+
+      {renderMediaManager()}
+
+    </div>
   );
 
 }
 
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 export default EventManagement;

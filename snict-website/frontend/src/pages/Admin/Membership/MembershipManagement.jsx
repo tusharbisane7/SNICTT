@@ -13,9 +13,11 @@ import {
   Clock3,
   CreditCard,
   Edit3,
+  FileDown,
   Eye,
   IndianRupee,
   Loader2,
+  MessageCircle,
   Plus,
   QrCode,
   RefreshCw,
@@ -28,6 +30,8 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+
+import jsPDF from "jspdf";
 
 import api from "../../../services/api";
 
@@ -1045,6 +1049,108 @@ const MembershipManagement =
       };
 
     // =======================================================
+    // RESEND APPROVAL WHATSAPP
+    // POST /api/membership/admin/:id/whatsapp
+    // =======================================================
+    //
+    // The backend sends the same approval message again for an
+    // already-approved membership. This is intentionally kept as
+    // a separate action so the admin can resend the message when
+    // the original WhatsApp delivery failed or the member asks
+    // for the membership details again.
+    //
+    // =======================================================
+
+    const resendApprovalWhatsApp =
+      async (membership) => {
+        if (!membership?.id) {
+          return;
+        }
+
+        const status =
+          getMembershipStatus(
+            membership
+          );
+
+        if (status !== "approved") {
+          setError(
+            "WhatsApp approval message can only be sent for an approved membership."
+          );
+          return;
+        }
+
+        const mobile =
+          getMobile(membership);
+
+        if (!mobile) {
+          setError(
+            "This member does not have a mobile number."
+          );
+          return;
+        }
+
+        const confirmed =
+          window.confirm(
+            `Send the membership approval WhatsApp again to ${getUserName(
+              membership
+            )}?`
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+          setActionLoading(
+            `whatsapp-${membership.id}`
+          );
+
+          setError("");
+          setSuccess("");
+
+          const response =
+            await api.post(
+              `/membership/admin/${membership.id}/whatsapp`
+            );
+
+          const updatedMembership =
+            response.data?.membership ||
+            response.data?.data ||
+            membership;
+
+          setSelectedMembership(
+            (current) =>
+              current?.id === membership.id
+                ? {
+                    ...current,
+                    ...updatedMembership,
+                  }
+                : current
+          );
+
+          setSuccess(
+            response.data?.message ||
+              "WhatsApp membership approval message sent successfully."
+          );
+
+          await loadMemberships();
+        } catch (err) {
+          console.error(
+            "Resend WhatsApp error:",
+            err
+          );
+
+          setError(
+            err.response?.data
+              ?.message ||
+              "Unable to send WhatsApp membership approval message."
+          );
+        } finally {
+          setActionLoading(null);
+        }
+      };
+
+    // =======================================================
     // OPEN REJECT
     // =======================================================
 
@@ -1568,6 +1674,199 @@ const MembershipManagement =
       };
 
     // =======================================================
+    // EXPORT MEMBERSHIPS AS PDF
+    // =======================================================
+
+    const exportMembershipsPdf = () => {
+      if (!filteredMemberships.length) {
+        setError("There are no memberships to export.");
+        return;
+      }
+
+      try {
+        const doc = new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: "a4",
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 10;
+        const columns = [
+          "#",
+          "Member",
+          "Username",
+          "Email",
+          "Mobile",
+          "Plan",
+          "Amount",
+          "UTR",
+          "Payment",
+          "Membership",
+          "Applied",
+        ];
+
+        const widths = [
+          8, 35, 28, 50, 27, 32, 23, 31, 25, 27, 31,
+        ];
+
+        const drawHeader = (y) => {
+          doc.setFillColor(20, 20, 20);
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(8);
+          doc.setFont(undefined, "bold");
+
+          let x = margin;
+          columns.forEach((column, index) => {
+            doc.rect(x, y, widths[index], 8, "F");
+            doc.text(column, x + 2, y + 5.2);
+            x += widths[index];
+          });
+
+          doc.setTextColor(20, 20, 20);
+          doc.setFont(undefined, "normal");
+          return y + 8;
+        };
+
+        const drawCellText = (text, x, y, width) => {
+          const value = String(text ?? "—");
+          const lines = doc.splitTextToSize(value, width - 4);
+          doc.text(lines.slice(0, 2), x + 2, y + 4);
+        };
+
+        const drawRow = (membership, index, y) => {
+          const rowHeight = 11;
+          const status = getMembershipStatus(membership);
+          const paymentStatus = getPaymentStatus(membership);
+          const utr =
+            membership?.utrNumber ||
+            membership?.utr_number ||
+            "Not submitted";
+
+          const values = [
+            index + 1,
+            getUserName(membership),
+            getUsername(membership),
+            getEmail(membership),
+            getMobile(membership),
+            getPlanName(membership),
+            `INR ${getAmount(membership).toLocaleString("en-IN")}`,
+            utr,
+            paymentStatus === "approved"
+              ? "Paid"
+              : paymentStatus === "submitted"
+              ? "Submitted"
+              : paymentStatus === "received"
+              ? "Received"
+              : paymentStatus === "rejected"
+              ? "Rejected"
+              : "Not Submitted",
+            status === "approved"
+              ? "Active"
+              : status.charAt(0).toUpperCase() + status.slice(1),
+            formatDate(
+              membership?.appliedAt ||
+                membership?.applied_at
+            ),
+          ];
+
+          let x = margin;
+          doc.setFontSize(7.2);
+          doc.setDrawColor(220, 220, 220);
+          doc.setTextColor(35, 35, 35);
+
+          values.forEach((value, cellIndex) => {
+            doc.rect(
+              x,
+              y,
+              widths[cellIndex],
+              rowHeight
+            );
+            drawCellText(
+              value,
+              x,
+              y,
+              widths[cellIndex]
+            );
+            x += widths[cellIndex];
+          });
+
+          return y + rowHeight;
+        };
+
+        doc.setTextColor(20, 20, 20);
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(18);
+        doc.text(
+          "SNICT — Membership Members",
+          margin,
+          14
+        );
+
+        doc.setFont(undefined, "normal");
+        doc.setFontSize(9);
+        doc.text(
+          `Generated: ${formatDateTime(new Date())}`,
+          margin,
+          20
+        );
+        doc.text(
+          `Members exported: ${filteredMemberships.length}`,
+          pageWidth - margin,
+          20,
+          { align: "right" }
+        );
+
+        let y = 25;
+        y = drawHeader(y);
+
+        filteredMemberships.forEach((membership, index) => {
+          if (y + 11 > pageHeight - 10) {
+            doc.addPage();
+            y = 15;
+            y = drawHeader(y);
+          }
+
+          y = drawRow(membership, index, y);
+        });
+
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let page = 1; page <= totalPages; page += 1) {
+          doc.setPage(page);
+          doc.setFontSize(7);
+          doc.setTextColor(100, 100, 100);
+          doc.text(
+            `SNICT Membership Management • Page ${page} of ${totalPages}`,
+            pageWidth - margin,
+            pageHeight - 5,
+            { align: "right" }
+          );
+        }
+
+        const datePart = new Date()
+          .toISOString()
+          .slice(0, 10);
+
+        doc.save(
+          `SNICT-Memberships-${datePart}.pdf`
+        );
+
+        setSuccess(
+          `${filteredMemberships.length} membership${filteredMemberships.length === 1 ? "" : "s"} exported successfully.`
+        );
+      } catch (err) {
+        console.error(
+          "Export memberships PDF error:",
+          err
+        );
+        setError(
+          "Unable to generate membership PDF. Please try again."
+        );
+      }
+    };
+
+    // =======================================================
     // RENDER
     // =======================================================
 
@@ -1858,9 +2157,22 @@ const MembershipManagement =
                 </h2>
               </div>
 
-              <div className="mm-section-count">
-                {filteredMemberships.length}{" "}
-                results
+              <div className="mm-section-header-actions">
+                <div className="mm-section-count">
+                  {filteredMemberships.length}{" "}
+                  results
+                </div>
+
+                <button
+                  type="button"
+                  className="mm-primary-button mm-export-button"
+                  onClick={exportMembershipsPdf}
+                  disabled={filteredMemberships.length === 0}
+                  title="Export the currently filtered memberships as PDF"
+                >
+                  <FileDown size={17} />
+                  Export PDF
+                </button>
               </div>
             </div>
 
@@ -2276,6 +2588,41 @@ const MembershipManagement =
                                       </button>
                                     </>
                                   )}
+
+                                {status ===
+                                  "approved" && (
+                                  <button
+                                    type="button"
+                                    className="mm-action-approve"
+                                    title="Resend membership approval on WhatsApp"
+                                    disabled={
+                                      actionLoading ===
+                                      `whatsapp-${membership.id}`
+                                    }
+                                    onClick={() =>
+                                      resendApprovalWhatsApp(
+                                        membership
+                                      )
+                                    }
+                                  >
+                                    {actionLoading ===
+                                    `whatsapp-${membership.id}` ? (
+                                      <Loader2
+                                        size={15}
+                                        className="mm-spin"
+                                      />
+                                    ) : (
+                                      <MessageCircle
+                                        size={15}
+                                      />
+                                    )}
+
+                                    {actionLoading ===
+                                    `whatsapp-${membership.id}`
+                                      ? "Sending..."
+                                      : "Send WhatsApp"}
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

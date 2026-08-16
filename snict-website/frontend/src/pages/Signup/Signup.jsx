@@ -15,7 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import api from "../../services/api";
 
-import snictLogo from "../../assets/snict-logo.png";
+import snictLogo from "../../assets/snict-logo.jpeg";
 
 import "./Signup.css";
 
@@ -42,6 +42,7 @@ function Signup() {
     bloodGroup: "",
     designation: "",
     bio: "",
+    aadhaarNumber: "",
   });
 
   // =========================================================
@@ -52,22 +53,19 @@ function Signup() {
   const [profilePreview, setProfilePreview] = useState("");
 
   // =========================================================
-  // MEMBERSHIP
+  // AADHAAR CARD
   // =========================================================
 
-  const [membershipPlans, setMembershipPlans] = useState([]);
-  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [aadhaarCard, setAadhaarCard] = useState(null);
 
-  const [paymentSettings, setPaymentSettings] = useState(null);
+  // =========================================================
+  // MEMBERSHIP
+  // =========================================================
+  //
+  // Membership selection/payment is now handled on the
+  // dedicated /membership-payment page.
+  //
 
-  const [membershipId, setMembershipId] = useState(null);
-
-  const [utrNumber, setUtrNumber] = useState("");
-
-  const [membershipStep, setMembershipStep] = useState("plan");
-
-  const [membershipLoading, setMembershipLoading] =
-    useState(false);
 
   // =========================================================
   // UI
@@ -81,6 +79,48 @@ function Signup() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // =========================================================
+  // AADHAAR CARD
+  // =========================================================
+
+  const handleAadhaarCardChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setAadhaarCard(null);
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError(
+        "Please select a PDF, JPG, JPEG, PNG or WEBP Aadhaar document."
+      );
+      event.target.value = "";
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setError("Aadhaar card must be less than 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setAadhaarCard(file);
+  };
 
   // =========================================================
   // USERNAME
@@ -111,7 +151,7 @@ function Signup() {
       .length;
   };
 
-  const bioWordCount = getWordCount(form.bio);
+  const bioCharacterCount = form.bio.length;
 
   // =========================================================
   // HANDLE INPUT
@@ -134,17 +174,14 @@ function Signup() {
         .slice(0, 10);
     }
 
-    if (name === "bio") {
-      const words = value
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
+    if (name === "aadhaarNumber") {
+      updatedValue = value
+        .replace(/\D/g, "")
+        .slice(0, 12);
+    }
 
-      if (words.length > 300) {
-        updatedValue = words
-          .slice(0, 300)
-          .join(" ");
-      }
+    if (name === "bio") {
+      updatedValue = value.slice(0, 300);
     }
 
     setForm((previous) => ({
@@ -239,43 +276,7 @@ function Signup() {
     };
   }, [profilePreview]);
 
-  // =========================================================
-  // LOAD MEMBERSHIP PLANS
-  // =========================================================
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadMembershipPlans = async () => {
-      try {
-        const response =
-          await api.get("/membership/plans");
-
-        if (mounted) {
-          setMembershipPlans(
-            Array.isArray(response.data?.plans)
-              ? response.data.plans
-              : []
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Membership plans error:",
-          error
-        );
-
-        if (mounted) {
-          setMembershipPlans([]);
-        }
-      }
-    };
-
-    loadMembershipPlans();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   // =========================================================
   // CHECK USERNAME
@@ -453,8 +454,16 @@ function Signup() {
       return "Designation must not exceed 150 characters.";
     }
 
-    if (getWordCount(bio) > 300) {
-      return "Bio must not exceed 300 words.";
+    if (bio.length > 300) {
+      return "Bio must not exceed 300 characters.";
+    }
+
+    if (!/^\d{12}$/.test(form.aadhaarNumber)) {
+      return "Please enter a valid 12-digit Aadhaar number.";
+    }
+
+    if (!aadhaarCard) {
+      return "Please upload your Aadhaar card.";
     }
 
     if (form.password.length < 8) {
@@ -465,12 +474,6 @@ function Signup() {
       return "Passwords do not match.";
     }
 
-    if (
-      membershipPlans.length > 0 &&
-      !selectedPlanId
-    ) {
-      return "Please select a membership plan.";
-    }
 
     return "";
   };
@@ -560,6 +563,11 @@ function Signup() {
         form.bio.trim()
       );
 
+      formData.append(
+        "aadhaarNumber",
+        form.aadhaarNumber.trim()
+      );
+
       if (profileImage) {
         formData.append(
           "profileImage",
@@ -567,13 +575,17 @@ function Signup() {
         );
       }
 
-      // Tell the backend whether this signup immediately
-      // continues into the protected membership/payment flow.
-      // The backend will issue a short-lived auth cookie only
-      // for this flow.
+      formData.append(
+        "aadhaarCard",
+        aadhaarCard
+      );
+
+      // Always issue the short-lived authentication session
+      // because membership selection/payment now happens on
+      // the dedicated membership payment page.
       formData.append(
         "signupWithMembership",
-        selectedPlanId ? "true" : "false"
+        "true"
       );
 
       const response = await api.post(
@@ -593,113 +605,28 @@ function Signup() {
       );
 
       // =====================================================
-      // MEMBERSHIP FLOW
+      // MEMBERSHIP PAYMENT PAGE
       // =====================================================
+      //
+      // Registration is complete. The backend issues a
+      // short-lived authentication cookie for the new member.
+      // The dedicated payment page will load the member details,
+      // membership plans and payment settings.
+      //
+      setSuccess(
+        response.data?.message ||
+          "Account created successfully. Redirecting to membership payment..."
+      );
 
-      if (selectedPlanId) {
-        setMembershipLoading(true);
+      setTimeout(() => {
+        navigate("/membership-payment", {
+          replace: true,
+          state: {
+            fromSignup: true,
+          },
+        });
+      }, 700);
 
-        try {
-          // -------------------------------------------------
-          // ACCOUNT IS ALREADY TEMPORARILY AUTHENTICATED
-          // -------------------------------------------------
-          // registerUser issues a short-lived auth cookie when
-          // signupWithMembership=true. Do NOT call /auth/login
-          // here because normal login intentionally requires an
-          // approved membership.
-
-          // -------------------------------------------------
-          // CREATE MEMBERSHIP
-          // -------------------------------------------------
-
-          const applyResponse =
-            await api.post(
-              "/membership/apply",
-              {
-                planId:
-                  Number(selectedPlanId),
-              }
-            );
-
-          const createdMembership =
-            applyResponse.data?.membership;
-
-          if (!createdMembership?.id) {
-            throw new Error(
-              "Membership application was not created"
-            );
-          }
-
-          setMembershipId(
-            createdMembership.id
-          );
-
-          // -------------------------------------------------
-          // PAYMENT SETTINGS
-          // -------------------------------------------------
-
-          try {
-            const settingsResponse =
-              await api.get(
-                "/membership/payment-settings"
-              );
-
-            setPaymentSettings(
-              settingsResponse.data?.settings ||
-                settingsResponse.data?.paymentSettings ||
-                null
-            );
-          } catch (settingsError) {
-            console.warn(
-              "Payment settings endpoint error:",
-              settingsError
-            );
-
-            setPaymentSettings(
-              applyResponse.data
-                ?.paymentSettings || null
-            );
-          }
-
-          // -------------------------------------------------
-          // SHOW PAYMENT
-          // -------------------------------------------------
-
-          setMembershipStep("payment");
-
-          setSuccess(
-            "Account created. Complete your membership payment and enter the UTR number."
-          );
-        } catch (membershipError) {
-          console.error(
-            "Membership signup flow error:",
-            membershipError
-          );
-
-          setSuccess(
-            response.data?.message ||
-              "Account created successfully."
-          );
-
-          setError(
-            membershipError.response?.data?.message ||
-              "Account was created, but membership setup could not be completed. Please login and complete membership from your membership page."
-          );
-        } finally {
-          setMembershipLoading(false);
-        }
-      } else {
-        setSuccess(
-          response.data?.message ||
-            "Account created successfully."
-        );
-
-        setTimeout(() => {
-          navigate("/login", {
-            replace: true,
-          });
-        }, 1200);
-      }
     } catch (error) {
       console.error(
         "Signup error:",
@@ -746,97 +673,6 @@ function Signup() {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  // =========================================================
-  // SUBMIT PAYMENT / UTR
-  // =========================================================
-
-  const handlePaymentSubmit = async (event) => {
-    event.preventDefault();
-
-    if (membershipLoading) {
-      return;
-    }
-
-    const cleanUtr =
-      String(utrNumber).trim();
-
-    if (!membershipId) {
-      setError(
-        "Membership application was not created. Please login and try again."
-      );
-
-      return;
-    }
-
-    if (!cleanUtr) {
-      setError(
-        "Please enter your UTR / transaction number."
-      );
-
-      return;
-    }
-
-    if (
-      cleanUtr.length < 6 ||
-      cleanUtr.length > 50
-    ) {
-      setError(
-        "Please enter a valid UTR / transaction number."
-      );
-
-      return;
-    }
-
-    try {
-      setError("");
-      setSuccess("");
-      setMembershipLoading(true);
-
-      const response =
-        await api.post(
-          "/membership/payment",
-          {
-            membershipId,
-            utrNumber: cleanUtr,
-          }
-        );
-
-      setSuccess(
-        response.data?.message ||
-          "Payment submitted successfully. Your membership is now waiting for admin approval."
-      );
-
-      // -----------------------------------------------------
-      // END TEMPORARY SIGNUP SESSION
-      // -----------------------------------------------------
-      // The user must not remain authenticated while the
-      // membership is pending. Normal login will become
-      // available only after admin approval.
-      try {
-        await api.post("/auth/logout");
-      } catch (logoutError) {
-        console.warn(
-          "Temporary signup logout error:",
-          logoutError
-        );
-      }
-
-      setMembershipStep("submitted");
-    } catch (error) {
-      console.error(
-        "Membership payment error:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-          "Unable to submit payment details."
-      );
-    } finally {
-      setMembershipLoading(false);
     }
   };
 
@@ -956,7 +792,7 @@ function Signup() {
             Payment form is NOT inside this form.
         =================================================== */}
 
-        {membershipStep === "plan" && (
+        
           <form
             className="signup-form"
             onSubmit={handleSubmit}
@@ -1102,9 +938,7 @@ function Signup() {
                   autoComplete="organization-title"
                 />
 
-                <small className="field-help">
-                  Maximum 150 characters.
-                </small>
+               
 
               </div>
 
@@ -1364,7 +1198,55 @@ function Signup() {
 
               </div>
 
+              {/* AADHAAR NUMBER */}
+
+              <div className="form-field">
+                <label htmlFor="aadhaarNumber">
+                  Aadhaar Number
+                </label>
+
+                <input
+                  id="aadhaarNumber"
+                  type="text"
+                  name="aadhaarNumber"
+                  value={form.aadhaarNumber}
+                  onChange={handleChange}
+                  placeholder="Enter 12-digit Aadhaar number"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={12}
+                  required
+                />
+
+                <small className="field-help">
+                  Enter your 12-digit Aadhaar number.
+                </small>
+              </div>
+
+              {/* AADHAAR DOCUMENT */}
+
+              <div className="form-field">
+                <label htmlFor="aadhaarCard">
+                  Aadhaar Card
+                </label>
+
+                <input
+                  id="aadhaarCard"
+                  type="file"
+                  name="aadhaarCard"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={handleAadhaarCardChange}
+                  required
+                />
+
+                <small className="field-help">
+                  PDF, JPG, JPEG, PNG or WEBP • Max 5 MB
+                  {aadhaarCard ? ` • ${aadhaarCard.name}` : ""}
+                </small>
+              </div>
+
               {/* BIO */}
+
 
               <div className="form-field full">
 
@@ -1379,23 +1261,23 @@ function Signup() {
                   onChange={handleChange}
                   placeholder="Tell the SNICT community about your professional background, experience, interests and areas of expertise..."
                   rows="6"
-                  maxLength={3000}
+                  maxLength={300}
                 />
 
                 <div className="bio-counter">
 
                   <span>
-                    Maximum 300 words
+                    Maximum 300 characters
                   </span>
 
                   <span
                     className={
-                      bioWordCount >= 280
+                      bioCharacterCount >= 280
                         ? "bio-counter-warning"
                         : ""
                     }
                   >
-                    {bioWordCount} / 300 words
+                    {bioCharacterCount} / 300 characters
                   </span>
 
                 </div>
@@ -1509,130 +1391,6 @@ function Signup() {
             </div>
 
             {/* =================================================
-                MEMBERSHIP PLAN
-            ================================================= */}
-
-            <section className="signup-membership-section">
-
-              <div className="signup-membership-header">
-
-                <div>
-
-                  <span className="signup-membership-eyebrow">
-                    MEMBERSHIP
-                  </span>
-
-                  <h2>
-                    Choose your SNICT membership
-                  </h2>
-
-                  <p>
-                    Select a membership plan. After
-                    your account is created, you can
-                    pay using the official payment QR
-                    and submit your UTR for approval.
-                  </p>
-
-                </div>
-
-              </div>
-
-              {membershipPlans.length > 0 ? (
-                <div className="signup-membership-plans">
-
-                  {membershipPlans.map((plan) => {
-
-                    const planId = String(
-                      plan.id ??
-                        plan.planId
-                    );
-
-                    const duration =
-                      plan.durationYears ??
-                      plan.duration_years ??
-                      1;
-
-                    const price = Number(
-                      plan.price ??
-                        plan.amount ??
-                        0
-                    );
-
-                    const name =
-                      plan.name ||
-                      `${duration} Year Membership`;
-
-                    const active =
-                      plan.isActive ??
-                      plan.is_active ??
-                      true;
-
-                    if (!active) {
-                      return null;
-                    }
-
-                    return (
-                      <button
-                        key={planId}
-                        type="button"
-                        className={`signup-membership-plan ${
-                          String(
-                            selectedPlanId
-                          ) === planId
-                            ? "selected"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          setSelectedPlanId(
-                            planId
-                          )
-                        }
-                      >
-
-                        <span className="membership-plan-check">
-                          {String(
-                            selectedPlanId
-                          ) === planId
-                            ? "✓"
-                            : ""}
-                        </span>
-
-                        <span className="membership-plan-name">
-                          {name}
-                        </span>
-
-                        <span className="membership-plan-duration">
-                          Valid for{" "}
-                          {duration}{" "}
-                          {Number(duration) === 1
-                            ? "year"
-                            : "years"}
-                        </span>
-
-                        <strong className="membership-plan-price">
-                          ₹
-                          {price.toLocaleString(
-                            "en-IN"
-                          )}
-                        </strong>
-
-                      </button>
-                    );
-                  })}
-
-                </div>
-              ) : (
-                <div className="signup-membership-empty">
-                  Membership plans are currently
-                  unavailable. You can create your
-                  account and join later from the
-                  membership section.
-                </div>
-              )}
-
-            </section>
-
-            {/* =================================================
                 CREATE ACCOUNT
             ================================================= */}
 
@@ -1673,208 +1431,6 @@ function Signup() {
             </button>
 
           </form>
-        )}
-
-        {/* =====================================================
-            PAYMENT SECTION
-            IMPORTANT:
-            This form is now OUTSIDE signup form.
-        ===================================================== */}
-
-        {membershipStep === "payment" && (
-          <section className="signup-payment-section">
-
-            <div className="signup-payment-header">
-
-              <span className="signup-membership-eyebrow">
-                PAYMENT
-              </span>
-
-              <h2>
-                Complete membership payment
-              </h2>
-
-              <p>
-                Scan the official SNICT payment QR,
-                complete the payment, then enter
-                the UTR number below.
-              </p>
-
-            </div>
-
-            {paymentSettings?.qrCode ? (
-              <div className="signup-payment-qr">
-
-                <img
-                  src={paymentSettings.qrCode}
-                  alt="SNICT membership payment QR"
-                  onError={(event) => {
-                    event.currentTarget.style.display = "none";
-
-                    const parent =
-                      event.currentTarget.parentElement;
-
-                    if (
-                      parent &&
-                      !parent.querySelector(
-                        ".signup-payment-qr-error"
-                      )
-                    ) {
-                      const message =
-                        document.createElement("div");
-
-                      message.className =
-                        "signup-payment-qr-error";
-
-                      message.innerText =
-                        "Payment QR could not be loaded. Please contact the administrator.";
-
-                      parent.appendChild(message);
-                    }
-                  }}
-                />
-
-              </div>
-            ) : (
-              <div className="signup-payment-qr signup-payment-qr-empty">
-                <span>
-                  Payment QR is currently unavailable.
-                  Please contact the administrator.
-                </span>
-              </div>
-            )}
-
-            <div className="signup-payment-details">
-
-              {paymentSettings?.accountName && (
-                <div>
-
-                  <span>
-                    Account Name
-                  </span>
-
-                  <strong>
-                    {paymentSettings.accountName}
-                  </strong>
-
-                </div>
-              )}
-
-              {paymentSettings?.upiId && (
-                <div>
-
-                  <span>
-                    UPI ID
-                  </span>
-
-                  <strong>
-                    {paymentSettings.upiId}
-                  </strong>
-
-                </div>
-              )}
-
-            </div>
-
-            {/* =================================================
-                SEPARATE PAYMENT FORM
-            ================================================= */}
-
-            <form
-              className="signup-payment-form"
-              onSubmit={
-                handlePaymentSubmit
-              }
-              noValidate
-            >
-
-              <div className="form-field full">
-
-                <label htmlFor="utrNumber">
-                  UTR / Transaction Number
-                </label>
-
-                <input
-                  id="utrNumber"
-                  type="text"
-                  value={utrNumber}
-                  onChange={(event) =>
-                    setUtrNumber(
-                      event.target.value
-                    )
-                  }
-                  placeholder="Enter payment UTR number"
-                  maxLength={50}
-                  autoComplete="off"
-                  required
-                />
-
-                <small className="field-help">
-                  Your payment will remain
-                  pending until an administrator
-                  verifies it.
-                </small>
-
-              </div>
-
-              <button
-                type="submit"
-                className="auth-submit"
-                disabled={
-                  membershipLoading
-                }
-              >
-
-                {membershipLoading
-                  ? "Submitting payment..."
-                  : "Submit UTR for Approval"}
-
-              </button>
-
-            </form>
-
-          </section>
-        )}
-
-        {/* =====================================================
-            MEMBERSHIP SUBMITTED
-        ===================================================== */}
-
-        {membershipStep === "submitted" && (
-          <section className="signup-membership-success">
-
-            <div className="membership-success-icon">
-              ✓
-            </div>
-
-            <h2>
-              Membership application submitted
-            </h2>
-
-            <p>
-              Your payment details have been
-              submitted. Your membership is now
-              waiting for admin approval.
-            </p>
-
-            <p>
-              You cannot login until your
-              membership is approved by the
-              administrator.
-            </p>
-
-            <button
-              type="button"
-              className="auth-submit"
-              onClick={
-                finishMembershipFlow
-              }
-            >
-              Continue to Login
-            </button>
-
-          </section>
-        )}
 
         {/* =====================================================
             FOOTER

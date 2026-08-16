@@ -11,6 +11,11 @@ const {
   hashOtp,
 } = require("../utils/generateOtp");
 
+
+// =========================================================
+// GENERAL HELPERS
+// =========================================================
+
 const createExpiry = () => {
   const expiry = new Date();
 
@@ -20,6 +25,11 @@ const createExpiry = () => {
 
   return expiry;
 };
+
+
+// =========================================================
+// IMAGE URL HELPER
+// =========================================================
 
 const getImageUrl = (
   req,
@@ -57,6 +67,11 @@ const getImageUrl = (
 
   return `${backendUrl}/${image}`;
 };
+
+
+// =========================================================
+// CLOUDINARY PUBLIC ID
+// =========================================================
 
 const getCloudinaryPublicId = (
   imageUrl
@@ -115,10 +130,16 @@ const getCloudinaryPublicId = (
   }
 };
 
+
+// =========================================================
+// DELETE CLOUDINARY IMAGE
+// =========================================================
+
 const deleteCloudinaryImage =
   async (
     imageUrl
   ) => {
+
     const publicId =
       getCloudinaryPublicId(
         imageUrl
@@ -129,6 +150,7 @@ const deleteCloudinaryImage =
     }
 
     try {
+
       await cloudinary.uploader.destroy(
         publicId,
         {
@@ -136,15 +158,24 @@ const deleteCloudinaryImage =
           invalidate: true,
         }
       );
+
     } catch (error) {
+
       console.error(
         "Cloudinary image delete error:",
         error.message
       );
+
     }
   };
 
+
+// =========================================================
+// AUTH COOKIE OPTIONS
+// =========================================================
+
 const authCookieOptions = {
+
   httpOnly: true,
 
   secure:
@@ -167,53 +198,255 @@ const authCookieOptions = {
   path: "/",
 };
 
+
+// =========================================================
+// NORMAL AUTH COOKIE
+// =========================================================
+
 const setAuthCookie = (
   res,
   token
 ) => {
+
   res.cookie(
     "snict_token",
     token,
     authCookieOptions
   );
+
 };
+
+
+// =========================================================
+// TEMPORARY SIGNUP AUTH COOKIE
+//
+// Used when:
+//
+// Signup
+//   ↓
+// Membership Payment
+//
+// Cookie validity = 30 minutes
+// =========================================================
 
 const setSignupAuthCookie = (
   res,
   token
 ) => {
+
   res.cookie(
     "snict_token",
     token,
     {
       ...authCookieOptions,
+
       maxAge:
         30 *
         60 *
         1000,
     }
   );
+
 };
 
-const getWordCount = (
+
+// =========================================================
+// BIO CHARACTER COUNT
+//
+// IMPORTANT:
+// Bio limit is 300 CHARACTERS,
+// NOT 300 WORDS.
+// =========================================================
+
+const getCharacterCount = (
   text
 ) => {
+
   if (!text) {
     return 0;
   }
 
-  return String(text)
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .length;
+  return Array.from(
+    String(text)
+  ).length;
+
 };
+
+
+// =========================================================
+// CLEAN BIO
+// =========================================================
+
+const cleanBioText = (
+  text
+) => {
+
+  return String(
+    text || ""
+  ).trim();
+
+};
+
+
+// =========================================================
+// AADHAAR NORMALIZER
+//
+// Accepts:
+//
+// 123456789012
+//
+// Also accepts:
+//
+// 1234 5678 9012
+//
+// Returns only 12 digits.
+// =========================================================
+
+const normalizeAadhaar = (
+  aadhaar
+) => {
+
+  return String(
+    aadhaar || ""
+  )
+    .replace(/\D/g, "")
+    .trim();
+
+};
+
+
+// =========================================================
+// AADHAAR LAST FOUR DIGITS
+//
+// We NEVER expose complete Aadhaar
+// to the frontend.
+// =========================================================
+
+const getAadhaarLast4 = (
+  aadhaar
+) => {
+
+  const normalized =
+    normalizeAadhaar(
+      aadhaar
+    );
+
+  if (
+    normalized.length !== 12
+  ) {
+    return null;
+  }
+
+  return normalized.slice(-4);
+
+};
+
+
+// =========================================================
+// FILE HELPER
+//
+// Supports:
+//
+// req.file
+//
+// AND:
+//
+// req.files.profileImage
+// req.files.aadhaarCard
+//
+// This makes controller compatible
+// with the new registration middleware.
+// =========================================================
+
+const getUploadedFile = (
+  req,
+  fieldName
+) => {
+
+  // -------------------------------------------------------
+  // Multer upload.fields()
+  // -------------------------------------------------------
+
+  if (
+    req.files &&
+    !Array.isArray(req.files) &&
+    req.files[fieldName] &&
+    req.files[fieldName].length > 0
+  ) {
+
+    return req.files[fieldName][0];
+
+  }
+
+
+  // -------------------------------------------------------
+  // Multer upload.single()
+  //
+  // Existing profile upload compatibility
+  // -------------------------------------------------------
+
+  if (
+    req.file &&
+    fieldName === "profileImage"
+  ) {
+
+    return req.file;
+
+  }
+
+
+  return null;
+
+};
+
+
+// =========================================================
+// FILE URL
+// =========================================================
+
+const getUploadedFileUrl = (
+  file
+) => {
+
+  if (!file) {
+    return null;
+  }
+
+  return (
+    file.path ||
+    file.secure_url ||
+    file.url ||
+    null
+  );
+
+};
+
+
+// =========================================================
+// CLEAN USER RESPONSE
+//
+// SECURITY:
+//
+// Aadhaar number is NEVER returned.
+// Aadhaar document URL is NEVER returned.
+//
+// Only last 4 digits are returned.
+// =========================================================
 
 const cleanUser = (
   user,
   req
 ) => {
+
+  const aadhaarLast4 =
+    user.aadhaar_number
+      ? getAadhaarLast4(
+          user.aadhaar_number
+        )
+      : null;
+
   return {
+
     id:
       user.id,
 
@@ -253,15 +486,40 @@ const cleanUser = (
     bio:
       user.bio || "",
 
+    // -----------------------------------------------------
+    // SECURITY:
+    // Only last four digits are exposed.
+    // -----------------------------------------------------
+
+    aadhaarLast4,
+
+    // -----------------------------------------------------
+    // This is useful for frontend UI.
+    // It does NOT expose the document URL.
+    // -----------------------------------------------------
+
+    aadhaarProvided:
+      Boolean(
+        user.aadhaar_number ||
+        user.aadhaar_card_url
+      ),
+
     createdAt:
       user.created_at,
   };
+
 };
+
+
+// =========================================================
+// SAFE HASH COMPARE
+// =========================================================
 
 const safeHashCompare = (
   hashA,
   hashB
 ) => {
+
   if (
     !hashA ||
     !hashB
@@ -292,23 +550,33 @@ const safeHashCompare = (
     a,
     b
   );
+
 };
+
+
+// =========================================================
+// CHECK USERNAME
+// GET /api/auth/check-username
+// =========================================================
 
 const checkUsername =
   async (
     req,
     res
   ) => {
+
     try {
+
       const username =
         String(
           req.query.username ||
-            ""
+          ""
         )
           .trim()
           .toLowerCase();
 
       if (!username) {
+
         return res.json({
           success: true,
           available: false,
@@ -316,6 +584,7 @@ const checkUsername =
             "Enter a username",
           suggestions: [],
         });
+
       }
 
       if (
@@ -323,6 +592,7 @@ const checkUsername =
           username
         )
       ) {
+
         return res.json({
           success: true,
           available: false,
@@ -330,6 +600,7 @@ const checkUsername =
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
           suggestions: [],
         });
+
       }
 
       const result =
@@ -340,13 +611,16 @@ const checkUsername =
           WHERE username = $1
           LIMIT 1
           `,
-          [username]
+          [
+            username,
+          ]
         );
 
       if (
         result.rows.length ===
         0
       ) {
+
         return res.json({
           success: true,
           available: true,
@@ -354,59 +628,116 @@ const checkUsername =
             "Username available",
           suggestions: [],
         });
+
       }
 
       const suggestions = [
+
         `${username}_01`,
+
         `${username}_2026`,
+
         `${username}123`,
+
         `${username}_official`,
+
       ];
 
       return res.json({
+
         success: true,
+
         available: false,
+
         message:
           "Username already taken",
+
         suggestions,
+
       });
 
     } catch (error) {
+
       console.error(
         "Check username error:",
         error
       );
 
       return res.status(500).json({
+
         success: false,
+
         message:
           "Unable to check username",
+
       });
+
     }
+
   };
+
+
+// =========================================================
+// REGISTER USER
+//
+// POST /api/auth/register
+// POST /api/auth/signup
+//
+// New fields:
+//
+// aadhaarNumber
+// aadhaarCard
+//
+// Bio:
+//
+// MAX 300 CHARACTERS
+// =========================================================
 
 const registerUser =
   async (
     req,
     res
   ) => {
+
     const client =
       await pool.connect();
 
     try {
+
       const {
+
         fullName,
+
         username,
+
         email,
+
         mobile,
+
         password,
+
         age,
+
         sex,
+
         address,
+
         bloodGroup,
+
         designation,
+
         bio,
+
+        aadhaarNumber,
+
+        signupWithMembership,
+
       } = req.body;
+
+
+      // =====================================================
+      // REQUIRED FIELDS
+      // =====================================================
 
       if (
         !fullName ||
@@ -420,12 +751,22 @@ const registerUser =
         !address ||
         !bloodGroup
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           message:
-            "All fields are required",
+            "All required fields are required",
+
         });
+
       }
+
+
+      // =====================================================
+      // NORMALIZE BASIC DATA
+      // =====================================================
 
       const normalizedEmail =
         String(email)
@@ -438,10 +779,32 @@ const registerUser =
           .toLowerCase();
 
       const normalizedMobile =
-        String(mobile).replace(
-          /\D/g,
-          ""
-        );
+        String(mobile)
+          .replace(
+            /\D/g,
+            ""
+          );
+
+
+      const cleanFullName =
+        String(
+          fullName
+        ).trim();
+
+      const cleanAddress =
+        String(
+          address
+        ).trim();
+
+      const cleanSex =
+        String(
+          sex
+        ).trim();
+
+      const cleanBloodGroup =
+        String(
+          bloodGroup
+        ).trim();
 
       const cleanDesignation =
         String(
@@ -449,33 +812,68 @@ const registerUser =
         ).trim();
 
       const cleanBio =
-        String(
-          bio || ""
-        ).trim();
+        cleanBioText(
+          bio
+        );
+
+
+      // =====================================================
+      // NORMALIZE AADHAAR
+      // =====================================================
+
+      const normalizedAadhaar =
+        normalizeAadhaar(
+          aadhaarNumber
+        );
+
+
+      // =====================================================
+      // MOBILE VALIDATION
+      // =====================================================
 
       if (
         !/^[0-9]{10}$/.test(
           normalizedMobile
         )
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           message:
             "Please enter a valid 10-digit mobile number",
+
         });
+
       }
+
+
+      // =====================================================
+      // USERNAME VALIDATION
+      // =====================================================
 
       if (
         !/^[a-z0-9_]{3,20}$/.test(
           normalizedUsername
         )
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           message:
             "Username must be 3-20 characters and contain only letters, numbers and underscore",
+
         });
+
       }
+
+
+      // =====================================================
+      // EMAIL VALIDATION
+      // =====================================================
 
       const emailRegex =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -485,22 +883,42 @@ const registerUser =
           normalizedEmail
         )
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           message:
             "Please enter a valid email",
+
         });
+
       }
+
+
+      // =====================================================
+      // PASSWORD VALIDATION
+      // =====================================================
 
       if (
         password.length < 8
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           message:
             "Password must be at least 8 characters",
+
         });
+
       }
+
+
+      // =====================================================
+      // AGE VALIDATION
+      // =====================================================
 
       const numericAge =
         Number(age);
@@ -512,27 +930,175 @@ const registerUser =
         numericAge < 1 ||
         numericAge > 120
       ) {
+
         return res.status(400).json({
+
           success: false,
+
           message:
             "Please enter a valid age",
+
         });
+
       }
 
+
+      // =====================================================
+      // BIO VALIDATION
+      //
+      // IMPORTANT:
+      // 300 CHARACTERS, NOT WORDS.
+      // =====================================================
+
       if (
-        cleanBio &&
-        getWordCount(cleanBio) > 100
+        getCharacterCount(
+          cleanBio
+        ) > 300
       ) {
+
         return res.status(400).json({
+
           success: false,
+
+          code:
+            "BIO_TOO_LONG",
+
           message:
-            "Bio cannot exceed 100 words",
+            "Bio cannot exceed 300 characters",
+
         });
+
       }
+
+
+      // =====================================================
+      // AADHAAR VALIDATION
+      //
+      // Registration now requires Aadhaar.
+      // =====================================================
+
+      if (
+        !normalizedAadhaar
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code:
+            "AADHAAR_REQUIRED",
+
+          message:
+            "Aadhaar number is required",
+
+        });
+
+      }
+
+
+      if (
+        !/^[0-9]{12}$/.test(
+          normalizedAadhaar
+        )
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code:
+            "INVALID_AADHAAR",
+
+          message:
+            "Please enter a valid 12-digit Aadhaar number",
+
+        });
+
+      }
+
+
+      // =====================================================
+      // AADHAAR CARD FILE
+      // =====================================================
+
+      const aadhaarCardFile =
+        getUploadedFile(
+          req,
+          "aadhaarCard"
+        );
+
+      const profileImageFile =
+        getUploadedFile(
+          req,
+          "profileImage"
+        );
+
+
+      if (
+        !aadhaarCardFile
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code:
+            "AADHAAR_CARD_REQUIRED",
+
+          message:
+            "Aadhaar card document is required",
+
+        });
+
+      }
+
+
+      // =====================================================
+      // FILE URLS
+      // =====================================================
+
+      const profileImageUrl =
+        getUploadedFileUrl(
+          profileImageFile
+        );
+
+      const aadhaarCardUrl =
+        getUploadedFileUrl(
+          aadhaarCardFile
+        );
+
+
+      if (
+        !aadhaarCardUrl
+      ) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          code:
+            "AADHAAR_UPLOAD_FAILED",
+
+          message:
+            "Unable to process Aadhaar card upload",
+
+        });
+
+      }
+
+
+      // =====================================================
+      // DATABASE TRANSACTION
+      // =====================================================
 
       await client.query(
         "BEGIN"
       );
+
+
+      // =====================================================
+      // CHECK DUPLICATE USER
+      // =====================================================
 
       const existingUser =
         await client.query(
@@ -541,24 +1107,33 @@ const registerUser =
             id,
             username,
             email,
-            mobile
+            mobile,
+            aadhaar_number
           FROM users
           WHERE
             email = $1
             OR username = $2
             OR mobile = $3
+            OR aadhaar_number = $4
+          LIMIT 1
           `,
           [
             normalizedEmail,
+
             normalizedUsername,
+
             normalizedMobile,
+
+            normalizedAadhaar,
           ]
         );
+
 
       if (
         existingUser.rows.length >
         0
       ) {
+
         await client.query(
           "ROLLBACK"
         );
@@ -566,39 +1141,92 @@ const registerUser =
         const existing =
           existingUser.rows[0];
 
+
         if (
           existing.email ===
           normalizedEmail
         ) {
+
           return res.status(409).json({
+
             success: false,
+
+            code:
+              "EMAIL_EXISTS",
+
             message:
               "Email already registered",
+
           });
+
         }
+
 
         if (
           existing.username ===
           normalizedUsername
         ) {
+
           return res.status(409).json({
+
             success: false,
+
+            code:
+              "USERNAME_EXISTS",
+
             message:
               "Username already taken",
+
           });
+
         }
+
 
         if (
           existing.mobile ===
           normalizedMobile
         ) {
+
           return res.status(409).json({
+
             success: false,
+
+            code:
+              "MOBILE_EXISTS",
+
             message:
               "Mobile number already registered",
+
           });
+
         }
+
+
+        if (
+          existing.aadhaar_number ===
+          normalizedAadhaar
+        ) {
+
+          return res.status(409).json({
+
+            success: false,
+
+            code:
+              "AADHAAR_EXISTS",
+
+            message:
+              "This Aadhaar number is already registered",
+
+          });
+
+        }
+
       }
+
+
+      // =====================================================
+      // HASH PASSWORD
+      // =====================================================
 
       const passwordHash =
         await bcrypt.hash(
@@ -606,16 +1234,17 @@ const registerUser =
           12
         );
 
-      let profileImageUrl =
-        null;
 
-      if (req.file) {
-        profileImageUrl =
-          req.file.path ||
-          req.file.secure_url ||
-          req.file.url ||
-          null;
-      }
+      // =====================================================
+      // INSERT USER
+      //
+      // IMPORTANT:
+      //
+      // Requires DB columns:
+      //
+      // aadhaar_number
+      // aadhaar_card_url
+      // =====================================================
 
       const result =
         await client.query(
@@ -633,7 +1262,9 @@ const registerUser =
             blood_group,
             profile_image_url,
             designation,
-            bio
+            bio,
+            aadhaar_number,
+            aadhaar_card_url
           )
           VALUES
           (
@@ -648,14 +1279,15 @@ const registerUser =
             $9,
             $10,
             $11,
-            $12
+            $12,
+            $13,
+            $14
           )
           RETURNING *
           `,
           [
-            String(
-              fullName
-            ).trim(),
+
+            cleanFullName,
 
             normalizedUsername,
 
@@ -667,40 +1299,57 @@ const registerUser =
 
             numericAge,
 
-            String(
-              sex
-            ).trim(),
+            cleanSex,
 
-            String(
-              address
-            ).trim(),
+            cleanAddress,
 
-            String(
-              bloodGroup
-            ).trim(),
+            cleanBloodGroup,
 
             profileImageUrl,
 
             cleanDesignation,
 
             cleanBio,
+
+            normalizedAadhaar,
+
+            aadhaarCardUrl,
+
           ]
         );
+
+
+      // =====================================================
+      // COMMIT
+      // =====================================================
 
       await client.query(
         "COMMIT"
       );
 
-      const signupWithMembership =
+
+      // =====================================================
+      // MEMBERSHIP SIGNUP FLOW
+      //
+      // Signup
+      //   ↓
+      // Temporary cookie
+      //   ↓
+      // Membership Payment
+      // =====================================================
+
+      const isSignupWithMembership =
         String(
-          req.body?.signupWithMembership ||
-            ""
+          signupWithMembership ||
+          ""
         ).toLowerCase() ===
         "true";
 
+
       if (
-        signupWithMembership
+        isSignupWithMembership
       ) {
+
         const signupToken =
           generateToken(
             result.rows[0].id
@@ -710,13 +1359,22 @@ const registerUser =
           res,
           signupToken
         );
+
       }
 
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
       return res.status(201).json({
+
         success: true,
 
         message:
-          "Account created successfully",
+          isSignupWithMembership
+            ? "Account created successfully. Continue to membership payment."
+            : "Account created successfully",
 
         email:
           normalizedEmail,
@@ -726,28 +1384,47 @@ const registerUser =
             result.rows[0],
             req
           ),
+
+        nextStep:
+          isSignupWithMembership
+            ? "membership-payment"
+            : "login",
+
       });
 
+
     } catch (error) {
+
+      // =====================================================
+      // ROLLBACK
+      // =====================================================
+
       try {
+
         await client.query(
           "ROLLBACK"
         );
+
       } catch (
         rollbackError
       ) {
+
         console.error(
           "Rollback error:",
           rollbackError.message
         );
+
       }
+
 
       console.error(
         "Signup error:",
         error
       );
 
+
       return res.status(500).json({
+
         success: false,
 
         message:
@@ -770,29 +1447,46 @@ const registerUser =
                   error.constraint,
               }
             : undefined,
+
       });
 
     } finally {
+
       client.release();
+
     }
+
   };
+  // =========================================================
+// LOGIN USER
+// POST /api/auth/login
+// =========================================================
 
 const loginUser =
   async (
     req,
     res
   ) => {
+
     try {
+
       const {
         identifier,
         password,
       } = req.body;
 
+
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (
         !identifier ||
         !password
       ) {
+
         return res.status(400).json({
+
           success: false,
 
           code:
@@ -800,13 +1494,25 @@ const loginUser =
 
           message:
             "Username/email and password are required",
+
         });
+
       }
+
+
+      // =====================================================
+      // NORMALIZE IDENTIFIER
+      // =====================================================
 
       const normalizedIdentifier =
         String(identifier)
           .trim()
           .toLowerCase();
+
+
+      // =====================================================
+      // FIND USER
+      // =====================================================
 
       const result =
         await pool.query(
@@ -823,11 +1529,18 @@ const loginUser =
           ]
         );
 
+
+      // =====================================================
+      // USER NOT FOUND
+      // =====================================================
+
       if (
         result.rows.length ===
         0
       ) {
+
         return res.status(401).json({
+
           success: false,
 
           code:
@@ -835,11 +1548,19 @@ const loginUser =
 
           message:
             "Incorrect username or email",
+
         });
+
       }
+
 
       const user =
         result.rows[0];
+
+
+      // =====================================================
+      // PASSWORD
+      // =====================================================
 
       const passwordMatch =
         await bcrypt.compare(
@@ -847,10 +1568,13 @@ const loginUser =
           user.password_hash
         );
 
+
       if (
         !passwordMatch
       ) {
+
         return res.status(401).json({
+
           success: false,
 
           code:
@@ -858,8 +1582,15 @@ const loginUser =
 
           message:
             "Incorrect password",
+
         });
+
       }
+
+
+      // =====================================================
+      // GET MEMBERSHIP
+      // =====================================================
 
       const membershipResult =
         await pool.query(
@@ -882,11 +1613,18 @@ const loginUser =
           ]
         );
 
+
+      // =====================================================
+      // MEMBERSHIP REQUIRED
+      // =====================================================
+
       if (
         membershipResult.rows.length ===
         0
       ) {
+
         return res.status(403).json({
+
           success: false,
 
           code:
@@ -894,17 +1632,27 @@ const loginUser =
 
           message:
             "Please apply for membership before logging in.",
+
         });
+
       }
+
 
       const membership =
         membershipResult.rows[0];
+
+
+      // =====================================================
+      // PENDING MEMBERSHIP
+      // =====================================================
 
       if (
         membership.status ===
         "pending"
       ) {
+
         return res.status(403).json({
+
           success: false,
 
           code:
@@ -915,14 +1663,23 @@ const loginUser =
 
           membershipStatus:
             "pending",
+
         });
+
       }
+
+
+      // =====================================================
+      // REJECTED MEMBERSHIP
+      // =====================================================
 
       if (
         membership.status ===
         "rejected"
       ) {
+
         return res.status(403).json({
+
           success: false,
 
           code:
@@ -939,14 +1696,23 @@ const loginUser =
           rejectionReason:
             membership.rejection_reason ||
             null,
+
         });
+
       }
+
+
+      // =====================================================
+      // MEMBERSHIP NOT APPROVED
+      // =====================================================
 
       if (
         membership.status !==
         "approved"
       ) {
+
         return res.status(403).json({
+
           success: false,
 
           code:
@@ -957,20 +1723,34 @@ const loginUser =
 
           membershipStatus:
             membership.status,
+
         });
+
       }
+
+
+      // =====================================================
+      // GENERATE AUTH TOKEN
+      // =====================================================
 
       const token =
         generateToken(
           user.id
         );
 
+
       setAuthCookie(
         res,
         token
       );
 
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
       return res.json({
+
         success: true,
 
         message:
@@ -983,6 +1763,7 @@ const loginUser =
           ),
 
         membership: {
+
           membershipNumber:
             membership.membership_number,
 
@@ -994,24 +1775,33 @@ const loginUser =
 
           approvedAt:
             membership.approved_at,
+
         },
+
       });
 
     } catch (error) {
+
       console.error(
         "Login error:",
         error
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
           "Unable to login",
+
       });
+
     }
+
   };
-  // =========================================================
+
+
+// =========================================================
 // FORGOT PASSWORD
 // POST /api/auth/forgot-password
 // =========================================================
@@ -1028,6 +1818,7 @@ const forgotPassword =
         email,
       } = req.body;
 
+
       // =====================================================
       // VALIDATION
       // =====================================================
@@ -1035,17 +1826,22 @@ const forgotPassword =
       if (!email) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Email is required",
+
         });
+
       }
+
 
       const normalizedEmail =
         String(email)
           .trim()
           .toLowerCase();
+
 
       // =====================================================
       // FIND USER
@@ -1055,11 +1851,8 @@ const forgotPassword =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE email = $1
-
           LIMIT 1
           `,
           [
@@ -1067,8 +1860,9 @@ const forgotPassword =
           ]
         );
 
+
       // =====================================================
-      // DO NOT REVEAL ACCOUNT EXISTENCE
+      // DO NOT REVEAL USER EXISTENCE
       // =====================================================
 
       if (
@@ -1077,15 +1871,20 @@ const forgotPassword =
       ) {
 
         return res.json({
+
           success: true,
 
           message:
             "If an account exists, a reset OTP has been sent.",
+
         });
+
       }
+
 
       const user =
         result.rows[0];
+
 
       // =====================================================
       // GENERATE OTP
@@ -1094,13 +1893,16 @@ const forgotPassword =
       const otp =
         generateOtp();
 
+
       const otpHash =
         hashOtp(
           String(otp)
         );
 
+
       const otpExpiry =
         createExpiry();
+
 
       // =====================================================
       // SAVE OTP
@@ -1109,31 +1911,26 @@ const forgotPassword =
       await pool.query(
         `
         UPDATE users
-
         SET
           reset_otp_hash = $1,
-
           reset_otp_expires = $2,
-
-          updated_at =
-            CURRENT_TIMESTAMP
-
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = $3
         `,
         [
           otpHash,
-
           otpExpiry,
-
           user.id,
         ]
       );
+
 
       // =====================================================
       // SEND EMAIL
       // =====================================================
 
       await sendEmail(
+
         user.email,
 
         "SNICT Password Reset OTP",
@@ -1196,11 +1993,18 @@ const forgotPassword =
         `
       );
 
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
       return res.json({
+
         success: true,
 
         message:
           "If an account exists, a reset OTP has been sent.",
+
       });
 
     } catch (error) {
@@ -1211,12 +2015,16 @@ const forgotPassword =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
           "Unable to process password reset",
+
       });
+
     }
+
   };
 
 
@@ -1239,6 +2047,7 @@ const resetPassword =
         newPassword,
       } = req.body;
 
+
       // =====================================================
       // VALIDATION
       // =====================================================
@@ -1250,12 +2059,16 @@ const resetPassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Email, OTP and new password are required",
+
         });
+
       }
+
 
       if (
         newPassword.length <
@@ -1263,17 +2076,22 @@ const resetPassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Password must be at least 8 characters",
+
         });
+
       }
+
 
       const normalizedEmail =
         String(email)
           .trim()
           .toLowerCase();
+
 
       // =====================================================
       // FIND USER
@@ -1283,11 +2101,8 @@ const resetPassword =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE email = $1
-
           LIMIT 1
           `,
           [
@@ -1295,21 +2110,27 @@ const resetPassword =
           ]
         );
 
+
       if (
         result.rows.length ===
         0
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Invalid reset request",
+
         });
+
       }
+
 
       const user =
         result.rows[0];
+
 
       // =====================================================
       // CHECK OTP
@@ -1321,12 +2142,20 @@ const resetPassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Reset OTP not available",
+
         });
+
       }
+
+
+      // =====================================================
+      // CHECK EXPIRY
+      // =====================================================
 
       if (
         new Date() >
@@ -1336,17 +2165,30 @@ const resetPassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Reset OTP has expired",
+
         });
+
       }
+
+
+      // =====================================================
+      // HASH PROVIDED OTP
+      // =====================================================
 
       const otpHash =
         hashOtp(
           String(otp).trim()
         );
+
+
+      // =====================================================
+      // COMPARE OTP
+      // =====================================================
 
       if (
         !safeHashCompare(
@@ -1356,12 +2198,16 @@ const resetPassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Invalid reset OTP",
+
         });
+
       }
+
 
       // =====================================================
       // HASH NEW PASSWORD
@@ -1373,6 +2219,7 @@ const resetPassword =
           12
         );
 
+
       // =====================================================
       // UPDATE PASSWORD
       // =====================================================
@@ -1380,25 +2227,19 @@ const resetPassword =
       await pool.query(
         `
         UPDATE users
-
         SET
           password_hash = $1,
-
           reset_otp_hash = NULL,
-
           reset_otp_expires = NULL,
-
-          updated_at =
-            CURRENT_TIMESTAMP
-
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = $2
         `,
         [
           passwordHash,
-
           user.id,
         ]
       );
+
 
       // =====================================================
       // CLEAR AUTH COOKIE
@@ -1409,11 +2250,18 @@ const resetPassword =
         authCookieOptions
       );
 
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
+
       return res.json({
+
         success: true,
 
         message:
           "Password reset successfully. Please login again.",
+
       });
 
     } catch (error) {
@@ -1424,12 +2272,16 @@ const resetPassword =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
           "Unable to reset password",
+
       });
+
     }
+
   };
 
 
@@ -1451,6 +2303,7 @@ const changePassword =
         newPassword,
       } = req.body;
 
+
       // =====================================================
       // VALIDATION
       // =====================================================
@@ -1461,12 +2314,16 @@ const changePassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Current and new passwords are required",
+
         });
+
       }
+
 
       if (
         newPassword.length <
@@ -1474,12 +2331,16 @@ const changePassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "New password must be at least 8 characters",
+
         });
+
       }
+
 
       if (
         currentPassword ===
@@ -1487,26 +2348,34 @@ const changePassword =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "New password must be different from current password",
+
         });
+
       }
 
+
       // =====================================================
-      // CHECK AUTHENTICATION
+      // AUTHENTICATION
       // =====================================================
 
       if (!req.userId) {
 
         return res.status(401).json({
+
           success: false,
 
           message:
             "Authentication required",
+
         });
+
       }
+
 
       // =====================================================
       // GET USER
@@ -1516,11 +2385,8 @@ const changePassword =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE id = $1
-
           LIMIT 1
           `,
           [
@@ -1528,21 +2394,27 @@ const changePassword =
           ]
         );
 
+
       if (
         result.rows.length ===
         0
       ) {
 
         return res.status(404).json({
+
           success: false,
 
           message:
             "User not found",
+
         });
+
       }
+
 
       const user =
         result.rows[0];
+
 
       // =====================================================
       // VERIFY CURRENT PASSWORD
@@ -1554,15 +2426,20 @@ const changePassword =
           user.password_hash
         );
 
+
       if (!valid) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Current password is incorrect",
+
         });
+
       }
+
 
       // =====================================================
       // HASH NEW PASSWORD
@@ -1574,6 +2451,7 @@ const changePassword =
           12
         );
 
+
       // =====================================================
       // UPDATE PASSWORD
       // =====================================================
@@ -1581,31 +2459,29 @@ const changePassword =
       await pool.query(
         `
         UPDATE users
-
         SET
           password_hash = $1,
-
-          updated_at =
-            CURRENT_TIMESTAMP
-
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = $2
         `,
         [
           passwordHash,
-
           user.id,
         ]
       );
+
 
       // =====================================================
       // RESPONSE
       // =====================================================
 
       return res.json({
+
         success: true,
 
         message:
           "Password changed successfully",
+
       });
 
     } catch (error) {
@@ -1616,18 +2492,28 @@ const changePassword =
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
           "Unable to change password",
+
       });
+
     }
+
   };
-
-
-// =========================================================
+  // =========================================================
 // GET PROFILE
 // GET /api/auth/profile
+// =========================================================
+//
+// Returns the logged-in user's profile.
+//
+// SECURITY:
+// - Complete Aadhaar number is NEVER returned.
+// - Aadhaar document URL is NEVER returned.
+// - Only Aadhaar last 4 digits are returned.
 // =========================================================
 
 const getProfile =
@@ -1639,18 +2525,22 @@ const getProfile =
     try {
 
       // =====================================================
-      // AUTHENTICATION
+      // AUTH CHECK
       // =====================================================
 
       if (!req.userId) {
 
         return res.status(401).json({
+
           success: false,
 
           message:
             "Authentication required",
+
         });
+
       }
+
 
       // =====================================================
       // GET USER
@@ -1660,11 +2550,8 @@ const getProfile =
         await pool.query(
           `
           SELECT *
-
           FROM users
-
           WHERE id = $1
-
           LIMIT 1
           `,
           [
@@ -1672,18 +2559,66 @@ const getProfile =
           ]
         );
 
+
       if (
         result.rows.length ===
         0
       ) {
 
         return res.status(404).json({
+
           success: false,
 
           message:
             "User not found",
+
         });
+
       }
+
+
+      const user =
+        result.rows[0];
+
+
+      // =====================================================
+      // GET MEMBERSHIP
+      // =====================================================
+
+      const membershipResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            membership_number,
+            membership_type,
+            status,
+            rejection_reason,
+            applied_at,
+            approved_at,
+            start_date,
+            expiry_date
+          FROM memberships
+          WHERE user_id = $1
+          ORDER BY applied_at DESC
+          LIMIT 1
+          `,
+          [
+            user.id,
+          ]
+        );
+
+
+      const membership =
+        membershipResult.rows.length >
+        0
+          ? membershipResult.rows[0]
+          : null;
+
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
 
       return res.json({
 
@@ -1691,31 +2626,60 @@ const getProfile =
 
         user:
           cleanUser(
-            result.rows[0],
+            user,
             req
           ),
+
+        membership,
+
       });
 
     } catch (error) {
 
       console.error(
-        "Profile error:",
+        "Get profile error:",
         error
       );
 
       return res.status(500).json({
+
         success: false,
 
         message:
           "Unable to fetch profile",
+
       });
+
     }
+
   };
 
 
 // =========================================================
 // UPDATE PROFILE
 // PUT /api/auth/profile
+// =========================================================
+//
+// Supports:
+//
+// fullName
+// mobile
+// age
+// sex
+// address
+// bloodGroup
+// designation
+// bio
+// aadhaarNumber
+// profileImage
+// aadhaarCard
+//
+// IMPORTANT:
+//
+// Bio maximum = 300 characters.
+//
+// Aadhaar = exactly 12 digits.
+//
 // =========================================================
 
 const updateProfile =
@@ -1727,173 +2691,159 @@ const updateProfile =
     try {
 
       // =====================================================
-      // AUTHENTICATION
+      // AUTH CHECK
       // =====================================================
 
       if (!req.userId) {
 
         return res.status(401).json({
+
           success: false,
 
           message:
             "Authentication required",
+
         });
+
       }
 
+
+      // =====================================================
+      // REQUEST DATA
+      // =====================================================
+
       const {
+
         fullName,
-        username,
-        email,
+
         mobile,
+
         age,
+
         sex,
+
         address,
+
         bloodGroup,
+
         designation,
+
         bio,
+
+        aadhaarNumber,
+
       } = req.body;
 
+
       // =====================================================
-      // REQUIRED FIELDS
+      // GET EXISTING USER
       // =====================================================
+
+      const userResult =
+        await pool.query(
+          `
+          SELECT *
+          FROM users
+          WHERE id = $1
+          LIMIT 1
+          `,
+          [
+            req.userId,
+          ]
+        );
+
 
       if (
-        !fullName ||
-        !username ||
-        !email ||
-        !mobile ||
-        age === undefined ||
-        age === null ||
-        !sex ||
-        !address ||
-        !bloodGroup
+        userResult.rows.length ===
+        0
       ) {
 
-        return res.status(400).json({
+        return res.status(404).json({
+
           success: false,
 
           message:
-            "All profile fields are required",
+            "User not found",
+
         });
+
       }
 
+
+      const existingUser =
+        userResult.rows[0];
+
+
       // =====================================================
-      // NORMALIZE
+      // PREPARE VALUES
       // =====================================================
 
       const cleanFullName =
-        String(
-          fullName
-        ).trim();
+        fullName !== undefined
+          ? String(
+              fullName
+            ).trim()
+          : existingUser.full_name;
 
-      const normalizedUsername =
-        String(
-          username
-        )
-          .trim()
-          .toLowerCase();
-
-      const normalizedEmail =
-        String(
-          email
-        )
-          .trim()
-          .toLowerCase();
 
       const cleanMobile =
-        String(
-          mobile
-        ).replace(
-          /\D/g,
-          ""
-        );
+        mobile !== undefined
+          ? String(
+              mobile
+            )
+              .replace(
+                /\D/g,
+                ""
+              )
+          : existingUser.mobile;
 
-      const cleanAddress =
-        String(
-          address
-        ).trim();
+
+      const cleanAge =
+        age !== undefined &&
+        age !== ""
+          ? Number(age)
+          : existingUser.age;
+
 
       const cleanSex =
-        String(
-          sex
-        ).trim();
+        sex !== undefined
+          ? String(
+              sex
+            ).trim()
+          : existingUser.sex;
+
+
+      const cleanAddress =
+        address !== undefined
+          ? String(
+              address
+            ).trim()
+          : existingUser.address;
+
 
       const cleanBloodGroup =
-        String(
-          bloodGroup
-        ).trim();
+        bloodGroup !== undefined
+          ? String(
+              bloodGroup
+            ).trim()
+          : existingUser.blood_group;
+
 
       const cleanDesignation =
-        String(
-          designation || ""
-        ).trim();
+        designation !== undefined
+          ? String(
+              designation
+            ).trim()
+          : existingUser.designation;
+
 
       const cleanBio =
-        String(
-          bio || ""
-        ).trim();
+        bio !== undefined
+          ? cleanBioText(
+              bio
+            )
+          : existingUser.bio || "";
 
-      const numericAge =
-        Number(age);
-
-      // =====================================================
-      // AGE VALIDATION
-      // =====================================================
-
-      if (
-        !Number.isInteger(
-          numericAge
-        ) ||
-        numericAge < 1 ||
-        numericAge > 120
-      ) {
-
-        return res.status(400).json({
-          success: false,
-
-          message:
-            "Please enter a valid age",
-        });
-      }
-
-      // =====================================================
-      // USERNAME VALIDATION
-      // =====================================================
-
-      if (
-        !/^[a-z0-9_]{3,20}$/.test(
-          normalizedUsername
-        )
-      ) {
-
-        return res.status(400).json({
-          success: false,
-
-          message:
-            "Username must be 3-20 characters and contain only letters, numbers and underscore",
-        });
-      }
-
-      // =====================================================
-      // EMAIL VALIDATION
-      // =====================================================
-
-      const emailRegex =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (
-        !emailRegex.test(
-          normalizedEmail
-        )
-      ) {
-
-        return res.status(400).json({
-          success: false,
-
-          message:
-            "Please enter a valid email",
-        });
-      }
 
       // =====================================================
       // MOBILE VALIDATION
@@ -1906,229 +2856,273 @@ const updateProfile =
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
             "Please enter a valid 10-digit mobile number",
+
         });
+
       }
 
+
       // =====================================================
-      // BIO VALIDATION
+      // AGE VALIDATION
       // =====================================================
 
       if (
-        cleanBio &&
-        getWordCount(cleanBio) > 100
+        !Number.isInteger(
+          cleanAge
+        ) ||
+        cleanAge < 1 ||
+        cleanAge > 120
       ) {
 
         return res.status(400).json({
+
           success: false,
 
           message:
-            "Bio cannot exceed 100 words",
+            "Please enter a valid age",
+
         });
+
       }
 
+
       // =====================================================
-      // CHECK DUPLICATES
+      // BIO VALIDATION
+      //
+      // 300 CHARACTERS MAX
       // =====================================================
-
-      const existingUser =
-        await pool.query(
-          `
-          SELECT
-            id,
-            username,
-            email,
-            mobile
-
-          FROM users
-
-          WHERE
-            (
-              username = $1
-              OR email = $2
-              OR mobile = $3
-            )
-
-            AND id != $4
-
-          LIMIT 1
-          `,
-          [
-            normalizedUsername,
-
-            normalizedEmail,
-
-            cleanMobile,
-
-            req.userId,
-          ]
-        );
 
       if (
-        existingUser.rows.length >
-        0
+        getCharacterCount(
+          cleanBio
+        ) > 300
       ) {
 
-        const existing =
-          existingUser.rows[0];
+        return res.status(400).json({
 
-        if (
-          existing.username ===
-          normalizedUsername
-        ) {
-
-          return res.status(409).json({
-            success: false,
-
-            message:
-              "Username already taken",
-          });
-        }
-
-        if (
-          existing.email ===
-          normalizedEmail
-        ) {
-
-          return res.status(409).json({
-            success: false,
-
-            message:
-              "Email already registered",
-          });
-        }
-
-        if (
-          existing.mobile ===
-          cleanMobile
-        ) {
-
-          return res.status(409).json({
-            success: false,
-
-            message:
-              "Mobile number already registered",
-          });
-        }
-      }
-
-      // =====================================================
-      // GET CURRENT USER
-      // =====================================================
-
-      const currentResult =
-        await pool.query(
-          `
-          SELECT
-            profile_image_url
-
-          FROM users
-
-          WHERE id = $1
-
-          LIMIT 1
-          `,
-          [
-            req.userId,
-          ]
-        );
-
-      if (
-        currentResult.rows.length ===
-        0
-      ) {
-
-        return res.status(404).json({
           success: false,
 
+          code:
+            "BIO_TOO_LONG",
+
           message:
-            "User not found",
+            "Bio cannot exceed 300 characters",
+
         });
+
       }
 
-      const currentUser =
-        currentResult.rows[0];
 
       // =====================================================
-      // IMAGE
+      // AADHAAR
+      //
+      // Only validate if the user sends
+      // a new Aadhaar number.
       // =====================================================
 
-      let profileImageUrl =
-        currentUser.profile_image_url ||
+      let finalAadhaar =
+        existingUser.aadhaar_number ||
         null;
 
-      if (req.file) {
 
-        profileImageUrl =
-          req.file.path ||
-          req.file.secure_url ||
-          req.file.url ||
-          profileImageUrl;
+      if (
+        aadhaarNumber !== undefined
+      ) {
+
+        const normalizedAadhaar =
+          normalizeAadhaar(
+            aadhaarNumber
+          );
+
 
         if (
-          currentUser.profile_image_url &&
-          profileImageUrl !==
-            currentUser.profile_image_url
+          !/^[0-9]{12}$/.test(
+            normalizedAadhaar
+          )
         ) {
 
-          await deleteCloudinaryImage(
-            currentUser.profile_image_url
-          );
+          return res.status(400).json({
+
+            success: false,
+
+            code:
+              "INVALID_AADHAAR",
+
+            message:
+              "Aadhaar number must contain exactly 12 digits",
+
+          });
+
         }
+
+
+        // ===================================================
+        // CHECK DUPLICATE AADHAAR
+        // ===================================================
+
+        const duplicateAadhaar =
+          await pool.query(
+            `
+            SELECT id
+            FROM users
+            WHERE
+              aadhaar_number = $1
+              AND id <> $2
+            LIMIT 1
+            `,
+            [
+              normalizedAadhaar,
+              req.userId,
+            ]
+          );
+
+
+        if (
+          duplicateAadhaar.rows.length >
+          0
+        ) {
+
+          return res.status(409).json({
+
+            success: false,
+
+            code:
+              "AADHAAR_EXISTS",
+
+            message:
+              "This Aadhaar number is already registered",
+
+          });
+
+        }
+
+
+        finalAadhaar =
+          normalizedAadhaar;
+
       }
 
+
       // =====================================================
-      // UPDATE
+      // FILES
+      // =====================================================
+
+      const profileImageFile =
+        getUploadedFile(
+          req,
+          "profileImage"
+        );
+
+
+      const aadhaarCardFile =
+        getUploadedFile(
+          req,
+          "aadhaarCard"
+        );
+
+
+      // =====================================================
+      // CURRENT FILE URLS
+      // =====================================================
+
+      let finalProfileImageUrl =
+        existingUser.profile_image_url ||
+        null;
+
+
+      let finalAadhaarCardUrl =
+        existingUser.aadhaar_card_url ||
+        null;
+
+
+      // =====================================================
+      // NEW PROFILE IMAGE
+      // =====================================================
+
+      if (
+        profileImageFile
+      ) {
+
+        const newProfileImageUrl =
+          getUploadedFileUrl(
+            profileImageFile
+          );
+
+
+        if (
+          newProfileImageUrl
+        ) {
+
+          finalProfileImageUrl =
+            newProfileImageUrl;
+
+        }
+
+      }
+
+
+      // =====================================================
+      // NEW AADHAAR CARD
+      // =====================================================
+
+      if (
+        aadhaarCardFile
+      ) {
+
+        const newAadhaarCardUrl =
+          getUploadedFileUrl(
+            aadhaarCardFile
+          );
+
+
+        if (
+          newAadhaarCardUrl
+        ) {
+
+          finalAadhaarCardUrl =
+            newAadhaarCardUrl;
+
+        }
+
+      }
+
+
+      // =====================================================
+      // UPDATE USER
       // =====================================================
 
       const result =
         await pool.query(
           `
           UPDATE users
-
           SET
             full_name = $1,
-
-            username = $2,
-
-            email = $3,
-
-            mobile = $4,
-
-            age = $5,
-
-            sex = $6,
-
-            address = $7,
-
-            blood_group = $8,
-
-            profile_image_url = $9,
-
-            designation = $10,
-
-            bio = $11,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
+            mobile = $2,
+            age = $3,
+            sex = $4,
+            address = $5,
+            blood_group = $6,
+            designation = $7,
+            bio = $8,
+            aadhaar_number = $9,
+            aadhaar_card_url = $10,
+            profile_image_url = $11,
+            updated_at = CURRENT_TIMESTAMP
           WHERE id = $12
-
           RETURNING *
           `,
           [
+
             cleanFullName,
-
-            normalizedUsername,
-
-            normalizedEmail,
 
             cleanMobile,
 
-            numericAge,
+            cleanAge,
 
             cleanSex,
 
@@ -2136,28 +3130,45 @@ const updateProfile =
 
             cleanBloodGroup,
 
-            profileImageUrl,
-
             cleanDesignation,
 
             cleanBio,
 
+            finalAadhaar,
+
+            finalAadhaarCardUrl,
+
+            finalProfileImageUrl,
+
             req.userId,
+
           ]
         );
 
+
+      // =====================================================
+      // DELETE OLD PROFILE IMAGE
+      //
+      // Only after successful database update.
+      // =====================================================
+
       if (
-        result.rows.length ===
-        0
+        profileImageFile &&
+        existingUser.profile_image_url &&
+        existingUser.profile_image_url !==
+          finalProfileImageUrl
       ) {
 
-        return res.status(404).json({
-          success: false,
+        await deleteCloudinaryImage(
+          existingUser.profile_image_url
+        );
 
-          message:
-            "User not found",
-        });
       }
+
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
 
       return res.json({
 
@@ -2171,6 +3182,7 @@ const updateProfile =
             result.rows[0],
             req
           ),
+
       });
 
     } catch (error) {
@@ -2178,21 +3190,6 @@ const updateProfile =
       console.error(
         "Update profile error:",
         error
-      );
-
-      console.error(
-        "Message:",
-        error.message
-      );
-
-      console.error(
-        "Code:",
-        error.code
-      );
-
-      console.error(
-        "Detail:",
-        error.detail
       );
 
       return res.status(500).json({
@@ -2205,23 +3202,32 @@ const updateProfile =
         debug:
           process.env.NODE_ENV !==
           "production"
-            ? {
-                error:
-                  error.message,
-
-                code:
-                  error.code,
-
-                detail:
-                  error.detail,
-              }
+            ? error.message
             : undefined,
+
       });
+
     }
+
   };
-  // =========================================================
-// GET ALL REGISTERED MEMBERS
+
+
+// =========================================================
+// GET ALL MEMBERS
 // GET /api/auth/members
+// =========================================================
+//
+// IMPORTANT:
+//
+// This endpoint should ideally be protected by
+// adminMiddleware.
+//
+// Since your current authRoutes exposes it publicly,
+// keep this controller response free from:
+// - password
+// - complete Aadhaar
+// - Aadhaar document URL
+//
 // =========================================================
 
 const getMembers =
@@ -2248,27 +3254,97 @@ const getMembers =
             profile_image_url,
             designation,
             bio,
+            aadhaar_number,
             created_at
-
           FROM users
-
-          ORDER BY
-            created_at DESC
+          ORDER BY created_at DESC
           `
         );
+
+
+      // =====================================================
+      // MAP MEMBERS
+      // =====================================================
+
+      const members =
+        result.rows.map(
+          (user) => ({
+
+            id:
+              user.id,
+
+            fullName:
+              user.full_name,
+
+            username:
+              user.username,
+
+            email:
+              user.email,
+
+            mobile:
+              user.mobile,
+
+            age:
+              user.age,
+
+            sex:
+              user.sex,
+
+            address:
+              user.address,
+
+            bloodGroup:
+              user.blood_group,
+
+            profileImageUrl:
+              getImageUrl(
+                req,
+                user.profile_image_url
+              ),
+
+            designation:
+              user.designation ||
+              "",
+
+            bio:
+              user.bio ||
+              "",
+
+            // ------------------------------------------------
+            // SECURITY
+            // ------------------------------------------------
+
+            aadhaarLast4:
+              getAadhaarLast4(
+                user.aadhaar_number
+              ),
+
+            aadhaarProvided:
+              Boolean(
+                user.aadhaar_number
+              ),
+
+            createdAt:
+              user.created_at,
+
+          })
+        );
+
+
+      // =====================================================
+      // RESPONSE
+      // =====================================================
 
       return res.json({
 
         success: true,
 
-        members:
-          result.rows.map(
-            (user) =>
-              cleanUser(
-                user,
-                req
-              )
-          ),
+        count:
+          members.length,
+
+        members,
+
       });
 
     } catch (error) {
@@ -2284,8 +3360,11 @@ const getMembers =
 
         message:
           "Unable to fetch members",
+
       });
+
     }
+
   };
 
 
@@ -2303,7 +3382,7 @@ const deleteProfilePhoto =
     try {
 
       // =====================================================
-      // AUTHENTICATION
+      // AUTH CHECK
       // =====================================================
 
       if (!req.userId) {
@@ -2314,11 +3393,14 @@ const deleteProfilePhoto =
 
           message:
             "Authentication required",
+
         });
+
       }
 
+
       // =====================================================
-      // GET CURRENT USER
+      // GET USER
       // =====================================================
 
       const result =
@@ -2327,17 +3409,15 @@ const deleteProfilePhoto =
           SELECT
             id,
             profile_image_url
-
           FROM users
-
           WHERE id = $1
-
           LIMIT 1
           `,
           [
             req.userId,
           ]
         );
+
 
       if (
         result.rows.length ===
@@ -2350,73 +3430,48 @@ const deleteProfilePhoto =
 
           message:
             "User not found",
+
         });
+
       }
+
 
       const user =
         result.rows[0];
 
+
       // =====================================================
-      // NO PHOTO
+      // DELETE CLOUDINARY IMAGE
       // =====================================================
 
       if (
-        !user.profile_image_url
+        user.profile_image_url
       ) {
 
-        return res.json({
-
-          success: true,
-
-          message:
-            "Profile photo already removed",
-
-          user:
-            cleanUser(
-              user,
-              req
-            ),
-        });
-      }
-
-      // =====================================================
-      // SAVE OLD URL
-      // =====================================================
-
-      const oldImageUrl =
-        user.profile_image_url;
-
-      // =====================================================
-      // REMOVE IMAGE URL FROM DATABASE FIRST
-      // =====================================================
-
-      const updatedResult =
-        await pool.query(
-          `
-          UPDATE users
-
-          SET
-            profile_image_url = NULL,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
-
-          RETURNING *
-          `,
-          [
-            req.userId,
-          ]
+        await deleteCloudinaryImage(
+          user.profile_image_url
         );
 
+      }
+
+
       // =====================================================
-      // DELETE FROM CLOUDINARY
+      // CLEAR DATABASE URL
       // =====================================================
 
-      await deleteCloudinaryImage(
-        oldImageUrl
+      await pool.query(
+        `
+        UPDATE users
+        SET
+          profile_image_url = NULL,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        `,
+        [
+          req.userId,
+        ]
       );
+
 
       // =====================================================
       // RESPONSE
@@ -2429,11 +3484,6 @@ const deleteProfilePhoto =
         message:
           "Profile photo deleted successfully",
 
-        user:
-          cleanUser(
-            updatedResult.rows[0],
-            req
-          ),
       });
 
     } catch (error) {
@@ -2449,18 +3499,21 @@ const deleteProfilePhoto =
 
         message:
           "Unable to delete profile photo",
+
       });
+
     }
+
   };
 
 
 // =========================================================
-// LOGOUT
+// LOGOUT USER
 // POST /api/auth/logout
 // =========================================================
 
 const logoutUser =
-  (
+  async (
     req,
     res
   ) => {
@@ -2473,8 +3526,13 @@ const logoutUser =
 
       res.clearCookie(
         "snict_token",
-        authCookieOptions
+        {
+          ...authCookieOptions,
+
+          maxAge: 0,
+        }
       );
+
 
       // =====================================================
       // RESPONSE
@@ -2485,7 +3543,8 @@ const logoutUser =
         success: true,
 
         message:
-          "Logged out successfully",
+          "Logout successful",
+
       });
 
     } catch (error) {
@@ -2501,20 +3560,23 @@ const logoutUser =
 
         message:
           "Unable to logout",
+
       });
+
     }
+
   };
 
 
 // =========================================================
-// EXPORT
+// EXPORT CONTROLLERS
 // =========================================================
 
 module.exports = {
 
-  registerUser,
-
   checkUsername,
+
+  registerUser,
 
   loginUser,
 

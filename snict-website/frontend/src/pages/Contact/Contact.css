@@ -1923,3 +1923,594 @@
   }
 
 }
+/* =========================================================
+   SNICT CONTACT PAGE
+   FINAL PATCH
+   Updated for new Contact.jsx
+   ========================================================= */
+
+
+/* =========================================================
+   ADDRESS ALIGNMENT
+   ========================================================= */
+
+.contact-location-card {
+  align-items: flex-start;
+}
+
+.contact-location-card .contact-address {
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  padding-right: 28px;
+}
+
+.contact-address > span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #879699;
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.contact-address h3 {
+  margin: 0 0 9px;
+
+  color: var(--contact-text);
+
+  font-size: 15px;
+  font-weight: 800;
+
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+.contact-address address {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  margin: 0;
+  padding: 0;
+
+  color: var(--contact-muted);
+
+  font-size: 12px;
+  font-style: normal;
+
+  line-height: 1.6;
+
+  text-align: left;
+
+  overflow-wrap: anywhere;
+}
+
+.contact-address address span {
+  display: block;
+
+  width: 100%;
+}
+
+
+/* =========================================================
+   LOCATION CARD ICON
+   ========================================================= */
+
+.contact-location-card
+.contact-info-icon {
+  flex: 0 0 46px;
+}
+
+
+/* =========================================================
+   LOCATION CARD PIN
+   ========================================================= */
+
+.contact-location-card
+.contact-info-arrow {
+  flex: 0 0 auto;
+
+  top: 22px;
+  right: 17px;
+
+  bottom: auto;
+
+  margin-top: 0;
+}
+
+
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.contact-error {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+
+  margin-bottom: 22px;
+
+  padding: 14px 16px;
+
+  color: #b42318;
+
+  border:
+    1px solid #f2c7c3;
+
+  border-radius: 10px;
+
+  background:
+    #fff5f4;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  line-height: 1.5;
+
+  animation:
+    contactErrorIn
+    0.35s
+    ease
+    both;
+}
+
+.contact-error > div {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #b42318;
+
+  border-radius: 8px;
+
+  background: #fde5e2;
+}
+
+.contact-error span {
+  padding-top: 6px;
+}
+
+@keyframes contactErrorIn {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+/* =========================================================
+   SUCCESS MESSAGE IMPROVEMENT
+   ========================================================= */
+
+.contact-success {
+  position: relative;
+
+  overflow: hidden;
+}
+
+.contact-success::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -100%;
+
+  width: 70%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.55),
+      transparent
+    );
+
+  animation:
+    contactSuccessShine
+    2.2s
+    ease
+    infinite;
+}
+
+@keyframes contactSuccessShine {
+
+  0% {
+    left: -100%;
+  }
+
+  55%,
+  100% {
+    left: 130%;
+  }
+
+}
+
+
+/* =========================================================
+   FORM SUBMIT LOADING SPINNER
+   ========================================================= */
+
+.contact-submit-spinner {
+  width: 17px;
+  height: 17px;
+
+  display: inline-block;
+
+  border:
+    2px solid
+    rgba(255, 255, 255, 0.35);
+
+  border-top-color:
+    #ffffff;
+
+  border-radius: 50%;
+
+  animation:
+    contactSubmitSpin
+    0.7s
+    linear
+    infinite;
+}
+
+@keyframes contactSubmitSpin {
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+
+}
+
+
+/* =========================================================
+   DISABLED SUBMIT
+   ========================================================= */
+
+.contact-submit:disabled {
+  opacity: 0.72;
+
+  cursor: not-allowed;
+
+  transform: none !important;
+
+  box-shadow:
+    0 8px 20px
+    rgba(8, 127, 140, 0.12);
+}
+
+.contact-submit:disabled:hover {
+  transform: none;
+
+  box-shadow:
+    0 8px 20px
+    rgba(8, 127, 140, 0.12);
+}
+
+
+/* =========================================================
+   BETTER FORM INPUT INTERACTION
+   ========================================================= */
+
+.contact-field input:hover,
+.contact-field select:hover,
+.contact-field textarea:hover {
+  border-color:
+    #c8dcde;
+
+  background:
+    #ffffff;
+}
+
+
+/* =========================================================
+   SELECT
+   ========================================================= */
+
+.contact-field select {
+  cursor: pointer;
+
+  appearance: auto;
+}
+
+
+/* =========================================================
+   TEXTAREA
+   ========================================================= */
+
+.contact-field textarea {
+  min-height: 145px;
+
+  max-height: 350px;
+}
+
+
+/* =========================================================
+   CONTACT CARD TEXT
+   ========================================================= */
+
+.contact-info-card h3 {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   EMAIL CARD
+   ========================================================= */
+
+.contact-info-card[href^="mailto:"] h3 {
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   PHONE CARD
+   ========================================================= */
+
+.contact-info-card[href^="tel:"] h3 {
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   CONTACT INFO CARD CONTENT
+   ========================================================= */
+
+.contact-info-card > div:nth-child(2) {
+  flex: 1;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   LOCATION CARD HOVER
+   ========================================================= */
+
+.contact-location-card:hover {
+  transform:
+    translateY(-7px);
+}
+
+
+/* =========================================================
+   LOCATION ADDRESS HOVER
+   ========================================================= */
+
+.contact-location-card:hover
+.contact-address h3 {
+  color:
+    var(--contact-primary);
+}
+
+
+/* =========================================================
+   MAP LOCATION
+   ========================================================= */
+
+.contact-location-item {
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
+}
+
+.contact-location-item:hover {
+  transform:
+    translateX(4px);
+}
+
+
+/* =========================================================
+   FORM CARD BETTER SHADOW
+   ========================================================= */
+
+.contact-form-card {
+  transition:
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.contact-form-card:hover {
+  border-color:
+    #d3e5e7;
+
+  box-shadow:
+    0 22px 60px
+    rgba(16, 42, 47, 0.09);
+}
+
+
+/* =========================================================
+   FORM FIELD LABEL
+   ========================================================= */
+
+.contact-field label {
+  user-select: none;
+}
+
+
+/* =========================================================
+   MOBILE ADDRESS
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+  .contact-location-card {
+    align-items: stretch;
+  }
+
+  .contact-location-card
+  .contact-address {
+    padding-right: 24px;
+  }
+
+  .contact-location-card
+  .contact-info-arrow {
+    top: 21px;
+    right: 17px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .contact-location-card {
+    gap: 13px;
+  }
+
+  .contact-location-card
+  .contact-address {
+    padding-right: 18px;
+  }
+
+  .contact-address > span {
+    font-size: 9px;
+  }
+
+  .contact-address h3 {
+    font-size: 14px;
+
+    line-height: 1.45;
+  }
+
+  .contact-address address {
+    font-size: 11.5px;
+
+    line-height: 1.65;
+  }
+
+  .contact-location-card
+  .contact-info-icon {
+    width: 42px;
+    height: 42px;
+
+    flex-basis: 42px;
+  }
+
+  .contact-location-card
+  .contact-info-arrow {
+    top: 20px;
+    right: 14px;
+  }
+
+  .contact-info-card[href^="tel:"] h3 {
+    white-space: normal;
+  }
+
+  .contact-info-card[href^="mailto:"] h3 {
+    font-size: 13px;
+  }
+
+  .contact-error {
+    padding: 12px 13px;
+
+    font-size: 11px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .contact-location-card {
+    padding: 17px;
+  }
+
+  .contact-location-card
+  .contact-address {
+    padding-right: 8px;
+  }
+
+  .contact-address h3 {
+    font-size: 13px;
+  }
+
+  .contact-address address {
+    font-size: 11px;
+
+    line-height: 1.6;
+  }
+
+  .contact-location-card
+  .contact-info-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.contact-field input:focus-visible,
+.contact-field select:focus-visible,
+.contact-field textarea:focus-visible,
+.contact-submit:focus-visible,
+.contact-cta-button:focus-visible,
+.contact-info-card:focus-visible {
+  outline:
+    3px solid
+    rgba(8, 127, 140, 0.18);
+
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .contact-submit-spinner,
+  .contact-success::after {
+
+    animation:
+      none !important;
+  }
+
+}

@@ -16,7 +16,7 @@ import api from "../../services/api";
 
 import "./AdminLogin.css";
 
-import snictLogo from "../../assets/snict-logo.png";
+import snictLogo from "../../assets/snict-logo.jpeg";
 
 
 function AdminLogin() {

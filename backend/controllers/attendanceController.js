@@ -4,9 +4,10 @@ const crypto = require("crypto");
 
 // =========================================================
 // ATTENDANCE CONTROLLER
+// SNICT
 // =========================================================
 //
-// This controller handles:
+// Handles:
 //
 // 1. Attendance listing
 // 2. Event attendance
@@ -15,18 +16,6 @@ const crypto = require("crypto");
 // 5. Manual attendance
 // 6. Attendance-code verification
 // 7. Event-pass QR verification
-//
-// DOES NOT MODIFY:
-//
-// - bookingController.js
-// - paymentController.js
-// - eventPassController.js
-//
-// Uses:
-//
-// - event_bookings
-// - event_passes
-// - event_attendance
 //
 // =========================================================
 
@@ -67,6 +56,7 @@ const sendDatabaseError = (
   message,
   error
 ) => {
+
   console.error(
     "======================================"
   );
@@ -121,29 +111,70 @@ const sendDatabaseError = (
     debug:
       process.env.NODE_ENV !== "production"
         ? {
-            error:
-              error?.message,
-
-            code:
-              error?.code,
-
-            detail:
-              error?.detail,
-
-            hint:
-              error?.hint,
-
-            constraint:
-              error?.constraint,
-
-            table:
-              error?.table,
-
-            column:
-              error?.column,
+            error: error?.message,
+            code: error?.code,
+            detail: error?.detail,
+            hint: error?.hint,
+            constraint: error?.constraint,
+            table: error?.table,
+            column: error?.column,
           }
         : undefined,
   });
+};
+
+
+// =========================================================
+// HELPER - NORMALIZE ATTENDANCE CODE
+// =========================================================
+
+const normalizeAttendanceCode = (
+  value
+) => {
+
+  if (
+    value === undefined ||
+    value === null
+  ) {
+    return null;
+  }
+
+  const code =
+    String(value)
+      .trim()
+      .toUpperCase();
+
+  return code || null;
+};
+
+
+// =========================================================
+// HELPER - NORMALIZE EVENT ID
+// =========================================================
+
+const normalizeEventId = (
+  value
+) => {
+
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const id =
+    Number(value);
+
+  if (
+    !Number.isInteger(id) ||
+    id <= 0
+  ) {
+    return null;
+  }
+
+  return id;
 };
 
 
@@ -155,6 +186,7 @@ const getBooking = async (
   client,
   bookingId
 ) => {
+
   const result =
     await client.query(
       `
@@ -208,6 +240,7 @@ const getBookingForUpdate = async (
   client,
   bookingId
 ) => {
+
   const result =
     await client.query(
       `
@@ -230,7 +263,9 @@ const getBookingForUpdate = async (
       [bookingId]
     );
 
-  if (result.rows.length === 0) {
+  if (
+    result.rows.length === 0
+  ) {
     return null;
   }
 
@@ -283,11 +318,15 @@ const getBookingForUpdate = async (
 const isConfirmedBooking = (
   booking
 ) => {
-  return (
-    booking &&
-    CONFIRMED_BOOKING_STATUSES.includes(
-      booking.booking_status
-    )
+
+  if (!booking) {
+    return false;
+  }
+
+  return CONFIRMED_BOOKING_STATUSES.includes(
+    String(
+      booking.booking_status || ""
+    ).toLowerCase()
   );
 };
 
@@ -295,21 +334,12 @@ const isConfirmedBooking = (
 // =========================================================
 // HELPER - ENSURE ATTENDANCE RECORD
 // =========================================================
-//
-// If attendance does not exist,
-// create it.
-//
-// Does NOT modify:
-//
-// - payment
-// - booking status
-//
-// =========================================================
 
 const ensureAttendanceRecord = async (
   client,
   bookingId
 ) => {
+
   const booking =
     await getBooking(
       client,
@@ -320,28 +350,35 @@ const ensureAttendanceRecord = async (
     return null;
   }
 
-  if (!isConfirmedBooking(booking)) {
+  if (
+    !isConfirmedBooking(booking)
+  ) {
     return null;
   }
 
 
-  // ---------------------------------------------------------
+  // =======================================================
   // EXISTING ATTENDANCE
-  // ---------------------------------------------------------
+  // =======================================================
 
   const existing =
     await client.query(
       `
         SELECT *
         FROM event_attendance
+
         WHERE booking_id = $1
+
         LIMIT 1
+
         FOR UPDATE
       `,
       [bookingId]
     );
 
-  if (existing.rows.length > 0) {
+  if (
+    existing.rows.length > 0
+  ) {
     return {
       attendance:
         existing.rows[0],
@@ -351,13 +388,18 @@ const ensureAttendanceRecord = async (
   }
 
 
-  // ---------------------------------------------------------
+  // =======================================================
   // GENERATE UNIQUE ATTENDANCE CODE
-  // ---------------------------------------------------------
+  // =======================================================
 
   let attendanceCode = null;
 
-  for (let i = 0; i < 20; i++) {
+  for (
+    let i = 0;
+    i < 20;
+    i++
+  ) {
+
     const code =
       generateAttendanceCode();
 
@@ -366,13 +408,17 @@ const ensureAttendanceRecord = async (
         `
           SELECT id
           FROM event_attendance
+
           WHERE attendance_code = $1
+
           LIMIT 1
         `,
         [code]
       );
 
-    if (check.rows.length === 0) {
+    if (
+      check.rows.length === 0
+    ) {
       attendanceCode = code;
       break;
     }
@@ -385,9 +431,9 @@ const ensureAttendanceRecord = async (
   }
 
 
-  // ---------------------------------------------------------
+  // =======================================================
   // CREATE ATTENDANCE
-  // ---------------------------------------------------------
+  // =======================================================
 
   const inserted =
     await client.query(
@@ -436,9 +482,9 @@ const ensureAttendanceRecord = async (
 
 const markAttendancePresent = async (
   client,
-  attendanceId,
-  adminId
+  attendanceId
 ) => {
+
   const result =
     await client.query(
       `
@@ -447,22 +493,20 @@ const markAttendancePresent = async (
         SET
           attendance_status = 'present',
           marked_at = CURRENT_TIMESTAMP,
-          marked_by = $1,
           updated_at = CURRENT_TIMESTAMP
 
-        WHERE id = $2
-
-        AND attendance_status = 'not_present'
+        WHERE id = $1
+          AND attendance_status = 'not_present'
 
         RETURNING *
       `,
-      [
-        adminId || null,
-        attendanceId,
-      ]
+      [attendanceId]
     );
 
-  return result.rows[0] || null;
+  return (
+    result.rows[0] ||
+    null
+  );
 };
 
 
@@ -475,7 +519,9 @@ const getAllAttendance = async (
   req,
   res
 ) => {
+
   try {
+
     const result =
       await pool.query(
         `
@@ -535,6 +581,7 @@ const getAllAttendance = async (
     });
 
   } catch (error) {
+
     return sendDatabaseError(
       res,
       "Unable to fetch attendance",
@@ -553,10 +600,20 @@ const getEventAttendance = async (
   req,
   res
 ) => {
+
   try {
-    const {
-      eventId,
-    } = req.params;
+
+    const eventId =
+      normalizeEventId(
+        req.params.eventId
+      );
+
+    if (!eventId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
 
     const {
       search,
@@ -573,18 +630,23 @@ const getEventAttendance = async (
       `;
 
 
-    // -------------------------------------------------------
+    // =====================================================
     // STATUS FILTER
-    // -------------------------------------------------------
+    // =====================================================
 
     if (
       status &&
       [
         "present",
         "not_present",
-      ].includes(status)
+      ].includes(
+        String(status).toLowerCase()
+      )
     ) {
-      values.push(status);
+
+      values.push(
+        String(status).toLowerCase()
+      );
 
       whereClause +=
         `
@@ -594,14 +656,15 @@ const getEventAttendance = async (
     }
 
 
-    // -------------------------------------------------------
+    // =====================================================
     // SEARCH FILTER
-    // -------------------------------------------------------
+    // =====================================================
 
     if (
       search &&
       String(search).trim()
     ) {
+
       values.push(
         `%${String(search).trim()}%`
       );
@@ -619,6 +682,10 @@ const getEventAttendance = async (
         `;
     }
 
+
+    // =====================================================
+    // QUERY
+    // =====================================================
 
     const result =
       await pool.query(
@@ -682,6 +749,7 @@ const getEventAttendance = async (
     });
 
   } catch (error) {
+
     return sendDatabaseError(
       res,
       "Unable to fetch event attendance",
@@ -689,8 +757,6 @@ const getEventAttendance = async (
     );
   }
 };
-
-
 // =========================================================
 // GET EVENT ATTENDANCE STATS
 // GET /api/attendance/event/:eventId/stats
@@ -701,56 +767,53 @@ const getEventAttendanceStats = async (
   res
 ) => {
   try {
-    const {
-      eventId,
-    } = req.params;
+    const eventId = normalizeEventId(
+      req.params.eventId
+    );
 
-    const result =
-      await pool.query(
-        `
-          SELECT
-            COUNT(*)::INTEGER AS total,
+    if (!eventId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
 
-            COUNT(
-              CASE
-                WHEN attendance_status = 'present'
-                THEN 1
-              END
-            )::INTEGER AS present,
+    const result = await pool.query(
+      `
+        SELECT
+          COUNT(*)::INTEGER AS total,
 
-            COUNT(
-              CASE
-                WHEN attendance_status = 'not_present'
-                THEN 1
-              END
-            )::INTEGER AS not_present
+          COUNT(
+            CASE
+              WHEN attendance_status = 'present'
+              THEN 1
+            END
+          )::INTEGER AS present,
 
-          FROM event_attendance
+          COUNT(
+            CASE
+              WHEN attendance_status = 'not_present'
+              THEN 1
+            END
+          )::INTEGER AS not_present
 
-          WHERE event_id = $1
-        `,
-        [eventId]
-      );
+        FROM event_attendance
 
-    const row =
-      result.rows[0];
+        WHERE event_id = $1
+      `,
+      [eventId]
+    );
 
-    const total =
-      Number(row?.total || 0);
+    const row = result.rows[0] || {};
 
-    const present =
-      Number(row?.present || 0);
+    const total = Number(row.total || 0);
+    const present = Number(row.present || 0);
+    const notPresent = Number(row.not_present || 0);
 
-    const notPresent =
-      Number(row?.not_present || 0);
-
-    const percentage =
+    const attendancePercentage =
       total > 0
         ? Number(
-            (
-              (present / total) *
-              100
-            ).toFixed(2)
+            ((present / total) * 100).toFixed(2)
           )
         : 0;
 
@@ -761,11 +824,9 @@ const getEventAttendanceStats = async (
         total,
         present,
         notPresent,
-        attendancePercentage:
-          percentage,
+        attendancePercentage,
       },
     });
-
   } catch (error) {
     return sendDatabaseError(
       res,
@@ -786,61 +847,77 @@ const getBookingAttendance = async (
   res
 ) => {
   try {
-    const {
-      bookingId,
-    } = req.params;
+    const bookingId = Number(
+      req.params.bookingId
+    );
 
-    const result =
-      await pool.query(
-        `
-          SELECT
-            ea.id AS attendance_id,
-            ea.booking_id,
-            ea.event_id,
-            ea.attendance_code,
-            ea.attendance_status,
-            ea.marked_at,
-            ea.marked_by,
-            ea.created_at,
-            ea.updated_at,
+    if (
+      !Number.isInteger(bookingId) ||
+      bookingId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking ID",
+      });
+    }
 
-            b.booking_code,
-            b.booking_status,
-            b.amount,
+    const result = await pool.query(
+      `
+        SELECT
 
-            u.id AS user_id,
-            u.full_name,
-            u.username,
-            u.email,
-            u.mobile,
-            u.profile_image_url,
+          ea.id AS attendance_id,
+          ea.booking_id,
+          ea.event_id,
 
-            e.title AS event_name,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.venue,
-            e.event_mode
+          ea.attendance_code,
+          ea.attendance_status,
 
-          FROM event_attendance ea
+          ea.marked_at,
+          ea.marked_by,
 
-          LEFT JOIN event_bookings b
-            ON b.id = ea.booking_id
+          ea.created_at,
+          ea.updated_at,
 
-          LEFT JOIN users u
-            ON u.id = b.user_id
+          b.booking_code,
+          b.booking_status,
+          b.amount,
 
-          LEFT JOIN events e
-            ON e.id = ea.event_id
+          u.id AS user_id,
 
-          WHERE ea.booking_id = $1
+          u.full_name,
+          u.username,
+          u.email,
+          u.mobile,
+          u.profile_image_url,
 
-          LIMIT 1
-        `,
-        [bookingId]
-      );
+          e.title AS event_name,
+          e.event_date,
+          e.start_time,
+          e.end_time,
+          e.venue,
+          e.event_mode
 
-    if (result.rows.length === 0) {
+        FROM event_attendance ea
+
+        LEFT JOIN event_bookings b
+          ON b.id = ea.booking_id
+
+        LEFT JOIN users u
+          ON u.id = b.user_id
+
+        LEFT JOIN events e
+          ON e.id = ea.event_id
+
+        WHERE ea.booking_id = $1
+
+        LIMIT 1
+      `,
+      [bookingId]
+    );
+
+    if (
+      result.rows.length === 0
+    ) {
       return res.status(404).json({
         success: false,
         message:
@@ -854,7 +931,6 @@ const getBookingAttendance = async (
       attendance:
         result.rows[0],
     });
-
   } catch (error) {
     return sendDatabaseError(
       res,
@@ -867,6 +943,7 @@ const getBookingAttendance = async (
 
 // =========================================================
 // MARK PRESENT MANUALLY
+//
 // POST /api/attendance/:bookingId/mark-present
 // =========================================================
 
@@ -878,22 +955,19 @@ const markPresent = async (
     await pool.connect();
 
   try {
-    const {
-      bookingId,
-    } = req.params;
+    const bookingId = Number(
+      req.params.bookingId
+    );
 
-    const {
-      eventId,
-    } = req.body || {};
-
-    const normalizedBookingId =
-      Number(bookingId);
+    const eventId =
+      normalizeEventId(
+        req.body?.eventId ||
+        req.body?.event_id
+      );
 
     if (
-      !Number.isInteger(
-        normalizedBookingId
-      ) ||
-      normalizedBookingId <= 0
+      !Number.isInteger(bookingId) ||
+      bookingId <= 0
     ) {
       return res.status(400).json({
         success: false,
@@ -902,22 +976,24 @@ const markPresent = async (
       });
     }
 
+    await client.query(
+      "BEGIN"
+    );
 
-    await client.query("BEGIN");
-
-
-    // -------------------------------------------------------
+    // =====================================================
     // LOCK BOOKING
-    // -------------------------------------------------------
+    // =====================================================
 
     const booking =
       await getBookingForUpdate(
         client,
-        normalizedBookingId
+        bookingId
       );
 
     if (!booking) {
-      await client.query("ROLLBACK");
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(404).json({
         success: false,
@@ -926,17 +1002,18 @@ const markPresent = async (
       });
     }
 
-
-    // -------------------------------------------------------
-    // EVENT CHECK
-    // -------------------------------------------------------
+    // =====================================================
+    // EVENT VALIDATION
+    // =====================================================
 
     if (
       eventId &&
       Number(eventId) !==
         Number(booking.event_id)
     ) {
-      await client.query("ROLLBACK");
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
         success: false,
@@ -945,36 +1022,43 @@ const markPresent = async (
       });
     }
 
-
-    // -------------------------------------------------------
+    // =====================================================
     // BOOKING STATUS
-    // -------------------------------------------------------
+    // =====================================================
 
     if (
-      !isConfirmedBooking(booking)
+      !isConfirmedBooking(
+        booking
+      )
     ) {
-      await client.query("ROLLBACK");
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
         success: false,
         message:
           "Only confirmed bookings can attend the event",
+
+        bookingStatus:
+          booking.booking_status,
       });
     }
 
-
-    // -------------------------------------------------------
-    // ENSURE ATTENDANCE
-    // -------------------------------------------------------
+    // =====================================================
+    // ENSURE ATTENDANCE RECORD
+    // =====================================================
 
     const data =
       await ensureAttendanceRecord(
         client,
-        normalizedBookingId
+        bookingId
       );
 
     if (!data) {
-      await client.query("ROLLBACK");
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
         success: false,
@@ -983,17 +1067,18 @@ const markPresent = async (
       });
     }
 
-
-    // -------------------------------------------------------
+    // =====================================================
     // ALREADY PRESENT
-    // -------------------------------------------------------
+    // =====================================================
 
     if (
       data.attendance
         .attendance_status ===
       "present"
     ) {
-      await client.query("COMMIT");
+      await client.query(
+        "COMMIT"
+      );
 
       return res.json({
         success: true,
@@ -1008,21 +1093,19 @@ const markPresent = async (
       });
     }
 
-
-    // -------------------------------------------------------
+    // =====================================================
     // MARK PRESENT
-    // -------------------------------------------------------
+    // =====================================================
 
     const updated =
       await markAttendancePresent(
         client,
-        data.attendance.id,
-        req.adminId
+        data.attendance.id
       );
 
-
-    await client.query("COMMIT");
-
+    await client.query(
+      "COMMIT"
+    );
 
     if (!updated) {
       return res.json({
@@ -1034,7 +1117,6 @@ const markPresent = async (
           "Attendance was already marked",
       });
     }
-
 
     return res.json({
       success: true,
@@ -1070,13 +1152,14 @@ const markPresent = async (
           booking.email,
       },
     });
-
   } catch (error) {
     try {
       await client.query(
         "ROLLBACK"
       );
-    } catch (rollbackError) {
+    } catch (
+      rollbackError
+    ) {
       console.error(
         "Rollback error:",
         rollbackError.message
@@ -1088,7 +1171,6 @@ const markPresent = async (
       "Unable to mark attendance",
       error
     );
-
   } finally {
     client.release();
   }
@@ -1097,400 +1179,106 @@ const markPresent = async (
 
 // =========================================================
 // VERIFY ATTENDANCE CODE
+//
 // POST /api/attendance/verify-code
+//
+// Accepted:
+//
+// {
+//   "attendanceCode": "SNICT-ATT-XXXXXXXXXXXX",
+//   "eventId": 3
+// }
+//
+// Also:
+//
+// {
+//   "code": "SNICT-ATT-XXXXXXXXXXXX",
+//   "event_id": 3
+// }
+//
 // =========================================================
 
-const verifyAttendanceCode = async (
-  req,
-  res
-) => {
-  const client =
-    await pool.connect();
+const verifyAttendanceCode =
+  async (
+    req,
+    res
+  ) => {
+    const client =
+      await pool.connect();
 
-  try {
-    const {
-      attendanceCode,
-      eventId,
-    } = req.body || {};
-
-    if (!attendanceCode) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Attendance code is required",
-      });
-    }
-
-    const cleanCode =
-      String(
-        attendanceCode
-      )
-        .trim()
-        .toUpperCase();
-
-
-    await client.query("BEGIN");
-
-
-    // -------------------------------------------------------
-    // GET ATTENDANCE
-    // -------------------------------------------------------
-
-    const result =
-      await client.query(
-        `
-          SELECT
-            ea.id AS attendance_id,
-            ea.booking_id,
-            ea.event_id,
-            ea.attendance_code,
-            ea.attendance_status,
-            ea.marked_at,
-
-            b.booking_code,
-            b.booking_status,
-            b.amount,
-
-            u.id AS user_id,
-            u.full_name,
-            u.username,
-            u.email,
-            u.mobile,
-            u.profile_image_url,
-
-            e.title AS event_name,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.venue,
-            e.event_mode
-
-          FROM event_attendance ea
-
-          INNER JOIN event_bookings b
-            ON b.id = ea.booking_id
-
-          LEFT JOIN users u
-            ON u.id = b.user_id
-
-          LEFT JOIN events e
-            ON e.id = ea.event_id
-
-          WHERE UPPER(
-            ea.attendance_code
-          ) = $1
-
-          LIMIT 1
-        `,
-        [cleanCode]
-      );
-
-
-    if (result.rows.length === 0) {
-      await client.query("ROLLBACK");
-
-      return res.status(404).json({
-        success: false,
-        message:
-          "Invalid attendance code",
-      });
-    }
-
-
-    const attendance =
-      result.rows[0];
-
-
-    // -------------------------------------------------------
-    // LOCK ATTENDANCE ROW
-    // -------------------------------------------------------
-
-    await client.query(
-      `
-        SELECT id
-        FROM event_attendance
-        WHERE id = $1
-        FOR UPDATE
-      `,
-      [attendance.attendance_id]
-    );
-
-
-    // -------------------------------------------------------
-    // EVENT CHECK
-    // -------------------------------------------------------
-
-    if (
-      eventId &&
-      Number(eventId) !==
-        Number(attendance.event_id)
-    ) {
-      await client.query("ROLLBACK");
-
-      return res.status(400).json({
-        success: false,
-        message:
-          "Attendance code belongs to another event",
-      });
-    }
-
-
-    // -------------------------------------------------------
-    // BOOKING STATUS
-    // -------------------------------------------------------
-
-    if (
-      !CONFIRMED_BOOKING_STATUSES.includes(
-        attendance.booking_status
-      )
-    ) {
-      await client.query("ROLLBACK");
-
-      return res.status(400).json({
-        success: false,
-        message:
-          "Booking is not confirmed",
-      });
-    }
-
-
-    // -------------------------------------------------------
-    // ALREADY PRESENT
-    // -------------------------------------------------------
-
-    if (
-      attendance.attendance_status ===
-      "present"
-    ) {
-      await client.query("COMMIT");
-
-      return res.json({
-        success: true,
-
-        alreadyPresent: true,
-
-        message:
-          "Attendance already marked",
-
-        attendance,
-      });
-    }
-
-
-    // -------------------------------------------------------
-    // MARK PRESENT
-    // -------------------------------------------------------
-
-    const updated =
-      await markAttendancePresent(
-        client,
-        attendance.attendance_id,
-        req.adminId
-      );
-
-
-    await client.query("COMMIT");
-
-
-    if (!updated) {
-      return res.json({
-        success: true,
-
-        alreadyPresent: true,
-
-        message:
-          "Attendance already marked",
-      });
-    }
-
-
-    return res.json({
-      success: true,
-
-      alreadyPresent: false,
-
-      message:
-        "Attendance verified successfully",
-
-      attendance:
-        updated,
-
-      attendee: {
-        name:
-          attendance.full_name,
-
-        username:
-          attendance.username,
-
-        email:
-          attendance.email,
-
-        mobile:
-          attendance.mobile,
-
-        profileImageUrl:
-          attendance.profile_image_url,
-      },
-
-      event: {
-        id:
-          attendance.event_id,
-
-        name:
-          attendance.event_name,
-
-        date:
-          attendance.event_date,
-
-        startTime:
-          attendance.start_time,
-
-        endTime:
-          attendance.end_time,
-
-        venue:
-          attendance.venue,
-      },
-    });
-
-  } catch (error) {
     try {
-      await client.query(
-        "ROLLBACK"
-      );
-    } catch (rollbackError) {
-      console.error(
-        "Rollback error:",
-        rollbackError.message
-      );
-    }
+      const body =
+        req.body || {};
 
-    return sendDatabaseError(
-      res,
-      "Unable to verify attendance code",
-      error
-    );
+      // ===================================================
+      // SUPPORT MULTIPLE FIELD NAMES
+      // ===================================================
 
-  } finally {
-    client.release();
-  }
-};
+      const rawAttendanceCode =
+        body.attendanceCode ||
+        body.attendance_code ||
+        body.code ||
+        body.attendanceCodeValue;
 
+      const cleanCode =
+        normalizeAttendanceCode(
+          rawAttendanceCode
+        );
 
-// =========================================================
-// VERIFY EVENT PASS QR
-// POST /api/attendance/verify-qr
-//
-// Supports:
-//
-// 1. Full Event Pass JSON
-//
-// {
-//   "type": "SNICT_EVENT_PASS",
-//   "bookingId": 20,
-//   "eventId": 3,
-//   "passCode": "...",
-//   "passToken": "..."
-// }
-//
-// 2. Attendance Code JSON
-//
-// {
-//   "attendanceCode": "SNICT-ATT-XXXX"
-// }
-//
-// 3. Plain text attendance code
-//
-// "SNICT-ATT-XXXX"
-//
-// =========================================================
+      const eventId =
+        normalizeEventId(
+          body.eventId ||
+          body.event_id
+        );
 
-const verifyQrCode = async (
-  req,
-  res
-) => {
-  const client =
-    await pool.connect();
+      // ===================================================
+      // CODE REQUIRED
+      // ===================================================
 
-  try {
-    const {
-      qrData,
-      eventId,
-    } = req.body || {};
-
-    if (!qrData) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "QR data is required",
-      });
-    }
-
-
-    // =======================================================
-    // PARSE QR DATA
-    // =======================================================
-
-    let data = qrData;
-
-    if (
-      typeof qrData ===
-      "string"
-    ) {
-      const trimmed =
-        qrData.trim();
-
-      try {
-        data =
-          JSON.parse(trimmed);
-
-      } catch (jsonError) {
-        data = {
-          attendanceCode:
-            trimmed,
-        };
+      if (!cleanCode) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Attendance code is required",
+        });
       }
-    }
 
+      // ===================================================
+      // CODE FORMAT
+      // ===================================================
 
-    if (
-      !data ||
-      typeof data !== "object"
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid QR data",
-      });
-    }
-
-
-    // =======================================================
-    // ATTENDANCE CODE QR
-    // =======================================================
-
-    if (
-      data.attendanceCode
-    ) {
-      const attendanceCode =
-        String(
-          data.attendanceCode
+      if (
+        !cleanCode.startsWith(
+          "SNICT-ATT-"
         )
-          .trim()
-          .toUpperCase();
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid attendance code format",
+        });
+      }
 
-      await client.query("BEGIN");
+      await client.query(
+        "BEGIN"
+      );
 
+      // ===================================================
+      // FIND ATTENDANCE
+      // ===================================================
 
-      const attendanceResult =
+      const result =
         await client.query(
           `
             SELECT
+
               ea.id AS attendance_id,
               ea.booking_id,
               ea.event_id,
+
               ea.attendance_code,
               ea.attendance_status,
+
               ea.marked_at,
 
               b.booking_code,
@@ -1498,6 +1286,7 @@ const verifyQrCode = async (
               b.amount,
 
               u.id AS user_id,
+
               u.full_name,
               u.username,
               u.email,
@@ -1523,46 +1312,57 @@ const verifyQrCode = async (
               ON e.id = ea.event_id
 
             WHERE UPPER(
-              ea.attendance_code
+              TRIM(ea.attendance_code)
             ) = $1
 
             LIMIT 1
           `,
-          [attendanceCode]
+          [cleanCode]
         );
 
+      // ===================================================
+      // CODE NOT FOUND
+      // ===================================================
 
       if (
-        attendanceResult.rows.length === 0
+        result.rows.length === 0
       ) {
-        await client.query("ROLLBACK");
+        await client.query(
+          "ROLLBACK"
+        );
 
         return res.status(404).json({
           success: false,
           message:
-            "Attendance code not found",
+            "Invalid attendance code",
         });
       }
 
-
       const attendance =
-        attendanceResult.rows[0];
+        result.rows[0];
 
+      // ===================================================
+      // LOCK ATTENDANCE
+      // ===================================================
 
       await client.query(
         `
           SELECT id
+
           FROM event_attendance
+
           WHERE id = $1
+
           FOR UPDATE
         `,
-        [attendance.attendance_id]
+        [
+          attendance.attendance_id,
+        ]
       );
 
-
-      // -----------------------------------------------------
+      // ===================================================
       // EVENT VALIDATION
-      // -----------------------------------------------------
+      // ===================================================
 
       if (
         eventId &&
@@ -1571,44 +1371,60 @@ const verifyQrCode = async (
             attendance.event_id
           )
       ) {
-        await client.query("ROLLBACK");
+        await client.query(
+          "ROLLBACK"
+        );
 
         return res.status(400).json({
           success: false,
+
           message:
             "Attendance code belongs to another event",
+
+          expectedEventId:
+            attendance.event_id,
+
+          receivedEventId:
+            eventId,
         });
       }
 
-
-      // -----------------------------------------------------
+      // ===================================================
       // BOOKING STATUS
-      // -----------------------------------------------------
+      // ===================================================
 
       if (
-        !CONFIRMED_BOOKING_STATUSES.includes(
-          attendance.booking_status
+        !isConfirmedBooking(
+          attendance
         )
       ) {
-        await client.query("ROLLBACK");
+        await client.query(
+          "ROLLBACK"
+        );
 
         return res.status(400).json({
           success: false,
+
           message:
             "Booking is not confirmed",
+
+          bookingStatus:
+            attendance.booking_status,
         });
       }
 
-
-      // -----------------------------------------------------
+      // ===================================================
       // ALREADY PRESENT
-      // -----------------------------------------------------
+      // ===================================================
 
       if (
-        attendance.attendance_status ===
+        attendance
+          .attendance_status ===
         "present"
       ) {
-        await client.query("COMMIT");
+        await client.query(
+          "COMMIT"
+        );
 
         return res.json({
           success: true,
@@ -1622,21 +1438,19 @@ const verifyQrCode = async (
         });
       }
 
-
-      // -----------------------------------------------------
+      // ===================================================
       // MARK PRESENT
-      // -----------------------------------------------------
+      // ===================================================
 
       const updated =
         await markAttendancePresent(
           client,
-          attendance.attendance_id,
-          req.adminId
+          attendance.attendance_id
         );
 
-
-      await client.query("COMMIT");
-
+      await client.query(
+        "COMMIT"
+      );
 
       if (!updated) {
         return res.json({
@@ -1649,6 +1463,9 @@ const verifyQrCode = async (
         });
       }
 
+      // ===================================================
+      // SUCCESS
+      // ===================================================
 
       return res.json({
         success: true,
@@ -1656,7 +1473,7 @@ const verifyQrCode = async (
         alreadyPresent: false,
 
         message:
-          "Attendance QR verified successfully",
+          "Attendance verified successfully",
 
         attendance:
           updated,
@@ -1698,12 +1515,557 @@ const verifyQrCode = async (
             attendance.venue,
         },
       });
+    } catch (error) {
+      try {
+        await client.query(
+          "ROLLBACK"
+        );
+      } catch (
+        rollbackError
+      ) {
+        console.error(
+          "Rollback error:",
+          rollbackError.message
+        );
+      }
+
+      return sendDatabaseError(
+        res,
+        "Unable to verify attendance code",
+        error
+      );
+    } finally {
+      client.release();
+    }
+  };
+  // =========================================================
+// VERIFY EVENT PASS QR
+//
+// POST /api/attendance/verify-qr
+//
+// Supports:
+//
+// 1. Event Pass QR
+//
+// {
+//   "type": "SNICT_EVENT_PASS",
+//   "bookingId": 23,
+//   "eventId": 3,
+//   "passCode": "SNICT-PASS-XXXX",
+//   "passToken": "XXXX"
+// }
+//
+// 2. Attendance Code QR
+//
+// {
+//   "attendanceCode": "SNICT-ATT-XXXXXXXXXXXX",
+//   "eventId": 3
+// }
+//
+// 3. Plain text QR
+//
+// "SNICT-ATT-XXXXXXXXXXXX"
+// =========================================================
+
+const verifyQrCode = async (
+  req,
+  res
+) => {
+
+  const client =
+    await pool.connect();
+
+  try {
+
+    const body =
+      req.body || {};
+
+    const qrData =
+      body.qrData ||
+      body.qr_data ||
+      body.data;
+
+    const requestEventId =
+      normalizeEventId(
+        body.eventId ||
+        body.event_id
+      );
+
+
+    // =====================================================
+    // QR DATA REQUIRED
+    // =====================================================
+
+    if (
+      qrData === undefined ||
+      qrData === null ||
+      qrData === ""
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "QR data is required",
+      });
     }
 
 
-    // =======================================================
+    // =====================================================
+    // PARSE QR DATA
+    // =====================================================
+
+    let data = qrData;
+
+    if (
+      typeof qrData === "string"
+    ) {
+
+      const trimmed =
+        qrData.trim();
+
+      // ---------------------------------------------------
+      // Try JSON first
+      // ---------------------------------------------------
+
+      try {
+
+        data =
+          JSON.parse(
+            trimmed
+          );
+
+      } catch (
+        jsonError
+      ) {
+
+        // -----------------------------------------------
+        // Plain attendance code
+        // -----------------------------------------------
+
+        data = {
+          attendanceCode:
+            trimmed,
+        };
+      }
+    }
+
+
+    // =====================================================
+    // STRING AFTER PARSING
+    // =====================================================
+
+    if (
+      typeof data === "string"
+    ) {
+
+      data = {
+        attendanceCode:
+          data.trim(),
+      };
+    }
+
+
+    // =====================================================
+    // OBJECT REQUIRED
+    // =====================================================
+
+    if (
+      !data ||
+      typeof data !== "object"
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid QR data",
+      });
+    }
+
+
+    // =====================================================
+    // ATTENDANCE CODE QR
+    // =====================================================
+
+    const attendanceCode =
+      normalizeAttendanceCode(
+        data.attendanceCode ||
+        data.attendance_code ||
+        data.code
+      );
+
+
+    // =====================================================
+    // IF QR CONTAINS ATTENDANCE CODE
+    // =====================================================
+
+    if (attendanceCode) {
+
+      await client.query(
+        "BEGIN"
+      );
+
+
+      // ===================================================
+      // FIND ATTENDANCE
+      // ===================================================
+
+      const result =
+        await client.query(
+          `
+            SELECT
+
+              ea.id AS attendance_id,
+              ea.booking_id,
+              ea.event_id,
+
+              ea.attendance_code,
+              ea.attendance_status,
+
+              ea.marked_at,
+
+              b.booking_code,
+              b.booking_status,
+              b.amount,
+
+              u.id AS user_id,
+
+              u.full_name,
+              u.username,
+              u.email,
+              u.mobile,
+              u.profile_image_url,
+
+              e.title AS event_name,
+              e.event_date,
+              e.start_time,
+              e.end_time,
+              e.venue,
+              e.event_mode
+
+            FROM event_attendance ea
+
+            INNER JOIN event_bookings b
+              ON b.id = ea.booking_id
+
+            LEFT JOIN users u
+              ON u.id = b.user_id
+
+            LEFT JOIN events e
+              ON e.id = ea.event_id
+
+            WHERE UPPER(
+              TRIM(ea.attendance_code)
+            ) = $1
+
+            LIMIT 1
+          `,
+          [attendanceCode]
+        );
+
+
+      // ===================================================
+      // CODE NOT FOUND
+      // ===================================================
+
+      if (
+        result.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Attendance code not found",
+        });
+      }
+
+
+      const attendance =
+        result.rows[0];
+
+
+      // ===================================================
+      // EVENT ID FROM QR
+      // ===================================================
+
+      const qrEventId =
+        normalizeEventId(
+          data.eventId ||
+          data.event_id
+        );
+
+
+      // ===================================================
+      // REQUEST EVENT CHECK
+      // ===================================================
+
+      if (
+        requestEventId &&
+        Number(requestEventId) !==
+          Number(attendance.event_id)
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Attendance code belongs to another event",
+
+          expectedEventId:
+            attendance.event_id,
+
+          receivedEventId:
+            requestEventId,
+        });
+      }
+
+
+      // ===================================================
+      // QR EVENT CHECK
+      // ===================================================
+
+      if (
+        qrEventId &&
+        Number(qrEventId) !==
+          Number(attendance.event_id)
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "QR belongs to another event",
+
+          expectedEventId:
+            attendance.event_id,
+
+          receivedEventId:
+            qrEventId,
+        });
+      }
+
+
+      // ===================================================
+      // LOCK ATTENDANCE
+      // ===================================================
+
+      await client.query(
+        `
+          SELECT id
+
+          FROM event_attendance
+
+          WHERE id = $1
+
+          FOR UPDATE
+        `,
+        [
+          attendance.attendance_id,
+        ]
+      );
+
+
+      // ===================================================
+      // BOOKING STATUS
+      // ===================================================
+
+      if (
+        !isConfirmedBooking(
+          attendance
+        )
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Booking is not confirmed",
+
+          bookingStatus:
+            attendance.booking_status,
+        });
+      }
+
+
+      // ===================================================
+      // ALREADY PRESENT
+      // =====================================================
+
+      if (
+        attendance.attendance_status ===
+        "present"
+      ) {
+
+        await client.query(
+          "COMMIT"
+        );
+
+        return res.json({
+
+          success: true,
+
+          alreadyPresent: true,
+
+          message:
+            "Attendance already marked",
+
+          attendance,
+
+          attendee: {
+
+            name:
+              attendance.full_name,
+
+            username:
+              attendance.username,
+
+            email:
+              attendance.email,
+
+            mobile:
+              attendance.mobile,
+
+            profileImageUrl:
+              attendance.profile_image_url,
+
+          },
+
+          event: {
+
+            id:
+              attendance.event_id,
+
+            name:
+              attendance.event_name,
+
+            date:
+              attendance.event_date,
+
+            startTime:
+              attendance.start_time,
+
+            endTime:
+              attendance.end_time,
+
+            venue:
+              attendance.venue,
+
+          },
+
+        });
+      }
+
+
+      // ===================================================
+      // MARK PRESENT
+      // ===================================================
+
+      const updated =
+        await markAttendancePresent(
+          client,
+          attendance.attendance_id
+        );
+
+
+      await client.query(
+        "COMMIT"
+      );
+
+
+      if (!updated) {
+
+        return res.json({
+
+          success: true,
+
+          alreadyPresent: true,
+
+          message:
+            "Attendance already marked",
+
+        });
+      }
+
+
+      // ===================================================
+      // SUCCESS
+      // ===================================================
+
+      return res.json({
+
+        success: true,
+
+        alreadyPresent: false,
+
+        message:
+          "Attendance QR verified successfully",
+
+        attendance:
+          updated,
+
+        attendee: {
+
+          name:
+            attendance.full_name,
+
+          username:
+            attendance.username,
+
+          email:
+            attendance.email,
+
+          mobile:
+            attendance.mobile,
+
+          profileImageUrl:
+            attendance.profile_image_url,
+
+        },
+
+        event: {
+
+          id:
+            attendance.event_id,
+
+          name:
+            attendance.event_name,
+
+          date:
+            attendance.event_date,
+
+          startTime:
+            attendance.start_time,
+
+          endTime:
+            attendance.end_time,
+
+          venue:
+            attendance.venue,
+
+        },
+
+      });
+    }
+
+
+    // =====================================================
     // EVENT PASS QR
-    // =======================================================
+    // =====================================================
 
     const bookingId =
       data.bookingId ||
@@ -1718,78 +2080,109 @@ const verifyQrCode = async (
       data.pass_token;
 
     const qrEventId =
-      data.eventId ||
-      data.event_id;
+      normalizeEventId(
+        data.eventId ||
+        data.event_id
+      );
 
 
-    // -------------------------------------------------------
-    // QR TYPE VALIDATION
-    // -------------------------------------------------------
+    // =====================================================
+    // EVENT PASS TYPE
+    // =====================================================
 
     if (
       data.type &&
-      data.type !== EVENT_PASS_TYPE
+      String(data.type).trim() !==
+        "SNICT_EVENT_PASS"
     ) {
+
       return res.status(400).json({
+
         success: false,
+
         message:
           "Invalid event pass QR type",
+
       });
     }
 
 
-    // -------------------------------------------------------
+    // =====================================================
     // BOOKING ID REQUIRED
-    // -------------------------------------------------------
+    // =====================================================
 
-    if (!bookingId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid event pass QR",
-      });
-    }
+    const normalizedBookingId =
+      Number(bookingId);
 
-
-    // -------------------------------------------------------
-    // EVENT VALIDATION
-    // -------------------------------------------------------
 
     if (
-      eventId &&
-      qrEventId &&
-      Number(eventId) !==
-        Number(qrEventId)
+      !Number.isInteger(
+        normalizedBookingId
+      ) ||
+      normalizedBookingId <= 0
     ) {
+
       return res.status(400).json({
+
         success: false,
+
         message:
-          "QR belongs to another event",
+          "Invalid event pass QR",
+
       });
     }
 
 
-    await client.query("BEGIN");
+    // =====================================================
+    // REQUEST EVENT VS QR EVENT
+    // =====================================================
+
+    if (
+      requestEventId &&
+      qrEventId &&
+      Number(requestEventId) !==
+        Number(qrEventId)
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          "QR belongs to another event",
+
+      });
+    }
 
 
-    // =======================================================
+    await client.query(
+      "BEGIN"
+    );
+
+
+    // =====================================================
     // GET EVENT PASS
-    // =======================================================
+    // =====================================================
 
     const passResult =
       await client.query(
         `
           SELECT
+
             ep.id AS pass_id,
+
             ep.booking_id,
+
             ep.pass_code,
             ep.pass_token,
+
             ep.valid_from,
             ep.valid_until,
 
             b.booking_code,
             b.user_id,
             b.event_id,
+
             b.amount,
             b.booking_status,
 
@@ -1821,19 +2214,32 @@ const verifyQrCode = async (
 
           LIMIT 1
         `,
-        [bookingId]
+        [
+          normalizedBookingId,
+        ]
       );
 
 
+    // =====================================================
+    // PASS NOT FOUND
+    // =====================================================
+
     if (
-      passResult.rows.length === 0
+      passResult.rows.length ===
+      0
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(404).json({
+
         success: false,
+
         message:
           "Event pass not found",
+
       });
     }
 
@@ -1842,108 +2248,161 @@ const verifyQrCode = async (
       passResult.rows[0];
 
 
-    // -------------------------------------------------------
+    // =====================================================
     // LOCK PASS
-    // -------------------------------------------------------
+    // =====================================================
 
     await client.query(
       `
         SELECT id
+
         FROM event_passes
+
         WHERE id = $1
+
         FOR UPDATE
       `,
-      [pass.pass_id]
+      [
+        pass.pass_id,
+      ]
     );
 
 
-    // =======================================================
+    // =====================================================
     // PASS CODE VALIDATION
-    // =======================================================
+    // =====================================================
 
     if (
       passCode &&
       String(
         pass.pass_code
       ).trim() !==
-      String(
-        passCode
-      ).trim()
+        String(
+          passCode
+        ).trim()
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(401).json({
+
         success: false,
+
         message:
           "Invalid event pass code",
+
       });
     }
 
 
-    // =======================================================
+    // =====================================================
     // PASS TOKEN VALIDATION
-    // =======================================================
+    // =====================================================
 
     if (
       passToken &&
       String(
         pass.pass_token
       ).trim() !==
-      String(
-        passToken
-      ).trim()
+        String(
+          passToken
+        ).trim()
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(401).json({
+
         success: false,
+
         message:
           "Invalid event pass token",
+
       });
     }
 
 
-    // =======================================================
+    // =====================================================
     // EVENT VALIDATION
-    // =======================================================
+    // =====================================================
 
     if (
-      eventId &&
-      Number(eventId) !==
+      requestEventId &&
+      Number(requestEventId) !==
         Number(pass.event_id)
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "Pass belongs to another event",
+
       });
     }
 
-
-    // =======================================================
-    // BOOKING STATUS
-    // =======================================================
 
     if (
-      !CONFIRMED_BOOKING_STATUSES.includes(
-        pass.booking_status
-      )
+      qrEventId &&
+      Number(qrEventId) !==
+        Number(pass.event_id)
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
+
         success: false,
+
         message:
-          "Booking is not confirmed",
+          "Pass belongs to another event",
+
       });
     }
 
 
-    // =======================================================
+    // =====================================================
+    // BOOKING STATUS
+    // =====================================================
+
+    if (
+      !isConfirmedBooking(
+        pass
+      )
+    ) {
+
+      await client.query(
+        "ROLLBACK"
+      );
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          "Booking is not confirmed",
+
+        bookingStatus:
+          pass.booking_status,
+
+      });
+    }
+
+
+    // =====================================================
     // PASS VALIDITY
-    // =======================================================
+    // =====================================================
 
     const now =
       new Date();
@@ -1956,12 +2415,18 @@ const verifyQrCode = async (
           pass.valid_from
         )
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "This event pass is not active yet",
+
       });
     }
 
@@ -1973,33 +2438,46 @@ const verifyQrCode = async (
           pass.valid_until
         )
     ) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "This event pass has expired",
+
       });
     }
 
 
-    // =======================================================
-    // GET / CREATE ATTENDANCE
-    // =======================================================
+    // =====================================================
+    // ENSURE ATTENDANCE RECORD
+    // =====================================================
 
     const attendanceData =
       await ensureAttendanceRecord(
         client,
-        bookingId
+        normalizedBookingId
       );
 
+
     if (!attendanceData) {
-      await client.query("ROLLBACK");
+
+      await client.query(
+        "ROLLBACK"
+      );
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "Unable to create attendance record",
+
       });
     }
 
@@ -2008,17 +2486,21 @@ const verifyQrCode = async (
       attendanceData.attendance;
 
 
-    // =======================================================
+    // =====================================================
     // ALREADY PRESENT
-    // =======================================================
+    // =====================================================
 
     if (
       attendance.attendance_status ===
       "present"
     ) {
-      await client.query("COMMIT");
+
+      await client.query(
+        "COMMIT"
+      );
 
       return res.json({
+
         success: true,
 
         alreadyPresent: true,
@@ -2029,6 +2511,7 @@ const verifyQrCode = async (
         attendance,
 
         attendee: {
+
           name:
             pass.full_name,
 
@@ -2043,9 +2526,11 @@ const verifyQrCode = async (
 
           profileImageUrl:
             pass.profile_image_url,
+
         },
 
         event: {
+
           id:
             pass.event_id,
 
@@ -2063,51 +2548,60 @@ const verifyQrCode = async (
 
           venue:
             pass.venue,
+
         },
 
         pass: {
+
           passCode:
             pass.pass_code,
 
           bookingCode:
             pass.booking_code,
+
         },
+
       });
     }
 
 
-    // =======================================================
+    // =====================================================
     // MARK PRESENT
-    // =======================================================
+    // =====================================================
 
     const updated =
       await markAttendancePresent(
         client,
-        attendance.id,
-        req.adminId
+        attendance.id
       );
 
 
-    await client.query("COMMIT");
+    await client.query(
+      "COMMIT"
+    );
 
 
     if (!updated) {
+
       return res.json({
+
         success: true,
 
         alreadyPresent: true,
 
         message:
           "Attendance already marked",
+
       });
     }
 
 
-    // =======================================================
+    // =====================================================
     // SUCCESS
-    // =======================================================
+    // =====================================================
 
     return res.json({
+
       success: true,
 
       alreadyPresent: false,
@@ -2119,6 +2613,7 @@ const verifyQrCode = async (
         updated,
 
       attendee: {
+
         name:
           pass.full_name,
 
@@ -2133,9 +2628,11 @@ const verifyQrCode = async (
 
         profileImageUrl:
           pass.profile_image_url,
+
       },
 
       event: {
+
         id:
           pass.event_id,
 
@@ -2153,9 +2650,11 @@ const verifyQrCode = async (
 
         venue:
           pass.venue,
+
       },
 
       pass: {
+
         passCode:
           pass.pass_code,
 
@@ -2167,15 +2666,23 @@ const verifyQrCode = async (
 
         validUntil:
           pass.valid_until,
+
       },
+
     });
 
   } catch (error) {
+
     try {
+
       await client.query(
         "ROLLBACK"
       );
-    } catch (rollbackError) {
+
+    } catch (
+      rollbackError
+    ) {
+
       console.error(
         "Attendance rollback error:",
         rollbackError.message
@@ -2189,7 +2696,9 @@ const verifyQrCode = async (
     );
 
   } finally {
+
     client.release();
+
   }
 };
 
@@ -2199,6 +2708,7 @@ const verifyQrCode = async (
 // =========================================================
 
 module.exports = {
+
   getAllAttendance,
 
   getEventAttendance,
@@ -2207,9 +2717,10 @@ module.exports = {
 
   getBookingAttendance,
 
-  markPresent,
+  verifyQrCode,
 
   verifyAttendanceCode,
 
-  verifyQrCode,
+  markPresent,
+
 };

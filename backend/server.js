@@ -42,6 +42,8 @@ const attendanceRoutes =
 const eventPassRoutes =
   require("./routes/eventPassRoutes");
 
+const contactRoutes =
+  require("./routes/contactRoutes");
 
 // =========================================================
 // APP
@@ -333,7 +335,10 @@ app.use(
   eventRoutes
 );
 
-
+app.use(
+  "/api/contact",
+  contactRoutes
+);
 // =========================================================
 // ATTENDANCE ROUTES
 // =========================================================

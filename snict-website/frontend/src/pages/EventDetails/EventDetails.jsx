@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
 import {
   CalendarDays,
@@ -12,6 +16,15 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
+  Image as ImageIcon,
+  FileText,
+  PlayCircle,
+  Download,
+  ExternalLink,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Files,
 } from "lucide-react";
 
 import {
@@ -34,11 +47,13 @@ const calculateEventStatus = (
   startTime,
   endTime
 ) => {
+
   if (!eventDate) {
     return "upcoming";
   }
 
   try {
+
     const date =
       eventDate
         .toString()
@@ -56,9 +71,6 @@ const calculateEventStatus = (
         .slice(0, 8) ||
       "23:59:59";
 
-    /*
-     * Explicit IST timezone.
-     */
     const startDate =
       new Date(
         `${date}T${start}+05:30`
@@ -69,7 +81,8 @@ const calculateEventStatus = (
         `${date}T${end}+05:30`
       );
 
-    const now = new Date();
+    const now =
+      new Date();
 
     if (
       Number.isNaN(
@@ -82,7 +95,9 @@ const calculateEventStatus = (
       return "upcoming";
     }
 
-    if (now < startDate) {
+    if (
+      now < startDate
+    ) {
       return "upcoming";
     }
 
@@ -107,26 +122,407 @@ const calculateEventStatus = (
 };
 
 
+// =========================================================
+// GET BACKEND ORIGIN
+// =========================================================
+
+const getBackendOrigin = () => {
+
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://snict-backend.onrender.com/api";
+
+  try {
+
+    return new URL(
+      apiUrl
+    ).origin;
+
+  } catch {
+
+    return "https://snict-backend.onrender.com";
+  }
+};
+
+
+// =========================================================
+// MEDIA URL
+// =========================================================
+
+const getMediaUrl = (
+  url
+) => {
+
+  if (!url) {
+    return "";
+  }
+
+  const value =
+    String(url).trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("blob:") ||
+    value.startsWith("data:")
+  ) {
+
+    return value;
+  }
+
+  const backendOrigin =
+    getBackendOrigin();
+
+  if (
+    value.startsWith("/")
+  ) {
+
+    return `${backendOrigin}${value}`;
+  }
+
+  return `${backendOrigin}/${value}`;
+};
+
+
+// =========================================================
+// MEDIA ARRAY NORMALIZER
+// =========================================================
+
+const normalizeMediaArray = (
+  value
+) => {
+
+  if (
+    !Array.isArray(value)
+  ) {
+    return [];
+  }
+
+  return value;
+};
+
+
+// =========================================================
+// MEDIA ITEM URL
+// =========================================================
+
+const getMediaItemUrl = (
+  item
+) => {
+
+  if (!item) {
+    return "";
+  }
+
+  if (
+    typeof item ===
+    "string"
+  ) {
+
+    return getMediaUrl(
+      item
+    );
+  }
+
+  return getMediaUrl(
+    item.url ||
+    item.secure_url ||
+    item.secureUrl ||
+    item.file_url ||
+    item.fileUrl ||
+    item.path ||
+    item.image_url ||
+    item.imageUrl ||
+    item.video_url ||
+    item.videoUrl ||
+    item.document_url ||
+    item.documentUrl ||
+    item.cloudinary_url ||
+    item.cloudinaryUrl
+  );
+};
+
+
+// =========================================================
+// MEDIA ITEM NAME
+// =========================================================
+
+const getMediaItemName = (
+  item,
+  fallback = "Event Media"
+) => {
+
+  if (!item) {
+    return fallback;
+  }
+
+  if (
+    typeof item ===
+    "string"
+  ) {
+
+    const parts =
+      item.split("/");
+
+    return (
+      parts[
+        parts.length - 1
+      ] ||
+      fallback
+    );
+  }
+
+  return (
+    item.name ||
+    item.original_name ||
+    item.originalName ||
+    item.filename ||
+    item.file_name ||
+    item.fileName ||
+    item.title ||
+    item.public_id ||
+    fallback
+  );
+};
+
+
+// =========================================================
+// FILE SIZE FORMATTER
+// =========================================================
+
+const formatFileSize = (
+  bytes
+) => {
+
+  if (
+    bytes === null ||
+    bytes === undefined ||
+    bytes === ""
+  ) {
+    return "";
+  }
+
+  const size =
+    Number(bytes);
+
+  if (
+    Number.isNaN(size) ||
+    size <= 0
+  ) {
+    return "";
+  }
+
+  const units = [
+    "B",
+    "KB",
+    "MB",
+    "GB",
+  ];
+
+  let index = 0;
+  let value = size;
+
+  while (
+    value >= 1024 &&
+    index <
+      units.length - 1
+  ) {
+
+    value =
+      value / 1024;
+
+    index++;
+  }
+
+  return `${value.toFixed(
+    value >= 10 || index === 0
+      ? 0
+      : 1
+  )} ${units[index]}`;
+};
+
+
+// =========================================================
+// FILE EXTENSION
+// =========================================================
+
+const getFileExtension = (
+  name
+) => {
+
+  if (!name) {
+    return "";
+  }
+
+  const cleanName =
+    String(name)
+      .split("?")[0];
+
+  const parts =
+    cleanName.split(".");
+
+  if (
+    parts.length < 2
+  ) {
+    return "";
+  }
+
+  return (
+    parts[
+      parts.length - 1
+    ] || ""
+  ).toUpperCase();
+};
+
+
+// =========================================================
+// DOCUMENT TYPE
+// =========================================================
+
+const getDocumentType = (
+  item
+) => {
+
+  const name =
+    getMediaItemName(
+      item,
+      "Document"
+    );
+
+  const extension =
+    getFileExtension(
+      name
+    );
+
+  if (
+    extension === "PDF"
+  ) {
+    return "PDF";
+  }
+
+  if (
+    extension === "DOC" ||
+    extension === "DOCX"
+  ) {
+    return "WORD";
+  }
+
+  if (
+    extension === "PPT" ||
+    extension === "PPTX"
+  ) {
+    return "POWERPOINT";
+  }
+
+  return extension ||
+    "DOCUMENT";
+};
+
+
+// =========================================================
+// COMPONENT
+// =========================================================
+
 function EventDetails() {
 
-  const { id } =
-    useParams();
+  const {
+    id,
+  } = useParams();
 
   const navigate =
     useNavigate();
 
 
-  const [event, setEvent] =
-    useState(null);
+  // =======================================================
+  // EVENT STATE
+  // =======================================================
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    event,
+    setEvent,
+  ] = useState(null);
 
-  const [error, setError] =
-    useState("");
 
-  const [bookingLoading, setBookingLoading] =
-    useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+
+  // =======================================================
+  // MEDIA STATE
+  // =======================================================
+
+  const [
+    gallery,
+    setGallery,
+  ] = useState([]);
+
+
+  const [
+    videos,
+    setVideos,
+  ] = useState([]);
+
+
+  const [
+    documents,
+    setDocuments,
+  ] = useState([]);
+
+
+  const [
+    mediaLoading,
+    setMediaLoading,
+  ] = useState(false);
+
+
+  const [
+    mediaError,
+    setMediaError,
+  ] = useState("");
+
+
+  // =======================================================
+  // GALLERY LIGHTBOX
+  // =======================================================
+
+  const [
+    lightboxOpen,
+    setLightboxOpen,
+  ] = useState(false);
+
+
+  const [
+    activeImageIndex,
+    setActiveImageIndex,
+  ] = useState(0);
+
+
+  // =======================================================
+  // VIDEO MODAL
+  // =======================================================
+
+  const [
+    videoModalOpen,
+    setVideoModalOpen,
+  ] = useState(false);
+
+
+  const [
+    activeVideo,
+    setActiveVideo,
+  ] = useState(null);
 
 
   // =========================================================
@@ -151,62 +547,342 @@ function EventDetails() {
   }, [id]);
 
 
+  // =========================================================
+  // LOAD EVENT + MEDIA
+  // =========================================================
+
   const loadEvent =
     async () => {
 
       try {
 
         setLoading(true);
-
         setError("");
+        setMediaError("");
+        setMediaLoading(true);
 
+        /*
+         * Load event and media separately.
+         *
+         * Public endpoints:
+         *
+         * GET /api/events/:id
+         * GET /api/events/:id/media
+         */
 
-        const response =
-          await api.get(
+        const eventRequest =
+          api.get(
             `/events/${id}`
           );
 
+        const mediaRequest =
+          api.get(
+            `/events/${id}/media`
+          );
+
+
+        const [
+          eventResponse,
+          mediaResponse,
+        ] = await Promise.allSettled([
+          eventRequest,
+          mediaRequest,
+        ]);
+
+
+        // ===================================================
+        // EVENT RESPONSE
+        // ===================================================
 
         if (
-          response.data?.success &&
-          response.data?.event
+          eventResponse.status ===
+          "rejected"
         ) {
 
-          const backendEvent =
-            response.data.event;
+          throw (
+            eventResponse.reason
+          );
+        }
 
 
-          /*
-           * Recalculate status on frontend
-           * using IST.
-           */
-
-          const status =
-            calculateEventStatus(
-              backendEvent.event_date,
-              backendEvent.start_time,
-              backendEvent.end_time
-            );
+        const eventData =
+          eventResponse.value
+            ?.data;
 
 
-          setEvent({
-            ...backendEvent,
-            status,
-          });
-
-        } else {
+        if (
+          !eventData?.success ||
+          !eventData?.event
+        ) {
 
           setError(
             "Event not found."
           );
 
+          return;
         }
+
+
+        const backendEvent =
+          eventData.event;
+
+
+        // ===================================================
+        // STATUS
+        // ===================================================
+
+        const status =
+          calculateEventStatus(
+            backendEvent.event_date,
+            backendEvent.start_time,
+            backendEvent.end_time
+          );
+
+
+        // ===================================================
+        // EVENT-EMBEDDED MEDIA
+        // ===================================================
+
+        let eventGallery =
+          normalizeMediaArray(
+            backendEvent.gallery
+          );
+
+        let eventVideos =
+          normalizeMediaArray(
+            backendEvent.videos
+          );
+
+        let eventDocuments =
+          normalizeMediaArray(
+            backendEvent.documents
+          );
+
+
+        // ===================================================
+        // MEDIA ENDPOINT
+        // ===================================================
+
+        if (
+          mediaResponse.status ===
+          "fulfilled"
+        ) {
+
+          const mediaResponseData =
+            mediaResponse.value
+              ?.data;
+
+
+          /*
+           * Support these possible
+           * backend structures:
+           *
+           * {
+           *   gallery: [],
+           *   videos: [],
+           *   documents: []
+           * }
+           *
+           * OR
+           *
+           * {
+           *   data: {
+           *     gallery: [],
+           *     videos: [],
+           *     documents: []
+           *   }
+           * }
+           *
+           * OR
+           *
+           * {
+           *   media: {
+           *     gallery: [],
+           *     videos: [],
+           *     documents: []
+           *   }
+           * }
+           *
+           * OR
+           *
+           * {
+           *   event: {
+           *     gallery: [],
+           *     videos: [],
+           *     documents: []
+           *   }
+           * }
+           */
+
+          const mediaData =
+            mediaResponseData
+              ?.data ||
+            mediaResponseData
+              ?.media ||
+            mediaResponseData
+              ?.event ||
+            mediaResponseData ||
+            {};
+
+          /*
+           * Support one additional nested response shape:
+           *
+           * {
+           *   success: true,
+           *   data: {
+           *     event: {
+           *       gallery: [],
+           *       videos: [],
+           *       documents: []
+           *     }
+           *   }
+           * }
+           */
+          const nestedMediaData =
+            mediaData?.data ||
+            mediaData?.media ||
+            mediaData?.event ||
+            mediaData ||
+            {};
+
+
+          if (
+            Array.isArray(
+              nestedMediaData.gallery
+            )
+          ) {
+
+            eventGallery =
+              nestedMediaData.gallery;
+          }
+
+
+          if (
+            Array.isArray(
+              nestedMediaData.videos
+            )
+          ) {
+
+            eventVideos =
+              nestedMediaData.videos;
+          }
+
+
+          if (
+            Array.isArray(
+              nestedMediaData.documents
+            )
+          ) {
+
+            eventDocuments =
+              nestedMediaData.documents;
+          }
+
+
+          /*
+           * Some backends may return
+           * images instead of gallery.
+           */
+
+          if (
+            eventGallery.length === 0 &&
+            Array.isArray(
+              nestedMediaData.images
+            )
+          ) {
+
+            eventGallery =
+              nestedMediaData.images;
+          }
+
+
+          /*
+           * Some backends may return
+           * files instead of documents.
+           */
+
+          if (
+            eventDocuments.length === 0 &&
+            Array.isArray(
+              nestedMediaData.files
+            )
+          ) {
+
+            eventDocuments =
+              nestedMediaData.files;
+          }
+
+
+        } else {
+
+          console.warn(
+            "Event media endpoint unavailable:",
+            mediaResponse.reason
+          );
+
+          /*
+           * Do NOT fail the whole event page
+           * when media endpoint fails.
+           *
+           * Event itself can still load.
+           */
+
+          setMediaError(
+            "Event media could not be loaded."
+          );
+        }
+
+
+        // ===================================================
+        // SET MEDIA
+        // ===================================================
+
+        setGallery(
+          eventGallery
+        );
+
+        setVideos(
+          eventVideos
+        );
+
+        setDocuments(
+          eventDocuments
+        );
+
+
+        // ===================================================
+        // SET EVENT
+        // ===================================================
+
+        setEvent({
+
+          ...backendEvent,
+
+          status,
+
+          gallery:
+            eventGallery,
+
+          videos:
+            eventVideos,
+
+          documents:
+            eventDocuments,
+
+        });
+
 
       } catch (error) {
 
         console.error(
           "Event details error:",
           error
+        );
+
+
+        console.error(
+          "Event details response:",
+          error.response?.data
         );
 
 
@@ -223,14 +899,15 @@ function EventDetails() {
 
           setError(
             error.response?.data?.message ||
-              "Unable to load event."
+            "Unable to load event."
           );
-
         }
+
 
       } finally {
 
         setLoading(false);
+        setMediaLoading(false);
 
       }
     };
@@ -261,6 +938,7 @@ function EventDetails() {
       if (
         parts.length !== 3
       ) {
+
         return value;
       }
 
@@ -283,10 +961,17 @@ function EventDetails() {
       return dateObject.toLocaleDateString(
         "en-IN",
         {
-          weekday: "long",
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
+          weekday:
+            "long",
+
+          day:
+            "2-digit",
+
+          month:
+            "long",
+
+          year:
+            "numeric",
         }
       );
     };
@@ -317,12 +1002,14 @@ function EventDetails() {
       if (
         parts.length < 2
       ) {
+
         return value;
       }
 
 
       let hour =
         Number(parts[0]);
+
 
       const minute =
         parts[1];
@@ -331,6 +1018,7 @@ function EventDetails() {
       if (
         Number.isNaN(hour)
       ) {
+
         return value;
       }
 
@@ -350,226 +1038,390 @@ function EventDetails() {
 
 
   // =========================================================
-  // BOOK EVENT
+  // GALLERY IMAGE URL
   // =========================================================
 
-  const handleBook =
-    async () => {
+  const getGalleryImageUrl =
+    (item) => {
 
-      if (bookingLoading) {
-        return;
-      }
-
-      if (!event) {
-        return;
-      }
-
-
-      // -----------------------------------------------------
-      // PAST
-      // -----------------------------------------------------
-
-      if (
-        event.status ===
-        "past"
-      ) {
-
-        alert(
-          "Registration for this event is closed."
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------------------
-      // ONGOING
-      // -----------------------------------------------------
-
-      if (
-        event.status ===
-        "ongoing"
-      ) {
-
-        alert(
-          "Registration is closed because this event is currently ongoing."
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------------------
-      // BOOKING DISABLED
-      // -----------------------------------------------------
-
-      if (
-        event.booking_enabled !==
-        true
-      ) {
-
-        alert(
-          "Booking is currently unavailable for this event."
-        );
-
-        return;
-      }
-
-
-      // -----------------------------------------------------
-      // FULL
-      // -----------------------------------------------------
-
-      const availableSlots =
-        event.available_slots !==
-          null &&
-        event.available_slots !==
-          undefined
-          ? Number(
-              event.available_slots
-            )
-          : null;
-
-
-      if (
-        availableSlots !==
-          null &&
-        availableSlots <= 0
-      ) {
-
-        alert(
-          "This event is fully booked."
-        );
-
-        return;
-      }
-
-
-      try {
-
-        setBookingLoading(true);
-
-
-        /*
-         * Backend identifies the logged-in
-         * user from authentication.
-         */
-
-        const response =
-          await api.post(
-            `/bookings/event/${id}`
-          );
-
-
-        if (
-          response.data?.success &&
-          response.data?.booking
-        ) {
-
-          const bookingId =
-            response.data.booking.id;
-
-
-          navigate(
-            `/events/booking/${bookingId}`,
-            {
-              state: {
-                eventId:
-                  event.id,
-
-                eventTitle:
-                  event.title,
-              },
-            }
-          );
-
-
-          return;
-        }
-
-
-        alert(
-          response.data?.message ||
-            "Unable to create booking."
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Event booking error:",
-          error
-        );
-
-
-        // ---------------------------------------------------
-        // LOGIN REQUIRED
-        // ---------------------------------------------------
-
-        if (
-          error.response?.status ===
-          401
-        ) {
-
-          navigate(
-            "/login",
-            {
-              state: {
-                from:
-                  `/events/${id}`,
-              },
-            }
-          );
-
-          return;
-        }
-
-
-        // ---------------------------------------------------
-        // EVENT FULL / CONFLICT
-        // ---------------------------------------------------
-
-        if (
-          error.response?.status ===
-          409
-        ) {
-
-          alert(
-            error.response?.data?.message ||
-              "This event is fully booked."
-          );
-
-
-          await loadEvent();
-
-          return;
-        }
-
-
-        alert(
-          error.response?.data?.message ||
-            "Unable to create booking. Please try again."
-        );
-
-      } finally {
-
-        setBookingLoading(false);
-
-      }
+      return getMediaItemUrl(
+        item
+      );
     };
+
+
+  // =========================================================
+  // OPEN LIGHTBOX
+  // =========================================================
+
+  const openLightbox =
+    (index) => {
+
+      if (
+        gallery.length === 0
+      ) {
+        return;
+      }
+
+
+      setActiveImageIndex(
+        index
+      );
+
+      setLightboxOpen(
+        true
+      );
+    };
+
+
+  // =========================================================
+  // CLOSE LIGHTBOX
+  // =========================================================
+
+  const closeLightbox =
+    () => {
+
+      setLightboxOpen(
+        false
+      );
+    };
+
+
+  // =========================================================
+  // PREVIOUS IMAGE
+  // =========================================================
+
+  const previousImage =
+    useCallback(() => {
+
+      if (
+        gallery.length === 0
+      ) {
+        return;
+      }
+
+
+      setActiveImageIndex(
+        (current) =>
+          current === 0
+            ? gallery.length - 1
+            : current - 1
+      );
+
+    }, [gallery.length]);
+
+
+  // =========================================================
+  // NEXT IMAGE
+  // =========================================================
+
+  const nextImage =
+    useCallback(() => {
+
+      if (
+        gallery.length === 0
+      ) {
+        return;
+      }
+
+
+      setActiveImageIndex(
+        (current) =>
+          current ===
+          gallery.length - 1
+            ? 0
+            : current + 1
+      );
+
+    }, [gallery.length]);
+
+
+  // =========================================================
+  // KEYBOARD CONTROLS
+  // =========================================================
+
+  useEffect(() => {
+
+    if (
+      !lightboxOpen &&
+      !videoModalOpen
+    ) {
+
+      return;
+    }
+
+
+    const handleKeyDown =
+      (event) => {
+
+        if (
+          event.key ===
+          "Escape"
+        ) {
+
+          setLightboxOpen(
+            false
+          );
+
+          setVideoModalOpen(
+            false
+          );
+
+          setActiveVideo(
+            null
+          );
+
+          return;
+        }
+
+
+        if (
+          lightboxOpen &&
+          event.key ===
+          "ArrowLeft"
+        ) {
+
+          previousImage();
+        }
+
+
+        if (
+          lightboxOpen &&
+          event.key ===
+          "ArrowRight"
+        ) {
+
+          nextImage();
+        }
+      };
+
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+
+    return () => {
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+
+    };
+
+  }, [
+    lightboxOpen,
+    videoModalOpen,
+    previousImage,
+    nextImage,
+  ]);
+
+
+  // =========================================================
+  // OPEN VIDEO
+  // =========================================================
+
+  const openVideo =
+    (video) => {
+
+      const url =
+        getMediaItemUrl(
+          video
+        );
+
+
+      if (!url) {
+
+        alert(
+          "Video URL is not available."
+        );
+
+        return;
+      }
+
+
+      setActiveVideo(
+        video
+      );
+
+      setVideoModalOpen(
+        true
+      );
+    };
+
+
+  // =========================================================
+  // CLOSE VIDEO
+  // =========================================================
+
+  const closeVideo =
+    () => {
+
+      setVideoModalOpen(
+        false
+      );
+
+      setActiveVideo(
+        null
+      );
+    };
+
+
+  // =========================================================
+  // EVENT REGISTRATION
+  // =========================================================
+  //
+  // The event details page no longer creates a booking.
+  //
+  // New flow:
+  //
+  // Event Details
+  //      ↓
+  // Register for Event
+  //      ↓
+  // Event Registration Preview
+  //      ↓
+  // Optional PDF / PPT / PPTX
+  //      ↓
+  // Payment
+  //
+  // =========================================================
+
+  const handleRegistration = () => {
+
+    if (!event) {
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // PAST EVENT
+    // -------------------------------------------------------
+
+    if (
+      event.status ===
+      "past"
+    ) {
+
+      alert(
+        "Registration for this event is closed."
+      );
+
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // ONGOING EVENT
+    // -------------------------------------------------------
+
+    if (
+      event.status ===
+      "ongoing"
+    ) {
+
+      alert(
+        "Registration is closed because this event is currently ongoing."
+      );
+
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // REGISTRATION DISABLED
+    // -------------------------------------------------------
+
+    if (
+      event.booking_enabled !==
+      true
+    ) {
+
+      alert(
+        "Registration is currently unavailable for this event."
+      );
+
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // AVAILABLE SLOTS
+    // -------------------------------------------------------
+
+    const availableSlots =
+      event.available_slots !==
+        null &&
+      event.available_slots !==
+        undefined
+        ? Number(
+            event.available_slots
+          )
+        : null;
+
+
+    if (
+      availableSlots !==
+        null &&
+      availableSlots <=
+        0
+    ) {
+
+      alert(
+        "This event is fully booked."
+      );
+
+      return;
+    }
+
+
+    // -------------------------------------------------------
+    // OPEN EVENT REGISTRATION PAGE
+    // -------------------------------------------------------
+
+    navigate(
+      `/events/registration/${id}`,
+      {
+        state: {
+          eventId:
+            event.id || id,
+
+          eventTitle:
+            event.title,
+
+          eventPrice:
+            Number(
+              event.price || 0
+            ),
+        },
+      }
+    );
+  };
 
 
   // =========================================================
   // LOADING
   // =========================================================
 
-  if (loading) {
+  if (
+    loading
+  ) {
 
     return (
-      <main className="event-details-page">
 
-        <div className="event-details-loading">
+      <main
+        className="event-details-page"
+      >
 
-          <div className="event-details-spinner" />
+        <div
+          className="event-details-loading"
+        >
+
+          <div
+            className="event-details-spinner"
+          />
 
           <p>
             Loading event...
@@ -592,11 +1444,18 @@ function EventDetails() {
   ) {
 
     return (
-      <main className="event-details-page">
 
-        <div className="event-details-error">
+      <main
+        className="event-details-page"
+      >
 
-          <div className="event-error-icon">
+        <div
+          className="event-details-error"
+        >
+
+          <div
+            className="event-error-icon"
+          >
 
             <AlertCircle
               size={30}
@@ -700,20 +1559,44 @@ function EventDetails() {
 
 
   // =========================================================
+  // ACTIVE LIGHTBOX IMAGE
+  // =========================================================
+
+  const activeImage =
+    gallery[
+      activeImageIndex
+    ];
+
+
+  const activeImageUrl =
+    activeImage
+      ? getGalleryImageUrl(
+          activeImage
+        )
+      : "";
+
+
+  // =========================================================
   // RENDER
   // =========================================================
 
   return (
-    <main className="event-details-page">
 
+    <main
+      className="event-details-page"
+    >
 
       {/* =====================================================
           HERO
       ===================================================== */}
 
-      <section className="event-details-hero">
+      <section
+        className="event-details-hero"
+      >
 
-        <div className="event-details-hero-background">
+        <div
+          className="event-details-hero-background"
+        >
 
           <div />
           <div />
@@ -723,13 +1606,17 @@ function EventDetails() {
 
         {/* IMAGE */}
 
-        <div className="event-details-image">
+        <div
+          className="event-details-image"
+        >
 
           {event.image_url ? (
 
             <img
               src={
-                event.image_url
+                getMediaUrl(
+                  event.image_url
+                )
               }
               alt={
                 event.title
@@ -749,7 +1636,9 @@ function EventDetails() {
 
           ) : (
 
-            <div className="event-details-image-placeholder">
+            <div
+              className="event-details-image-placeholder"
+            >
 
               <CalendarDays
                 size={70}
@@ -764,9 +1653,13 @@ function EventDetails() {
 
         {/* INTRO */}
 
-        <div className="event-details-intro">
+        <div
+          className="event-details-intro"
+        >
 
-          <div className="event-details-badges">
+          <div
+            className="event-details-badges"
+          >
 
             <span
               className={`event-details-status ${event.status}`}
@@ -779,7 +1672,9 @@ function EventDetails() {
             </span>
 
 
-            <span className="event-details-type">
+            <span
+              className="event-details-type"
+            >
 
               {event.event_type ||
                 "EVENT"}
@@ -796,9 +1691,13 @@ function EventDetails() {
 
           {event.doctor_name && (
 
-            <div className="event-details-doctor">
+            <div
+              className="event-details-doctor"
+            >
 
-              <div className="event-doctor-icon">
+              <div
+                className="event-doctor-icon"
+              >
 
                 <UserRound
                   size={19}
@@ -837,21 +1736,27 @@ function EventDetails() {
           MAIN
       ===================================================== */}
 
-      <section className="event-details-container">
-
+      <section
+        className="event-details-container"
+      >
 
         {/* ===================================================
             LEFT CONTENT
         =================================================== */}
 
-        <div className="event-details-main">
-
+        <div
+          className="event-details-main"
+        >
 
           {/* OVERVIEW */}
 
-          <section className="event-description">
+          <section
+            className="event-description"
+          >
 
-            <span className="event-section-label">
+            <span
+              className="event-section-label"
+            >
               ABOUT THE EVENT
             </span>
 
@@ -871,14 +1776,19 @@ function EventDetails() {
 
           {/* EVENT INFORMATION */}
 
-          <section className="event-info-grid">
-
+          <section
+            className="event-info-grid"
+          >
 
             {/* DATE */}
 
-            <div className="event-info-card">
+            <div
+              className="event-info-card"
+            >
 
-              <div className="event-info-icon">
+              <div
+                className="event-info-icon"
+              >
 
                 <CalendarDays
                   size={20}
@@ -903,9 +1813,13 @@ function EventDetails() {
 
             {/* TIME */}
 
-            <div className="event-info-card">
+            <div
+              className="event-info-card"
+            >
 
-              <div className="event-info-icon">
+              <div
+                className="event-info-icon"
+              >
 
                 <Clock3
                   size={20}
@@ -938,9 +1852,13 @@ function EventDetails() {
 
             {/* VENUE */}
 
-            <div className="event-info-card">
+            <div
+              className="event-info-card"
+            >
 
-              <div className="event-info-icon">
+              <div
+                className="event-info-icon"
+              >
 
                 {event.event_mode ===
                 "online" ? (
@@ -985,10 +1903,13 @@ function EventDetails() {
 
           {/* EXTRA INFORMATION */}
 
-          <section className="event-extra-info">
+          <section
+            className="event-extra-info"
+          >
 
-
-            <div className="event-extra-item">
+            <div
+              className="event-extra-item"
+            >
 
               <span>
                 EVENT MODE
@@ -1012,7 +1933,9 @@ function EventDetails() {
 
             {event.doctor_name && (
 
-              <div className="event-extra-item">
+              <div
+                className="event-extra-item"
+              >
 
                 <span>
                   EXPERT
@@ -1030,7 +1953,9 @@ function EventDetails() {
 
             {event.specialization && (
 
-              <div className="event-extra-item">
+              <div
+                className="event-extra-item"
+              >
 
                 <span>
                   SPECIALIZATION
@@ -1050,11 +1975,16 @@ function EventDetails() {
 
           {/* CAPACITY */}
 
-          {maxSlots !== null && (
+          {maxSlots !==
+            null && (
 
-            <section className="event-capacity-card">
+            <section
+              className="event-capacity-card"
+            >
 
-              <div className="event-capacity-icon">
+              <div
+                className="event-capacity-icon"
+              >
 
                 <Users
                   size={21}
@@ -1073,7 +2003,7 @@ function EventDetails() {
                 <strong>
 
                   {availableSlots !==
-                    null
+                  null
                     ? `${availableSlots} seats available`
                     : `${maxSlots} participants maximum`}
 
@@ -1085,6 +2015,557 @@ function EventDetails() {
 
           )}
 
+
+          {/* =================================================
+              EVENT MEDIA
+          ================================================= */}
+
+          <section
+            className="event-media-section"
+          >
+
+            <div
+              className="event-media-header"
+            >
+
+              <div
+                className="event-media-title"
+              >
+
+                <Files
+                  size={20}
+                />
+
+                <span>
+                  Event Media
+                </span>
+
+              </div>
+
+
+              <div
+                className="event-media-count"
+              >
+
+                {gallery.length +
+                  videos.length +
+                  documents.length}
+
+              </div>
+
+            </div>
+
+
+            {/* MEDIA ERROR */}
+
+            {mediaError && (
+              <div
+                className="event-media-error"
+              >
+
+                <AlertCircle
+                  size={16}
+                />
+
+                <span>
+                  {mediaError}
+                </span>
+
+              </div>
+            )}
+
+
+            {/* MEDIA LOADING */}
+
+            {mediaLoading && (
+
+              <div
+                className="event-media-empty"
+              >
+
+                <div
+                  className="event-details-spinner"
+                />
+
+                <strong>
+                  Loading event media...
+                </strong>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                GALLERY
+            ================================================= */}
+
+            {!mediaLoading &&
+              gallery.length >
+                0 && (
+
+              <div
+                className="event-media-block"
+              >
+
+                <div
+                  className="event-media-block-header"
+                >
+
+                  <div>
+
+                    <ImageIcon
+                      size={17}
+                    />
+
+                    <strong>
+                      Gallery
+                    </strong>
+
+                  </div>
+
+
+                  <span>
+                    {gallery.length}
+                    {" "}
+                    Photos
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="event-media-grid"
+                >
+
+                  {gallery.map(
+                    (
+                      image,
+                      index
+                    ) => {
+
+                      const imageUrl =
+                        getGalleryImageUrl(
+                          image
+                        );
+
+
+                      if (
+                        !imageUrl
+                      ) {
+                        return null;
+                      }
+
+
+                      return (
+
+                        <button
+                          type="button"
+                          key={
+                            image.id ||
+                            image.public_id ||
+                            imageUrl ||
+                            index
+                          }
+                          className="event-gallery-item"
+                          onClick={() =>
+                            openLightbox(
+                              index
+                            )
+                          }
+                        >
+
+                          <img
+                            src={
+                              imageUrl
+                            }
+                            alt={
+                              getMediaItemName(
+                                image,
+                                `Event Gallery ${index + 1}`
+                              )
+                            }
+                            loading="lazy"
+                          />
+
+
+                          <span
+                            className="event-gallery-overlay"
+                          >
+
+                            <ImageIcon
+                              size={27}
+                            />
+
+                          </span>
+
+                        </button>
+
+                      );
+
+                    }
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                VIDEOS
+            ================================================= */}
+
+            {!mediaLoading &&
+              videos.length >
+                0 && (
+
+              <div
+                className="event-media-block"
+              >
+
+                <div
+                  className="event-media-block-header"
+                >
+
+                  <div>
+
+                    <PlayCircle
+                      size={17}
+                    />
+
+                    <strong>
+                      Videos
+                    </strong>
+
+                  </div>
+
+
+                  <span>
+                    {videos.length}
+                    {" "}
+                    Videos
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="event-video-grid"
+                >
+
+                  {videos.map(
+                    (
+                      video,
+                      index
+                    ) => {
+
+                      const videoUrl =
+                        getMediaItemUrl(
+                          video
+                        );
+
+
+                      if (
+                        !videoUrl
+                      ) {
+                        return null;
+                      }
+
+
+                      return (
+
+                        <article
+                          key={
+                            video.id ||
+                            video.public_id ||
+                            videoUrl ||
+                            index
+                          }
+                          className="event-video-card"
+                        >
+
+                          <div
+                            className="event-video-preview"
+                          >
+
+                            <video
+                              src={
+                                videoUrl
+                              }
+                              preload="metadata"
+                              controls
+                              playsInline
+                            />
+
+                            <button
+                              type="button"
+                              className="event-video-play"
+                              onClick={() =>
+                                openVideo(
+                                  video
+                                )
+                              }
+                              aria-label="Open video"
+                            >
+
+                              <PlayCircle
+                                size={42}
+                              />
+
+                            </button>
+
+                          </div>
+
+
+                          <div
+                            className="event-video-info"
+                          >
+
+                            <h4>
+
+                              {getMediaItemName(
+                                video,
+                                `Event Video ${index + 1}`
+                              )}
+
+                            </h4>
+
+
+                            {video.size && (
+
+                              <p>
+                                {formatFileSize(
+                                  video.size
+                                )}
+                              </p>
+
+                            )}
+
+                          </div>
+
+                        </article>
+
+                      );
+
+                    }
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                DOCUMENTS
+            ================================================= */}
+
+            {!mediaLoading &&
+              documents.length >
+                0 && (
+
+              <div
+                className="event-media-block"
+              >
+
+                <div
+                  className="event-media-block-header"
+                >
+
+                  <div>
+
+                    <FileText
+                      size={17}
+                    />
+
+                    <strong>
+                      Documents
+                    </strong>
+
+                  </div>
+
+
+                  <span>
+                    {documents.length}
+                    {" "}
+                    Files
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="event-document-list"
+                >
+
+                  {documents.map(
+                    (
+                      document,
+                      index
+                    ) => {
+
+                      const documentUrl =
+                        getMediaItemUrl(
+                          document
+                        );
+
+
+                      if (
+                        !documentUrl
+                      ) {
+                        return null;
+                      }
+
+
+                      const name =
+                        getMediaItemName(
+                          document,
+                          `Event Document ${index + 1}`
+                        );
+
+
+                      const type =
+                        getDocumentType(
+                          document
+                        );
+
+
+                      return (
+
+                        <div
+                          key={
+                            document.id ||
+                            document.public_id ||
+                            documentUrl ||
+                            index
+                          }
+                          className="event-document-item"
+                        >
+
+                          <div
+                            className="event-document-icon"
+                          >
+
+                            <FileText
+                              size={20}
+                            />
+
+                          </div>
+
+
+                          <div
+                            className="event-document-info"
+                          >
+
+                            <strong>
+                              {name}
+                            </strong>
+
+
+                            <span>
+
+                              {type}
+
+                              {document.size &&
+                                ` • ${formatFileSize(
+                                  document.size
+                                )}`}
+
+                            </span>
+
+                          </div>
+
+
+                          <a
+                            href={
+                              documentUrl
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="event-document-btn"
+                          >
+
+                            <ExternalLink
+                              size={14}
+                            />
+
+                            <span>
+                              Open
+                            </span>
+
+                          </a>
+
+
+                          <a
+                            href={
+                              documentUrl
+                            }
+                            download
+                            className="event-document-btn"
+                          >
+
+                            <Download
+                              size={14}
+                            />
+
+                            <span>
+                              Download
+                            </span>
+
+                          </a>
+
+                        </div>
+
+                      );
+
+                    }
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* =================================================
+                NO MEDIA
+            ================================================= */}
+
+            {!mediaLoading &&
+              gallery.length ===
+                0 &&
+              videos.length ===
+                0 &&
+              documents.length ===
+                0 && (
+
+              <div
+                className="event-media-empty"
+              >
+
+                <Files
+                  size={32}
+                />
+
+                <strong>
+                  No event media available
+                </strong>
+
+                <span>
+                  Gallery images, videos and documents
+                  will appear here when added by the admin.
+                </span>
+
+              </div>
+
+            )}
+
+          </section>
+
         </div>
 
 
@@ -1092,19 +2573,22 @@ function EventDetails() {
             BOOKING CARD
         =================================================== */}
 
-        <aside className="event-booking-card">
+        <aside
+          className="event-booking-card"
+        >
 
-
-          <div className="booking-card-label">
-
+          <div
+            className="booking-card-label"
+          >
             REGISTRATION
-
           </div>
 
 
           {/* PRICE */}
 
-          <div className="event-booking-price">
+          <div
+            className="event-booking-price"
+          >
 
             {eventPrice > 0 ? (
 
@@ -1135,7 +2619,9 @@ function EventDetails() {
           </div>
 
 
-          <span className="booking-price-note">
+          <span
+            className="booking-price-note"
+          >
 
             {eventPrice > 0
               ? "Registration fee"
@@ -1146,19 +2632,21 @@ function EventDetails() {
 
           {/* CAPACITY */}
 
-          {maxSlots !== null && (
+          {maxSlots !==
+            null && (
 
-            <div className="booking-capacity">
+            <div
+              className="booking-capacity"
+            >
 
               <Users
                 size={16}
               />
 
-
               <span>
 
                 {availableSlots !==
-                  null
+                null
                   ? `${availableSlots} of ${maxSlots} seats available`
                   : `Limited to ${maxSlots} participants`}
 
@@ -1173,7 +2661,9 @@ function EventDetails() {
 
           {isPast ? (
 
-            <div className="booking-closed-message">
+            <div
+              className="booking-closed-message"
+            >
 
               <AlertCircle
                 size={18}
@@ -1187,7 +2677,9 @@ function EventDetails() {
 
           ) : isOngoing ? (
 
-            <div className="booking-closed-message">
+            <div
+              className="booking-closed-message"
+            >
 
               <Clock3
                 size={18}
@@ -1201,21 +2693,25 @@ function EventDetails() {
 
           ) : !bookingEnabled ? (
 
-            <div className="booking-closed-message">
+            <div
+              className="booking-closed-message"
+            >
 
               <AlertCircle
                 size={18}
               />
 
               <span>
-                Booking unavailable
+                Registration unavailable
               </span>
 
             </div>
 
           ) : isFull ? (
 
-            <div className="booking-closed-message">
+            <div
+              className="booking-closed-message"
+            >
 
               <Users
                 size={18}
@@ -1231,31 +2727,19 @@ function EventDetails() {
 
             <button
               type="button"
-              className="event-book-btn"
+              className="event-book-btn event-registration-btn"
               onClick={
-                handleBook
-              }
-              disabled={
-                bookingLoading
+                handleRegistration
               }
             >
 
               <span>
-
-                {bookingLoading
-                  ? "Creating Booking..."
-                  : "Book Your Seat"}
-
+                Register for Event
               </span>
 
-
-              {!bookingLoading && (
-
-                <ArrowRight
-                  size={18}
-                />
-
-              )}
+              <ArrowRight
+                size={18}
+              />
 
             </button>
 
@@ -1268,23 +2752,25 @@ function EventDetails() {
             bookingEnabled &&
             !isFull && (
 
-              <div className="booking-login-note">
+            <div
+              className="booking-login-note"
+            >
 
-                <CheckCircle2
-                  size={16}
-                />
+              {/* <CheckCircle2
+                size={16}
+              />
 
-                <span>
+              <span>
 
-                  Login is required
-                  to complete
-                  registration.
+                Login is required
+                to complete
+                registration.
 
-                </span>
+              </span> */}
 
-              </div>
+            </div>
 
-            )}
+          )}
 
 
           {/* BACK */}
@@ -1306,8 +2792,182 @@ function EventDetails() {
 
       </section>
 
+
+      {/* =====================================================
+          IMAGE LIGHTBOX
+      ===================================================== */}
+
+      {lightboxOpen &&
+        activeImageUrl && (
+
+        <div
+          className="event-lightbox"
+          role="dialog"
+          aria-modal="true"
+          onClick={
+            closeLightbox
+          }
+        >
+
+          <div
+            className="event-lightbox-content"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <button
+              type="button"
+              className="event-lightbox-close"
+              onClick={
+                closeLightbox
+              }
+              aria-label="Close gallery"
+            >
+
+              <X
+                size={21}
+              />
+
+            </button>
+
+
+            {gallery.length >
+              1 && (
+
+              <button
+                type="button"
+                className="event-lightbox-nav event-lightbox-prev"
+                onClick={
+                  previousImage
+                }
+                aria-label="Previous image"
+              >
+
+                <ChevronLeft
+                  size={28}
+                />
+
+              </button>
+
+            )}
+
+
+            <img
+              src={
+                activeImageUrl
+              }
+              alt={
+                getMediaItemName(
+                  activeImage,
+                  "Event Gallery"
+                )
+              }
+            />
+
+
+            {gallery.length >
+              1 && (
+
+              <button
+                type="button"
+                className="event-lightbox-nav event-lightbox-next"
+                onClick={
+                  nextImage
+                }
+                aria-label="Next image"
+              >
+
+                <ChevronRight
+                  size={28}
+                />
+
+              </button>
+
+            )}
+
+
+            {gallery.length >
+              1 && (
+
+              <div
+                className="event-lightbox-counter"
+              >
+
+                {activeImageIndex + 1}
+                {" / "}
+                {gallery.length}
+
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      {/* =====================================================
+          VIDEO MODAL
+      ===================================================== */}
+
+      {videoModalOpen &&
+        activeVideo && (
+
+        <div
+          className="event-video-modal"
+          role="dialog"
+          aria-modal="true"
+          onClick={
+            closeVideo
+          }
+        >
+
+          <div
+            className="event-video-modal-content"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <button
+              type="button"
+              className="event-lightbox-close"
+              onClick={
+                closeVideo
+              }
+              aria-label="Close video"
+            >
+
+              <X
+                size={21}
+              />
+
+            </button>
+
+
+            <video
+              src={
+                getMediaItemUrl(
+                  activeVideo
+                )
+              }
+              controls
+              autoPlay
+              playsInline
+            />
+
+          </div>
+
+        </div>
+
+      )}
+
     </main>
   );
 }
+
 
 export default EventDetails;

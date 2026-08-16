@@ -170,84 +170,7 @@ function AcademicCommittee() {
       <div className="academic-glow academic-glow-two" />
 
 
-      {/* =================================================
-          HERO
-      ================================================= */}
-
-      <section className="academic-hero">
-
-        <div className="academic-container">
-
-          <div className="academic-hero-content">
-
-            <div className="academic-icon">
-              <GraduationCap size={37} />
-            </div>
-
-            <span>
-              SNICT COMMITTEE
-            </span>
-
-            <h1>
-              Academic
-              <strong> Committee</strong>
-            </h1>
-
-            <p>
-              Supporting academic development,
-              learning initiatives, professional
-              knowledge and educational growth.
-            </p>
-
-            <div className="academic-stat">
-
-              <Users size={19} />
-
-              <strong>
-                {members.length}
-              </strong>
-
-              <span>
-                Committee Members
-              </span>
-
-            </div>
-
-          </div>
-
-
-          {/* =================================================
-              HERO VISUAL
-          ================================================= */}
-
-          <div className="academic-visual">
-
-            <div className="academic-orbit academic-orbit-one" />
-
-            <div className="academic-orbit academic-orbit-two" />
-
-            <div className="academic-core">
-
-              <GraduationCap
-                size={65}
-                strokeWidth={1.2}
-              />
-
-              <strong>
-                SNICT
-              </strong>
-
-              <span>
-                ACADEMIC
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+     
 
 
       {/* =================================================
@@ -265,18 +188,15 @@ function AcademicCommittee() {
           <header className="academic-heading">
 
             <span>
-              ACADEMIC LEADERSHIP
+              SNICT
             </span>
 
             <h2>
-              Academic
-              <strong> Committee</strong>
+              ORGANIZING
+              <strong> COMMITTEE</strong>
             </h2>
 
-            <p>
-              Meet the professionals supporting
-              academic and educational development.
-            </p>
+            
 
           </header>
 
@@ -360,7 +280,7 @@ function AcademicCommittee() {
                 </h3>
 
                 <p>
-                  Academic Committee members
+                   Committee members
                   will appear here.
                 </p>
 
@@ -539,7 +459,7 @@ function AcademicCommittee() {
                         <div className="academic-member-content">
 
                           <small>
-                            ACADEMIC COMMITTEE
+                            ORGANIZING COMMITTEE
                           </small>
 
 

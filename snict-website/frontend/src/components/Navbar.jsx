@@ -24,7 +24,7 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import snictLogo from "../assets/snict-logo.png";
+import snictLogo from "../assets/snict-logo.jpeg";
 
 import "./Navbar.css";
 
@@ -793,38 +793,10 @@ function Navbar() {
 
                   {/* OUR TEAM */}
 
-                  <Link
-                    to="/team"
-                    onClick={closeMenu}
-                  >
-
-                    <span>
-                      Members
-                    </span>
-
-                    <ArrowRight
-                      size={14}
-                    />
-
-                  </Link>
+            
 
 
-                  {/* MEMBERS */}
-
-                  {/* <Link
-                    to="/members"
-                    onClick={closeMenu}
-                  >
-
-                    <span>
-                      Members
-                    </span>
-
-                    <ArrowRight
-                      size={14}
-                    />
-
-                  </Link> */}
+        
 
 
                   {/* PLACEMENT COMMITTEE */}
@@ -835,7 +807,7 @@ function Navbar() {
                   >
 
                     <span>
-                      Placement Committee
+                      Commercial Course Director Faculty
                     </span>
 
                     <ArrowRight
@@ -853,7 +825,7 @@ function Navbar() {
                   >
 
                     <span>
-                      Working Committee
+                      Office Bearers
                     </span>
 
                     <ArrowRight
@@ -871,7 +843,7 @@ function Navbar() {
                   >
 
                     <span>
-                      Academic Committee
+                      Organizing Committee
                     </span>
 
                     <ArrowRight
@@ -889,7 +861,7 @@ function Navbar() {
                   >
 
                     <span>
-                      Compliance Committee
+                      Scientific Committee
                     </span>
 
                     <ArrowRight
@@ -904,6 +876,25 @@ function Navbar() {
 
             </div>
 
+
+
+            {/* =================================================
+                MEMBERS
+                Direct tab immediately after TEAM
+            ================================================= */}
+
+            <NavLink
+              to="/members"
+              className={({ isActive }) =>
+                `desktop-link ${
+                  isActive
+                    ? "active"
+                    : ""
+                }`
+              }
+            >
+              Members
+            </NavLink>
 
             {/* =================================================
                 EVENTS
@@ -1008,6 +999,30 @@ function Navbar() {
             >
               Contact
             </NavLink>
+
+
+            {/* =================================================
+                REGISTRATION
+                Visible only to guests.
+                Hidden when a user or admin is logged in.
+            ================================================= */}
+
+            {!user && !admin && (
+              <NavLink
+                to="/signup"
+                className={({ isActive }) =>
+                  `desktop-link ${
+                    isActive
+                      ? "active"
+                      : ""
+                  }`
+                }
+              >
+                Registration
+              </NavLink>
+            )}
+
+
 
           </nav>
 
@@ -1299,7 +1314,7 @@ function Navbar() {
                 </Link>
 
 
-                <Link
+                {/* <Link
                   to="/signup"
                   className="navbar-join"
                 >
@@ -1312,7 +1327,7 @@ function Navbar() {
                     size={16}
                   />
 
-                </Link>
+                </Link> */}
 
               </>
 
@@ -1773,6 +1788,32 @@ function Navbar() {
             </div>
 
 
+
+            {/* =================================================
+                MOBILE MEMBERS
+                Direct tab immediately after TEAM
+            ================================================= */}
+
+            <NavLink
+              to="/members"
+              onClick={closeMenu}
+              className={({ isActive }) =>
+                `mobile-link ${
+                  isActive
+                    ? "active"
+                    : ""
+                }`
+              }
+            >
+              <span>
+                Members
+              </span>
+
+              <ArrowRight
+                size={16}
+              />
+            </NavLink>
+
             {/* =================================================
                 MOBILE EVENTS
             ================================================= */}
@@ -1879,6 +1920,37 @@ function Navbar() {
               />
 
             </NavLink>
+
+
+            {/* =================================================
+                MOBILE REGISTRATION
+                Visible only to guests.
+                Hidden when a user or admin is logged in.
+            ================================================= */}
+
+            {!user && !admin && (
+              <NavLink
+                to="/signup"
+                onClick={closeMenu}
+                className={({ isActive }) =>
+                  `mobile-link ${
+                    isActive
+                      ? "active"
+                      : ""
+                  }`
+                }
+              >
+                <span>
+                  Registration
+                </span>
+
+                <ArrowRight
+                  size={16}
+                />
+              </NavLink>
+            )}
+
+
 
 
             {/* =================================================

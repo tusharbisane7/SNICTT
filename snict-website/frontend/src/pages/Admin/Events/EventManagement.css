@@ -225,11 +225,9 @@
   padding: 10px 14px;
   margin-bottom: 16px;
   box-sizing: border-box;
-
   border: 1px solid #e5e9f1;
   border-radius: 12px;
   background: #ffffff;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -308,7 +306,7 @@
     125px
     100px
     110px
-    90px;
+    130px;
   align-items: center;
   gap: 17px;
   box-sizing: border-box;
@@ -526,9 +524,7 @@
    EMPTY / LOADING
    ========================================================= */
 
-.admin-event-state,
-.admin-registration-loading,
-.admin-registration-empty {
+.admin-event-state {
   min-height: 300px;
   border: 1px solid #e5e9f1;
   border-radius: 14px;
@@ -541,16 +537,13 @@
   color: #94a3b8;
 }
 
-.admin-event-state h3,
-.admin-registration-loading h3,
-.admin-registration-empty h3 {
+.admin-event-state h3 {
   margin: 14px 0 5px;
   color: #334155;
   font-size: 16px;
 }
 
-.admin-event-state p,
-.admin-registration-empty p {
+.admin-event-state p {
   margin: 0;
   color: #94a3b8;
   font-size: 13px;
@@ -561,20 +554,18 @@
    EVENT FORM MODAL
    ========================================================= */
 
-.event-form-overlay,
-.admin-registration-modal-overlay {
+.event-form-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
   padding: 24px;
   background: rgba(15, 23, 42, 0.48);
   backdrop-filter: blur(5px);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .event-form-modal {
@@ -592,6 +583,11 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 20px;
+}
+
+.event-form-header > div {
+  min-width: 0;
 }
 
 .event-form-header span {
@@ -609,6 +605,7 @@
 }
 
 .event-modal-close {
+  flex: 0 0 auto;
   width: 35px;
   height: 35px;
   border: 0;
@@ -623,6 +620,11 @@
 .event-modal-close:hover {
   background: #f1f5f9;
   color: #172033;
+}
+
+.event-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 
@@ -699,6 +701,31 @@
 .form-field input::placeholder,
 .form-field textarea::placeholder {
   color: #a0aec0;
+}
+
+
+/* =========================================================
+   FILE INPUT
+   ========================================================= */
+
+.form-field input[type="file"] {
+  height: auto;
+  min-height: 42px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.form-field input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 6px;
+  background: #172033;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 
@@ -812,408 +839,189 @@
 
 
 /* =========================================================
-   REGISTERED USERS
+   =========================================================
+   MEDIA OVERVIEW TAB
+   =========================================================
    ========================================================= */
 
-.admin-event-registrations {
+.admin-event-media-overview {
   width: 100%;
 }
 
-
-/* =========================================================
-   REGISTRATION STATS
-   ========================================================= */
-
-.admin-registration-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+.admin-media-overview-header {
+  padding: 20px;
   margin-bottom: 16px;
-}
-
-.admin-registration-stat {
-  min-height: 105px;
-  padding: 16px;
-  box-sizing: border-box;
   border: 1px solid #e5e9f1;
   border-radius: 12px;
   background: #ffffff;
-  position: relative;
 }
 
-.admin-registration-stat > div {
-  width: 34px;
-  height: 34px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  background: #f1f5f9;
-  color: #475569;
-  display: grid;
-  place-items: center;
-}
-
-.admin-registration-stat span {
+.admin-media-overview-header span {
   display: block;
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 700;
+  margin-bottom: 6px;
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
 }
 
-.admin-registration-stat strong {
-  display: block;
-  margin-top: 3px;
+.admin-media-overview-header h2 {
+  margin: 0;
   color: #172033;
   font-size: 20px;
   font-weight: 800;
 }
 
-
-/* =========================================================
-   REGISTRATION TOOLBAR
-   ========================================================= */
-
-.admin-registration-toolbar {
-  padding: 12px;
-  margin-bottom: 14px;
-  border: 1px solid #e5e9f1;
-  border-radius: 12px;
-  background: #ffffff;
-
-  display: grid;
-  grid-template-columns: minmax(280px, 1fr) 190px 170px 160px;
-  gap: 9px;
-}
-
-.admin-registration-search {
-  height: 40px;
-  padding: 0 12px;
-  box-sizing: border-box;
-
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  color: #94a3b8;
-}
-
-.admin-registration-search:focus-within {
-  border-color: #64748b;
-  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.08);
-}
-
-.admin-registration-search input {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #172033;
-  font-family: inherit;
+.admin-media-overview-header p {
+  margin: 7px 0 0;
+  color: #64748b;
   font-size: 12px;
 }
 
-.admin-registration-search input::placeholder {
-  color: #a0aec0;
-}
-
-.admin-registration-toolbar select {
-  height: 40px;
-  width: 100%;
-  padding: 0 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  outline: none;
-  background: #ffffff;
-  color: #475569;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.admin-registration-toolbar select:focus {
-  border-color: #64748b;
-}
-
 
 /* =========================================================
-   REGISTRATION TABLE
+   MEDIA EVENT GRID
    ========================================================= */
 
-.admin-registration-table-wrapper {
-  width: 100%;
-  overflow-x: auto;
+.admin-media-event-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+  gap: 14px;
+}
+
+.admin-media-event-card {
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid #e5e9f1;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #ffffff;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.admin-registration-table {
+.admin-media-event-card:hover {
+  transform: translateY(-2px);
+  border-color: #d7dde8;
+  box-shadow:
+    0 12px 30px
+    rgba(15, 23, 42, 0.08);
+}
+
+.admin-media-event-image {
   width: 100%;
-  min-width: 1200px;
-  border-collapse: collapse;
-}
-
-.admin-registration-table thead {
-  background: #f8fafc;
-}
-
-.admin-registration-table th {
-  height: 45px;
-  padding: 0 13px;
-  border-bottom: 1px solid #e5e9f1;
-  text-align: left;
-  color: #64748b;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.admin-registration-table td {
-  padding: 12px 13px;
-  border-bottom: 1px solid #f1f3f7;
-  vertical-align: middle;
-}
-
-.admin-registration-table tbody tr {
-  transition: background 0.15s ease;
-}
-
-.admin-registration-table tbody tr:hover {
-  background: #fafbfc;
-}
-
-.admin-registration-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-
-/* =========================================================
-   USER CELL
-   ========================================================= */
-
-.admin-registration-user {
-  min-width: 160px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.admin-registration-avatar {
-  flex: 0 0 auto;
-  width: 35px;
-  height: 35px;
-  border-radius: 9px;
+  height: 175px;
   background: #f1f5f9;
-  color: #475569;
+  color: #94a3b8;
   display: grid;
   place-items: center;
-}
-
-.admin-registration-user > div:last-child {
-  min-width: 0;
-}
-
-.admin-registration-user strong {
-  display: block;
-  max-width: 150px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #172033;
-  font-size: 12px;
-  font-weight: 800;
 }
 
-.admin-registration-user small {
-  display: block;
-  margin-top: 2px;
-  color: #94a3b8;
-  font-size: 9px;
+.admin-media-event-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-
-/* =========================================================
-   CONTACT
-   ========================================================= */
-
-.admin-registration-contact {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.admin-media-event-content {
+  padding: 16px;
 }
 
-.admin-registration-contact span {
-  max-width: 180px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.admin-media-event-content > span {
+  display: inline-flex;
   color: #64748b;
-  font-size: 10px;
-}
-
-
-/* =========================================================
-   EVENT CELL
-   ========================================================= */
-
-.admin-registration-event {
-  min-width: 150px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.admin-registration-event strong {
-  max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #334155;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.admin-registration-event small {
-  color: #94a3b8;
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.admin-media-event-content h3 {
+  margin: 6px 0 0;
+  color: #172033;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-media-event-content p {
+  margin: 5px 0 13px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
 
 /* =========================================================
-   BOOKING ID
+   MEDIA EVENT COUNTS
    ========================================================= */
 
-.admin-registration-booking-id {
-  display: inline-flex;
-  padding: 5px 7px;
-  border-radius: 6px;
-  background: #f8fafc;
+.admin-media-event-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 13px;
+}
+
+.admin-media-event-counts > div {
+  min-width: 0;
+  min-height: 54px;
+  padding: 8px 6px;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  background: #fafbfc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: #64748b;
-  font-size: 10px;
+}
+
+.admin-media-event-counts > div > span {
+  margin-top: 4px;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-media-event-counts small {
+  margin-top: 1px;
+  color: #94a3b8;
+  font-size: 8px;
   font-weight: 700;
 }
 
 
 /* =========================================================
-   AMOUNT
+   MANAGE MEDIA BUTTON
    ========================================================= */
 
-.admin-registration-amount {
-  color: #172033;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   BADGES
-   ========================================================= */
-
-.admin-registration-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 25px;
-  padding: 0 8px;
-  border-radius: 6px;
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: capitalize;
-  white-space: nowrap;
-}
-
-
-/* Payment */
-
-.admin-registration-badge.payment-paid,
-.admin-registration-badge.payment-verified {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.admin-registration-badge.payment-submitted {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.admin-registration-badge.payment-pending {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-
-/* Booking */
-
-.admin-registration-badge.booking-confirmed {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.admin-registration-badge.booking-pending,
-.admin-registration-badge.booking-payment_pending {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.admin-registration-badge.booking-cancelled,
-.admin-registration-badge.booking-rejected {
-  background: #fff1f2;
-  color: #be123c;
-}
-
-
-/* =========================================================
-   DATE
-   ========================================================= */
-
-.admin-registration-date {
-  display: block;
-  max-width: 130px;
-  color: #64748b;
-  font-size: 10px;
-  line-height: 1.4;
-}
-
-
-/* =========================================================
-   VIEW BUTTON
-   ========================================================= */
-
-.admin-registration-view-btn {
-  min-height: 31px;
-  padding: 0 9px;
+.admin-media-manage-btn {
+  width: 100%;
+  min-height: 38px;
   border: 1px solid #e2e8f0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #ffffff;
-  color: #475569;
-
+  color: #334155;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-
+  gap: 7px;
   font-family: inherit;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
-.admin-registration-view-btn:hover {
+.admin-media-manage-btn:hover {
   border-color: #172033;
   background: #172033;
   color: #ffffff;
@@ -1221,198 +1029,780 @@
 
 
 /* =========================================================
-   REGISTRATION MODAL
+   =========================================================
+   MEDIA MANAGER MODAL
+   =========================================================
    ========================================================= */
 
-.admin-registration-modal-overlay {
-  overflow-y: auto;
-}
-
-.admin-registration-modal {
-  width: min(760px, 100%);
+.event-media-manager-modal {
+  width: min(1100px, 100%);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-
   border-radius: 16px;
   background: #ffffff;
-  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
+  box-shadow:
+    0 30px 80px
+    rgba(15, 23, 42, 0.25);
 }
 
-.admin-registration-modal-header {
-  padding: 20px 22px;
-  border-bottom: 1px solid #edf0f5;
-
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.admin-registration-modal-header span {
-  color: #94a3b8;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
-.admin-registration-modal-header h2 {
-  margin: 5px 0 0;
-  color: #172033;
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.admin-registration-modal-header > button {
-  width: 35px;
-  height: 35px;
-  border: 0;
-  border-radius: 8px;
-  background: #f8fafc;
+.event-media-manager-subtitle {
+  margin: 7px 0 0;
   color: #64748b;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.admin-registration-modal-header > button:hover {
-  background: #f1f5f9;
-  color: #172033;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 
 /* =========================================================
-   DETAIL GRID
+   MEDIA TABS
    ========================================================= */
 
-.admin-registration-details {
-  padding: 20px 22px;
+.event-media-tabs {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.admin-registration-detail-card {
-  min-height: 68px;
-  padding: 11px;
-  box-sizing: border-box;
-
-  border: 1px solid #edf0f5;
-  border-radius: 9px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #edf0f5;
   background: #fafbfc;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
-.admin-registration-detail-card.full {
-  grid-column: 1 / -1;
-}
-
-.admin-registration-detail-icon {
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+.event-media-tabs button {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
   background: #ffffff;
   color: #64748b;
-
-  display: grid;
-  place-items: center;
-}
-
-.admin-registration-detail-card > div:last-child {
-  min-width: 0;
-}
-
-.admin-registration-detail-card span {
-  display: block;
-  margin-bottom: 3px;
-  color: #94a3b8;
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.admin-registration-detail-card strong {
-  display: block;
-  color: #334155;
-  font-size: 12px;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-
-/* =========================================================
-   MODAL ACTIONS
-   ========================================================= */
-
-.admin-registration-modal-actions {
-  padding: 16px 22px;
-  border-top: 1px solid #edf0f5;
-
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.admin-registration-modal-actions button {
-  min-height: 38px;
-  padding: 0 13px;
-  border-radius: 8px;
-
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  gap: 6px;
-
+  gap: 8px;
   font-family: inherit;
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
+  transition: all 0.18s ease;
 }
 
-.registration-confirm-btn {
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
-  color: #15803d;
+.event-media-tabs button:hover {
+  border-color: #cbd5e1;
+  color: #172033;
 }
 
-.registration-confirm-btn:hover {
-  background: #dcfce7;
+.event-media-tabs button.active {
+  border-color: #172033;
+  background: #172033;
+  color: #ffffff;
 }
 
-.registration-reject-btn {
+.event-media-tabs button strong {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.event-media-tabs button.active strong {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.event-media-tabs button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MEDIA UPLOAD SECTION
+   ========================================================= */
+
+.event-media-upload-section {
+  padding: 20px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.event-media-upload-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.event-media-upload-heading h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.event-media-upload-heading p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   MEDIA UPLOAD BOX
+   ========================================================= */
+
+.event-media-upload-box {
+  min-height: 170px;
+  padding: 25px;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #fafbfc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+  box-sizing: border-box;
+}
+
+.event-media-upload-box:hover {
+  border-color: #64748b;
+  background: #f8fafc;
+}
+
+.event-media-upload-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: #eef2f7;
+  color: #475569;
+  display: grid;
+  place-items: center;
+}
+
+.event-media-upload-box h4 {
+  margin: 0;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.event-media-upload-box p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.event-media-upload-box small {
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   SELECTED MEDIA
+   ========================================================= */
+
+.event-selected-media {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #e5e9f1;
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.event-selected-media-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.event-selected-media-header > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.event-selected-media-header strong {
+  color: #334155;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.event-selected-media-header span {
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.event-selected-media-header button {
+  border: 0;
+  background: transparent;
+  color: #dc2626;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.event-selected-media-header button:hover {
+  color: #b91c1c;
+}
+
+.event-selected-media-header button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SELECTED MEDIA LIST
+   ========================================================= */
+
+.event-selected-media-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.event-selected-media-item {
+  min-width: 0;
+  min-height: 62px;
+  padding: 7px;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  background: #fafbfc;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-sizing: border-box;
+}
+
+.event-selected-file-image,
+.event-selected-file-video,
+.event-selected-file-document {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 7px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.event-selected-file-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-selected-media-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.event-selected-media-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.event-selected-media-info small {
+  display: block;
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+.event-selected-media-remove {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
   border: 1px solid #fecaca;
+  border-radius: 7px;
   background: #fff1f2;
-  color: #be123c;
+  color: #dc2626;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
 
-.registration-reject-btn:hover {
+.event-selected-media-remove:hover {
   background: #ffe4e6;
 }
 
-.registration-delete-btn {
-  border: 1px solid #fecaca;
+.event-selected-media-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MEDIA UPLOAD ACTIONS
+   ========================================================= */
+
+.event-media-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.event-media-upload-btn {
+  min-height: 39px;
+  padding: 0 15px;
+  border: 1px solid #172033;
+  border-radius: 8px;
+  background: #172033;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.event-media-upload-btn:hover {
+  background: #0f172a;
+  box-shadow:
+    0 7px 18px
+    rgba(15, 23, 42, 0.15);
+}
+
+.event-media-upload-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MEDIA LIBRARY
+   ========================================================= */
+
+.event-media-library {
+  padding: 20px;
+}
+
+.event-media-library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 14px;
+}
+
+.event-media-library-header > div span {
+  display: block;
+  margin-bottom: 4px;
+  color: #94a3b8;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.event-media-library-header h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.event-media-refresh-btn {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
   background: #ffffff;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.event-media-refresh-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.event-media-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MEDIA STATE
+   ========================================================= */
+
+.event-media-state {
+  min-height: 230px;
+  padding: 30px;
+  border: 1px solid #e5e9f1;
+  border-radius: 12px;
+  background: #fafbfc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #94a3b8;
+  box-sizing: border-box;
+}
+
+.event-media-state h3 {
+  margin: 12px 0 5px;
+  color: #334155;
+  font-size: 15px;
+}
+
+.event-media-state p {
+  margin: 0;
+  max-width: 420px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   MEDIA GRID
+   ========================================================= */
+
+.event-media-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    4,
+    minmax(0, 1fr)
+  );
+  gap: 12px;
+}
+
+.event-media-grid-documents {
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+}
+
+
+/* =========================================================
+   MEDIA CARD
+   ========================================================= */
+
+.event-media-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e5e9f1;
+  border-radius: 11px;
+  background: #ffffff;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.event-media-card:hover {
+  border-color: #d7dde8;
+  box-shadow:
+    0 10px 25px
+    rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   MEDIA CARD PREVIEW
+   ========================================================= */
+
+.event-media-card-preview {
+  position: relative;
+  width: 100%;
+  height: 155px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.event-media-card-preview > img,
+.event-media-card-preview > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.event-media-card-preview > video {
+  background: #0f172a;
+}
+
+
+/* =========================================================
+   EMPTY PREVIEW
+   ========================================================= */
+
+.event-media-empty-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #94a3b8;
+}
+
+.event-media-empty-preview span {
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   MEDIA CARD OVERLAY
+   ========================================================= */
+
+.event-media-card-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 9px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15, 23, 42, 0.35),
+      transparent 35%
+    );
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.event-media-card:hover
+.event-media-card-overlay {
+  opacity: 1;
+}
+
+.event-media-card-overlay button {
+  width: 31px;
+  height: 31px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #334155;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.event-media-card-overlay button:hover {
+  background: #ffffff;
+  color: #172033;
+}
+
+.event-media-card-overlay button.delete {
   color: #dc2626;
 }
 
-.registration-delete-btn:hover {
+.event-media-card-overlay button.delete:hover {
   background: #fff1f2;
+  color: #b91c1c;
+}
+
+.event-media-card-overlay button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   MEDIA CARD INFO
+   ========================================================= */
+
+.event-media-card-info {
+  min-width: 0;
+  padding: 11px;
+}
+
+.event-media-card-info > strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.event-media-card-meta {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 8px;
+}
+
+.event-media-card-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-media-card-info > small {
+  display: block;
+  margin-top: 5px;
+  color: #cbd5e1;
+  font-size: 8px;
+}
+
+
+/* =========================================================
+   DOCUMENT PREVIEW
+   ========================================================= */
+
+.event-media-document-preview {
+  width: 100%;
+  height: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+  background:
+    linear-gradient(
+      135deg,
+      #f8fafc,
+      #eef2f7
+    );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 9px;
+}
+
+.event-media-document-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 5px 15px
+    rgba(15, 23, 42, 0.06);
+}
+
+.event-media-document-preview strong {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #475569;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   DOCUMENT CARD
+   ========================================================= */
+
+.event-media-document-card
+.event-media-card-preview {
+  height: 165px;
+}
+
+
+/* =========================================================
+   MEDIA MANAGER FOOTER
+   ========================================================= */
+
+.event-media-manager-footer {
+  min-height: 60px;
+  padding: 13px 20px;
+  border-top: 1px solid #edf0f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-media-manager-footer > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-media-manager-footer strong {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.event-media-manager-footer span {
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
 }
 
 .registration-close-btn {
+  min-height: 36px;
+  padding: 0 13px;
   border: 1px solid #e2e8f0;
+  border-radius: 8px;
   background: #ffffff;
   color: #475569;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .registration-close-btn:hover {
   background: #f8fafc;
 }
 
-.admin-registration-modal-actions button:disabled {
+.registration-close-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -1423,10 +1813,15 @@
    ========================================================= */
 
 .admin-event-spin {
-  animation: adminEventSpin 0.8s linear infinite;
+  animation:
+    adminEventSpin
+    0.8s
+    linear
+    infinite;
 }
 
 @keyframes adminEventSpin {
+
   from {
     transform: rotate(0deg);
   }
@@ -1434,6 +1829,7 @@
   to {
     transform: rotate(360deg);
   }
+
 }
 
 
@@ -1442,6 +1838,7 @@
    ========================================================= */
 
 .event-form-modal::-webkit-scrollbar,
+.event-media-manager-modal::-webkit-scrollbar,
 .admin-registration-modal::-webkit-scrollbar,
 .admin-registration-table-wrapper::-webkit-scrollbar {
   width: 7px;
@@ -1449,12 +1846,14 @@
 }
 
 .event-form-modal::-webkit-scrollbar-track,
+.event-media-manager-modal::-webkit-scrollbar-track,
 .admin-registration-modal::-webkit-scrollbar-track,
 .admin-registration-table-wrapper::-webkit-scrollbar-track {
   background: #f8fafc;
 }
 
 .event-form-modal::-webkit-scrollbar-thumb,
+.event-media-manager-modal::-webkit-scrollbar-thumb,
 .admin-registration-modal::-webkit-scrollbar-thumb,
 .admin-registration-table-wrapper::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -1463,7 +1862,40 @@
 
 
 /* =========================================================
-   RESPONSIVE
+   TABLET / LARGE
+   ========================================================= */
+
+@media (max-width: 1350px) {
+
+  .admin-event-row {
+    grid-template-columns:
+      65px
+      minmax(190px, 1fr)
+      110px
+      90px
+      90px
+      120px;
+  }
+
+  .event-media-grid {
+    grid-template-columns: repeat(
+      3,
+      minmax(0, 1fr)
+    );
+  }
+
+  .admin-media-event-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+
+}
+
+
+/* =========================================================
+   1250
    ========================================================= */
 
 @media (max-width: 1250px) {
@@ -1474,22 +1906,22 @@
       minmax(200px, 1fr)
       110px
       85px
-      80px;
+      120px;
   }
 
   .admin-event-booking-status {
     display: none;
   }
 
-  .admin-registration-toolbar {
-    grid-template-columns:
-      minmax(250px, 1fr)
-      170px
-      160px;
+  .admin-event-row-price {
+    display: none;
   }
 
-  .admin-registration-toolbar select:last-child {
-    grid-column: 2 / 4;
+  .event-media-grid {
+    grid-template-columns: repeat(
+      3,
+      minmax(0, 1fr)
+    );
   }
 
 }
@@ -1505,6 +1937,7 @@
     padding: 20px;
   }
 
+
   .admin-events-header {
     align-items: flex-start;
     flex-direction: column;
@@ -1517,6 +1950,7 @@
   .admin-add-event-btn {
     width: 100%;
   }
+
 
   .admin-event-toolbar {
     align-items: flex-start;
@@ -1531,21 +1965,6 @@
     flex: 1;
   }
 
-  .admin-registration-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .admin-registration-toolbar {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .admin-registration-search {
-    grid-column: 1 / -1;
-  }
-
-  .admin-registration-toolbar select:last-child {
-    grid-column: auto;
-  }
 
   .admin-event-row {
     grid-template-columns:
@@ -1555,8 +1974,46 @@
       85px;
   }
 
+
   .admin-event-row-price {
     display: none;
+  }
+
+
+  .event-media-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+
+
+  .event-media-grid-documents {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+
+
+  .admin-media-event-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+
+
+  .event-selected-media-list {
+    grid-template-columns: 1fr;
+  }
+
+
+  .event-media-manager-modal {
+    width: min(
+      760px,
+      100%
+    );
   }
 
 }
@@ -1572,6 +2029,7 @@
     padding: 14px;
   }
 
+
   .admin-events-header h1 {
     font-size: 24px;
   }
@@ -1579,6 +2037,7 @@
   .admin-events-header p {
     font-size: 12px;
   }
+
 
   .admin-event-main-tabs {
     flex-direction: column;
@@ -1589,94 +2048,33 @@
     flex: none;
   }
 
+
   .admin-event-filters {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(
+      2,
+      1fr
+    );
   }
 
   .admin-event-filters button {
     width: 100%;
   }
 
-  .admin-registration-stats {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .admin-registration-stat {
-    min-height: 95px;
-    padding: 12px;
-  }
-
-  .admin-registration-stat strong {
-    font-size: 18px;
-  }
-
-  .admin-registration-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-registration-search {
-    grid-column: auto;
-  }
-
-  .admin-registration-toolbar select:last-child {
-    grid-column: auto;
-  }
-
-  .form-row,
-  .form-row.three {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .event-form-overlay,
-  .admin-registration-modal-overlay {
-    padding: 10px;
-  }
-
-  .event-form-modal,
-  .admin-registration-modal {
-    max-height: calc(100vh - 20px);
-    border-radius: 13px;
-  }
-
-  .event-form-header,
-  .admin-registration-modal-header {
-    padding: 16px;
-  }
-
-  .admin-event-form {
-    padding: 16px;
-  }
-
-  .admin-registration-details {
-    padding: 16px;
-    grid-template-columns: 1fr;
-  }
-
-  .admin-registration-detail-card.full {
-    grid-column: auto;
-  }
-
-  .admin-registration-modal-actions {
-    padding: 14px 16px;
-    justify-content: stretch;
-  }
-
-  .admin-registration-modal-actions button {
-    flex: 1;
-  }
 
   .admin-event-row {
-    grid-template-columns: 55px 1fr;
+    grid-template-columns:
+      55px
+      1fr;
     gap: 12px;
   }
+
 
   .admin-event-image {
     width: 55px;
     height: 55px;
   }
+
 
   .admin-event-status-wrapper,
   .admin-event-bookings,
@@ -1684,17 +2082,134 @@
     grid-column: 2;
   }
 
+
   .admin-event-status-wrapper {
     flex-direction: row;
   }
+
 
   .admin-event-actions {
     justify-content: flex-start;
   }
 
+
   .admin-event-actions button {
     width: 38px;
     height: 38px;
+  }
+
+
+  .event-form-overlay {
+    padding: 10px;
+  }
+
+
+  .event-form-modal,
+  .event-media-manager-modal {
+    max-height: calc(
+      100vh - 20px
+    );
+    border-radius: 13px;
+  }
+
+
+  .event-form-header {
+    padding: 16px;
+  }
+
+
+  .admin-event-form {
+    padding: 16px;
+  }
+
+
+  .form-row,
+  .form-row.three {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+
+  .event-form-actions {
+    flex-direction: column-reverse;
+  }
+
+
+  .event-form-actions button {
+    width: 100%;
+  }
+
+
+  /* MEDIA */
+
+  .admin-media-event-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .event-media-tabs {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+
+  .event-media-tabs button {
+    width: 100%;
+  }
+
+
+  .event-media-upload-section,
+  .event-media-library {
+    padding: 14px;
+  }
+
+
+  .event-media-upload-box {
+    min-height: 150px;
+    padding: 20px;
+  }
+
+
+  .event-media-grid,
+  .event-media-grid-documents {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+
+  .event-media-card-preview {
+    height: 125px;
+  }
+
+
+  .event-media-document-card
+  .event-media-card-preview {
+    height: 135px;
+  }
+
+
+  .event-media-card-info {
+    padding: 9px;
+  }
+
+
+  .event-media-card-overlay {
+    opacity: 1;
+  }
+
+
+  .event-media-library-header {
+    align-items: flex-start;
+  }
+
+
+  .event-media-refresh-btn {
+    flex: 0 0 auto;
+  }
+
+
+  .event-media-manager-footer {
+    padding: 12px 14px;
   }
 
 }
@@ -1710,9 +2225,11 @@
     grid-template-columns: 1fr;
   }
 
+
   .admin-event-filters {
     grid-template-columns: 1fr;
   }
+
 
   .event-checkboxes {
     align-items: flex-start;
@@ -1720,20 +2237,94 @@
     gap: 11px;
   }
 
-  .event-form-actions {
-    flex-direction: column-reverse;
+
+  .admin-media-overview-header {
+    padding: 15px;
   }
 
-  .event-form-actions button {
+
+  .event-media-grid,
+  .event-media-grid-documents {
+    grid-template-columns: 1fr;
+  }
+
+
+  .event-media-card-preview,
+  .event-media-document-card
+  .event-media-card-preview {
+    height: 170px;
+  }
+
+
+  .event-media-upload-actions {
+    justify-content: stretch;
+  }
+
+
+  .event-media-upload-btn {
     width: 100%;
   }
 
-  .admin-registration-modal-actions {
+
+  .event-media-manager-footer {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .admin-registration-modal-actions button {
+
+  .event-media-manager-footer > div {
+    justify-content: center;
+  }
+
+
+  .registration-close-btn {
     width: 100%;
+  }
+
+
+  .event-selected-media-item {
+    min-height: 58px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY / FOCUS
+   ========================================================= */
+
+.admin-add-event-btn:focus-visible,
+.admin-event-main-tabs button:focus-visible,
+.admin-event-filters button:focus-visible,
+.admin-event-actions button:focus-visible,
+.event-modal-close:focus-visible,
+.event-media-tabs button:focus-visible,
+.event-media-upload-btn:focus-visible,
+.event-media-refresh-btn:focus-visible,
+.admin-media-manage-btn:focus-visible,
+.event-media-card-overlay button:focus-visible {
+  outline: 2px solid #64748b;
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .admin-event-spin {
+    animation: none;
+  }
+
+  .admin-event-row,
+  .admin-event-actions button,
+  .admin-add-event-btn,
+  .admin-media-event-card,
+  .event-media-card,
+  .event-media-upload-box {
+    transition: none;
   }
 
 }

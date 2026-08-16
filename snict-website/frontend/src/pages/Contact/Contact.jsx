@@ -8,46 +8,93 @@ import {
   Clock3,
   MessageCircle,
   Building2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 import { useState } from "react";
 
 import { useAuth } from "../../context/AuthContext";
 
+import api from "../../services/api";
+
 import "./Contact.css";
 
 
+// =========================================================
+// CONTACT PAGE
+// =========================================================
+
 function Contact() {
 
-  // =========================================================
+  // =======================================================
   // AUTH
-  // =========================================================
+  // =======================================================
 
   const { user } = useAuth();
 
 
-  // =========================================================
+  // =======================================================
   // FORM STATE
-  // =========================================================
+  // =======================================================
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
+  const [
+    formData,
+    setFormData,
+  ] = useState({
+
+    name:
+      user?.full_name ||
+      user?.name ||
+      "",
+
+    email:
+      user?.email ||
+      "",
+
+    phone:
+      user?.mobile ||
+      user?.phone ||
+      "",
+
+    subject:
+      "",
+
+    message:
+      "",
+
   });
 
 
-  const [submitted, setSubmitted] =
-    useState(false);
+  // =======================================================
+  // SUBMIT STATE
+  // =======================================================
+
+  const [
+    submitted,
+    setSubmitted,
+  ] = useState(false);
 
 
-  // =========================================================
-  // HANDLE CHANGE
-  // =========================================================
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
-  const handleChange = (event) => {
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+
+  // =======================================================
+  // HANDLE INPUT CHANGE
+  // =======================================================
+
+  const handleChange = (
+    event
+  ) => {
 
     const {
       name,
@@ -55,47 +102,159 @@ function Contact() {
     } = event.target;
 
 
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    setFormData(
+      (previous) => ({
+        ...previous,
+
+        [name]:
+          value,
+      })
+    );
+
+
+    // Remove previous error
+    // while user starts typing.
+
+    if (error) {
+      setError("");
+    }
 
   };
 
 
-  // =========================================================
+  // =======================================================
   // HANDLE SUBMIT
-  // =========================================================
+  // =======================================================
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (
+    event
+  ) => {
 
     event.preventDefault();
 
-    /*
-      Backend/API can be connected here later.
-    */
 
-    console.log(
-      "Contact form submitted:",
-      formData
-    );
+    // Prevent duplicate submissions
+
+    if (submitting) {
+      return;
+    }
 
 
-    setSubmitted(true);
+    setError("");
+    setSubmitted(false);
+    setSubmitting(true);
 
 
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      subject: "",
-      message: "",
-    });
+    try {
+
+      // ===================================================
+      // SEND TO BACKEND
+      // POST /api/contact
+      // ===================================================
+
+      const response =
+        await api.post(
+          "/contact",
+          {
+            name:
+              formData.name.trim(),
+
+            email:
+              formData.email.trim(),
+
+            phone:
+              formData.phone.trim(),
+
+            subject:
+              formData.subject,
+
+            message:
+              formData.message.trim(),
+          }
+        );
 
 
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 5000);
+      // ===================================================
+      // CHECK RESPONSE
+      // ===================================================
+
+      if (
+        !response.data?.success
+      ) {
+
+        throw new Error(
+          response.data?.message ||
+            "Unable to submit your enquiry."
+        );
+
+      }
+
+
+      // ===================================================
+      // SUCCESS
+      // ===================================================
+
+      setSubmitted(true);
+
+
+      // Reset form
+
+      setFormData({
+
+        name:
+          user?.full_name ||
+          user?.name ||
+          "",
+
+        email:
+          user?.email ||
+          "",
+
+        phone:
+          user?.mobile ||
+          user?.phone ||
+          "",
+
+        subject:
+          "",
+
+        message:
+          "",
+
+      });
+
+
+      // Hide success message
+
+      setTimeout(() => {
+
+        setSubmitted(false);
+
+      }, 5000);
+
+
+    } catch (
+      submitError
+    ) {
+
+      console.error(
+        "Contact form submission error:",
+        submitError
+      );
+
+
+      setError(
+        submitError.response?.data
+          ?.message ||
+          submitError.message ||
+          "Unable to send your enquiry. Please try again."
+      );
+
+    } finally {
+
+      setSubmitting(false);
+
+    }
 
   };
 
@@ -137,14 +296,18 @@ function Contact() {
 
             <h1>
               Let's connect
-              <span> with SNICT.</span>
+              <span>
+                {" "}with SNICT.
+              </span>
             </h1>
 
 
             <p>
-              Have a question, suggestion or want to know
-              more about SNICT? Get in touch with our team.
-              We would be happy to hear from you.
+              Have a question, suggestion
+              or want to know more about
+              SNICT? Get in touch with our
+              team. We would be happy to
+              hear from you.
             </p>
 
 
@@ -152,7 +315,9 @@ function Contact() {
 
               <div>
 
-                <HeartPulse size={17} />
+                <HeartPulse
+                  size={17}
+                />
 
                 <span>
                   Cardiovascular Community
@@ -163,7 +328,9 @@ function Contact() {
 
               <div>
 
-                <MessageCircle size={17} />
+                <MessageCircle
+                  size={17}
+                />
 
                 <span>
                   Professional Support
@@ -224,12 +391,15 @@ function Contact() {
 
             <h2>
               We're here to
-              <span> help.</span>
+              <span>
+                {" "}help.
+              </span>
             </h2>
 
 
             <p>
-              Reach out to us through any of the available
+              Reach out to us through
+              any of the available
               contact channels.
             </p>
 
@@ -244,13 +414,15 @@ function Contact() {
             ================================================= */}
 
             <a
-              href="mailto:info@snict.org"
+              href="mailto:support@snict.net"
               className="contact-info-card"
             >
 
               <div className="contact-info-icon">
 
-                <Mail size={23} />
+                <Mail
+                  size={23}
+                />
 
               </div>
 
@@ -263,12 +435,13 @@ function Contact() {
 
 
                 <h3>
-                   support@snict.org
+                  support@snict.net
                 </h3>
 
 
                 <p>
-                  Send us your questions or enquiries.
+                  Send us your questions
+                  or enquiries.
                 </p>
 
               </div>
@@ -287,13 +460,15 @@ function Contact() {
             ================================================= */}
 
             <a
-              href="tel:+919999999999"
+              href="tel:+919731464382"
               className="contact-info-card"
             >
 
               <div className="contact-info-icon">
 
-                <Phone size={23} />
+                <Phone
+                  size={23}
+                />
 
               </div>
 
@@ -311,7 +486,8 @@ function Contact() {
 
 
                 <p>
-                  Contact us for professional enquiries.
+                  Contact us for
+                  professional enquiries.
                 </p>
 
               </div>
@@ -329,16 +505,23 @@ function Contact() {
                 LOCATION
             ================================================= */}
 
-            <div className="contact-info-card">
+            <div
+              className="
+                contact-info-card
+                contact-location-card
+              "
+            >
 
               <div className="contact-info-icon">
 
-                <MapPin size={23} />
+                <MapPin
+                  size={23}
+                />
 
               </div>
 
 
-              <div>
+              <div className="contact-address">
 
                 <span>
                   LOCATION
@@ -346,12 +529,31 @@ function Contact() {
 
 
                 <h3>
-                  45/25 Socitey of Neo Interventional Cardiovascular Technologites,
-                1-1/Pelleru, Chrjerla, SPSR, Nellore, Andhra Pradesh - 524309
+                  SNICT Office
                 </h3>
 
 
-               
+                <address>
+
+                  <span>
+                    45/25, Society of Neo
+                    Interventional
+                    Cardiovascular
+                    Technologists,
+                  </span>
+
+                  <span>
+                    1-1/Pelleru,
+                    Cherjerla,
+                    SPSR Nellore,
+                  </span>
+
+                  <span>
+                    Andhra Pradesh -
+                    524309
+                  </span>
+
+                </address>
 
               </div>
 
@@ -368,11 +570,18 @@ function Contact() {
                 OFFICE HOURS
             ================================================= */}
 
-            <div className="contact-info-card">
+            <div
+              className="
+                contact-info-card
+                contact-availability-card
+              "
+            >
 
               <div className="contact-info-icon">
 
-                <Clock3 size={23} />
+                <Clock3
+                  size={23}
+                />
 
               </div>
 
@@ -390,7 +599,8 @@ function Contact() {
 
 
                 <p>
-                  We'll respond as soon as possible.
+                  We'll respond as soon
+                  as possible.
                 </p>
 
               </div>
@@ -422,7 +632,7 @@ function Contact() {
 
 
             {/* =================================================
-                LEFT
+                LEFT INTRO
             ================================================= */}
 
             <div className="contact-form-intro">
@@ -434,14 +644,18 @@ function Contact() {
 
               <h2>
                 Tell us
-                <span> how we can help.</span>
+                <span>
+                  {" "}how we can help.
+                </span>
               </h2>
 
 
               <p>
-                Whether you're interested in membership,
-                collaboration, events or simply want to
-                connect with SNICT, send us a message.
+                Whether you're interested
+                in membership, collaboration,
+                events or simply want to
+                connect with SNICT, send
+                us a message.
               </p>
 
 
@@ -449,7 +663,9 @@ function Contact() {
 
                 <div>
 
-                  <Building2 size={21} />
+                  <Building2
+                    size={21}
+                  />
 
                 </div>
 
@@ -471,7 +687,9 @@ function Contact() {
 
                 <div>
 
-                  <MessageCircle size={21} />
+                  <MessageCircle
+                    size={21}
+                  />
 
                 </div>
 
@@ -481,7 +699,8 @@ function Contact() {
                   Communication
 
                   <strong>
-                    We're happy to hear from you
+                    We're happy to hear
+                    from you
                   </strong>
 
                 </span>
@@ -497,20 +716,53 @@ function Contact() {
 
             <div className="contact-form-card">
 
+
+              {/* =================================================
+                  SUCCESS
+              ================================================= */}
+
               {submitted && (
 
                 <div className="contact-success">
 
                   <div>
 
-                    <Send size={18} />
+                    <CheckCircle2
+                      size={18}
+                    />
 
                   </div>
 
 
                   <span>
-                    Thank you! Your enquiry has
-                    been received.
+                    Thank you! Your enquiry
+                    has been received.
+                  </span>
+
+                </div>
+
+              )}
+
+
+              {/* =================================================
+                  ERROR
+              ================================================= */}
+
+              {error && (
+
+                <div className="contact-error">
+
+                  <div>
+
+                    <AlertCircle
+                      size={18}
+                    />
+
+                  </div>
+
+
+                  <span>
+                    {error}
                   </span>
 
                 </div>
@@ -519,7 +771,9 @@ function Contact() {
 
 
               <form
-                onSubmit={handleSubmit}
+                onSubmit={
+                  handleSubmit
+                }
                 className="contact-form"
               >
 
@@ -540,8 +794,13 @@ function Contact() {
                     name="name"
                     type="text"
                     placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={handleChange}
+                    value={
+                      formData.name
+                    }
+                    onChange={
+                      handleChange
+                    }
+                    autoComplete="name"
                     required
                   />
 
@@ -566,8 +825,13 @@ function Contact() {
                       name="email"
                       type="email"
                       placeholder="you@example.com"
-                      value={formData.email}
-                      onChange={handleChange}
+                      value={
+                        formData.email
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      autoComplete="email"
                       required
                     />
 
@@ -586,8 +850,13 @@ function Contact() {
                       name="phone"
                       type="tel"
                       placeholder="+91 XXXXX XXXXX"
-                      value={formData.phone}
-                      onChange={handleChange}
+                      value={
+                        formData.phone
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      autoComplete="tel"
                     />
 
                   </div>
@@ -609,8 +878,12 @@ function Contact() {
                   <select
                     id="subject"
                     name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
+                    value={
+                      formData.subject
+                    }
+                    onChange={
+                      handleChange
+                    }
                     required
                   >
 
@@ -659,8 +932,12 @@ function Contact() {
                     name="message"
                     rows="6"
                     placeholder="Write your message..."
-                    value={formData.message}
-                    onChange={handleChange}
+                    value={
+                      formData.message
+                    }
+                    onChange={
+                      handleChange
+                    }
                     required
                   />
 
@@ -674,14 +951,31 @@ function Contact() {
                 <button
                   type="submit"
                   className="contact-submit"
+                  disabled={
+                    submitting
+                  }
                 >
 
                   <span>
-                    Send Message
+
+                    {submitting
+                      ? "Sending..."
+                      : "Send Message"}
+
                   </span>
 
 
-                  <Send size={17} />
+                  {submitting ? (
+
+                    <span className="contact-submit-spinner" />
+
+                  ) : (
+
+                    <Send
+                      size={17}
+                    />
+
+                  )}
 
                 </button>
 
@@ -715,22 +1009,29 @@ function Contact() {
 
               <h2>
                 SNICT
-                <span> Community</span>
+                <span>
+                  {" "}Community
+                </span>
               </h2>
 
 
               <p>
-                Connect with the SNICT professional community
-                and stay involved with cardiovascular
-                education and collaboration.
+                Connect with the SNICT
+                professional community
+                and stay involved with
+                cardiovascular education
+                and collaboration.
               </p>
 
 
               <div className="contact-location-item">
 
-                <MapPin size={19} />
+                <MapPin
+                  size={19}
+                />
 
                 <span>
+                  Andhra Pradesh,
                   India
                 </span>
 
@@ -746,7 +1047,9 @@ function Contact() {
 
               <div className="contact-map-pin">
 
-                <MapPin size={30} />
+                <MapPin
+                  size={30}
+                />
 
                 <span>
                   SNICT
@@ -787,15 +1090,23 @@ function Contact() {
               <h2>
 
                 {user ? (
+
                   <>
                     Welcome to the
-                    <span> SNICT community.</span>
+                    <span>
+                      {" "}SNICT community.
+                    </span>
                   </>
+
                 ) : (
+
                   <>
                     Become part of the
-                    <span> community.</span>
+                    <span>
+                      {" "}community.
+                    </span>
                   </>
+
                 )}
 
               </h2>
@@ -812,10 +1123,6 @@ function Contact() {
             </div>
 
 
-            {/* =================================================
-                SHOW ONLY WHEN USER IS NOT LOGGED IN
-            ================================================= */}
-
             {!user && (
 
               <a
@@ -825,7 +1132,9 @@ function Contact() {
 
                 Join SNICT
 
-                <ArrowRight size={18} />
+                <ArrowRight
+                  size={18}
+                />
 
               </a>
 

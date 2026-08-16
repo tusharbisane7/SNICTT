@@ -20,7 +20,7 @@ import "./Login.css";
 // SNICT LOGO
 // =========================================================
 
-import snictLogo from "../../assets/snict-logo.png";
+import snictLogo from "../../assets/snict-logo.jpeg";
 
 
 // =========================================================

@@ -2,6 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
+
 // =========================================================
 // MIDDLEWARE
 // =========================================================
@@ -11,6 +12,7 @@ const authMiddleware =
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
+
 
 // =========================================================
 // CONTROLLER
@@ -22,6 +24,7 @@ const {
   getAdminPassByBookingId,
 } = require("../controllers/eventPassController");
 
+
 // =========================================================
 // USER EVENT PASS
 // =========================================================
@@ -29,9 +32,10 @@ const {
 // GET /api/event-passes/booking/:bookingId
 //
 // Example:
+//
 // GET /api/event-passes/booking/23
 //
-// This is the primary Event Pass endpoint.
+// User can only access his own booking pass.
 //
 // =========================================================
 
@@ -41,68 +45,59 @@ router.get(
   getMyPass
 );
 
+
 // =========================================================
 // USER EVENT PASS
 // =========================================================
 //
-// GET /api/event-passes/:id/pass
-//
-// Example:
-// GET /api/event-passes/23/pass
+// GET /api/event-passes/:id
 //
 // Compatibility route.
 //
-// =========================================================
-
-router.get(
-  "/:id/pass",
-  authMiddleware,
-  getMyPass
-);
-
-// =========================================================
-// USER EVENT PASS - BOOKING COMPATIBILITY
-// =========================================================
-//
-// GET /api/event-passes/booking/:bookingId/pass
-//
 // Example:
-// GET /api/event-passes/booking/23/pass
 //
-// Compatibility endpoint.
+// GET /api/event-passes/23
 //
 // =========================================================
 
 router.get(
-  "/booking/:bookingId/pass",
+  "/:id",
   authMiddleware,
   getMyPass
 );
+
 
 // =========================================================
 // ADMIN - GET ALL EVENT PASSES
 // =========================================================
 //
-// GET /api/event-passes/admin/passes
+// GET /api/event-passes/admin
 //
 // IMPORTANT:
-// This route MUST come before dynamic admin routes.
+//
+// This MUST be before:
+//
+// /:id
+//
+// Otherwise "admin" can be treated as an ID.
 //
 // =========================================================
 
 router.get(
-  "/admin/passes",
+  "/admin",
   adminMiddleware,
   getAdminPasses
 );
 
+
 // =========================================================
-// ADMIN - GET EVENT PASS BY BOOKING ID
+// ADMIN - GET PASS BY BOOKING ID
 // =========================================================
 //
 // GET /api/event-passes/admin/booking/:bookingId
 //
 // Example:
+//
 // GET /api/event-passes/admin/booking/23
 //
 // =========================================================
@@ -113,13 +108,16 @@ router.get(
   getAdminPassByBookingId
 );
 
+
 // =========================================================
-// ADMIN - COMPATIBILITY ROUTE
+// ADMIN - GET PASS BY BOOKING ID
+// COMPATIBILITY ROUTE
 // =========================================================
 //
 // GET /api/event-passes/admin/:id/pass
 //
 // Example:
+//
 // GET /api/event-passes/admin/23/pass
 //
 // =========================================================
@@ -129,6 +127,7 @@ router.get(
   adminMiddleware,
   getAdminPassByBookingId
 );
+
 
 // =========================================================
 // EXPORT

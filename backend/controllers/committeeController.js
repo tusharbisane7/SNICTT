@@ -6,10 +6,10 @@ const cloudinary = require("../config/cloudinary");
 // =========================================================
 
 const VALID_COMMITTEES = [
-  "Placement Committee",
-  "Academic Committee",
-  "Compliance Committee",
-  "Working Committee",
+  "COMMERCIAL COURSE DIRECTOR FACULTY",
+  "OFFICE BEARERS",
+  "ORGANIZING COMMITTEE",
+  "SCIENTIFIC COMMITTEE",
 ];
 
 // =========================================================
@@ -17,10 +17,22 @@ const VALID_COMMITTEES = [
 // =========================================================
 
 const COMMITTEE_MAP = {
-  placement: "Placement Committee",
-  academic: "Academic Committee",
-  compliance: "Compliance Committee",
-  working: "Working Committee",
+  placement: "COMMERCIAL COURSE DIRECTOR FACULTY",
+  commercial: "COMMERCIAL COURSE DIRECTOR FACULTY",
+  "commercial-course-director-faculty":
+    "COMMERCIAL COURSE DIRECTOR FACULTY",
+
+  academic: "ORGANIZING COMMITTEE",
+  organizing: "ORGANIZING COMMITTEE",
+  "organizing-committee": "ORGANIZING COMMITTEE",
+
+  compliance: "SCIENTIFIC COMMITTEE",
+  scientific: "SCIENTIFIC COMMITTEE",
+  "scientific-committee": "SCIENTIFIC COMMITTEE",
+
+  working: "OFFICE BEARERS",
+  office: "OFFICE BEARERS",
+  "office-bearers": "OFFICE BEARERS",
 };
 
 // =========================================================
@@ -303,16 +315,16 @@ const getCommitteeMembers =
           ORDER BY
             CASE committee_name
 
-              WHEN 'Placement Committee'
+              WHEN 'COMMERCIAL COURSE DIRECTOR FACULTY'
                 THEN 1
 
-              WHEN 'Academic Committee'
+              WHEN 'OFFICE BEARERS'
                 THEN 2
 
-              WHEN 'Compliance Committee'
+              WHEN 'ORGANIZING COMMITTEE'
                 THEN 3
 
-              WHEN 'Working Committee'
+              WHEN 'SCIENTIFIC COMMITTEE'
                 THEN 4
 
               ELSE 5
@@ -395,9 +407,7 @@ const getCommitteeByName =
             "Invalid committee name",
 
           allowedCommittees:
-            Object.keys(
-              COMMITTEE_MAP
-            ),
+            VALID_COMMITTEES,
 
         });
       }
@@ -500,16 +510,16 @@ const getAllCommitteeMembers =
           ORDER BY
             CASE committee_name
 
-              WHEN 'Placement Committee'
+              WHEN 'COMMERCIAL COURSE DIRECTOR FACULTY'
                 THEN 1
 
-              WHEN 'Academic Committee'
+              WHEN 'OFFICE BEARERS'
                 THEN 2
 
-              WHEN 'Compliance Committee'
+              WHEN 'ORGANIZING COMMITTEE'
                 THEN 3
 
-              WHEN 'Working Committee'
+              WHEN 'SCIENTIFIC COMMITTEE'
                 THEN 4
 
               ELSE 5
@@ -986,8 +996,7 @@ const addCommitteeMember =
       });
     }
   };
-
-// =========================================================
+  // =========================================================
 // UPDATE COMMITTEE MEMBER
 // ADMIN
 // PUT /api/committees/admin/:id
