@@ -166,6 +166,10 @@ function EventManagement() {
   const mediaInputRef =
     useRef(null);
 
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeTitle, setYoutubeTitle] = useState("");
+  const [youtubeDescription, setYoutubeDescription] = useState("");
+
 
   // =======================================================
   // INITIAL LOAD
@@ -1247,6 +1251,9 @@ function EventManagement() {
     );
 
     setSelectedMediaFiles([]);
+    setYoutubeUrl("");
+    setYoutubeTitle("");
+    setYoutubeDescription("");
 
     setError("");
 
@@ -1268,6 +1275,9 @@ function EventManagement() {
     }
 
     clearSelectedMedia();
+    setYoutubeUrl("");
+    setYoutubeTitle("");
+    setYoutubeDescription("");
 
     setMediaEvent(null);
 
@@ -1433,18 +1443,6 @@ function EventManagement() {
 
     }
 
-    if (
-      mediaType ===
-      MEDIA_TYPES.VIDEO
-    ) {
-
-      return [
-        "video/mp4",
-        "video/webm",
-        "video/quicktime",
-      ].join(",");
-
-    }
 
     return [
       "application/pdf",
@@ -1495,38 +1493,6 @@ function EventManagement() {
 
         setError(
           `"${file.name}" is not a supported image.`
-        );
-
-        return false;
-
-      }
-
-    }
-
-
-    // -------------------------------------------------------
-    // VIDEO
-    // -------------------------------------------------------
-
-    if (
-      mediaType ===
-      MEDIA_TYPES.VIDEO
-    ) {
-
-      const allowed = [
-        "video/mp4",
-        "video/webm",
-        "video/quicktime",
-      ];
-
-      if (
-        !allowed.includes(
-          file.type
-        )
-      ) {
-
-        setError(
-          `"${file.name}" is not a supported video. Use MP4, WEBM or MOV.`
         );
 
         return false;
@@ -1789,6 +1755,56 @@ function EventManagement() {
 
 
   // =========================================================
+  // YOUTUBE HELPERS
+  // =========================================================
+
+  const getYoutubeVideoId = (url) => {
+    if (!url) return "";
+    try {
+      const parsedUrl = new URL(String(url).trim());
+      const hostname = parsedUrl.hostname.replace("www.", "").replace("m.", "");
+      if (hostname === "youtube.com") {
+        if (parsedUrl.pathname === "/watch") return parsedUrl.searchParams.get("v") || "";
+        if (parsedUrl.pathname.startsWith("/shorts/")) return parsedUrl.pathname.split("/shorts/")[1]?.split("/")[0] || "";
+        if (parsedUrl.pathname.startsWith("/embed/")) return parsedUrl.pathname.split("/embed/")[1]?.split("/")[0] || "";
+      }
+      if (hostname === "youtu.be") return parsedUrl.pathname.replace(/^\//, "").split("/")[0] || "";
+    } catch { return ""; }
+    return "";
+  };
+
+  const addYoutubeVideo = async () => {
+    if (!mediaEvent?.id) { setError("Please select an event first."); return; }
+    const trimmedUrl = youtubeUrl.trim();
+    if (!trimmedUrl) { setError("Please enter a YouTube URL."); return; }
+    if (!getYoutubeVideoId(trimmedUrl)) { setError("Please enter a valid YouTube URL."); return; }
+
+    try {
+      setMediaUploading(true);
+      setError("");
+      setSuccess("");
+      const response = await api.post(`/events/admin/${mediaEvent.id}/media/youtube`, {
+        title: youtubeTitle.trim(),
+        youtubeUrl: trimmedUrl,
+        description: youtubeDescription.trim(),
+      });
+      if (!response.data?.success) throw new Error(response.data?.message || "Unable to add YouTube video.");
+      setSuccess("YouTube video added successfully.");
+      setYoutubeUrl("");
+      setYoutubeTitle("");
+      setYoutubeDescription("");
+      await loadEventMedia(mediaEvent.id);
+      await loadEvents();
+    } catch (error) {
+      console.error("Add YouTube video error:", error);
+      setError(error.response?.data?.message || error.message || "Unable to add YouTube video.");
+    } finally {
+      setMediaUploading(false);
+    }
+  };
+
+
+  // =========================================================
   // UPLOAD EVENT MEDIA
   // =========================================================
 
@@ -1807,6 +1823,11 @@ function EventManagement() {
 
       }
 
+
+      if (mediaType === MEDIA_TYPES.VIDEO) {
+        setError("Videos must be added using a YouTube URL.");
+        return;
+      }
 
       if (
         selectedMediaFiles.length === 0
@@ -2218,40 +2239,27 @@ function EventManagement() {
     }
 
 
-    // VIDEO
+    // VIDEO / YOUTUBE
 
-    if (
-      mediaType ===
-      MEDIA_TYPES.VIDEO
-    ) {
-
-      if (!url) {
-
+    if (mediaType === MEDIA_TYPES.VIDEO) {
+      const videoId = getYoutubeVideoId(url);
+      if (!videoId) {
         return (
           <div className="event-media-empty-preview">
-
-            <Video
-              size={30}
-            />
-
-            <span>
-              Video unavailable
-            </span>
-
+            <Video size={30} />
+            <span>Invalid YouTube video</span>
           </div>
         );
-
       }
-
-
       return (
-        <video
-          src={url}
-          controls
-          preload="metadata"
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title={media?.title || "YouTube Video"}
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
         />
       );
-
     }
 
 
@@ -2424,7 +2432,7 @@ function EventManagement() {
       MEDIA_TYPES.VIDEO
     ) {
 
-      return "Upload event videos.";
+      return "Add event videos using YouTube URLs.";
 
     }
 
@@ -3531,811 +3539,92 @@ function EventManagement() {
   // =========================================================
 
   const renderMediaManager = () => {
-
-    if (!mediaEvent) {
-      return null;
-    }
-
+    if (!mediaEvent) return null;
 
     return (
-      <div
-        className="event-form-overlay"
-        onMouseDown={(event) => {
-
-          if (
-            event.target ===
-            event.currentTarget
-          ) {
-
-            closeMediaManager();
-
-          }
-
-        }}
-      >
-
-        <div
-          className="event-media-manager-modal"
-          onMouseDown={(event) =>
-            event.stopPropagation()
-          }
-        >
-
-          {/* =================================================
-               HEADER
-               ================================================= */}
+      <div className="event-form-overlay" onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeMediaManager();
+      }}>
+        <div className="event-media-manager-modal" onMouseDown={(event) => event.stopPropagation()}>
 
           <div className="event-form-header">
-
             <div>
-
-              <span>
-                EVENT MEDIA MANAGEMENT
-              </span>
-
-              <h2>
-                {getEventTitle(
-                  mediaEvent
-                )}
-              </h2>
-
-              <p className="event-media-manager-subtitle">
-                Manage gallery images, videos and documents
-                for this event.
-              </p>
-
+              <span>EVENT MEDIA MANAGEMENT</span>
+              <h2>{getEventTitle(mediaEvent)}</h2>
+              <p className="event-media-manager-subtitle">Manage gallery images, YouTube videos and documents for this event.</p>
             </div>
-
-
-            <button
-              type="button"
-              className="event-modal-close"
-              onClick={
-                closeMediaManager
-              }
-              disabled={
-                mediaUploading
-              }
-            >
-              <X
-                size={18}
-              />
-            </button>
-
+            <button type="button" className="event-modal-close" onClick={closeMediaManager} disabled={mediaUploading}><X size={18} /></button>
           </div>
-
-
-          {/* =================================================
-               MEDIA TABS
-               ================================================= */}
 
           <div className="event-media-tabs">
-
-            <button
-              type="button"
-              className={
-                mediaType ===
-                MEDIA_TYPES.IMAGE
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                handleMediaTypeChange(
-                  MEDIA_TYPES.IMAGE
-                )
-              }
-              disabled={
-                mediaUploading
-              }
-            >
-
-              <ImageIcon
-                size={16}
-              />
-
-              <span>
-                Gallery
-              </span>
-
-              <strong>
-                {mediaCounts.images}
-              </strong>
-
-            </button>
-
-
-            <button
-              type="button"
-              className={
-                mediaType ===
-                MEDIA_TYPES.VIDEO
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                handleMediaTypeChange(
-                  MEDIA_TYPES.VIDEO
-                )
-              }
-              disabled={
-                mediaUploading
-              }
-            >
-
-              <Video
-                size={16}
-              />
-
-              <span>
-                Videos
-              </span>
-
-              <strong>
-                {mediaCounts.videos}
-              </strong>
-
-            </button>
-
-
-            <button
-              type="button"
-              className={
-                mediaType ===
-                MEDIA_TYPES.DOCUMENT
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                handleMediaTypeChange(
-                  MEDIA_TYPES.DOCUMENT
-                )
-              }
-              disabled={
-                mediaUploading
-              }
-            >
-
-              <FileText
-                size={16}
-              />
-
-              <span>
-                Documents
-              </span>
-
-              <strong>
-                {mediaCounts.documents}
-              </strong>
-
-            </button>
-
+            <button type="button" className={mediaType === MEDIA_TYPES.IMAGE ? "active" : ""} onClick={() => handleMediaTypeChange(MEDIA_TYPES.IMAGE)} disabled={mediaUploading}><ImageIcon size={16} /><span>Gallery</span><strong>{mediaCounts.images}</strong></button>
+            <button type="button" className={mediaType === MEDIA_TYPES.VIDEO ? "active" : ""} onClick={() => handleMediaTypeChange(MEDIA_TYPES.VIDEO)} disabled={mediaUploading}><Video size={16} /><span>YouTube Videos</span><strong>{mediaCounts.videos}</strong></button>
+            <button type="button" className={mediaType === MEDIA_TYPES.DOCUMENT ? "active" : ""} onClick={() => handleMediaTypeChange(MEDIA_TYPES.DOCUMENT)} disabled={mediaUploading}><FileText size={16} /><span>Documents</span><strong>{mediaCounts.documents}</strong></button>
           </div>
-
-
-          {/* =================================================
-               UPLOAD SECTION
-               ================================================= */}
 
           <div className="event-media-upload-section">
+            <div className="event-media-upload-heading"><div><h3>{getMediaTypeLabel()}</h3><p>{mediaType === MEDIA_TYPES.VIDEO ? "Add a YouTube video using its URL. No video file upload is required." : getMediaTypeDescription()}</p></div></div>
 
-            <div className="event-media-upload-heading">
-
-              <div>
-
-                <h3>
-                  {getMediaTypeLabel()}
-                </h3>
-
-                <p>
-                  {getMediaTypeDescription()}
-                </p>
-
+            {mediaType === MEDIA_TYPES.VIDEO ? (
+              <div className="event-youtube-upload-section">
+                <div className="event-youtube-upload-icon"><PlayCircle size={32} /></div>
+                <div className="form-field full"><label>Video Title</label><input type="text" value={youtubeTitle} onChange={(event) => setYoutubeTitle(event.target.value)} placeholder="Enter video title" disabled={mediaUploading} /></div>
+                <div className="form-field full"><label>YouTube URL *</label><input type="url" value={youtubeUrl} onChange={(event) => setYoutubeUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=..." disabled={mediaUploading} /><small>Supported: youtube.com/watch, youtu.be, YouTube Shorts and YouTube embed URLs.</small></div>
+                <div className="form-field full"><label>Description</label><textarea value={youtubeDescription} onChange={(event) => setYoutubeDescription(event.target.value)} placeholder="Optional video description" rows={4} disabled={mediaUploading} /></div>
+                <div className="event-media-upload-actions"><button type="button" className="event-media-upload-btn" onClick={addYoutubeVideo} disabled={mediaUploading || !youtubeUrl.trim()}>{mediaUploading ? <><RefreshCw size={15} className="admin-event-spin" /> Adding...</> : <><Plus size={15} /> Add YouTube Video</>}</button></div>
               </div>
-
-            </div>
-
-
-            {/* =================================================
-                 DROP / SELECT AREA
-                 ================================================= */}
-
-            <div
-              className="event-media-upload-box"
-              onClick={() => {
-
-                if (
-                  mediaUploading
-                ) {
-                  return;
-                }
-
-                mediaInputRef.current?.click();
-
-              }}
-            >
-
-              <input
-                ref={
-                  mediaInputRef
-                }
-                type="file"
-                multiple
-                hidden
-                accept={
-                  getMediaAccept()
-                }
-                onChange={
-                  handleMediaFilesChange
-                }
-              />
-
-
-              <div className="event-media-upload-icon">
-
-                {mediaType ===
-                MEDIA_TYPES.IMAGE ? (
-                  <ImageIcon
-                    size={25}
-                  />
-                ) : mediaType ===
-                  MEDIA_TYPES.VIDEO ? (
-                  <Video
-                    size={25}
-                  />
-                ) : (
-                  <FileText
-                    size={25}
-                  />
-                )}
-
-              </div>
-
-
-              <h4>
-                Select files to upload
-              </h4>
-
-
-              <p>
-                Click here to browse your computer
-              </p>
-
-
-              <small>
-
-                {mediaType ===
-                MEDIA_TYPES.IMAGE
-                  ? "JPG, JPEG, PNG, WEBP or GIF • Maximum 100 MB each"
-                  : mediaType ===
-                    MEDIA_TYPES.VIDEO
-                    ? "MP4, WEBM or MOV • Maximum 100 MB each"
-                    : "PDF, DOC, DOCX, PPT or PPTX • Maximum 100 MB each"}
-
-              </small>
-
-            </div>
-
-
-            {/* =================================================
-                 SELECTED FILES
-                 ================================================= */}
-
-            {selectedMediaFiles.length >
-              0 && (
-
-              <div className="event-selected-media">
-
-                <div className="event-selected-media-header">
-
-                  <div>
-
-                    <strong>
-                      Selected Files
-                    </strong>
-
-                    <span>
-                      {selectedMediaFiles.length}
-                    </span>
-
-                  </div>
-
-
-                  <button
-                    type="button"
-                    onClick={
-                      clearSelectedMedia
-                    }
-                    disabled={
-                      mediaUploading
-                    }
-                  >
-                    Clear all
-                  </button>
-
+            ) : (
+              <>
+                <div className="event-media-upload-box" onClick={() => { if (!mediaUploading) mediaInputRef.current?.click(); }}>
+                  <input ref={mediaInputRef} type="file" multiple hidden accept={getMediaAccept()} onChange={handleMediaFilesChange} />
+                  <div className="event-media-upload-icon">{mediaType === MEDIA_TYPES.IMAGE ? <ImageIcon size={25} /> : <FileText size={25} />}</div>
+                  <h4>Select files to upload</h4><p>Click here to browse your computer</p>
+                  <small>{mediaType === MEDIA_TYPES.IMAGE ? "JPG, JPEG, PNG, WEBP or GIF • Maximum 100 MB each" : "PDF, DOC, DOCX, PPT or PPTX • Maximum 100 MB each"}</small>
                 </div>
 
-
-                <div className="event-selected-media-list">
-
-                  {selectedMediaFiles.map(
-                    (
-                      item,
-                      index
-                    ) => (
-
-                      <div
-                        className="event-selected-media-item"
-                        key={`${item.file.name}-${index}`}
-                      >
-
-                        {renderSelectedFilePreview(
-                          item
-                        )}
-
-
-                        <div className="event-selected-media-info">
-
-                          <strong
-                            title={
-                              item.file.name
-                            }
-                          >
-                            {item.file.name}
-                          </strong>
-
-                          <small>
-                            {formatFileSize(
-                              item.file.size
-                            )}
-                          </small>
-
-                        </div>
-
-
-                        <button
-                          type="button"
-                          className="event-selected-media-remove"
-                          onClick={() =>
-                            removeSelectedMediaFile(
-                              index
-                            )
-                          }
-                          disabled={
-                            mediaUploading
-                          }
-                        >
-                          <X
-                            size={15}
-                          />
-                        </button>
-
+                {selectedMediaFiles.length > 0 && (
+                  <div className="event-selected-media">
+                    <div className="event-selected-media-header"><div><strong>Selected Files</strong><span>{selectedMediaFiles.length}</span></div><button type="button" onClick={clearSelectedMedia} disabled={mediaUploading}>Clear all</button></div>
+                    <div className="event-selected-media-list">{selectedMediaFiles.map((item, index) => (
+                      <div className="event-selected-media-item" key={`${item.file.name}-${index}`}>
+                        {renderSelectedFilePreview(item)}
+                        <div className="event-selected-media-info"><strong title={item.file.name}>{item.file.name}</strong><small>{formatFileSize(item.file.size)}</small></div>
+                        <button type="button" className="event-selected-media-remove" onClick={() => removeSelectedMediaFile(index)} disabled={mediaUploading}><X size={15} /></button>
                       </div>
-
-                    )
-                  )}
-
-                </div>
-
-
-                {/* =================================================
-                     UPLOAD BUTTON
-                     ================================================= */}
-
-                <div className="event-media-upload-actions">
-
-                  <button
-                    type="button"
-                    className="event-media-upload-btn"
-                    onClick={
-                      uploadEventMediaFiles
-                    }
-                    disabled={
-                      mediaUploading
-                    }
-                  >
-
-                    {mediaUploading ? (
-                      <>
-                        <RefreshCw
-                          size={15}
-                          className="admin-event-spin"
-                        />
-
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload
-                          size={15}
-                        />
-
-                        Upload{" "}
-                        {
-                          selectedMediaFiles.length
-                        }{" "}
-                        File
-                        {
-                          selectedMediaFiles.length !==
-                          1
-                            ? "s"
-                            : ""
-                        }
-                      </>
-                    )}
-
-                  </button>
-
-                </div>
-
-              </div>
-
+                    ))}</div>
+                    <div className="event-media-upload-actions"><button type="button" className="event-media-upload-btn" onClick={uploadEventMediaFiles} disabled={mediaUploading}>{mediaUploading ? <><RefreshCw size={15} className="admin-event-spin" /> Uploading...</> : <><Upload size={15} /> Upload {selectedMediaFiles.length} File{selectedMediaFiles.length !== 1 ? "s" : ""}</>}</button></div>
+                  </div>
+                )}
+              </>
             )}
-
           </div>
-
-
-          {/* =================================================
-               MEDIA LIBRARY
-               ================================================= */}
 
           <div className="event-media-library">
-
-            <div className="event-media-library-header">
-
-              <div>
-
-                <span>
-                  MEDIA LIBRARY
-                </span>
-
-                <h3>
-                  {getMediaTypeLabel()}
-                </h3>
-
-              </div>
-
-
-              <button
-                type="button"
-                className="event-media-refresh-btn"
-                onClick={() =>
-                  loadEventMedia(
-                    mediaEvent.id
-                  )
-                }
-                disabled={
-                  mediaLoading ||
-                  mediaUploading
-                }
-              >
-
-                <RefreshCw
-                  size={14}
-                  className={
-                    mediaLoading
-                      ? "admin-event-spin"
-                      : ""
-                  }
-                />
-
-                Refresh
-
-              </button>
-
-            </div>
-
-
-            {/* =================================================
-                 LOADING
-                 ================================================= */}
+            <div className="event-media-library-header"><div><span>MEDIA LIBRARY</span><h3>{getMediaTypeLabel()}</h3></div><button type="button" className="event-media-refresh-btn" onClick={() => loadEventMedia(mediaEvent.id)} disabled={mediaLoading || mediaUploading}><RefreshCw size={14} className={mediaLoading ? "admin-event-spin" : ""} /> Refresh</button></div>
 
             {mediaLoading ? (
-
-              <div className="event-media-state">
-
-                <RefreshCw
-                  size={30}
-                  className="admin-event-spin"
-                />
-
-                <h3>
-                  Loading media...
-                </h3>
-
-                <p>
-                  Please wait while the media library
-                  is loaded.
-                </p>
-
-              </div>
-
-            ) : activeMediaItems.length ===
-              0 ? (
-
-              /* =================================================
-                   EMPTY
-                   ================================================= */
-
-              <div className="event-media-state">
-
-                {mediaType ===
-                MEDIA_TYPES.IMAGE ? (
-                  <ImageIcon
-                    size={35}
-                  />
-                ) : mediaType ===
-                  MEDIA_TYPES.VIDEO ? (
-                  <Video
-                    size={35}
-                  />
-                ) : (
-                  <FileText
-                    size={35}
-                  />
-                )}
-
-                <h3>
-                  No{" "}
-                  {mediaType ===
-                  MEDIA_TYPES.IMAGE
-                    ? "gallery images"
-                    : mediaType ===
-                      MEDIA_TYPES.VIDEO
-                      ? "videos"
-                      : "documents"}{" "}
-                  yet
-                </h3>
-
-                <p>
-                  Upload your first{" "}
-                  {mediaType ===
-                  MEDIA_TYPES.IMAGE
-                    ? "gallery image"
-                    : mediaType ===
-                      MEDIA_TYPES.VIDEO
-                      ? "video"
-                      : "document"}{" "}
-                  using the upload area above.
-                </p>
-
-              </div>
-
+              <div className="event-media-state"><RefreshCw size={30} className="admin-event-spin" /><h3>Loading media...</h3><p>Please wait while the media library is loaded.</p></div>
+            ) : activeMediaItems.length === 0 ? (
+              <div className="event-media-state">{mediaType === MEDIA_TYPES.IMAGE ? <ImageIcon size={35} /> : mediaType === MEDIA_TYPES.VIDEO ? <Video size={35} /> : <FileText size={35} />}<h3>No {mediaType === MEDIA_TYPES.IMAGE ? "gallery images" : mediaType === MEDIA_TYPES.VIDEO ? "YouTube videos" : "documents"} yet</h3><p>{mediaType === MEDIA_TYPES.VIDEO ? "Add your first YouTube video using the form above." : "Upload your first media item using the upload area above."}</p></div>
             ) : (
-
-              /* =================================================
-                   MEDIA GRID
-                   ================================================= */
-
-              <div
-                className={
-                  mediaType ===
-                  MEDIA_TYPES.DOCUMENT
-                    ? "event-media-grid event-media-grid-documents"
-                    : "event-media-grid"
-                }
-              >
-
-                {activeMediaItems.map(
-                  (
-                    media,
-                    index
-                  ) => {
-
-                    const mediaId =
-                      getMediaId(
-                        media
-                      );
-
-                    const url =
-                      getMediaUrl(
-                        media
-                      );
-
-                    const name =
-                      getMediaName(
-                        media
-                      );
-
-                    const createdAt =
-                      getMediaDate(
-                        media
-                      );
-
-
-                    return (
-                      <div
-                        className={
-                          mediaType ===
-                          MEDIA_TYPES.DOCUMENT
-                            ? "event-media-card event-media-document-card"
-                            : "event-media-card"
-                        }
-                        key={
-                          mediaId ||
-                          `${name}-${index}`
-                        }
-                      >
-
-                        {/* =================================
-                             PREVIEW
-                             ================================= */}
-
-                        <div className="event-media-card-preview">
-
-                          {renderMediaPreview(
-                            media
-                          )}
-
-
-                          {/* =================================
-                               CARD OVERLAY
-                               ================================= */}
-
-                          <div className="event-media-card-overlay">
-
-                            {url && (
-                              <button
-                                type="button"
-                                title="Open"
-                                onClick={() =>
-                                  openMediaUrl(
-                                    media
-                                  )
-                                }
-                              >
-                                <ExternalLink
-                                  size={15}
-                                />
-                              </button>
-                            )}
-
-
-                            <button
-                              type="button"
-                              title="Delete"
-                              className="delete"
-                              disabled={
-                                mediaDeletingId ===
-                                mediaId
-                              }
-                              onClick={() =>
-                                deleteEventMedia(
-                                  media
-                                )
-                              }
-                            >
-
-                              {mediaDeletingId ===
-                              mediaId ? (
-                                <RefreshCw
-                                  size={15}
-                                  className="admin-event-spin"
-                                />
-                              ) : (
-                                <Trash2
-                                  size={15}
-                                />
-                              )}
-
-                            </button>
-
-                          </div>
-
-                        </div>
-
-
-                        {/* =================================
-                             CARD INFORMATION
-                             ================================= */}
-
-                        <div className="event-media-card-info">
-
-                          <strong
-                            title={name}
-                          >
-                            {name}
-                          </strong>
-
-
-                          <div className="event-media-card-meta">
-
-                            <span>
-                              {getMediaMimeType(
-                                media
-                              ) ||
-                                (
-                                  mediaType ===
-                                  MEDIA_TYPES.IMAGE
-                                    ? "Image"
-                                    : mediaType ===
-                                      MEDIA_TYPES.VIDEO
-                                      ? "Video"
-                                      : "Document"
-                                )}
-                            </span>
-
-
-                            {media.file_size && (
-                              <>
-                                <span>
-                                  •
-                                </span>
-
-                                <span>
-                                  {formatFileSize(
-                                    media.file_size
-                                  )}
-                                </span>
-                              </>
-                            )}
-
-                          </div>
-
-
-                          {createdAt && (
-                            <small>
-                              {formatDateTime(
-                                createdAt
-                              )}
-                            </small>
-                          )}
-
-                        </div>
-
-                      </div>
-                    );
-
-                  }
-                )}
-
+              <div className={mediaType === MEDIA_TYPES.DOCUMENT ? "event-media-grid event-media-grid-documents" : "event-media-grid"}>
+                {activeMediaItems.map((media, index) => {
+                  const mediaId = getMediaId(media); const url = getMediaUrl(media); const name = getMediaName(media); const createdAt = getMediaDate(media);
+                  return (
+                    <div className={mediaType === MEDIA_TYPES.DOCUMENT ? "event-media-card event-media-document-card" : "event-media-card"} key={mediaId || `${name}-${index}`}>
+                      <div className="event-media-card-preview">{renderMediaPreview(media)}<div className="event-media-card-overlay">{url && <button type="button" title={mediaType === MEDIA_TYPES.VIDEO ? "Open YouTube video" : "Open"} onClick={() => openMediaUrl(media)}><ExternalLink size={15} /></button>}<button type="button" title="Delete" className="delete" disabled={mediaDeletingId === mediaId} onClick={() => deleteEventMedia(media)}>{mediaDeletingId === mediaId ? <RefreshCw size={15} className="admin-event-spin" /> : <Trash2 size={15} />}</button></div></div>
+                      <div className="event-media-card-info"><strong title={name}>{name}</strong><div className="event-media-card-meta"><span>{mediaType === MEDIA_TYPES.VIDEO ? "YouTube" : getMediaMimeType(media) || (mediaType === MEDIA_TYPES.IMAGE ? "Image" : "Document")}</span>{media.file_size && <><span>•</span><span>{formatFileSize(media.file_size)}</span></>}</div>{media.description && <small title={media.description}>{media.description}</small>}{createdAt && <small>{formatDateTime(createdAt)}</small>}</div>
+                    </div>
+                  );
+                })}
               </div>
-
             )}
-
           </div>
 
-
-          {/* =================================================
-               FOOTER
-               ================================================= */}
-
-          <div className="event-media-manager-footer">
-
-            <div>
-
-              <strong>
-                Total Media
-              </strong>
-
-              <span>
-                {mediaCounts.images +
-                  mediaCounts.videos +
-                  mediaCounts.documents}
-              </span>
-
-            </div>
-
-
-            <button
-              type="button"
-              className="registration-close-btn"
-              onClick={
-                closeMediaManager
-              }
-              disabled={
-                mediaUploading
-              }
-            >
-              Close
-            </button>
-
-          </div>
-
+          <div className="event-media-manager-footer"><div><strong>Total Media</strong><span>{mediaCounts.images + mediaCounts.videos + mediaCounts.documents}</span></div><button type="button" className="registration-close-btn" onClick={closeMediaManager} disabled={mediaUploading}>Close</button></div>
         </div>
-
       </div>
     );
-
   };
 
 

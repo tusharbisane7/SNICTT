@@ -13,11 +13,13 @@ const {
   getEvents,
   getEventById,
 
+
   // =======================================================
   // EVENT REGISTRATION
   // =======================================================
 
   registerForEvent,
+
 
   // =======================================================
   // ADMIN EVENT CONTROLLERS
@@ -28,11 +30,13 @@ const {
   updateEvent,
   deleteEvent,
 
+
   // =======================================================
   // PUBLIC EVENT MEDIA
   // =======================================================
 
   getPublicEventMedia,
+
 
   // =======================================================
   // ADMIN EVENT MEDIA
@@ -40,6 +44,11 @@ const {
 
   getEventMedia,
   uploadEventMedia,
+
+  // NEW:
+  // YouTube URL based video
+  addYouTubeVideo,
+
   deleteEventMedia,
 
 } = require("../controllers/eventController");
@@ -92,11 +101,11 @@ router.get(
 //
 // GET /api/events/:id/media
 //
-// IMPORTANT:
-// This MUST be before /:id
-//
 // Authentication:
 // NOT REQUIRED
+//
+// IMPORTANT:
+// This MUST be before /:id
 //
 // =========================================================
 
@@ -136,7 +145,7 @@ router.get(
 // Content-Type:
 // multipart/form-data
 //
-// Cover image:
+// Cover image field:
 // image
 //
 // Authentication:
@@ -161,7 +170,7 @@ router.post(
 // Content-Type:
 // multipart/form-data
 //
-// Cover image:
+// Cover image field:
 // image
 //
 // Authentication:
@@ -196,7 +205,7 @@ router.get(
 
 
 // =========================================================
-// ADMIN - UPLOAD EVENT MEDIA
+// ADMIN - UPLOAD IMAGES / DOCUMENTS
 // =========================================================
 //
 // POST /api/events/admin/:id/media
@@ -204,19 +213,16 @@ router.get(
 // Content-Type:
 // multipart/form-data
 //
-// Fields:
-//
-// files
-// type
-//
 // type:
-//
 // image
-// video
 // document
 //
-// Authentication:
-// ADMIN REQUIRED
+// files:
+// actual files
+//
+// IMPORTANT:
+//
+// Videos are NO LONGER uploaded here.
 //
 // =========================================================
 
@@ -225,6 +231,37 @@ router.post(
   adminMiddleware,
   eventUpload.mediaUpload,
   uploadEventMedia
+);
+
+
+// =========================================================
+// ADMIN - ADD YOUTUBE VIDEO
+// =========================================================
+//
+// POST /api/events/admin/:id/media/youtube
+//
+// Content-Type:
+// application/json
+//
+// Authentication:
+// ADMIN REQUIRED
+//
+// Body:
+//
+// {
+//   "title": "Event Highlights",
+//   "youtubeUrl": "https://www.youtube.com/watch?v=ABC123",
+//   "description": "Event highlights"
+// }
+//
+// NO FILE UPLOAD.
+//
+// =========================================================
+
+router.post(
+  "/admin/:id/media/youtube",
+  adminMiddleware,
+  addYouTubeVideo
 );
 
 
@@ -240,8 +277,13 @@ router.post(
 // ?type=video
 // ?type=document
 //
-// Authentication:
-// ADMIN REQUIRED
+// Examples:
+//
+// DELETE /api/events/admin/5/media/10?type=image
+//
+// DELETE /api/events/admin/5/media/11?type=video
+//
+// DELETE /api/events/admin/5/media/12?type=document
 //
 // =========================================================
 
@@ -258,11 +300,11 @@ router.delete(
 //
 // DELETE /api/events/admin/:id
 //
-// IMPORTANT:
-// Keep this after all /admin/:id/media routes.
-//
 // Authentication:
 // ADMIN REQUIRED
+//
+// IMPORTANT:
+// Keep this AFTER all /admin/:id/media routes.
 //
 // =========================================================
 
@@ -291,45 +333,9 @@ router.delete(
 // email
 // phone
 //
-// Optional file:
+// Optional:
 //
 // presentation
-//
-// Allowed:
-//
-// PDF
-// PPT
-// PPTX
-//
-// Flow:
-//
-// Event Details
-//      ↓
-// Event Registration
-//      ↓
-// User Details Preview
-//      ↓
-// Optional Presentation Upload
-//      ↓
-// Create Pending Booking
-//      ↓
-// Event Payment
-//      ↓
-// Confirm Booking
-//
-// IMPORTANT:
-//
-// This MUST be before:
-//
-// /:id
-//
-// Otherwise:
-//
-// /events/6/register
-//
-// could reach:
-//
-// /events/:id
 //
 // =========================================================
 
@@ -351,9 +357,7 @@ router.post(
 // NOT REQUIRED
 //
 // IMPORTANT:
-//
-// This MUST be the LAST public dynamic
-// event route.
+// This MUST be the LAST dynamic public route.
 //
 // =========================================================
 
