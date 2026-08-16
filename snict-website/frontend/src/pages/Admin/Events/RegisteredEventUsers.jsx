@@ -16,12 +16,13 @@ import {
   Phone,
   User,
   CreditCard,
-  Ticket,
   CheckCircle2,
   Clock3,
   AlertCircle,
   FileText,
   ArrowLeft,
+  ExternalLink,
+  Download,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -70,10 +71,8 @@ function RegisteredEventUsers() {
   const [loading, setLoading] =
     useState(true);
 
-
   const [refreshing, setRefreshing] =
     useState(false);
-
 
   const [error, setError] =
     useState("");
@@ -86,10 +85,8 @@ function RegisteredEventUsers() {
   const [search, setSearch] =
     useState("");
 
-
   const [bookingStatusFilter, setBookingStatusFilter] =
     useState("all");
-
 
   const [paymentStatusFilter, setPaymentStatusFilter] =
     useState("all");
@@ -125,9 +122,13 @@ function RegisteredEventUsers() {
     try {
 
       if (isRefresh) {
+
         setRefreshing(true);
+
       } else {
+
         setLoading(true);
+
       }
 
       setError("");
@@ -158,11 +159,15 @@ function RegisteredEventUsers() {
       ) {
 
         setEvents(
+
           Array.isArray(
             eventsResponse.data.events
           )
+
             ? eventsResponse.data.events
+
             : []
+
         );
 
       } else {
@@ -181,11 +186,15 @@ function RegisteredEventUsers() {
       ) {
 
         setBookings(
+
           Array.isArray(
             bookingsResponse.data.bookings
           )
+
             ? bookingsResponse.data.bookings
+
             : []
+
         );
 
       } else {
@@ -269,7 +278,9 @@ function RegisteredEventUsers() {
       if (
         selectedEventId === "all"
       ) {
+
         return null;
+
       }
 
       return events.find(
@@ -309,13 +320,15 @@ function RegisteredEventUsers() {
             String(
               booking.event_id
             ) ===
-              String(
-                selectedEventId
-              );
+            String(
+              selectedEventId
+            );
 
 
           if (!matchesEvent) {
+
             return false;
+
           }
 
 
@@ -334,11 +347,13 @@ function RegisteredEventUsers() {
           const matchesBookingStatus =
             bookingStatusFilter === "all" ||
             bookingStatus ===
-              bookingStatusFilter;
+            bookingStatusFilter;
 
 
           if (!matchesBookingStatus) {
+
             return false;
+
           }
 
 
@@ -356,11 +371,13 @@ function RegisteredEventUsers() {
           const matchesPaymentStatus =
             paymentStatusFilter === "all" ||
             paymentStatus ===
-              paymentStatusFilter;
+            paymentStatusFilter;
 
 
           if (!matchesPaymentStatus) {
+
             return false;
+
           }
 
 
@@ -369,7 +386,9 @@ function RegisteredEventUsers() {
           // ===============================================
 
           if (!query) {
+
             return true;
+
           }
 
 
@@ -394,8 +413,11 @@ function RegisteredEventUsers() {
             booking.event_name,
 
           ]
+
             .filter(Boolean)
+
             .join(" ")
+
             .toLowerCase();
 
 
@@ -451,10 +473,8 @@ function RegisteredEventUsers() {
 
 
             return (
-              status ===
-                "pending" ||
-              status ===
-                "payment_pending"
+              status === "pending" ||
+              status === "payment_pending"
             );
 
           }
@@ -473,10 +493,8 @@ function RegisteredEventUsers() {
 
 
             return (
-              status ===
-                "verified" ||
-              status ===
-                "paid"
+              status === "verified" ||
+              status === "paid"
             );
 
           }
@@ -490,7 +508,9 @@ function RegisteredEventUsers() {
         verified,
       };
 
-    }, [filteredUsers]);
+    }, [
+      filteredUsers
+    ]);
 
 
   // =======================================================
@@ -502,7 +522,9 @@ function RegisteredEventUsers() {
   ) => {
 
     if (!value) {
+
       return "-";
+
     }
 
 
@@ -517,7 +539,9 @@ function RegisteredEventUsers() {
           date.getTime()
         )
       ) {
+
         return "-";
+
       }
 
 
@@ -548,7 +572,9 @@ function RegisteredEventUsers() {
   ) => {
 
     if (!value) {
+
       return "-";
+
     }
 
 
@@ -563,7 +589,9 @@ function RegisteredEventUsers() {
           date.getTime()
         )
       ) {
+
         return "-";
+
       }
 
 
@@ -611,6 +639,161 @@ function RegisteredEventUsers() {
 
 
   // =======================================================
+  // GET PRESENTATION URL
+  // =======================================================
+  //
+  // Supports multiple backend naming conventions.
+  //
+  // =======================================================
+
+  const getPresentationUrl = (
+    booking
+  ) => {
+
+    if (!booking) {
+
+      return "";
+
+    }
+
+
+    return (
+      booking.presentation_url ||
+      booking.presentationUrl ||
+      booking.presentation_file_url ||
+      booking.presentation_file ||
+      booking.presentationURL ||
+      ""
+    );
+
+  };
+
+
+  // =======================================================
+  // CHECK PRESENTATION
+  // =======================================================
+
+  const hasPresentation = (
+    booking
+  ) => {
+
+    return Boolean(
+      getPresentationUrl(
+        booking
+      )
+    );
+
+  };
+
+
+  // =======================================================
+  // VIEW PRESENTATION
+  // =======================================================
+
+  const handleViewPresentation = (
+    booking
+  ) => {
+
+    const url =
+      getPresentationUrl(
+        booking
+      );
+
+
+    if (!url) {
+
+      alert(
+        "No presentation was uploaded by this participant."
+      );
+
+      return;
+
+    }
+
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+  };
+
+
+  // =======================================================
+  // DOWNLOAD PRESENTATION
+  // =======================================================
+
+  const handleDownloadPresentation = (
+    booking
+  ) => {
+
+    const url =
+      getPresentationUrl(
+        booking
+      );
+
+
+    if (!url) {
+
+      alert(
+        "No presentation was uploaded by this participant."
+      );
+
+      return;
+
+    }
+
+
+    const memberName =
+      booking.full_name ||
+      booking.user_name ||
+      booking.username ||
+      "Participant";
+
+
+    const safeName =
+      memberName
+        .replace(
+          /[^a-z0-9]/gi,
+          "_"
+        )
+        .substring(
+          0,
+          50
+        );
+
+
+    const link =
+      document.createElement(
+        "a"
+      );
+
+    link.href = url;
+
+    link.target = "_blank";
+
+    link.rel =
+      "noopener noreferrer";
+
+    link.download =
+      `Presentation_${safeName}`;
+
+
+    document.body.appendChild(
+      link
+    );
+
+    link.click();
+
+    document.body.removeChild(
+      link
+    );
+
+  };
+
+
+  // =======================================================
   // STATUS CLASS
   // =======================================================
 
@@ -625,12 +808,9 @@ function RegisteredEventUsers() {
 
 
     if (
-      value ===
-        "confirmed" ||
-      value ===
-        "verified" ||
-      value ===
-        "paid"
+      value === "confirmed" ||
+      value === "verified" ||
+      value === "paid"
     ) {
 
       return "status-success";
@@ -639,12 +819,9 @@ function RegisteredEventUsers() {
 
 
     if (
-      value ===
-        "pending" ||
-      value ===
-        "payment_pending" ||
-      value ===
-        "submitted"
+      value === "pending" ||
+      value === "payment_pending" ||
+      value === "submitted"
     ) {
 
       return "status-warning";
@@ -653,10 +830,8 @@ function RegisteredEventUsers() {
 
 
     if (
-      value ===
-        "rejected" ||
-      value ===
-        "cancelled"
+      value === "rejected" ||
+      value === "cancelled"
     ) {
 
       return "status-danger";
@@ -678,7 +853,9 @@ function RegisteredEventUsers() {
   ) => {
 
     if (!status) {
+
       return "N/A";
+
     }
 
 
@@ -719,7 +896,9 @@ function RegisteredEventUsers() {
 
   const closeUser = () => {
 
-    setSelectedUser(null);
+    setSelectedUser(
+      null
+    );
 
   };
 
@@ -730,93 +909,233 @@ function RegisteredEventUsers() {
 
   const exportUsersPDF = () => {
 
-    if (!filteredUsers.length) {
-      alert("No registered users available to export.");
+    if (
+      !filteredUsers.length
+    ) {
+
+      alert(
+        "No registered users available to export."
+      );
+
       return;
+
     }
 
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "mm",
-      format: "a4",
-    });
 
-    const eventName = getEventName();
+    const doc =
+      new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("SNICT", 14, 16);
 
-    doc.setFontSize(14);
-    doc.text("Registered Users in Event", 14, 25);
+    const eventName =
+      getEventName();
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Event: ${eventName}`, 14, 33);
-    doc.text(`Generated: ${formatDateTime(new Date())}`, 14, 39);
-    doc.text(`Total Registered: ${filteredUsers.length}`, 210, 33);
 
-    const rows = filteredUsers.map((booking, index) => [
-      index + 1,
-      booking.full_name ||
-        booking.user_name ||
-        booking.username ||
-        "Unknown User",
-      booking.email || "-",
-      booking.mobile || "-",
-      booking.booking_code || `#${booking.id}`,
-      getStatusLabel(
-        booking.booking_status ||
-        booking.status
-      ),
-      getStatusLabel(booking.payment_status),
-      formatDateTime(
-        booking.booking_created_at ||
-        booking.created_at
-      ),
-    ]);
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
 
-    autoTable(doc, {
-      startY: 47,
-      head: [[
-        "#",
-        "Member",
-        "Email",
-        "Mobile",
-        "Booking Code",
-        "Booking Status",
-        "Payment",
-        "Registered On",
-      ]],
-      body: rows,
-      theme: "grid",
-      styles: {
-        fontSize: 8,
-        cellPadding: 3,
-        valign: "middle",
-      },
-      headStyles: {
-        fontStyle: "bold",
-      },
-      didDrawPage: (data) => {
-        const pageHeight = doc.internal.pageSize.height;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.text(
-          `SNICT • Registered Event Members • Page ${data.pageNumber}`,
-          14,
-          pageHeight - 8
+    doc.setFontSize(
+      18
+    );
+
+    doc.text(
+      "SNICT",
+      14,
+      16
+    );
+
+
+    doc.setFontSize(
+      14
+    );
+
+    doc.text(
+      "Registered Users in Event",
+      14,
+      25
+    );
+
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    doc.setFontSize(
+      10
+    );
+
+    doc.text(
+      `Event: ${eventName}`,
+      14,
+      33
+    );
+
+    doc.text(
+      `Generated: ${formatDateTime(new Date())}`,
+      14,
+      39
+    );
+
+    doc.text(
+      `Total Registered: ${filteredUsers.length}`,
+      210,
+      33
+    );
+
+
+    const rows =
+      filteredUsers.map(
+        (
+          booking,
+          index
+        ) => [
+
+          index + 1,
+
+          booking.full_name ||
+          booking.user_name ||
+          booking.username ||
+          "Unknown User",
+
+          booking.email ||
+          "-",
+
+          booking.mobile ||
+          "-",
+
+          booking.booking_code ||
+          `#${booking.id}`,
+
+          getStatusLabel(
+            booking.booking_status ||
+            booking.status
+          ),
+
+          getStatusLabel(
+            booking.payment_status
+          ),
+
+          hasPresentation(
+            booking
+          )
+            ? "Uploaded"
+            : "Not Uploaded",
+
+          formatDateTime(
+            booking.booking_created_at ||
+            booking.created_at
+          ),
+
+        ]
+      );
+
+
+    autoTable(
+      doc,
+      {
+
+        startY: 47,
+
+        head: [[
+
+          "#",
+
+          "Member",
+
+          "Email",
+
+          "Mobile",
+
+          "Booking Code",
+
+          "Booking Status",
+
+          "Payment",
+
+          "Presentation",
+
+          "Registered On",
+
+        ]],
+
+        body: rows,
+
+        theme: "grid",
+
+        styles: {
+
+          fontSize: 7,
+
+          cellPadding: 2.5,
+
+          valign: "middle",
+
+        },
+
+        headStyles: {
+
+          fontStyle:
+            "bold",
+
+        },
+
+        didDrawPage:
+          (data) => {
+
+            const pageHeight =
+              doc.internal.pageSize.height;
+
+
+            doc.setFont(
+              "helvetica",
+              "normal"
+            );
+
+            doc.setFontSize(
+              8
+            );
+
+
+            doc.text(
+
+              `SNICT • Registered Event Members • Page ${data.pageNumber}`,
+
+              14,
+
+              pageHeight - 8
+
+            );
+
+          },
+
+      }
+    );
+
+
+    const safeName =
+      eventName
+
+        .replace(
+          /[^a-z0-9]/gi,
+          "_"
+        )
+
+        .substring(
+          0,
+          50
         );
-      },
-    });
 
-    const safeName = eventName
-      .replace(/[^a-z0-9]/gi, "_")
-      .substring(0, 50);
 
     doc.save(
       `SNICT_Registered_Users_${safeName}.pdf`
     );
+
   };
 
 
@@ -824,17 +1143,24 @@ function RegisteredEventUsers() {
   // EXPORT INDIVIDUAL MEMBER PDF
   // =======================================================
 
-  const exportMemberPDF = (booking) => {
+  const exportMemberPDF = (
+    booking
+  ) => {
 
     if (!booking) {
+
       return;
+
     }
 
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
+
+    const doc =
+      new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
 
     const eventName =
       booking.event_title ||
@@ -842,158 +1168,319 @@ function RegisteredEventUsers() {
       selectedEvent?.title ||
       "Event";
 
+
     const memberName =
       booking.full_name ||
       booking.user_name ||
       booking.username ||
       "Member";
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("SNICT", 20, 20);
 
-    doc.setFontSize(15);
-    doc.text("Event Registration Details", 20, 30);
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
+    doc.setFontSize(
+      20
+    );
+
+    doc.text(
+      "SNICT",
+      20,
+      20
+    );
+
+
+    doc.setFontSize(
+      15
+    );
+
+    doc.text(
+      "Event Registration Details",
+      20,
+      30
+    );
+
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    doc.setFontSize(
+      10
+    );
+
     doc.text(
       `Generated: ${formatDateTime(new Date())}`,
       20,
       38
     );
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.text("Member Information", 20, 52);
 
-    autoTable(doc, {
-      startY: 58,
-      theme: "grid",
-      body: [
-        ["Full Name", memberName],
-        ["Username", booking.username || "-"],
-        ["Email", booking.email || "-"],
-        ["Mobile", booking.mobile || "-"],
-      ],
-      styles: {
-        fontSize: 10,
-        cellPadding: 4,
-      },
-      columnStyles: {
-        0: {
-          fontStyle: "bold",
-          cellWidth: 45,
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    doc.setFontSize(
+      13
+    );
+
+    doc.text(
+      "Member Information",
+      20,
+      52
+    );
+
+
+    autoTable(
+      doc,
+      {
+
+        startY: 58,
+
+        theme: "grid",
+
+        body: [
+
+          [
+            "Full Name",
+            memberName
+          ],
+
+          [
+            "Username",
+            booking.username ||
+            "-"
+          ],
+
+          [
+            "Email",
+            booking.email ||
+            "-"
+          ],
+
+          [
+            "Mobile",
+            booking.mobile ||
+            "-"
+          ],
+
+        ],
+
+        styles: {
+
+          fontSize: 10,
+
+          cellPadding: 4,
+
         },
-        1: {
-          cellWidth: 125,
+
+        columnStyles: {
+
+          0: {
+
+            fontStyle:
+              "bold",
+
+            cellWidth: 45,
+
+          },
+
+          1: {
+
+            cellWidth: 125,
+
+          },
+
         },
-      },
-    });
+
+      }
+    );
+
 
     let currentY =
-      (doc.lastAutoTable?.finalY || 58) + 14;
+      (
+        doc.lastAutoTable?.finalY ||
+        58
+      ) + 14;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    doc.setFontSize(
+      13
+    );
+
     doc.text(
       "Event & Registration",
       20,
       currentY
     );
 
+
     currentY += 6;
 
-    autoTable(doc, {
-      startY: currentY,
-      theme: "grid",
-      body: [
-        ["Event", eventName],
-        [
-          "Event Date",
-          formatDate(
-            booking.event_date ||
-            selectedEvent?.event_date
-          ),
+
+    autoTable(
+      doc,
+      {
+
+        startY:
+          currentY,
+
+        theme:
+          "grid",
+
+        body: [
+
+          [
+            "Event",
+            eventName
+          ],
+
+          [
+            "Event Date",
+            formatDate(
+              booking.event_date ||
+              selectedEvent?.event_date
+            ),
+          ],
+
+          [
+            "Booking Code",
+            booking.booking_code ||
+            `#${booking.id}`,
+          ],
+
+          [
+            "Booking Amount",
+            formatCurrency(
+              booking.amount
+            ),
+          ],
+
+          [
+            "Booking Status",
+            getStatusLabel(
+              booking.booking_status ||
+              booking.status
+            ),
+          ],
+
+          [
+            "Payment Status",
+            getStatusLabel(
+              booking.payment_status
+            ),
+          ],
+
+          [
+            "Payment Method",
+            booking.payment_method ||
+            "-"
+          ],
+
+          [
+            "Transaction ID",
+            booking.transaction_id ||
+            "Not submitted",
+          ],
+
+          [
+            "Registered On",
+            formatDateTime(
+              booking.booking_created_at ||
+              booking.created_at
+            ),
+          ],
+
+          [
+            "Presentation",
+            hasPresentation(
+              booking
+            )
+              ? "Uploaded"
+              : "Not uploaded",
+          ],
+
         ],
-        [
-          "Booking Code",
-          booking.booking_code ||
-          `#${booking.id}`,
-        ],
-        [
-          "Booking Amount",
-          formatCurrency(booking.amount),
-        ],
-        [
-          "Booking Status",
-          getStatusLabel(
-            booking.booking_status ||
-            booking.status
-          ),
-        ],
-        [
-          "Payment Status",
-          getStatusLabel(
-            booking.payment_status
-          ),
-        ],
-        [
-          "Payment Method",
-          booking.payment_method || "-",
-        ],
-        [
-          "Transaction ID",
-          booking.transaction_id ||
-          "Not submitted",
-        ],
-        [
-          "Registered On",
-          formatDateTime(
-            booking.booking_created_at ||
-            booking.created_at
-          ),
-        ],
-        [
-          "Presentation",
-          booking.presentation_url
-            ? "Uploaded"
-            : "Not uploaded",
-        ],
-      ],
-      styles: {
-        fontSize: 10,
-        cellPadding: 4,
-      },
-      columnStyles: {
-        0: {
-          fontStyle: "bold",
-          cellWidth: 45,
+
+        styles: {
+
+          fontSize: 10,
+
+          cellPadding: 4,
+
         },
-        1: {
-          cellWidth: 125,
+
+        columnStyles: {
+
+          0: {
+
+            fontStyle:
+              "bold",
+
+            cellWidth: 45,
+
+          },
+
+          1: {
+
+            cellWidth: 125,
+
+          },
+
         },
-      },
-    });
+
+      }
+    );
+
 
     const pageHeight =
       doc.internal.pageSize.height;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    doc.setFontSize(
+      9
+    );
+
+
     doc.text(
       "This document is generated from the SNICT Event Management System.",
       20,
       pageHeight - 15
     );
 
-    const safeMemberName = memberName
-      .replace(/[^a-z0-9]/gi, "_")
-      .substring(0, 40);
+
+    const safeMemberName =
+      memberName
+
+        .replace(
+          /[^a-z0-9]/gi,
+          "_"
+        )
+
+        .substring(
+          0,
+          40
+        );
+
 
     doc.save(
       `SNICT_${safeMemberName}_Registration.pdf`
     );
+
   };
 
 
@@ -1003,7 +1490,9 @@ function RegisteredEventUsers() {
 
   const getEventName = () => {
 
-    if (selectedEvent) {
+    if (
+      selectedEvent
+    ) {
 
       return (
         selectedEvent.title ||
@@ -1023,13 +1512,19 @@ function RegisteredEventUsers() {
   // LOADING
   // =======================================================
 
-  if (loading) {
+  if (
+    loading
+  ) {
 
     return (
 
-      <div className="registered-users-page">
+      <div
+        className="registered-users-page"
+      >
 
-        <div className="registered-users-loading">
+        <div
+          className="registered-users-loading"
+        >
 
           <RefreshCw
             size={34}
@@ -1060,15 +1555,21 @@ function RegisteredEventUsers() {
 
   return (
 
-    <div className="registered-users-page">
+    <div
+      className="registered-users-page"
+    >
 
       {/* ===================================================
           HEADER
       =================================================== */}
 
-      <div className="registered-users-header">
+      <div
+        className="registered-users-header"
+      >
 
-        <div className="registered-users-header-left">
+        <div
+          className="registered-users-header-left"
+        >
 
           <button
             type="button"
@@ -1091,7 +1592,9 @@ function RegisteredEventUsers() {
 
           <div>
 
-            <div className="registered-users-eyebrow">
+            <div
+              className="registered-users-eyebrow"
+            >
 
               <Users
                 size={16}
@@ -1117,7 +1620,9 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-users-header-actions">
+        <div
+          className="registered-users-header-actions"
+        >
 
           <button
             type="button"
@@ -1125,7 +1630,9 @@ function RegisteredEventUsers() {
             onClick={() =>
               loadData(true)
             }
-            disabled={refreshing}
+            disabled={
+              refreshing
+            }
           >
 
             <RefreshCw
@@ -1145,7 +1652,9 @@ function RegisteredEventUsers() {
           <button
             type="button"
             className="registered-users-export"
-            onClick={exportUsersPDF}
+            onClick={
+              exportUsersPDF
+            }
             disabled={
               filteredUsers.length === 0
             }
@@ -1170,7 +1679,9 @@ function RegisteredEventUsers() {
 
       {error && (
 
-        <div className="registered-users-alert error">
+        <div
+          className="registered-users-alert error"
+        >
 
           <AlertCircle
             size={19}
@@ -1189,11 +1700,17 @@ function RegisteredEventUsers() {
           STATISTICS
       =================================================== */}
 
-      <div className="registered-users-stats">
+      <div
+        className="registered-users-stats"
+      >
 
-        <div className="registered-stat-card">
+        <div
+          className="registered-stat-card"
+        >
 
-          <div className="registered-stat-icon">
+          <div
+            className="registered-stat-icon"
+          >
 
             <Users
               size={21}
@@ -1216,9 +1733,13 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-stat-card">
+        <div
+          className="registered-stat-card"
+        >
 
-          <div className="registered-stat-icon success">
+          <div
+            className="registered-stat-icon success"
+          >
 
             <CheckCircle2
               size={21}
@@ -1241,9 +1762,13 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-stat-card">
+        <div
+          className="registered-stat-card"
+        >
 
-          <div className="registered-stat-icon warning">
+          <div
+            className="registered-stat-icon warning"
+          >
 
             <Clock3
               size={21}
@@ -1266,9 +1791,13 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-stat-card">
+        <div
+          className="registered-stat-card"
+        >
 
-          <div className="registered-stat-icon verified">
+          <div
+            className="registered-stat-icon verified"
+          >
 
             <CreditCard
               size={21}
@@ -1297,9 +1826,13 @@ function RegisteredEventUsers() {
           FILTER PANEL
       =================================================== */}
 
-      <div className="registered-users-filter-panel">
+      <div
+        className="registered-users-filter-panel"
+      >
 
-        <div className="registered-filter-group event-filter">
+        <div
+          className="registered-filter-group event-filter"
+        >
 
           <label>
             Select Event
@@ -1338,13 +1871,17 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-filter-group search-filter">
+        <div
+          className="registered-filter-group search-filter"
+        >
 
           <label>
             Search Member
           </label>
 
-          <div className="registered-search-box">
+          <div
+            className="registered-search-box"
+          >
 
             <Search
               size={18}
@@ -1383,7 +1920,9 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-filter-group">
+        <div
+          className="registered-filter-group"
+        >
 
           <label>
             Booking Status
@@ -1433,7 +1972,9 @@ function RegisteredEventUsers() {
         </div>
 
 
-        <div className="registered-filter-group">
+        <div
+          className="registered-filter-group"
+        >
 
           <label>
             Payment
@@ -1487,9 +2028,13 @@ function RegisteredEventUsers() {
 
       {selectedEvent && (
 
-        <div className="registered-selected-event">
+        <div
+          className="registered-selected-event"
+        >
 
-          <div className="selected-event-icon">
+          <div
+            className="selected-event-icon"
+          >
 
             <CalendarDays
               size={23}
@@ -1531,9 +2076,13 @@ function RegisteredEventUsers() {
           TABLE
       =================================================== */}
 
-      <div className="registered-users-card">
+      <div
+        className="registered-users-card"
+      >
 
-        <div className="registered-users-card-header">
+        <div
+          className="registered-users-card-header"
+        >
 
           <div>
 
@@ -1542,18 +2091,22 @@ function RegisteredEventUsers() {
             </h2>
 
             <p>
+
               {filteredUsers.length}
               {" "}
               registered member
               {filteredUsers.length !== 1
                 ? "s"
                 : ""}
+
             </p>
 
           </div>
 
 
-          <div className="print-only-event-title">
+          <div
+            className="print-only-event-title"
+          >
 
             SNICT — Registered Event Members
 
@@ -1568,7 +2121,9 @@ function RegisteredEventUsers() {
 
         {filteredUsers.length === 0 ? (
 
-          <div className="registered-users-empty">
+          <div
+            className="registered-users-empty"
+          >
 
             <Users
               size={44}
@@ -1587,9 +2142,13 @@ function RegisteredEventUsers() {
 
         ) : (
 
-          <div className="registered-users-table-wrapper">
+          <div
+            className="registered-users-table-wrapper"
+          >
 
-            <table className="registered-users-table">
+            <table
+              className="registered-users-table"
+            >
 
               <thead>
 
@@ -1613,6 +2172,10 @@ function RegisteredEventUsers() {
 
                   <th>
                     Payment
+                  </th>
+
+                  <th>
+                    Presentation
                   </th>
 
                   <th>
@@ -1663,7 +2226,9 @@ function RegisteredEventUsers() {
 
                         <td>
 
-                          <div className="registered-member-cell">
+                          <div
+                            className="registered-member-cell"
+                          >
 
                             {booking.profile_image_url ? (
 
@@ -1676,7 +2241,9 @@ function RegisteredEventUsers() {
 
                             ) : (
 
-                              <div className="registered-member-avatar">
+                              <div
+                                className="registered-member-avatar"
+                              >
 
                                 <User
                                   size={18}
@@ -1715,9 +2282,12 @@ function RegisteredEventUsers() {
 
                         <td>
 
-                          <div className="registered-contact">
+                          <div
+                            className="registered-contact"
+                          >
 
                             <span>
+
                               <Mail
                                 size={14}
                               />
@@ -1730,6 +2300,7 @@ function RegisteredEventUsers() {
                             </span>
 
                             <span>
+
                               <Phone
                                 size={14}
                               />
@@ -1748,13 +2319,17 @@ function RegisteredEventUsers() {
 
                         <td>
 
-                          <div className="registered-booking-cell">
+                          <div
+                            className="registered-booking-cell"
+                          >
 
                             <strong>
+
                               {
                                 booking.booking_code ||
                                 `#${booking.id}`
                               }
+
                             </strong>
 
                             <span
@@ -1764,11 +2339,13 @@ function RegisteredEventUsers() {
                                 )}`
                               }
                             >
+
                               {
                                 getStatusLabel(
                                   bookingStatus
                                 )
                               }
+
                             </span>
 
                           </div>
@@ -1785,12 +2362,56 @@ function RegisteredEventUsers() {
                               )}`
                             }
                           >
+
                             {
                               getStatusLabel(
                                 paymentStatus
                               )
                             }
+
                           </span>
+
+                        </td>
+
+
+                        {/* =====================================
+                            PRESENTATION
+                        ===================================== */}
+
+                        <td>
+
+                          {hasPresentation(
+                            booking
+                          ) ? (
+
+                            <button
+                              type="button"
+                              className="registered-presentation-link"
+                              onClick={() =>
+                                handleViewPresentation(
+                                  booking
+                                )
+                              }
+                              title="View participant presentation"
+                            >
+
+                              <FileText
+                                size={16}
+                              />
+
+                              View
+
+                            </button>
+
+                          ) : (
+
+                            <span
+                              className="presentation-not-uploaded"
+                            >
+                              Not uploaded
+                            </span>
+
+                          )}
 
                         </td>
 
@@ -1853,7 +2474,9 @@ function RegisteredEventUsers() {
 
       {selectedUser && (
 
-        <div className="registered-user-modal no-print">
+        <div
+          className="registered-user-modal no-print"
+        >
 
           <div
             className="registered-user-modal-backdrop"
@@ -1863,9 +2486,13 @@ function RegisteredEventUsers() {
           />
 
 
-          <div className="registered-user-modal-card">
+          <div
+            className="registered-user-modal-card"
+          >
 
-            <div className="registered-user-modal-header">
+            <div
+              className="registered-user-modal-header"
+            >
 
               <div>
 
@@ -1896,7 +2523,9 @@ function RegisteredEventUsers() {
             </div>
 
 
-            <div className="registered-user-profile">
+            <div
+              className="registered-user-profile"
+            >
 
               {selectedUser.profile_image_url ? (
 
@@ -1909,7 +2538,9 @@ function RegisteredEventUsers() {
 
               ) : (
 
-                <div className="registered-user-profile-placeholder">
+                <div
+                  className="registered-user-profile-placeholder"
+                >
 
                   <User
                     size={30}
@@ -1944,9 +2575,13 @@ function RegisteredEventUsers() {
             </div>
 
 
-            <div className="registered-detail-grid">
+            <div
+              className="registered-detail-grid"
+            >
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Email
@@ -1962,7 +2597,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Mobile
@@ -1978,7 +2615,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Booking Code
@@ -1994,7 +2633,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Booking Amount
@@ -2011,7 +2652,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Booking Status
@@ -2022,15 +2665,19 @@ function RegisteredEventUsers() {
                   <span
                     className={
                       `status-pill ${getStatusClass(
-                        selectedUser.booking_status
+                        selectedUser.booking_status ||
+                        selectedUser.status
                       )}`
                     }
                   >
+
                     {
                       getStatusLabel(
-                        selectedUser.booking_status
+                        selectedUser.booking_status ||
+                        selectedUser.status
                       )
                     }
+
                   </span>
 
                 </strong>
@@ -2038,7 +2685,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Payment Status
@@ -2053,11 +2702,13 @@ function RegisteredEventUsers() {
                       )}`
                     }
                   >
+
                     {
                       getStatusLabel(
                         selectedUser.payment_status
                       )
                     }
+
                   </span>
 
                 </strong>
@@ -2065,7 +2716,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail full">
+              <div
+                className="registered-detail full"
+              >
 
                 <span>
                   Event
@@ -2082,7 +2735,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Event Date
@@ -2099,7 +2754,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Registered On
@@ -2117,7 +2774,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Payment Method
@@ -2133,7 +2792,9 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail">
+              <div
+                className="registered-detail"
+              >
 
                 <span>
                   Transaction ID
@@ -2149,47 +2810,86 @@ function RegisteredEventUsers() {
               </div>
 
 
-              <div className="registered-detail full">
+              {/* ============================================
+                  PRESENTATION
+              ============================================ */}
+
+              <div
+                className="registered-detail full"
+              >
 
                 <span>
                   Presentation
                 </span>
 
-                <strong>
 
-                  {selectedUser.presentation_url ? (
+                {hasPresentation(
+                  selectedUser
+                ) ? (
 
-                    <a
-                      href={
-                        selectedUser.presentation_url
-                      }
-                      target="_blank"
-                      rel="noreferrer"
+                  <div
+                    className="registered-presentation-actions"
+                  >
+
+                    <button
+                      type="button"
                       className="registered-presentation-link"
+                      onClick={() =>
+                        handleViewPresentation(
+                          selectedUser
+                        )
+                      }
                     >
 
-                      <FileText
+                      <Eye
                         size={16}
                       />
 
                       View Presentation
 
-                    </a>
+                      <ExternalLink
+                        size={14}
+                      />
 
-                  ) : (
+                    </button>
 
-                    "No presentation uploaded"
 
-                  )}
+                    <button
+                      type="button"
+                      className="registered-presentation-download"
+                      onClick={() =>
+                        handleDownloadPresentation(
+                          selectedUser
+                        )
+                      }
+                    >
 
-                </strong>
+                      <Download
+                        size={16}
+                      />
+
+                      Download
+
+                    </button>
+
+                  </div>
+
+                ) : (
+
+                  <strong>
+                    No presentation uploaded
+                  </strong>
+
+                )}
 
               </div>
 
             </div>
 
 
-            <div className="registered-user-modal-footer">
+            <div
+              className="registered-user-modal-footer"
+            >
 
               <button
                 type="button"
@@ -2208,7 +2908,9 @@ function RegisteredEventUsers() {
                 type="button"
                 className="registered-modal-primary"
                 onClick={() =>
-                  exportMemberPDF(selectedUser)
+                  exportMemberPDF(
+                    selectedUser
+                  )
                 }
               >
 

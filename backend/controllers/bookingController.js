@@ -977,6 +977,8 @@ const createBooking = async (
   }
 
 };
+
+
 // =========================================================
 // GET USER BOOKINGS
 // GET /api/bookings
@@ -1005,6 +1007,12 @@ const getMyBookings = async (
         b.amount,
 
         b.booking_status,
+
+        b.presentation_url,
+        b.presentation_public_id,
+        b.presentation_name,
+        b.presentation_type,
+        b.presentation_size,
 
         b.created_at,
         b.updated_at,
@@ -1166,6 +1174,12 @@ const getMyBookingById = async (
           b.amount,
 
           b.booking_status,
+
+          b.presentation_url,
+          b.presentation_public_id,
+          b.presentation_name,
+          b.presentation_type,
+          b.presentation_size,
 
           b.created_at,
           b.updated_at,
@@ -1531,8 +1545,6 @@ const getMyPass = async (
 
   }
 };
-
-
 // =========================================================
 // ADMIN - GET ALL BOOKINGS
 // GET /api/bookings/admin
@@ -1551,11 +1563,13 @@ const getAllBookings = async (
         SELECT
 
           b.id,
+
           b.id AS booking_id,
 
           b.booking_code,
 
           b.user_id,
+
           b.event_id,
 
           b.amount,
@@ -1563,6 +1577,17 @@ const getAllBookings = async (
           b.booking_status,
 
           b.booking_status AS status,
+
+          -- PRESENTATION
+          b.presentation_url,
+
+          b.presentation_public_id,
+
+          b.presentation_name,
+
+          b.presentation_type,
+
+          b.presentation_size,
 
           b.created_at
             AS booking_created_at,
@@ -1636,9 +1661,14 @@ const getAllBookings = async (
 
           ep.pass_code,
 
+          ep.pass_token,
+
           ep.valid_from,
 
-          ep.valid_until
+          ep.valid_until,
+
+          ep.created_at
+            AS pass_created_at
 
 
         FROM event_bookings b
@@ -1742,7 +1772,19 @@ const getAdminBookingById = async (
           b.booking_status
             AS status,
 
+          -- PRESENTATION
+          b.presentation_url,
+
+          b.presentation_public_id,
+
+          b.presentation_name,
+
+          b.presentation_type,
+
+          b.presentation_size,
+
           b.created_at,
+
           b.updated_at,
 
 
@@ -1908,6 +1950,8 @@ const getAdminBookingById = async (
 
   }
 };
+
+
 // =========================================================
 // ADMIN - UPDATE BOOKING STATUS
 // PUT /api/bookings/admin/:id/status
@@ -1934,6 +1978,7 @@ const updateBookingStatus = async (
 
   const client =
     await pool.connect();
+
 
   try {
 
@@ -1963,11 +2008,17 @@ const updateBookingStatus = async (
     // =====================================================
 
     const allowedBookingStatuses = [
+
       "payment_pending",
+
       "confirmed",
+
       "completed",
+
       "cancelled",
+
       "rejected",
+
     ];
 
 
@@ -2039,16 +2090,30 @@ const updateBookingStatus = async (
 
           b.user_id,
 
+          b.presentation_url,
+
+          b.presentation_public_id,
+
+          b.presentation_name,
+
+          b.presentation_type,
+
+          b.presentation_size,
+
           p.id AS payment_id,
 
           p.payment_status
 
+
         FROM event_bookings b
+
 
         LEFT JOIN event_payments p
           ON p.booking_id = b.id
 
+
         WHERE b.id = $1
+
 
         FOR UPDATE OF b
         `,
@@ -2091,12 +2156,6 @@ const updateBookingStatus = async (
     //
     // Payment MUST already be verified.
     //
-    // Payment Management:
-    // payment_status = verified
-    //
-    // Booking Management:
-    // booking_status = confirmed
-    //
     // =====================================================
 
     if (
@@ -2137,14 +2196,6 @@ const updateBookingStatus = async (
     // =====================================================
     // UPDATE BOOKING
     // =====================================================
-    //
-    // IMPORTANT:
-    //
-    // event_bookings HAS updated_at.
-    //
-    // event_payments DOES NOT.
-    //
-    // =====================================================
 
     await client.query(
       `
@@ -2174,9 +2225,6 @@ const updateBookingStatus = async (
     //
     // booking_status = confirmed
     // payment_status = verified
-    //
-    // createEventPass() contains the permanent
-    // PostgreSQL timestamp fix.
     //
     // =====================================================
 
@@ -2222,13 +2270,22 @@ const updateBookingStatus = async (
 
           b.booking_status AS status,
 
+          b.presentation_url,
+
+          b.presentation_public_id,
+
+          b.presentation_name,
+
+          b.presentation_type,
+
+          b.presentation_size,
+
           b.created_at,
 
           b.updated_at,
 
 
           -- USER
-
           u.full_name,
 
           u.username,
@@ -2237,7 +2294,6 @@ const updateBookingStatus = async (
 
 
           -- EVENT
-
           e.title AS event_title,
 
           e.title AS event_name,
@@ -2258,7 +2314,6 @@ const updateBookingStatus = async (
 
 
           -- PAYMENT
-
           p.id AS payment_id,
 
           p.payment_status,
@@ -2269,11 +2324,11 @@ const updateBookingStatus = async (
 
           p.payment_proof_url,
 
-          p.amount AS payment_amount,
+          p.amount
+            AS payment_amount,
 
 
           -- PASS
-
           ep.id AS pass_id,
 
           ep.pass_code,
@@ -2336,7 +2391,9 @@ const updateBookingStatus = async (
       message:
         finalBookingStatus ===
         "confirmed"
+
           ? "Booking confirmed successfully"
+
           : "Booking status updated successfully",
 
       booking:
@@ -2415,8 +2472,6 @@ const updateBookingStatus = async (
   }
 
 };
-
-
 // =========================================================
 // ADMIN - DELETE BOOKING
 // DELETE /api/bookings/admin/:id
@@ -2429,6 +2484,7 @@ const deleteBooking = async (
 
   const client =
     await pool.connect();
+
 
   try {
 
@@ -2450,18 +2506,39 @@ const deleteBooking = async (
     // CHECK BOOKING
     // =====================================================
 
-    const check =
+    const bookingResult =
       await client.query(
         `
         SELECT
 
-          id,
+          b.id,
 
-          booking_code
+          b.booking_code,
 
-        FROM event_bookings
+          b.event_id,
 
-        WHERE id = $1
+          b.user_id,
+
+          b.amount,
+
+          b.booking_status,
+
+          b.presentation_url,
+
+          b.presentation_public_id,
+
+          b.presentation_name,
+
+          b.presentation_type,
+
+          b.presentation_size
+
+
+        FROM event_bookings b
+
+
+        WHERE b.id = $1
+
 
         FOR UPDATE
         `,
@@ -2469,14 +2546,19 @@ const deleteBooking = async (
       );
 
 
+    // =====================================================
+    // BOOKING NOT FOUND
+    // =====================================================
+
     if (
-      check.rows.length ===
+      bookingResult.rows.length ===
       0
     ) {
 
       await client.query(
         "ROLLBACK"
       );
+
 
       return res.status(404).json({
 
@@ -2488,6 +2570,10 @@ const deleteBooking = async (
       });
 
     }
+
+
+    const booking =
+      bookingResult.rows[0];
 
 
     // =====================================================
@@ -2507,6 +2593,10 @@ const deleteBooking = async (
     // =====================================================
     // DELETE PAYMENT
     // =====================================================
+    //
+    // Payment belongs to booking.
+    //
+    // =====================================================
 
     await client.query(
       `
@@ -2522,21 +2612,14 @@ const deleteBooking = async (
     // DELETE BOOKING
     // =====================================================
 
-    const result =
-      await client.query(
-        `
-        DELETE FROM event_bookings
+    await client.query(
+      `
+      DELETE FROM event_bookings
 
-        WHERE id = $1
-
-        RETURNING
-
-          id,
-
-          booking_code
-        `,
-        [id]
-      );
+      WHERE id = $1
+      `,
+      [id]
+    );
 
 
     // =====================================================
@@ -2559,8 +2642,21 @@ const deleteBooking = async (
       message:
         "Booking deleted successfully",
 
-      booking:
-        result.rows[0],
+      booking: {
+
+        id:
+          booking.id,
+
+        booking_code:
+          booking.booking_code,
+
+        event_id:
+          booking.event_id,
+
+        user_id:
+          booking.user_id,
+
+      },
 
     });
 
@@ -2589,11 +2685,19 @@ const deleteBooking = async (
     }
 
 
+    // =====================================================
+    // ERROR LOG
+    // =====================================================
+
     console.error(
       "Delete booking error:",
       error
     );
 
+
+    // =====================================================
+    // ERROR RESPONSE
+    // =====================================================
 
     return res.status(500).json({
 
@@ -2618,14 +2722,16 @@ const deleteBooking = async (
   }
 
 };
+
+
 // =========================================================
-// EXPORTS
+// EXPORT CONTROLLERS
 // =========================================================
 
 module.exports = {
 
   // =======================================================
-  // USER BOOKING
+  // USER BOOKINGS
   // =======================================================
 
   createBooking,
@@ -2638,7 +2744,7 @@ module.exports = {
 
 
   // =======================================================
-  // ADMIN BOOKING
+  // ADMIN BOOKINGS
   // =======================================================
 
   getAllBookings,

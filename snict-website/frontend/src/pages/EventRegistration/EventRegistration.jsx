@@ -416,7 +416,7 @@ function EventRegistration() {
       // ===================================================
 
       const fileName =
-        file.name.toLowerCase();
+        String(file.name || "").toLowerCase();
 
       const allowedExtensions = [
         ".pdf",
@@ -455,7 +455,7 @@ function EventRegistration() {
 
       const mimeAllowed =
         allowedMimeTypes.includes(
-          file.type
+          file.type || ""
         );
 
 
@@ -655,7 +655,8 @@ function EventRegistration() {
 
           formData.append(
             "presentation",
-            presentationFile
+            presentationFile,
+            presentationFile.name
           );
 
         }
