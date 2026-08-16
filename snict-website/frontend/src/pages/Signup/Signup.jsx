@@ -462,10 +462,6 @@ function Signup() {
       return "Please enter a valid 12-digit Aadhaar number.";
     }
 
-    if (!aadhaarCard) {
-      return "Please upload your Aadhaar card.";
-    }
-
     if (form.password.length < 8) {
       return "Password must be at least 8 characters.";
     }
@@ -575,10 +571,12 @@ function Signup() {
         );
       }
 
-      formData.append(
-        "aadhaarCard",
-        aadhaarCard
-      );
+      if (aadhaarCard) {
+        formData.append(
+          "aadhaarCard",
+          aadhaarCard
+        );
+      }
 
       // Always issue the short-lived authentication session
       // because membership selection/payment now happens on
@@ -1227,7 +1225,7 @@ function Signup() {
 
               <div className="form-field">
                 <label htmlFor="aadhaarCard">
-                  Aadhaar Card
+                  Aadhaar Card <span className="optional-label">(Optional)</span>
                 </label>
 
                 <input
@@ -1236,11 +1234,10 @@ function Signup() {
                   name="aadhaarCard"
                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={handleAadhaarCardChange}
-                  required
                 />
 
                 <small className="field-help">
-                  PDF, JPG, JPEG, PNG or WEBP • Max 5 MB
+                  Optional • PDF, JPG, JPEG, PNG or WEBP • Max 5 MB
                   {aadhaarCard ? ` • ${aadhaarCard.name}` : ""}
                 </small>
               </div>
