@@ -1,690 +1,12 @@
-const pool = require("../config/db");
-const QRCode = require("qrcode");
+const pool =
+  require("../config/db");
 
-const {
-  sendMembershipApprovalWhatsApp,
-} = require("../services/whatsappService");
-
-
-// =========================================================
-// MEMBERSHIP CONTROLLER
-// SNICT
-// =========================================================
-//
-// Responsibilities:
-//
-// - Membership plans
-// - Membership applications
-// - Membership payments
-// - Payment verification
-// - Membership approval
-// - Membership rejection
-// - Membership renewal
-// - Membership QR generation
-// - Membership verification
-// - Admin membership management
-// - WhatsApp approval notification
-//
-// =========================================================
+const QRCode =
+  require("qrcode");
 
 
 // =========================================================
-// CONSTANTS
-// =========================================================
-
-const MEMBERSHIP_STATUS = {
-  PENDING: "pending",
-  APPROVED: "approved",
-  REJECTED: "rejected",
-  EXPIRED: "expired",
-};
-
-
-const PAYMENT_STATUS = {
-  PENDING: "pending",
-  RECEIVED: "received",
-  REJECTED: "rejected",
-};
-
-
-const DEFAULT_MEMBERSHIP_DURATION =
-  365;
-
-
-// =========================================================
-// CLIENT URL
-// =========================================================
-
-const getClientUrl = () => {
-
-  return (
-    process.env.CLIENT_URL ||
-    "http://localhost:5173"
-  ).replace(/\/$/, "");
-
-};
-
-
-// =========================================================
-// DATABASE ERROR HANDLER
-// =========================================================
-
-const sendDatabaseError = (
-  res,
-  message,
-  error
-) => {
-
-  console.error(
-    "===================================="
-  );
-
-  console.error(
-    "MEMBERSHIP ERROR"
-  );
-
-  console.error(
-    "Message:",
-    error?.message
-  );
-
-  console.error(
-    "Code:",
-    error?.code
-  );
-
-  console.error(
-    "Detail:",
-    error?.detail
-  );
-
-  console.error(
-    "Hint:",
-    error?.hint
-  );
-
-  console.error(
-    "Table:",
-    error?.table
-  );
-
-  console.error(
-    "Column:",
-    error?.column
-  );
-
-  console.error(
-    "Constraint:",
-    error?.constraint
-  );
-
-  console.error(
-    "===================================="
-  );
-
-
-  return res.status(500).json({
-
-    success: false,
-
-    message,
-
-    debug:
-      process.env.NODE_ENV !==
-      "production"
-        ? {
-            message:
-              error?.message,
-
-            code:
-              error?.code,
-
-            detail:
-              error?.detail,
-
-            hint:
-              error?.hint,
-
-            table:
-              error?.table,
-
-            column:
-              error?.column,
-
-            constraint:
-              error?.constraint,
-          }
-        : undefined,
-
-  });
-
-};
-
-
-// =========================================================
-// CLEAN MEMBERSHIP
-// =========================================================
-
-const cleanMembership = (
-  membership
-) => {
-
-  if (!membership) {
-    return null;
-  }
-
-
-  return {
-
-    id:
-      membership.id ??
-      null,
-
-    userId:
-      membership.user_id ??
-      null,
-
-    userName:
-      membership.user_name ??
-      membership.full_name ??
-      null,
-
-    fullName:
-      membership.full_name ??
-      membership.user_name ??
-      null,
-
-    username:
-      membership.username ??
-      null,
-
-    email:
-      membership.email ??
-      null,
-
-    mobile:
-      membership.mobile ??
-      null,
-
-    planId:
-      membership.plan_id ??
-      null,
-
-    planName:
-      membership.plan_name ??
-      null,
-
-    amount:
-      Number(
-        membership.amount ??
-        membership.plan_amount ??
-        0
-      ),
-
-    membershipNumber:
-      membership.membership_number ??
-      null,
-
-    status:
-      membership.status ??
-      MEMBERSHIP_STATUS.PENDING,
-
-    paymentStatus:
-      membership.payment_status ??
-      PAYMENT_STATUS.PENDING,
-
-    utr:
-      membership.utr ??
-      membership.transaction_id ??
-      null,
-
-    paymentProofUrl:
-      membership.payment_proof_url ??
-      null,
-
-    startDate:
-      membership.start_date ??
-      null,
-
-    expiryDate:
-      membership.expiry_date ??
-      null,
-
-    qrCode:
-      membership.qr_code ??
-      membership.qr_code_url ??
-      null,
-
-    verificationToken:
-      membership.verification_token ??
-      null,
-
-    rejectionReason:
-      membership.rejection_reason ??
-      null,
-
-    createdAt:
-      membership.created_at ??
-      null,
-
-    updatedAt:
-      membership.updated_at ??
-      null,
-
-
-    // =====================================================
-    // WHATSAPP
-    // =====================================================
-
-    whatsappStatus:
-      membership.whatsapp_status ??
-      "not_sent",
-
-    whatsappMessageId:
-      membership.whatsapp_message_id ??
-      null,
-
-    whatsappSentAt:
-      membership.whatsapp_sent_at ??
-      null,
-
-    whatsappError:
-      membership.whatsapp_error ??
-      null,
-
-  };
-
-};
-
-
-// =========================================================
-// GET USER DETAILS
-// =========================================================
-
-const getUserDetails = async (
-  client,
-  userId
-) => {
-
-  const result =
-    await client.query(
-      `
-      SELECT
-
-        id,
-
-        full_name,
-
-        username,
-
-        email,
-
-        mobile,
-
-        profile_image_url
-
-      FROM users
-
-      WHERE id = $1
-
-      LIMIT 1
-      `,
-      [
-        userId,
-      ]
-    );
-
-
-  return (
-    result.rows[0] ||
-    null
-  );
-
-};
-
-
-// =========================================================
-// GENERATE MEMBERSHIP NUMBER
-// =========================================================
-//
-// Example:
-//
-// SNICT-2026-0001
-//
-// =========================================================
-
-const generateMembershipNumber =
-  async (
-    client
-  ) => {
-
-    const year =
-      new Date()
-        .getFullYear();
-
-
-    for (
-      let attempt = 0;
-      attempt < 20;
-      attempt++
-    ) {
-
-      const randomNumber =
-        Math.floor(
-          1000 +
-          Math.random() *
-          9000
-        );
-
-
-      const membershipNumber =
-        `SNICT-${year}-${randomNumber}`;
-
-
-      const result =
-        await client.query(
-          `
-          SELECT id
-
-          FROM memberships
-
-          WHERE membership_number = $1
-
-          LIMIT 1
-          `,
-          [
-            membershipNumber,
-          ]
-        );
-
-
-      if (
-        result.rows.length === 0
-      ) {
-
-        return membershipNumber;
-
-      }
-
-    }
-
-
-    throw new Error(
-      "Unable to generate unique membership number"
-    );
-
-  };
-
-
-// =========================================================
-// GENERATE VERIFICATION TOKEN
-// =========================================================
-
-const generateVerificationToken =
-  () => {
-
-    return (
-      require("crypto")
-        .randomBytes(32)
-        .toString("hex")
-    );
-
-  };
-
-
-// =========================================================
-// GENERATE MEMBERSHIP QR
-// =========================================================
-
-const generateMembershipQr = async (
-  membershipNumber
-) => {
-
-  const verificationUrl =
-    `${getClientUrl()}/membership/verify/${encodeURIComponent(
-      membershipNumber
-    )}`;
-
-
-  return QRCode.toDataURL(
-    verificationUrl,
-    {
-      width: 500,
-
-      margin: 2,
-
-      errorCorrectionLevel:
-        "M",
-    }
-  );
-
-};
-
-
-// =========================================================
-// FORMAT DATE
-// =========================================================
-
-const formatDate = (
-  value
-) => {
-
-  if (!value) {
-    return null;
-  }
-
-
-  if (
-    typeof value === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(
-      value
-    )
-  ) {
-
-    return value;
-
-  }
-
-
-  const date =
-    value instanceof Date
-      ? value
-      : new Date(value);
-
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-
-    return null;
-
-  }
-
-
-  const year =
-    date.getFullYear();
-
-
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      date.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  return (
-    `${year}-${month}-${day}`
-  );
-
-};
-
-
-// =========================================================
-// ADD DAYS TO DATE
-// =========================================================
-
-const addDays = (
-  dateValue,
-  days
-) => {
-
-  const date =
-    new Date(
-      dateValue
-    );
-
-
-  date.setDate(
-    date.getDate() +
-    Number(days)
-  );
-
-
-  return formatDate(
-    date
-  );
-
-};
-
-
-// =========================================================
-// GET MEMBERSHIP EXPIRY DATE
-// =========================================================
-
-const calculateExpiryDate = (
-  startDate,
-  durationDays =
-    DEFAULT_MEMBERSHIP_DURATION
-) => {
-
-  return addDays(
-    startDate,
-    durationDays
-  );
-
-};
-
-
-// =========================================================
-// GET AMOUNT
-// =========================================================
-
-const getAmount = (
-  membership
-) => {
-
-  return Number(
-    membership?.amount ??
-    membership?.plan_amount ??
-    0
-  );
-
-};
-
-
-// =========================================================
-// GET PLAN NAME
-// =========================================================
-
-const getPlanName = (
-  membership
-) => {
-
-  return (
-    membership?.plan_name ||
-    membership?.planName ||
-    "Membership"
-  );
-
-};
-
-
-// =========================================================
-// GET USER NAME
-// =========================================================
-
-const getUserName = (
-  membership
-) => {
-
-  return (
-    membership?.full_name ||
-    membership?.user_name ||
-    membership?.username ||
-    "Member"
-  );
-
-};
-
-
-// =========================================================
-// GET MOBILE
-// =========================================================
-
-const getMobile = (
-  membership
-) => {
-
-  return (
-    membership?.mobile ||
-    membership?.phone ||
-    membership?.phone_number ||
-    ""
-  );
-
-};
-
-
-// =========================================================
-// MEMBERSHIP SELECT
-// =========================================================
-
-const membershipSelect = `
-  SELECT
-
-    m.*,
-
-    u.full_name,
-
-    u.username,
-
-    u.email,
-
-    u.mobile,
-
-    u.profile_image_url,
-
-    p.name AS plan_name,
-
-    p.duration_years AS plan_duration_years,
-
-    p.price AS plan_amount
-
-  FROM memberships m
-
-  LEFT JOIN users u
-    ON u.id = m.user_id
-
-  LEFT JOIN membership_plans p
-    ON p.id = m.plan_id
-`;
-
-
-// =========================================================
-// ENSURE MEMBERSHIP SCHEMA
+// MEMBERSHIP SCHEMA INITIALIZATION
 // =========================================================
 
 let schemaPromise = null;
@@ -702,12 +24,43 @@ const ensureMembershipSchema =
       (async () => {
 
         // ===================================================
-        // MEMBERSHIPS TABLE
+        // EXISTING MEMBERSHIPS TABLE
         // ===================================================
 
-        await pool.query(
-          `
+        await pool.query(`
           ALTER TABLE memberships
+
+          ADD COLUMN IF NOT EXISTS
+            membership_number VARCHAR(100),
+
+          ADD COLUMN IF NOT EXISTS
+            membership_type VARCHAR(100),
+
+          ADD COLUMN IF NOT EXISTS
+            status VARCHAR(50),
+
+          ADD COLUMN IF NOT EXISTS
+            applied_at TIMESTAMP
+              DEFAULT CURRENT_TIMESTAMP,
+
+          ADD COLUMN IF NOT EXISTS
+            approved_at TIMESTAMP,
+
+          ADD COLUMN IF NOT EXISTS
+            rejected_at TIMESTAMP,
+
+          ADD COLUMN IF NOT EXISTS
+            rejection_reason TEXT,
+
+          ADD COLUMN IF NOT EXISTS
+            updated_at TIMESTAMP
+              DEFAULT CURRENT_TIMESTAMP,
+
+          ADD COLUMN IF NOT EXISTS
+            qr_code TEXT,
+
+          ADD COLUMN IF NOT EXISTS
+            verification_token TEXT,
 
           ADD COLUMN IF NOT EXISTS
             plan_id INTEGER,
@@ -738,24 +91,7 @@ const ensureMembershipSchema =
             expiry_date TIMESTAMP,
 
           ADD COLUMN IF NOT EXISTS
-            approved_at TIMESTAMP,
-
-          ADD COLUMN IF NOT EXISTS
-            rejected_at TIMESTAMP,
-
-          ADD COLUMN IF NOT EXISTS
-            rejection_reason TEXT,
-
-          ADD COLUMN IF NOT EXISTS
-            qr_code TEXT,
-
-          ADD COLUMN IF NOT EXISTS
-            updated_at TIMESTAMP
-              DEFAULT CURRENT_TIMESTAMP,
-
-          ADD COLUMN IF NOT EXISTS
-            whatsapp_status VARCHAR(30)
-              DEFAULT 'not_sent',
+            whatsapp_status VARCHAR(50),
 
           ADD COLUMN IF NOT EXISTS
             whatsapp_message_id TEXT,
@@ -765,18 +101,15 @@ const ensureMembershipSchema =
 
           ADD COLUMN IF NOT EXISTS
             whatsapp_error TEXT
-          `
-        );
+        `);
 
 
         // ===================================================
         // MEMBERSHIP PLANS
         // ===================================================
 
-        await pool.query(
-          `
-          CREATE TABLE IF NOT EXISTS
-            membership_plans (
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS membership_plans (
 
             id SERIAL PRIMARY KEY,
 
@@ -801,20 +134,19 @@ const ensureMembershipSchema =
               DEFAULT CURRENT_TIMESTAMP
 
           )
-          `
-        );
+        `);
 
 
         // ===================================================
         // PAYMENT SETTINGS
         // ===================================================
 
-        await pool.query(
-          `
+        await pool.query(`
           CREATE TABLE IF NOT EXISTS
             membership_payment_settings (
 
-            id INTEGER PRIMARY KEY
+            id INTEGER
+              PRIMARY KEY
               DEFAULT 1,
 
             upi_id VARCHAR(255),
@@ -827,42 +159,42 @@ const ensureMembershipSchema =
               DEFAULT CURRENT_TIMESTAMP
 
           )
-          `
-        );
+        `);
 
 
         // ===================================================
         // DEFAULT PAYMENT SETTINGS
         // ===================================================
 
-        await pool.query(
-          `
+        await pool.query(`
           INSERT INTO
             membership_payment_settings
-            (id)
+          (
+            id
+          )
 
           VALUES
-            (1)
+          (
+            1
+          )
 
           ON CONFLICT (id)
           DO NOTHING
-          `
-        );
+        `);
 
 
         // ===================================================
-        // DEFAULT PLANS
+        // DEFAULT MEMBERSHIP PLANS
         // ===================================================
 
         const plansResult =
-          await pool.query(
-            `
+          await pool.query(`
             SELECT
-              COUNT(*)::INTEGER AS count
+              COUNT(*)::INTEGER
+                AS count
 
             FROM membership_plans
-            `
-          );
+          `);
 
 
         if (
@@ -871,41 +203,31 @@ const ensureMembershipSchema =
           ) === 0
         ) {
 
-          await pool.query(
-            `
+          await pool.query(`
             INSERT INTO membership_plans
             (
               name,
-
               duration_years,
-
               price,
-
               is_active
             )
 
             VALUES
+
             (
               '1 Year Membership',
-
               1,
-
               0,
-
               TRUE
             ),
 
             (
               '2 Year Membership',
-
               2,
-
               0,
-
               TRUE
             )
-            `
-          );
+          `);
 
           console.log(
             "Default membership plans created."
@@ -913,14 +235,66 @@ const ensureMembershipSchema =
 
         }
 
-      })()
-        .catch((error) => {
 
-          schemaPromise = null;
+        // ===================================================
+        // INDEXES
+        // ===================================================
+
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS
+            idx_memberships_utr_number
+
+          ON memberships(
+            utr_number
+          )
+        `);
+
+
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS
+            idx_memberships_user_id
+
+          ON memberships(
+            user_id
+          )
+        `);
+
+
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS
+            idx_memberships_status
+
+          ON memberships(
+            status
+          )
+        `);
+
+
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS
+            idx_memberships_number
+
+          ON memberships(
+            membership_number
+          )
+        `);
+
+
+        console.log(
+          "Membership schema verified"
+        );
+
+      })()
+      .catch(
+        (error) => {
+
+          schemaPromise =
+            null;
 
           throw error;
 
-        });
+        }
+      );
 
 
     return schemaPromise;
@@ -929,7 +303,380 @@ const ensureMembershipSchema =
 
 
 // =========================================================
-// MARK EXPIRED IF NEEDED
+// CLIENT URL
+// =========================================================
+
+const getClientUrl =
+  () => {
+
+    const configuredUrl =
+      String(
+        process.env.CLIENT_URL ||
+        process.env.FRONTEND_URL ||
+        ""
+      ).trim();
+
+
+    // -------------------------------------------------------
+    // IMPORTANT:
+    //
+    // QR generation must not crash membership approval
+    // simply because CLIENT_URL was not configured.
+    //
+    // Prefer environment variable.
+    // Fallback to the production frontend.
+    // -------------------------------------------------------
+
+    return (
+      configuredUrl ||
+      "https://snict.net"
+    ).replace(
+      /\/+$/,
+      ""
+    );
+
+  };
+
+
+// =========================================================
+// GENERATE MEMBERSHIP QR
+// =========================================================
+
+const generateMembershipQr =
+  async (
+    membershipNumber
+  ) => {
+
+    const clientUrl =
+      getClientUrl();
+
+
+    const verificationUrl =
+      `${clientUrl}/membership/verify/${encodeURIComponent(
+        membershipNumber
+      )}`;
+
+
+    console.log(
+      "Membership verification URL:",
+      verificationUrl
+    );
+
+
+    return QRCode.toDataURL(
+      verificationUrl,
+      {
+        width: 500,
+
+        margin: 2,
+
+        errorCorrectionLevel:
+          "H",
+      }
+    );
+
+  };
+
+
+// =========================================================
+// CLEAN MEMBERSHIP
+// =========================================================
+
+const cleanMembership =
+  (
+    membership
+  ) => {
+
+    if (!membership) {
+      return null;
+    }
+
+
+    return {
+
+      id:
+        membership.id,
+
+
+      userId:
+        membership.user_id,
+
+
+      membershipNumber:
+        membership.membership_number ||
+        null,
+
+
+      membershipType:
+        membership.membership_type ||
+        null,
+
+
+      status:
+        membership.status ||
+        null,
+
+
+      planId:
+        membership.plan_id ||
+        null,
+
+
+      planName:
+        membership.plan_name ||
+        null,
+
+
+      amount:
+        membership.amount !== null &&
+        membership.amount !== undefined
+
+          ? Number(
+              membership.amount
+            )
+
+          : null,
+
+
+      durationYears:
+        membership.duration_years !== null &&
+        membership.duration_years !== undefined
+
+          ? Number(
+              membership.duration_years
+            )
+
+          : null,
+
+
+      utrNumber:
+        membership.utr_number ||
+        null,
+
+
+      paymentStatus:
+        membership.payment_status ||
+        "not_submitted",
+
+
+      paymentSubmittedAt:
+        membership.payment_submitted_at ||
+        null,
+
+
+      paymentReceivedAt:
+        membership.payment_received_at ||
+        null,
+
+
+      appliedAt:
+        membership.applied_at ||
+        null,
+
+
+      approvedAt:
+        membership.approved_at ||
+        null,
+
+
+      startDate:
+        membership.start_date ||
+        null,
+
+
+      expiryDate:
+        membership.expiry_date ||
+        null,
+
+
+      rejectedAt:
+        membership.rejected_at ||
+        null,
+
+
+      rejectionReason:
+        membership.rejection_reason ||
+        null,
+
+
+      qrCode:
+        membership.qr_code ||
+        null,
+
+
+      verificationToken:
+        membership.verification_token ||
+        null,
+
+
+      whatsappStatus:
+        membership.whatsapp_status ||
+        null,
+
+
+      whatsappMessageId:
+        membership.whatsapp_message_id ||
+        null,
+
+
+      whatsappSentAt:
+        membership.whatsapp_sent_at ||
+        null,
+
+
+      whatsappError:
+        membership.whatsapp_error ||
+        null,
+
+
+      updatedAt:
+        membership.updated_at ||
+        null,
+
+
+      user:
+        membership.full_name
+
+          ? {
+
+              id:
+                membership.user_id,
+
+              fullName:
+                membership.full_name,
+
+              username:
+                membership.username,
+
+              email:
+                membership.email,
+
+              mobile:
+                membership.mobile,
+
+              age:
+                membership.age,
+
+              sex:
+                membership.sex,
+
+              address:
+                membership.address,
+
+              bloodGroup:
+                membership.blood_group,
+
+            }
+
+          : undefined,
+
+    };
+
+  };
+
+
+// =========================================================
+// MEMBERSHIP SELECT
+// =========================================================
+
+const membershipSelect = `
+
+  SELECT
+
+    m.id,
+
+    m.user_id,
+
+    m.membership_number,
+
+    m.membership_type,
+
+    m.status,
+
+
+    m.plan_id,
+
+    m.amount,
+
+    m.duration_years,
+
+
+    m.utr_number,
+
+    m.payment_status,
+
+    m.payment_submitted_at,
+
+    m.payment_received_at,
+
+
+    m.applied_at,
+
+    m.approved_at,
+
+
+    m.start_date,
+
+    m.expiry_date,
+
+
+    m.rejected_at,
+
+    m.rejection_reason,
+
+
+    m.qr_code,
+
+    m.verification_token,
+
+
+    m.whatsapp_status,
+
+    m.whatsapp_message_id,
+
+    m.whatsapp_sent_at,
+
+    m.whatsapp_error,
+
+
+    m.updated_at,
+
+
+    p.name AS plan_name,
+
+
+    u.full_name,
+
+    u.username,
+
+    u.email,
+
+    u.mobile,
+
+    u.age,
+
+    u.sex,
+
+    u.address,
+
+    u.blood_group
+
+
+  FROM memberships m
+
+
+  INNER JOIN users u
+    ON u.id = m.user_id
+
+
+  LEFT JOIN membership_plans p
+    ON p.id = m.plan_id
+
+`;
+
+
+// =========================================================
+// MARK EXPIRED
 // =========================================================
 
 const markExpiredIfNeeded =
@@ -943,21 +690,26 @@ const markExpiredIfNeeded =
 
       SET
 
-        status = 'expired',
+        status =
+          'expired',
 
         updated_at =
           CURRENT_TIMESTAMP
 
-      WHERE id = $1
+      WHERE
 
-        AND status = 'approved'
+        id = $1
+
+        AND status =
+          'approved'
 
         AND expiry_date IS NOT NULL
 
-        AND expiry_date <= CURRENT_TIMESTAMP
+        AND expiry_date <=
+          CURRENT_TIMESTAMP
       `,
       [
-        membershipId,
+        membershipId
       ]
     );
 
@@ -977,16 +729,21 @@ const markAllExpired =
 
       SET
 
-        status = 'expired',
+        status =
+          'expired',
 
         updated_at =
           CURRENT_TIMESTAMP
 
-      WHERE status = 'approved'
+      WHERE
+
+        status =
+          'approved'
 
         AND expiry_date IS NOT NULL
 
-        AND expiry_date <= CURRENT_TIMESTAMP
+        AND expiry_date <=
+          CURRENT_TIMESTAMP
       `
     );
 
@@ -994,135 +751,8 @@ const markAllExpired =
 
 
 // =========================================================
-// SEND APPROVAL WHATSAPP
-// =========================================================
+// USER - GET MY MEMBERSHIP
 //
-// WhatsApp is intentionally separate from the
-// membership database transaction.
-//
-// If WhatsApp fails:
-//
-// Membership remains APPROVED.
-//
-// =========================================================
-
-const sendApprovalWhatsApp =
-  async ({
-    membership,
-    membershipNumber,
-    startDate,
-    expiryDate,
-  }) => {
-
-    const user =
-      await getUserDetails(
-        pool,
-        membership.user_id
-      );
-
-
-    if (!user) {
-
-      return {
-
-        sent: false,
-
-        status: "failed",
-
-        messageId: null,
-
-        error:
-          "User not found.",
-
-      };
-
-    }
-
-
-    if (!user.mobile) {
-
-      return {
-
-        sent: false,
-
-        status: "failed",
-
-        messageId: null,
-
-        error:
-          "User does not have a mobile number.",
-
-      };
-
-    }
-
-
-    try {
-
-      const result =
-        await sendMembershipApprovalWhatsApp({
-
-          mobile:
-            user.mobile,
-
-          fullName:
-            user.full_name ||
-            "Member",
-
-          membershipNumber,
-
-          planName:
-            membership.plan_name ||
-            "Membership",
-
-          amount:
-            getAmount(
-              membership
-            ),
-
-          startDate,
-
-          expiryDate,
-
-          verificationUrl:
-            `${getClientUrl()}/membership/verify/${encodeURIComponent(
-              membershipNumber
-            )}`,
-
-        });
-
-
-      return result;
-
-    } catch (error) {
-
-      console.error(
-        "WhatsApp approval message error:",
-        error
-      );
-
-
-      return {
-
-        sent: false,
-
-        status: "failed",
-
-        messageId: null,
-
-        error:
-          error?.message ||
-          "WhatsApp message failed.",
-
-      };
-
-    }
-
-  };
-
-
-// =========================================================
-// USER - GET MEMBERSHIP
 // GET /api/membership/me
 // =========================================================
 
@@ -1144,18 +774,18 @@ const getMyMembership =
       const result =
         await pool.query(
           `
-
           ${membershipSelect}
 
-          WHERE m.user_id = $1
+          WHERE
+            m.user_id = $1
 
-          ORDER BY m.id DESC
+          ORDER BY
+            m.id DESC
 
           LIMIT 1
-
           `,
           [
-            userId,
+            userId
           ]
         );
 
@@ -1168,9 +798,11 @@ const getMyMembership =
 
           success: true,
 
-          hasMembership: false,
+          hasMembership:
+            false,
 
-          membership: null,
+          membership:
+            null,
 
         });
 
@@ -1189,16 +821,15 @@ const getMyMembership =
       const latest =
         await pool.query(
           `
-
           ${membershipSelect}
 
-          WHERE m.id = $1
+          WHERE
+            m.id = $1
 
           LIMIT 1
-
           `,
           [
-            membership.id,
+            membership.id
           ]
         );
 
@@ -1207,7 +838,8 @@ const getMyMembership =
 
         success: true,
 
-        hasMembership: true,
+        hasMembership:
+          true,
 
         membership:
           cleanMembership(
@@ -1216,7 +848,9 @@ const getMyMembership =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Get my membership error:",
@@ -1224,7 +858,9 @@ const getMyMembership =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
@@ -1234,7 +870,9 @@ const getMyMembership =
         debug:
           process.env.NODE_ENV !==
           "production"
+
             ? error.message
+
             : undefined,
 
       });
@@ -1246,6 +884,7 @@ const getMyMembership =
 
 // =========================================================
 // USER - GET MEMBERSHIP PLANS
+//
 // GET /api/membership/plans
 // =========================================================
 
@@ -1263,7 +902,6 @@ const getMembershipPlans =
       const result =
         await pool.query(
           `
-
           SELECT
 
             id,
@@ -1282,10 +920,11 @@ const getMembershipPlans =
 
           FROM membership_plans
 
-          WHERE is_active = TRUE
+          WHERE
+            is_active = TRUE
 
-          ORDER BY duration_years ASC
-
+          ORDER BY
+            duration_years ASC
           `
         );
 
@@ -1296,7 +935,9 @@ const getMembershipPlans =
 
         plans:
           result.rows.map(
-            (plan) => ({
+            (
+              plan
+            ) => ({
 
               id:
                 plan.id,
@@ -1328,7 +969,9 @@ const getMembershipPlans =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Get membership plans error:",
@@ -1336,12 +979,22 @@ const getMembershipPlans =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
           "Unable to load membership plans",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
@@ -1352,6 +1005,7 @@ const getMembershipPlans =
 
 // =========================================================
 // USER - APPLY MEMBERSHIP
+//
 // POST /api/membership/apply
 // =========================================================
 
@@ -1381,11 +1035,15 @@ const applyMembership =
 
 
       if (
-        !Number.isInteger(planId) ||
+        !Number.isInteger(
+          planId
+        ) ||
         planId <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -1402,14 +1060,13 @@ const applyMembership =
       );
 
 
-      // ===================================================
+      // =====================================================
       // USER
-      // ===================================================
+      // =====================================================
 
       const userResult =
         await client.query(
           `
-
           SELECT id
 
           FROM users
@@ -1417,10 +1074,9 @@ const applyMembership =
           WHERE id = $1
 
           LIMIT 1
-
           `,
           [
-            userId,
+            userId
           ]
         );
 
@@ -1434,7 +1090,9 @@ const applyMembership =
         );
 
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -1446,14 +1104,13 @@ const applyMembership =
       }
 
 
-      // ===================================================
+      // =====================================================
       // PLAN
-      // ===================================================
+      // =====================================================
 
       const planResult =
         await client.query(
           `
-
           SELECT
 
             id,
@@ -1466,15 +1123,16 @@ const applyMembership =
 
           FROM membership_plans
 
-          WHERE id = $1
+          WHERE
+
+            id = $1
 
             AND is_active = TRUE
 
           LIMIT 1
-
           `,
           [
-            planId,
+            planId
           ]
         );
 
@@ -1488,7 +1146,9 @@ const applyMembership =
         );
 
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -1504,47 +1164,50 @@ const applyMembership =
         planResult.rows[0];
 
 
-      // ===================================================
+      // =====================================================
       // EXISTING MEMBERSHIP
-      // ===================================================
+      // =====================================================
 
       const existingResult =
         await client.query(
           `
-
           SELECT *
 
           FROM memberships
 
-          WHERE user_id = $1
+          WHERE
+            user_id = $1
 
-          ORDER BY id DESC
+          ORDER BY
+            id DESC
 
           LIMIT 1
-
           `,
           [
-            userId,
+            userId
           ]
         );
 
 
       if (
-        existingResult.rows.length > 0
+        existingResult.rows.length >
+        0
       ) {
 
         const existing =
           existingResult.rows[0];
 
 
-        // ===============================================
+        // ===================================================
         // EXPIRE OLD MEMBERSHIP
-        // ===============================================
+        // ===================================================
 
         if (
           existing.status ===
             "approved" &&
+
           existing.expiry_date &&
+
           new Date(
             existing.expiry_date
           ) <= new Date()
@@ -1552,21 +1215,20 @@ const applyMembership =
 
           await client.query(
             `
-
             UPDATE memberships
 
             SET
 
-              status = 'expired',
+              status =
+                'expired',
 
               updated_at =
                 CURRENT_TIMESTAMP
 
             WHERE id = $1
-
             `,
             [
-              existing.id,
+              existing.id
             ]
           );
 
@@ -1577,9 +1239,9 @@ const applyMembership =
         }
 
 
-        // ===============================================
-        // ACTIVE MEMBERSHIP
-        // ===============================================
+        // ===================================================
+        // ACTIVE
+        // ===================================================
 
         if (
           existing.status ===
@@ -1591,7 +1253,9 @@ const applyMembership =
           );
 
 
-          return res.status(400).json({
+          return res.status(
+            400
+          ).json({
 
             success: false,
 
@@ -1608,9 +1272,9 @@ const applyMembership =
         }
 
 
-        // ===============================================
-        // PENDING MEMBERSHIP
-        // ===============================================
+        // ===================================================
+        // PENDING
+        // ===================================================
 
         if (
           existing.status ===
@@ -1622,7 +1286,9 @@ const applyMembership =
           );
 
 
-          return res.status(400).json({
+          return res.status(
+            400
+          ).json({
 
             success: false,
 
@@ -1639,13 +1305,14 @@ const applyMembership =
         }
 
 
-        // ===============================================
-        // EXPIRED / REJECTED
-        // ===============================================
+        // ===================================================
+        // REUSE EXPIRED / REJECTED
+        // ===================================================
 
         if (
           existing.status ===
             "expired" ||
+
           existing.status ===
             "rejected"
         ) {
@@ -1653,16 +1320,18 @@ const applyMembership =
           const result =
             await client.query(
               `
-
               UPDATE memberships
 
               SET
 
-                plan_id = $1,
+                plan_id =
+                  $1,
 
-                amount = $2,
+                amount =
+                  $2,
 
-                duration_years = $3,
+                duration_years =
+                  $3,
 
                 membership_type =
                   'regular',
@@ -1671,6 +1340,9 @@ const applyMembership =
                   'pending',
 
                 membership_number =
+                  NULL,
+
+                verification_token =
                   NULL,
 
                 utr_number =
@@ -1707,7 +1379,7 @@ const applyMembership =
                   NULL,
 
                 whatsapp_status =
-                  'not_sent',
+                  NULL,
 
                 whatsapp_message_id =
                   NULL,
@@ -1724,9 +1396,9 @@ const applyMembership =
               WHERE id = $4
 
               RETURNING *
-
               `,
               [
+
                 plan.id,
 
                 plan.price,
@@ -1734,6 +1406,7 @@ const applyMembership =
                 plan.duration_years,
 
                 existing.id,
+
               ]
             );
 
@@ -1762,14 +1435,13 @@ const applyMembership =
       }
 
 
-      // ===================================================
+      // =====================================================
       // NEW MEMBERSHIP
-      // ===================================================
+      // =====================================================
 
       const result =
         await client.query(
           `
-
           INSERT INTO memberships
           (
             user_id,
@@ -1809,9 +1481,9 @@ const applyMembership =
           )
 
           RETURNING *
-
           `,
           [
+
             userId,
 
             plan.id,
@@ -1819,6 +1491,7 @@ const applyMembership =
             plan.price,
 
             plan.duration_years,
+
           ]
         );
 
@@ -1828,7 +1501,9 @@ const applyMembership =
       );
 
 
-      return res.status(201).json({
+      return res.status(
+        201
+      ).json({
 
         success: true,
 
@@ -1842,7 +1517,9 @@ const applyMembership =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       try {
 
@@ -1850,7 +1527,9 @@ const applyMembership =
           "ROLLBACK"
         );
 
-      } catch (rollbackError) {
+      } catch (
+        rollbackError
+      ) {
 
         console.error(
           "Rollback error:",
@@ -1866,7 +1545,9 @@ const applyMembership =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
@@ -1876,7 +1557,9 @@ const applyMembership =
         debug:
           process.env.NODE_ENV !==
           "production"
+
             ? error.message
+
             : undefined,
 
       });
@@ -1888,10 +1571,9 @@ const applyMembership =
     }
 
   };
-
-
-// =========================================================
-// USER - SUBMIT PAYMENT
+  // =========================================================
+// USER - SUBMIT PAYMENT / UTR
+//
 // POST /api/membership/payment
 // =========================================================
 
@@ -1916,12 +1598,15 @@ const submitPayment =
         );
 
 
-      const utrNumber =
+      const cleanUtr =
         String(
-          req.body.utrNumber ||
-          ""
+          req.body.utrNumber || ""
         ).trim();
 
+
+      // =====================================================
+      // VALIDATE MEMBERSHIP ID
+      // =====================================================
 
       if (
         !Number.isInteger(
@@ -1930,7 +1615,9 @@ const submitPayment =
         membershipId <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -1942,9 +1629,15 @@ const submitPayment =
       }
 
 
-      if (!utrNumber) {
+      // =====================================================
+      // VALIDATE UTR
+      // =====================================================
 
-        return res.status(400).json({
+      if (!cleanUtr) {
+
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -1957,11 +1650,13 @@ const submitPayment =
 
 
       if (
-        utrNumber.length < 6 ||
-        utrNumber.length > 100
+        cleanUtr.length < 6 ||
+        cleanUtr.length > 100
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -1973,24 +1668,27 @@ const submitPayment =
       }
 
 
+      // =====================================================
+      // FIND MEMBERSHIP
+      // =====================================================
+
       const membershipResult =
         await pool.query(
           `
-
           SELECT *
 
           FROM memberships
 
-          WHERE id = $1
+          WHERE
+
+            id = $1
 
             AND user_id = $2
 
           LIMIT 1
-
           `,
           [
             membershipId,
-
             userId,
           ]
         );
@@ -2000,7 +1698,9 @@ const submitPayment =
         membershipResult.rows.length === 0
       ) {
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -2016,461 +1716,46 @@ const submitPayment =
         membershipResult.rows[0];
 
 
-      if (
-        membership.status !==
-        "pending"
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            `Membership cannot accept payment because its status is "${membership.status}".`,
-
-        });
-
-      }
-
-
-      if (
-        membership.payment_status ===
-        "received"
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Payment has already been marked as received",
-
-        });
-
-      }
-
-
-      const result =
-        await pool.query(
-          `
-
-          UPDATE memberships
-
-          SET
-
-            utr_number = $1,
-
-            payment_status =
-              'submitted',
-
-            payment_submitted_at =
-              CURRENT_TIMESTAMP,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $2
-
-            AND user_id = $3
-
-          RETURNING *
-
-          `,
-          [
-            utrNumber,
-
-            membershipId,
-
-            userId,
-          ]
-        );
-
-
-      return res.json({
-
-        success: true,
-
-        message:
-          "Payment submitted successfully. Your membership is now waiting for admin approval.",
-
-        membership:
-          cleanMembership(
-            result.rows[0]
-          ),
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Submit payment error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to submit payment",
-
-        debug:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
-// ADMIN - GET ALL MEMBERSHIPS
-// GET /api/membership/admin
-// =========================================================
-
-const getAllMemberships =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      await markAllExpired();
-
-
-      const result =
-        await pool.query(
-          `
-
-          ${membershipSelect}
-
-          ORDER BY
-
-            CASE
-
-              WHEN m.status =
-                'pending'
-              THEN 1
-
-              WHEN m.status =
-                'approved'
-              THEN 2
-
-              WHEN m.status =
-                'expired'
-              THEN 3
-
-              WHEN m.status =
-                'rejected'
-              THEN 4
-
-              ELSE 5
-
-            END,
-
-            m.applied_at DESC
-
-          `
-        );
-
-
-      return res.json({
-
-        success: true,
-
-        memberships:
-          result.rows.map(
-            cleanMembership
-          ),
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Get memberships error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to fetch memberships",
-
-        debug:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
-// ADMIN - GET SINGLE MEMBERSHIP
-// GET /api/membership/admin/:id
-// =========================================================
-
-const getMembershipById =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      const id =
-        Number(
-          req.params.id
-        );
-
-
-      if (
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid membership ID",
-
-        });
-
-      }
-
-
-      const result =
-        await pool.query(
-          `
-
-          ${membershipSelect}
-
-          WHERE m.id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      if (
-        result.rows.length === 0
-      ) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Membership not found",
-
-        });
-
-      }
-
-
-      await markExpiredIfNeeded(
-        id
-      );
-
-
-      const latest =
-        await pool.query(
-          `
-
-          ${membershipSelect}
-
-          WHERE m.id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      return res.json({
-
-        success: true,
-
-        membership:
-          cleanMembership(
-            latest.rows[0]
-          ),
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Get membership error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to load membership",
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
-// ADMIN - MARK PAYMENT RECEIVED
-// PUT /api/membership/admin/:id/payment-received
-// =========================================================
-
-const markPaymentReceived =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      const id =
-        Number(
-          req.params.id
-        );
-
-
-      if (
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid membership ID",
-
-        });
-
-      }
-
-
-      const result =
-        await pool.query(
-          `
-
-          SELECT *
-
-          FROM memberships
-
-          WHERE id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      if (
-        result.rows.length === 0
-      ) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Membership not found",
-
-        });
-
-      }
-
-
-      const membership =
-        result.rows[0];
-
+      // =====================================================
+      // ONLY PENDING MEMBERSHIP
+      // =====================================================
 
       if (
         membership.status !==
         "pending"
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            `Payment cannot be verified because membership status is "${membership.status}".`,
+            "Payment cannot be submitted for this membership",
 
         });
 
       }
 
 
-      if (
-        !membership.utr_number
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "UTR number is required before marking payment as received.",
-
-        });
-
-      }
-
+      // =====================================================
+      // PREVENT DUPLICATE PAYMENT SUBMISSION
+      // =====================================================
 
       if (
         membership.payment_status ===
-        "received"
+        "submitted"
       ) {
 
-        return res.json({
+        return res.status(
+          400
+        ).json({
 
-          success: true,
+          success: false,
 
           message:
-            "Payment is already marked as received",
+            "Payment has already been submitted and is waiting for admin approval",
 
           membership:
             cleanMembership(
@@ -2482,1120 +1767,72 @@ const markPaymentReceived =
       }
 
 
-      const updated =
-        await pool.query(
-          `
-
-          UPDATE memberships
-
-          SET
-
-            payment_status =
-              'received',
-
-            payment_received_at =
-              CURRENT_TIMESTAMP,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
-
-          RETURNING *
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      return res.json({
-
-        success: true,
-
-        message:
-          "Payment marked as received successfully",
-
-        membership:
-          cleanMembership(
-            updated.rows[0]
-          ),
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Mark payment received error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to mark payment as received",
-
-        debug:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
-// ADMIN - MARK PAYMENT NOT RECEIVED
-// PUT /api/membership/admin/:id/payment-not-received
-// =========================================================
-
-const markPaymentNotReceived =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      const id =
-        Number(
-          req.params.id
-        );
-
+      // =====================================================
+      // PREVENT PAYMENT AFTER RECEIVED
+      // =====================================================
 
       if (
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid membership ID",
-
-        });
-
-      }
-
-
-      const result =
-        await pool.query(
-          `
-
-          SELECT *
-
-          FROM memberships
-
-          WHERE id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      if (
-        result.rows.length === 0
-      ) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Membership not found",
-
-        });
-
-      }
-
-
-      const membership =
-        result.rows[0];
-
-
-      if (
-        membership.status !==
-        "pending"
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            `Payment cannot be rejected because membership status is "${membership.status}".`,
-
-        });
-
-      }
-
-
-      const updated =
-        await pool.query(
-          `
-
-          UPDATE memberships
-
-          SET
-
-            payment_status =
-              'not_received',
-
-            payment_received_at =
-              NULL,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
-
-          RETURNING *
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      return res.json({
-
-        success: true,
-
-        message:
-          "Payment marked as not received",
-
-        membership:
-          cleanMembership(
-            updated.rows[0]
-          ),
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Mark payment not received error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to mark payment as not received",
-
-        debug:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
-// ADMIN - APPROVE MEMBERSHIP
-// PUT /api/membership/admin/:id/approve
-// =========================================================
-//
-// FLOW:
-//
-// Payment received
-//       ↓
-// UTR verified
-//       ↓
-// Membership approved
-//       ↓
-// Membership number generated
-//       ↓
-// QR generated
-//       ↓
-// Database COMMIT
-//       ↓
-// WhatsApp notification
-//
-// IMPORTANT:
-//
-// WhatsApp is intentionally sent AFTER COMMIT.
-// If WhatsApp fails, the approved membership remains approved.
-//
-// =========================================================
-
-const approveMembership =
-  async (
-    req,
-    res
-  ) => {
-
-    const client =
-      await pool.connect();
-
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      const id =
-        Number(
-          req.params.id
-        );
-
-
-      if (
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid membership ID",
-
-        });
-
-      }
-
-
-      await client.query(
-        "BEGIN"
-      );
-
-
-      // ===================================================
-      // GET MEMBERSHIP
-      // ===================================================
-
-      const membershipResult =
-        await client.query(
-          `
-
-          SELECT
-
-            m.*,
-
-            p.name AS plan_name,
-
-            p.duration_years
-              AS plan_duration_years,
-
-            p.price
-              AS plan_amount
-
-          FROM memberships m
-
-          LEFT JOIN membership_plans p
-
-            ON p.id =
-              m.plan_id
-
-          WHERE m.id = $1
-
-          FOR UPDATE OF m
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      if (
-        membershipResult.rows.length ===
-        0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Membership not found",
-
-        });
-
-      }
-
-
-      const membership =
-        membershipResult.rows[0];
-
-
-      // ===================================================
-      // MUST BE PENDING
-      // ===================================================
-
-      if (
-        membership.status !==
-        "pending"
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            `Membership cannot be approved because its current status is "${membership.status}".`,
-
-        });
-
-      }
-
-
-      // ===================================================
-      // PAYMENT MUST BE RECEIVED
-      // ===================================================
-
-      if (
-        membership.payment_status !==
+        membership.payment_status ===
         "received"
       ) {
 
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Payment must be marked as received before approving the membership.",
+            "Payment has already been verified by admin",
 
-          paymentStatus:
-            membership.payment_status,
-
-          utrNumber:
-            membership.utr_number ||
-            null,
+          membership:
+            cleanMembership(
+              membership
+            ),
 
         });
 
       }
 
 
-      // ===================================================
-      // UTR REQUIRED
-      // ===================================================
-
-      if (
-        !membership.utr_number
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "UTR number is required before approving membership.",
-
-        });
-
-      }
-
-
-      // ===================================================
-      // PLAN VALIDATION
-      // ===================================================
-
-      const durationYears =
-        Number(
-          membership.duration_years ||
-          membership.plan_duration_years ||
-          0
-        );
-
-
-      const amount =
-        Number(
-          membership.amount ??
-          membership.plan_amount ??
-          0
-        );
-
-
-      if (
-        durationYears <= 0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Membership duration is invalid.",
-
-        });
-
-      }
-
-
-      if (
-        amount <= 0
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Membership amount is invalid.",
-
-        });
-
-      }
-
-
-      // ===================================================
-      // GENERATE MEMBERSHIP NUMBER
-      // ===================================================
-
-      const membershipNumber =
-        await generateMembershipNumber(
-          client
-        );
-
-
-      // ===================================================
-      // START DATE
-      // ===================================================
-
-      const startDate =
-        new Date();
-
-
-      // ===================================================
-      // EXPIRY DATE
-      // ===================================================
-
-      const expiryDate =
-        new Date(
-          startDate
-        );
-
-
-      expiryDate.setFullYear(
-        expiryDate.getFullYear() +
-        durationYears
-      );
-
-
-      // ===================================================
-      // VERIFICATION TOKEN
-      // ===================================================
-
-      const verificationToken =
-        generateVerificationToken();
-
-
-      // ===================================================
-      // GENERATE VERIFICATION QR
-      // ===================================================
-
-      const qrCode =
-        await generateMembershipQr(
-          membershipNumber
-        );
-
-
-      // ===================================================
-      // UPDATE MEMBERSHIP
-      // ===================================================
-
-      const updateResult =
-        await client.query(
-          `
-
-          UPDATE memberships
-
-          SET
-
-            membership_number =
-              $1,
-
-            amount =
-              $2,
-
-            duration_years =
-              $3,
-
-            payment_status =
-              'received',
-
-            status =
-              'approved',
-
-            approved_at =
-              CURRENT_TIMESTAMP,
-
-            start_date =
-              $4,
-
-            expiry_date =
-              $5,
-
-            rejected_at =
-              NULL,
-
-            rejection_reason =
-              NULL,
-
-            qr_code =
-              $6,
-
-            verification_token =
-              $7,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $8
-
-          RETURNING *
-
-          `,
-          [
-            membershipNumber,
-
-            amount,
-
-            durationYears,
-
-            startDate,
-
-            expiryDate,
-
-            qrCode,
-
-            verificationToken,
-
-            id,
-          ]
-        );
-
-
-      // ===================================================
-      // COMMIT APPROVAL
-      // ===================================================
-
-      await client.query(
-        "COMMIT"
-      );
-
-
-      // ===================================================
-      // WHATSAPP
-      // ===================================================
-
-      let whatsappResult = {
-
-        sent: false,
-
-        status: "not_sent",
-
-        messageId: null,
-
-        error: null,
-
-      };
-
-
-      try {
-
-        const userResult =
-          await pool.query(
-            `
-
-            SELECT
-
-              id,
-
-              full_name,
-
-              mobile
-
-            FROM users
-
-            WHERE id = $1
-
-            LIMIT 1
-
-            `,
-            [
-              membership.user_id,
-            ]
-          );
-
-
-        const user =
-          userResult.rows[0];
-
-
-        if (
-          !user?.mobile
-        ) {
-
-          whatsappResult = {
-
-            sent: false,
-
-            status: "failed",
-
-            messageId: null,
-
-            error:
-              "User does not have a mobile number.",
-
-          };
-
-        } else {
-
-          whatsappResult =
-            await sendMembershipApprovalWhatsApp({
-
-              mobile:
-                user.mobile,
-
-              fullName:
-                user.full_name ||
-                "Member",
-
-              membershipNumber,
-
-              planName:
-                membership.plan_name ||
-                "Membership",
-
-              amount,
-
-              startDate,
-
-              expiryDate,
-
-              verificationUrl:
-                `${getClientUrl()}/membership/verify/${encodeURIComponent(
-                  membershipNumber
-                )}`,
-
-            });
-
-        }
-
-
-        // =================================================
-        // SAVE WHATSAPP STATUS
-        // =================================================
-
+      // =====================================================
+      // CHECK DUPLICATE UTR
+      // =====================================================
+
+      const duplicate =
         await pool.query(
           `
+          SELECT id
 
-          UPDATE memberships
+          FROM memberships
 
-          SET
+          WHERE
 
-            whatsapp_status =
-              $1,
+            utr_number = $1
 
-            whatsapp_message_id =
-              $2,
-
-            whatsapp_sent_at =
-              CASE
-
-                WHEN $1 = 'sent'
-
-                THEN CURRENT_TIMESTAMP
-
-                ELSE whatsapp_sent_at
-
-              END,
-
-            whatsapp_error =
-              $3,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $4
-
-          `,
-          [
-            whatsappResult.status,
-
-            whatsappResult.messageId,
-
-            whatsappResult.error,
-
-            id,
-          ]
-        );
-
-      } catch (whatsappError) {
-
-        console.error(
-          "Membership WhatsApp notification error:",
-          whatsappError
-        );
-
-
-        whatsappResult = {
-
-          sent: false,
-
-          status: "failed",
-
-          messageId: null,
-
-          error:
-            whatsappError.message ||
-            "WhatsApp notification failed.",
-
-        };
-
-
-        try {
-
-          await pool.query(
-            `
-
-            UPDATE memberships
-
-            SET
-
-              whatsapp_status =
-                'failed',
-
-              whatsapp_error =
-                $1,
-
-              updated_at =
-                CURRENT_TIMESTAMP
-
-            WHERE id = $2
-
-            `,
-            [
-              whatsappResult.error,
-
-              id,
-            ]
-          );
-
-        } catch (statusError) {
-
-          console.error(
-            "Unable to save WhatsApp failure status:",
-            statusError
-          );
-
-        }
-
-      }
-
-
-      // ===================================================
-      // GET FINAL MEMBERSHIP
-      // ===================================================
-
-      const finalResult =
-        await pool.query(
-          `
-
-          ${membershipSelect}
-
-          WHERE m.id = $1
+            AND id != $2
 
           LIMIT 1
-
           `,
           [
-            id,
-          ]
-        );
-
-
-      const finalMembership =
-        finalResult.rows[0];
-
-
-      // ===================================================
-      // RESPONSE
-      // ===================================================
-
-      return res.json({
-
-        success: true,
-
-        message:
-          whatsappResult.sent
-            ? "Membership approved successfully and WhatsApp notification sent."
-            : "Membership approved successfully, but WhatsApp notification could not be sent.",
-
-        membership:
-          cleanMembership(
-            finalMembership
-          ),
-
-        whatsapp: {
-
-          sent:
-            whatsappResult.sent,
-
-          status:
-            whatsappResult.status,
-
-          messageId:
-            whatsappResult.messageId,
-
-          error:
-            process.env.NODE_ENV !==
-            "production"
-              ? whatsappResult.error
-              : undefined,
-
-        },
-
-      });
-
-    } catch (error) {
-
-      try {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-      } catch (rollbackError) {
-
-        console.error(
-          "Rollback error:",
-          rollbackError
-        );
-
-      }
-
-
-      console.error(
-        "Approve membership error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to approve membership",
-
-        debug:
-          process.env.NODE_ENV !==
-          "production"
-            ? error.message
-            : undefined,
-
-      });
-
-    } finally {
-
-      client.release();
-
-    }
-
-  };
-  // =========================================================
-// ADMIN - REJECT MEMBERSHIP
-// PUT /api/membership/admin/:id/reject
-// =========================================================
-
-const rejectMembership =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      const id =
-        Number(
-          req.params.id
-        );
-
-
-      const reason =
-        String(
-          req.body?.reason ||
-          ""
-        ).trim();
-
-
-      // =====================================================
-      // VALIDATE ID
-      // =====================================================
-
-      if (
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid membership ID",
-
-        });
-
-      }
-
-
-      // =====================================================
-      // VALIDATE REASON
-      // =====================================================
-
-      if (!reason) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Rejection reason is required",
-
-        });
-
-      }
-
-
-      if (
-        reason.length > 1000
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Rejection reason cannot exceed 1000 characters",
-
-        });
-
-      }
-
-
-      // =====================================================
-      // FIND MEMBERSHIP
-      // =====================================================
-
-      const membershipResult =
-        await pool.query(
-          `
-
-          ${membershipSelect}
-
-          WHERE m.id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            id,
+            cleanUtr,
+            membershipId,
           ]
         );
 
 
       if (
-        membershipResult.rows.length ===
-        0
+        duplicate.rows.length > 0
       ) {
 
-        return res.status(404).json({
+        return res.status(
+          409
+        ).json({
 
           success: false,
 
           message:
-            "Membership not found",
-
-        });
-
-      }
-
-
-      const membership =
-        membershipResult.rows[0];
-
-
-      // =====================================================
-      // ALREADY REJECTED
-      // =====================================================
-
-      if (
-        membership.status ===
-        "rejected"
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Membership is already rejected",
+            "This UTR number has already been submitted",
 
         });
 
@@ -3603,73 +1840,53 @@ const rejectMembership =
 
 
       // =====================================================
-      // APPROVED MEMBERSHIP CANNOT BE REJECTED
-      // =====================================================
-
-      if (
-        membership.status ===
-        "approved"
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "An approved membership cannot be rejected",
-
-        });
-
-      }
-
-
-      // =====================================================
-      // UPDATE
+      // SAVE PAYMENT
       // =====================================================
 
       const result =
         await pool.query(
           `
-
           UPDATE memberships
 
           SET
 
-            status =
-              'rejected',
+            utr_number =
+              $1,
 
-            rejected_at =
+            payment_status =
+              'submitted',
+
+            payment_submitted_at =
               CURRENT_TIMESTAMP,
 
-            rejection_reason =
-              $1,
+            payment_received_at =
+              NULL,
 
             updated_at =
               CURRENT_TIMESTAMP
 
-          WHERE id = $2
+          WHERE
+
+            id = $2
+
+            AND user_id = $3
 
           RETURNING *
-
           `,
           [
-            reason,
-
-            id,
+            cleanUtr,
+            membershipId,
+            userId,
           ]
         );
 
-
-      // =====================================================
-      // RESPONSE
-      // =====================================================
 
       return res.json({
 
         success: true,
 
         message:
-          "Membership rejected successfully",
+          "Payment submitted successfully. Waiting for admin approval.",
 
         membership:
           cleanMembership(
@@ -3678,25 +1895,31 @@ const rejectMembership =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
-        "Reject membership error:",
+        "Submit payment error:",
         error
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
-          "Unable to reject membership",
+          "Unable to submit payment",
 
         debug:
           process.env.NODE_ENV !==
           "production"
+
             ? error.message
+
             : undefined,
 
       });
@@ -3708,6 +1931,7 @@ const rejectMembership =
 
 // =========================================================
 // USER - RENEW MEMBERSHIP
+//
 // POST /api/membership/renew
 // =========================================================
 
@@ -3716,10 +1940,6 @@ const renewMembership =
     req,
     res
   ) => {
-
-    const client =
-      await pool.connect();
-
 
     try {
 
@@ -3732,20 +1952,20 @@ const renewMembership =
 
       const planId =
         Number(
-          req.body?.planId
+          req.body.planId
         );
 
 
-      // =====================================================
-      // VALIDATE PLAN
-      // =====================================================
-
       if (
-        !Number.isInteger(planId) ||
+        !Number.isInteger(
+          planId
+        ) ||
         planId <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -3757,60 +1977,43 @@ const renewMembership =
       }
 
 
-      await client.query(
-        "BEGIN"
-      );
-
-
       // =====================================================
-      // GET PLAN
+      // PLAN
       // =====================================================
 
       const planResult =
-        await client.query(
+        await pool.query(
           `
-
-          SELECT
-
-            id,
-
-            name,
-
-            duration_years,
-
-            price
+          SELECT *
 
           FROM membership_plans
 
-          WHERE id = $1
+          WHERE
+
+            id = $1
 
             AND is_active = TRUE
 
           LIMIT 1
-
           `,
           [
-            planId,
+            planId
           ]
         );
 
 
       if (
-        planResult.rows.length ===
-        0
+        planResult.rows.length === 0
       ) {
 
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
           message:
-            "Selected membership plan is not available",
+            "Membership plan not found",
 
         });
 
@@ -3822,41 +2025,37 @@ const renewMembership =
 
 
       // =====================================================
-      // GET CURRENT MEMBERSHIP
+      // CURRENT MEMBERSHIP
       // =====================================================
 
-      const membershipResult =
-        await client.query(
+      const existingResult =
+        await pool.query(
           `
-
           SELECT *
 
           FROM memberships
 
-          WHERE user_id = $1
+          WHERE
+            user_id = $1
 
-          ORDER BY id DESC
+          ORDER BY
+            id DESC
 
           LIMIT 1
-
           `,
           [
-            userId,
+            userId
           ]
         );
 
 
       if (
-        membershipResult.rows.length ===
-        0
+        existingResult.rows.length === 0
       ) {
 
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(404).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -3868,8 +2067,8 @@ const renewMembership =
       }
 
 
-      const currentMembership =
-        membershipResult.rows[0];
+      const existing =
+        existingResult.rows[0];
 
 
       // =====================================================
@@ -3877,29 +2076,51 @@ const renewMembership =
       // =====================================================
 
       if (
-        currentMembership.status ===
-        "approved" &&
-        currentMembership.expiry_date &&
+        existing.status ===
+          "approved" &&
+
+        existing.expiry_date &&
+
         new Date(
-          currentMembership.expiry_date
+          existing.expiry_date
         ) > new Date()
       ) {
 
-        await client.query(
-          "ROLLBACK"
-        );
-
-
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Your current membership is still active.",
+            "Your membership is still active. You can renew after expiry.",
+
+        });
+
+      }
+
+
+      // =====================================================
+      // PENDING
+      // =====================================================
+
+      if (
+        existing.status ===
+        "pending"
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "A membership application/payment is already pending.",
 
           membership:
             cleanMembership(
-              currentMembership
+              existing
             ),
 
         });
@@ -3908,13 +2129,43 @@ const renewMembership =
 
 
       // =====================================================
-      // EXPIRED MEMBERSHIP
+      // EXPIRE OLD MEMBERSHIP
+      // =====================================================
+
+      if (
+        existing.status ===
+        "approved"
+      ) {
+
+        await pool.query(
+          `
+          UPDATE memberships
+
+          SET
+
+            status =
+              'expired',
+
+            updated_at =
+              CURRENT_TIMESTAMP
+
+          WHERE id = $1
+          `,
+          [
+            existing.id
+          ]
+        );
+
+      }
+
+
+      // =====================================================
+      // CREATE RENEWAL
       // =====================================================
 
       const result =
-        await client.query(
+        await pool.query(
           `
-
           UPDATE memberships
 
           SET
@@ -3928,14 +2179,23 @@ const renewMembership =
             duration_years =
               $3,
 
+            membership_type =
+              'regular',
+
             status =
               'pending',
 
-            payment_status =
-              'not_submitted',
+            membership_number =
+              NULL,
+
+            verification_token =
+              NULL,
 
             utr_number =
               NULL,
+
+            payment_status =
+              'not_submitted',
 
             payment_submitted_at =
               NULL,
@@ -3943,16 +2203,16 @@ const renewMembership =
             payment_received_at =
               NULL,
 
-            membership_number =
+            applied_at =
+              CURRENT_TIMESTAMP,
+
+            approved_at =
               NULL,
 
             start_date =
               NULL,
 
             expiry_date =
-              NULL,
-
-            approved_at =
               NULL,
 
             rejected_at =
@@ -3964,11 +2224,8 @@ const renewMembership =
             qr_code =
               NULL,
 
-            verification_token =
-              NULL,
-
             whatsapp_status =
-              'not_sent',
+              NULL,
 
             whatsapp_message_id =
               NULL,
@@ -3979,32 +2236,20 @@ const renewMembership =
             whatsapp_error =
               NULL,
 
-            applied_at =
-              CURRENT_TIMESTAMP,
-
             updated_at =
               CURRENT_TIMESTAMP
 
           WHERE id = $4
 
           RETURNING *
-
           `,
           [
             plan.id,
-
             plan.price,
-
             plan.duration_years,
-
-            currentMembership.id,
+            existing.id,
           ]
         );
-
-
-      await client.query(
-        "COMMIT"
-      );
 
 
       return res.json({
@@ -4012,7 +2257,7 @@ const renewMembership =
         success: true,
 
         message:
-          "Membership renewal application created successfully",
+          "Renewal application created successfully",
 
         membership:
           cleanMembership(
@@ -4021,23 +2266,9 @@ const renewMembership =
 
       });
 
-    } catch (error) {
-
-      try {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-      } catch (rollbackError) {
-
-        console.error(
-          "Rollback error:",
-          rollbackError
-        );
-
-      }
-
+    } catch (
+      error
+    ) {
 
       console.error(
         "Renew membership error:",
@@ -4045,7 +2276,9 @@ const renewMembership =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
@@ -4055,14 +2288,12 @@ const renewMembership =
         debug:
           process.env.NODE_ENV !==
           "production"
+
             ? error.message
+
             : undefined,
 
       });
-
-    } finally {
-
-      client.release();
 
     }
 
@@ -4071,6 +2302,7 @@ const renewMembership =
 
 // =========================================================
 // PUBLIC - VERIFY MEMBERSHIP
+//
 // GET /api/membership/verify/:membershipNumber
 // =========================================================
 
@@ -4096,7 +2328,9 @@ const verifyMembership =
         !membershipNumber
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -4110,30 +2344,35 @@ const verifyMembership =
       }
 
 
+      // =====================================================
+      // FIND MEMBERSHIP
+      // =====================================================
+
       const result =
         await pool.query(
           `
-
           ${membershipSelect}
 
           WHERE
-            m.membership_number = $1
+
+            m.membership_number =
+              $1
 
           LIMIT 1
-
           `,
           [
-            membershipNumber,
+            membershipNumber
           ]
         );
 
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -4152,7 +2391,7 @@ const verifyMembership =
 
 
       // =====================================================
-      // UPDATE EXPIRY STATUS
+      // CHECK EXPIRY
       // =====================================================
 
       await markExpiredIfNeeded(
@@ -4161,22 +2400,21 @@ const verifyMembership =
 
 
       // =====================================================
-      // GET LATEST
+      // GET UPDATED DATA
       // =====================================================
 
       const latest =
         await pool.query(
           `
-
           ${membershipSelect}
 
-          WHERE m.id = $1
+          WHERE
+            m.id = $1
 
           LIMIT 1
-
           `,
           [
-            membership.id,
+            membership.id
           ]
         );
 
@@ -4185,17 +2423,17 @@ const verifyMembership =
         latest.rows[0];
 
 
-      // =====================================================
-      // RESPONSE
-      // =====================================================
+      const isValid =
+        finalMembership.status ===
+        "approved";
+
 
       return res.json({
 
         success: true,
 
         valid:
-          finalMembership.status ===
-          "approved",
+          isValid,
 
         membership:
           cleanMembership(
@@ -4204,7 +2442,9 @@ const verifyMembership =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Verify membership error:",
@@ -4212,7 +2452,9 @@ const verifyMembership =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
@@ -4224,7 +2466,9 @@ const verifyMembership =
         debug:
           process.env.NODE_ENV !==
           "production"
+
             ? error.message
+
             : undefined,
 
       });
@@ -4235,11 +2479,1455 @@ const verifyMembership =
 
 
 // =========================================================
+// ADMIN - GET ALL MEMBERSHIPS
+//
+// GET /api/membership/admin
+// =========================================================
+
+const getAllMemberships =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      await markAllExpired();
+
+
+      const result =
+        await pool.query(
+          `
+          ${membershipSelect}
+
+          ORDER BY
+
+            CASE
+
+              WHEN m.status =
+                'pending'
+                THEN 1
+
+              WHEN m.status =
+                'approved'
+                THEN 2
+
+              WHEN m.status =
+                'expired'
+                THEN 3
+
+              WHEN m.status =
+                'rejected'
+                THEN 4
+
+              ELSE 5
+
+            END,
+
+            m.applied_at DESC
+          `
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        memberships:
+          result.rows.map(
+            cleanMembership
+          ),
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Get memberships error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to fetch memberships",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
+
+      });
+
+    }
+
+  };
+
+
+// =========================================================
+// ADMIN - GET SINGLE MEMBERSHIP
+//
+// GET /api/membership/admin/:id
+// =========================================================
+
+const getMembershipById =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      const id =
+        Number(
+          req.params.id
+        );
+
+
+      if (
+        !Number.isInteger(
+          id
+        ) ||
+        id <= 0
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Invalid membership ID",
+
+        });
+
+      }
+
+
+      const result =
+        await pool.query(
+          `
+          ${membershipSelect}
+
+          WHERE
+            m.id = $1
+
+          LIMIT 1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      if (
+        result.rows.length === 0
+      ) {
+
+        return res.status(
+          404
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership not found",
+
+        });
+
+      }
+
+
+      await markExpiredIfNeeded(
+        id
+      );
+
+
+      const latest =
+        await pool.query(
+          `
+          ${membershipSelect}
+
+          WHERE
+            m.id = $1
+
+          LIMIT 1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        membership:
+          cleanMembership(
+            latest.rows[0]
+          ),
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Get membership error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to load membership",
+
+      });
+
+    }
+
+  };
+
+
+// =========================================================
+// ADMIN - APPROVE MEMBERSHIP
+//
+// PUT /api/membership/admin/:id/approve
+// =========================================================
+
+const approveMembership =
+  async (
+    req,
+    res
+  ) => {
+
+    const client =
+      await pool.connect();
+
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      const id =
+        Number(
+          req.params.id
+        );
+
+
+      if (
+        !Number.isInteger(
+          id
+        ) ||
+        id <= 0
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Invalid membership ID",
+
+        });
+
+      }
+
+
+      await client.query(
+        "BEGIN"
+      );
+
+
+      // =====================================================
+      // LOCK MEMBERSHIP
+      // =====================================================
+
+      const membershipResult =
+        await client.query(
+          `
+          SELECT *
+
+          FROM memberships
+
+          WHERE
+            id = $1
+
+          FOR UPDATE
+          `,
+          [
+            id
+          ]
+        );
+
+
+      if (
+        membershipResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          404
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership not found",
+
+        });
+
+      }
+
+
+      const membership =
+        membershipResult.rows[0];
+
+
+      // =====================================================
+      // ALREADY APPROVED
+      // =====================================================
+
+      if (
+        membership.status ===
+        "approved"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership is already approved",
+
+          membership:
+            cleanMembership(
+              membership
+            ),
+
+        });
+
+      }
+
+
+      // =====================================================
+      // ONLY PENDING
+      // =====================================================
+
+      if (
+        membership.status !==
+        "pending"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Only pending membership applications can be approved",
+
+          membership:
+            cleanMembership(
+              membership
+            ),
+
+        });
+
+      }
+
+
+      // =====================================================
+      // PAYMENT REQUIRED
+      // =====================================================
+
+      if (
+        membership.payment_status !==
+        "received"
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Payment must be marked as received before approving the membership.",
+
+          paymentStatus:
+            membership.payment_status,
+
+        });
+
+      }
+
+
+      // =====================================================
+      // UTR REQUIRED
+      // =====================================================
+
+      if (
+        !membership.utr_number
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "UTR number is missing. Payment cannot be approved.",
+
+        });
+
+      }
+
+
+      // =====================================================
+      // PLAN REQUIRED
+      // =====================================================
+
+      if (
+        !membership.plan_id
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership plan is missing",
+
+        });
+
+      }
+
+
+      // =====================================================
+      // GET PLAN
+      // =====================================================
+
+      const planResult =
+        await client.query(
+          `
+          SELECT
+
+            id,
+
+            name,
+
+            duration_years,
+
+            price
+
+          FROM membership_plans
+
+          WHERE
+            id = $1
+
+          LIMIT 1
+          `,
+          [
+            membership.plan_id
+          ]
+        );
+
+
+      if (
+        planResult.rows.length === 0
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership plan not found",
+
+        });
+
+      }
+
+
+      const plan =
+        planResult.rows[0];
+
+
+      // =====================================================
+      // ADVISORY LOCK
+      //
+      // Prevents two admins from generating the same
+      // membership number at the same time.
+      // =====================================================
+
+      await client.query(
+        `
+        SELECT
+          pg_advisory_xact_lock(
+            782341
+          )
+        `
+      );
+
+
+      // =====================================================
+      // GENERATE MEMBERSHIP NUMBER
+      // =====================================================
+
+      const year =
+        new Date().getFullYear();
+
+
+      const countResult =
+        await client.query(
+          `
+          SELECT
+
+            COUNT(*)::INTEGER
+              AS count
+
+          FROM memberships
+
+          WHERE
+            membership_number
+              IS NOT NULL
+          `
+        );
+
+
+      const nextNumber =
+        Number(
+          countResult.rows[0].count ||
+          0
+        ) + 1;
+
+
+      const membershipNumber =
+        `SNICT-${year}-${String(
+          nextNumber
+        ).padStart(
+          5,
+          "0"
+        )}`;
+
+
+      // =====================================================
+      // START DATE
+      // =====================================================
+
+      const startDate =
+        new Date();
+
+
+      // =====================================================
+      // EXPIRY DATE
+      // =====================================================
+
+      const expiryDate =
+        new Date(
+          startDate
+        );
+
+
+      expiryDate.setFullYear(
+        expiryDate.getFullYear() +
+          Number(
+            plan.duration_years
+          )
+      );
+
+
+      // =====================================================
+      // VERIFICATION TOKEN
+      // =====================================================
+
+      const crypto =
+        require("crypto");
+
+
+      const verificationToken =
+        crypto
+          .randomBytes(
+            32
+          )
+          .toString(
+            "hex"
+          );
+
+
+      // =====================================================
+      // GENERATE QR
+      // =====================================================
+
+      const qrCode =
+        await generateMembershipQr(
+          membershipNumber
+        );
+
+
+      // =====================================================
+      // FINAL APPROVAL
+      // =====================================================
+
+      const result =
+        await client.query(
+          `
+          UPDATE memberships
+
+          SET
+
+            membership_number =
+              $1,
+
+            verification_token =
+              $2,
+
+            status =
+              'approved',
+
+            payment_status =
+              'approved',
+
+            payment_received_at =
+              COALESCE(
+                payment_received_at,
+                CURRENT_TIMESTAMP
+              ),
+
+            approved_at =
+              CURRENT_TIMESTAMP,
+
+            start_date =
+              $3,
+
+            expiry_date =
+              $4,
+
+            rejected_at =
+              NULL,
+
+            rejection_reason =
+              NULL,
+
+            qr_code =
+              $5,
+
+            updated_at =
+              CURRENT_TIMESTAMP
+
+          WHERE
+            id = $6
+
+          RETURNING *
+          `,
+          [
+            membershipNumber,
+            verificationToken,
+            startDate,
+            expiryDate,
+            qrCode,
+            id,
+          ]
+        );
+
+
+      // =====================================================
+      // COMMIT
+      // =====================================================
+
+      await client.query(
+        "COMMIT"
+      );
+
+
+      // =====================================================
+      // COMPLETE DATA
+      // =====================================================
+
+      const finalResult =
+        await pool.query(
+          `
+          ${membershipSelect}
+
+          WHERE
+            m.id = $1
+
+          LIMIT 1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Membership approved successfully",
+
+        membership:
+          cleanMembership(
+            finalResult.rows[0]
+          ),
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      try {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+      } catch (
+        rollbackError
+      ) {
+
+        console.error(
+          "Rollback error:",
+          rollbackError
+        );
+
+      }
+
+
+      console.error(
+        "Approve membership error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to approve membership",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
+
+      });
+
+    } finally {
+
+      client.release();
+
+    }
+
+  };
+
+
+// =========================================================
+// ADMIN - MARK PAYMENT RECEIVED
+//
+// PUT /api/membership/admin/:id/payment-received
+// =========================================================
+
+const markPaymentReceived =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      const id =
+        Number(
+          req.params.id
+        );
+
+
+      if (
+        !Number.isInteger(
+          id
+        ) ||
+        id <= 0
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Invalid membership ID",
+
+        });
+
+      }
+
+
+      const existing =
+        await pool.query(
+          `
+          SELECT *
+
+          FROM memberships
+
+          WHERE
+            id = $1
+
+          LIMIT 1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      if (
+        existing.rows.length === 0
+      ) {
+
+        return res.status(
+          404
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership not found",
+
+        });
+
+      }
+
+
+      const membership =
+        existing.rows[0];
+
+
+      if (
+        membership.status !==
+        "pending"
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Only pending membership payments can be verified",
+
+        });
+
+      }
+
+
+      if (
+        !membership.utr_number
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "UTR number has not been submitted",
+
+        });
+
+      }
+
+
+      if (
+        membership.payment_status !==
+          "submitted" &&
+
+        membership.payment_status !==
+          "not_received"
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Payment is not waiting for verification",
+
+        });
+
+      }
+
+
+      const result =
+        await pool.query(
+          `
+          UPDATE memberships
+
+          SET
+
+            payment_status =
+              'received',
+
+            payment_received_at =
+              CURRENT_TIMESTAMP,
+
+            updated_at =
+              CURRENT_TIMESTAMP
+
+          WHERE
+            id = $1
+
+          RETURNING *
+          `,
+          [
+            id
+          ]
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Payment marked as received successfully",
+
+        membership:
+          cleanMembership(
+            result.rows[0]
+          ),
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Mark payment received error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to mark payment as received",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
+
+      });
+
+    }
+
+  };
+
+
+// =========================================================
+// ADMIN - MARK PAYMENT NOT RECEIVED
+//
+// PUT /api/membership/admin/:id/payment-not-received
+// =========================================================
+
+const markPaymentNotReceived =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      const id =
+        Number(
+          req.params.id
+        );
+
+
+      if (
+        !Number.isInteger(
+          id
+        ) ||
+        id <= 0
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Invalid membership ID",
+
+        });
+
+      }
+
+
+      const existing =
+        await pool.query(
+          `
+          SELECT *
+
+          FROM memberships
+
+          WHERE
+            id = $1
+
+          LIMIT 1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      if (
+        existing.rows.length === 0
+      ) {
+
+        return res.status(
+          404
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership not found",
+
+        });
+
+      }
+
+
+      const membership =
+        existing.rows[0];
+
+
+      if (
+        membership.status !==
+        "pending"
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Only pending membership payments can be updated",
+
+        });
+
+      }
+
+
+      if (
+        !membership.utr_number
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "UTR number has not been submitted",
+
+        });
+
+      }
+
+
+      const result =
+        await pool.query(
+          `
+          UPDATE memberships
+
+          SET
+
+            payment_status =
+              'not_received',
+
+            payment_received_at =
+              NULL,
+
+            updated_at =
+              CURRENT_TIMESTAMP
+
+          WHERE
+            id = $1
+
+          RETURNING *
+          `,
+          [
+            id
+          ]
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Payment marked as not received",
+
+        membership:
+          cleanMembership(
+            result.rows[0]
+          ),
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Mark payment not received error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to mark payment as not received",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
+
+      });
+
+    }
+
+  };
+
+
+// =========================================================
+// ADMIN - REJECT MEMBERSHIP
+//
+// PUT /api/membership/admin/:id/reject
+// =========================================================
+
+const rejectMembership =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      const id =
+        Number(
+          req.params.id
+        );
+
+
+      const rejectionReason =
+        String(
+          req.body.reason || ""
+        ).trim();
+
+
+      if (
+        !Number.isInteger(
+          id
+        ) ||
+        id <= 0
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Invalid membership ID",
+
+        });
+
+      }
+
+
+      if (
+        !rejectionReason
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Rejection reason is required",
+
+        });
+
+      }
+
+
+      const existing =
+        await pool.query(
+          `
+          SELECT
+
+            id,
+
+            status
+
+          FROM memberships
+
+          WHERE
+            id = $1
+
+          LIMIT 1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      if (
+        existing.rows.length === 0
+      ) {
+
+        return res.status(
+          404
+        ).json({
+
+          success: false,
+
+          message:
+            "Membership not found",
+
+        });
+
+      }
+
+
+      if (
+        existing.rows[0].status !==
+        "pending"
+      ) {
+
+        return res.status(
+          400
+        ).json({
+
+          success: false,
+
+          message:
+            "Only pending membership applications can be rejected",
+
+        });
+
+      }
+
+
+      const result =
+        await pool.query(
+          `
+          UPDATE memberships
+
+          SET
+
+            status =
+              'rejected',
+
+            payment_status =
+              'rejected',
+
+            rejected_at =
+              CURRENT_TIMESTAMP,
+
+            rejection_reason =
+              $1,
+
+            updated_at =
+              CURRENT_TIMESTAMP
+
+          WHERE
+            id = $2
+
+          RETURNING *
+          `,
+          [
+            rejectionReason,
+            id,
+          ]
+        );
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "Membership rejected successfully",
+
+        membership:
+          cleanMembership(
+            result.rows[0]
+          ),
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Reject membership error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to reject membership",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
+
+      });
+
+    }
+
+  };
+  // =========================================================
 // ADMIN - GET MEMBERSHIP PLANS
+//
 // GET /api/membership/admin/plans
 // =========================================================
 
-const getMembershipPlansAdmin =
+const getAdminMembershipPlans =
   async (
     req,
     res
@@ -4253,7 +3941,6 @@ const getMembershipPlansAdmin =
       const result =
         await pool.query(
           `
-
           SELECT
 
             id,
@@ -4273,13 +3960,8 @@ const getMembershipPlansAdmin =
           FROM membership_plans
 
           ORDER BY
-
-            is_active DESC,
-
             duration_years ASC,
-
             id ASC
-
           `
         );
 
@@ -4290,7 +3972,9 @@ const getMembershipPlansAdmin =
 
         plans:
           result.rows.map(
-            (plan) => ({
+            (
+              plan
+            ) => ({
 
               id:
                 plan.id,
@@ -4309,9 +3993,7 @@ const getMembershipPlansAdmin =
                 ),
 
               isActive:
-                Boolean(
-                  plan.is_active
-                ),
+                plan.is_active,
 
               createdAt:
                 plan.created_at,
@@ -4324,7 +4006,9 @@ const getMembershipPlansAdmin =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Get admin membership plans error:",
@@ -4332,12 +4016,22 @@ const getMembershipPlansAdmin =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
-          "Unable to load membership plans",
+          "Unable to fetch membership plans",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
@@ -4348,6 +4042,7 @@ const getMembershipPlansAdmin =
 
 // =========================================================
 // ADMIN - CREATE MEMBERSHIP PLAN
+//
 // POST /api/membership/admin/plans
 // =========================================================
 
@@ -4364,26 +4059,20 @@ const createMembershipPlan =
 
       const name =
         String(
-          req.body?.name ||
-          ""
+          req.body.name || ""
         ).trim();
 
 
       const durationYears =
         Number(
-          req.body?.durationYears
+          req.body.durationYears
         );
 
 
       const price =
         Number(
-          req.body?.price
+          req.body.price
         );
-
-
-      const isActive =
-        req.body?.isActive !==
-        false;
 
 
       // =====================================================
@@ -4392,7 +4081,9 @@ const createMembershipPlan =
 
       if (!name) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -4408,16 +4099,17 @@ const createMembershipPlan =
         !Number.isInteger(
           durationYears
         ) ||
-        durationYears < 1 ||
-        durationYears > 20
+        durationYears <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Duration must be between 1 and 20 years",
+            "Duration must be a valid number of years",
 
         });
 
@@ -4425,16 +4117,20 @@ const createMembershipPlan =
 
 
       if (
-        !Number.isFinite(price) ||
+        !Number.isFinite(
+          price
+        ) ||
         price < 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Please enter a valid plan price",
+            "Price must be a valid amount",
 
         });
 
@@ -4448,7 +4144,6 @@ const createMembershipPlan =
       const result =
         await pool.query(
           `
-
           INSERT INTO membership_plans
           (
             name,
@@ -4472,7 +4167,7 @@ const createMembershipPlan =
 
             $3,
 
-            $4,
+            TRUE,
 
             CURRENT_TIMESTAMP,
 
@@ -4480,16 +4175,11 @@ const createMembershipPlan =
           )
 
           RETURNING *
-
           `,
           [
             name,
-
             durationYears,
-
             price,
-
-            isActive,
           ]
         );
 
@@ -4498,7 +4188,9 @@ const createMembershipPlan =
         result.rows[0];
 
 
-      return res.status(201).json({
+      return res.status(
+        201
+      ).json({
 
         success: true,
 
@@ -4524,9 +4216,7 @@ const createMembershipPlan =
             ),
 
           isActive:
-            Boolean(
-              plan.is_active
-            ),
+            plan.is_active,
 
           createdAt:
             plan.created_at,
@@ -4538,7 +4228,9 @@ const createMembershipPlan =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Create membership plan error:",
@@ -4546,7 +4238,9 @@ const createMembershipPlan =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
@@ -4556,7 +4250,9 @@ const createMembershipPlan =
         debug:
           process.env.NODE_ENV !==
           "production"
+
             ? error.message
+
             : undefined,
 
       });
@@ -4568,6 +4264,7 @@ const createMembershipPlan =
 
 // =========================================================
 // ADMIN - UPDATE MEMBERSHIP PLAN
+//
 // PUT /api/membership/admin/plans/:id
 // =========================================================
 
@@ -4590,39 +4287,51 @@ const updateMembershipPlan =
 
       const name =
         String(
-          req.body?.name ||
-          ""
+          req.body.name || ""
         ).trim();
 
 
       const durationYears =
         Number(
-          req.body?.durationYears
+          req.body.durationYears
         );
 
 
       const price =
         Number(
-          req.body?.price
+          req.body.price
         );
 
 
       const isActive =
-        req.body?.isActive !==
-        false;
+        req.body.isActive !== undefined
 
+          ? Boolean(
+              req.body.isActive
+            )
+
+          : true;
+
+
+      // =====================================================
+      // VALIDATION
+      // =====================================================
 
       if (
-        !Number.isInteger(id) ||
+        !Number.isInteger(
+          id
+        ) ||
         id <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Invalid membership plan ID",
+            "Invalid plan ID",
 
         });
 
@@ -4631,7 +4340,9 @@ const updateMembershipPlan =
 
       if (!name) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -4647,16 +4358,17 @@ const updateMembershipPlan =
         !Number.isInteger(
           durationYears
         ) ||
-        durationYears < 1 ||
-        durationYears > 20
+        durationYears <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Duration must be between 1 and 20 years",
+            "Duration must be a valid number of years",
 
         });
 
@@ -4664,26 +4376,33 @@ const updateMembershipPlan =
 
 
       if (
-        !Number.isFinite(price) ||
+        !Number.isFinite(
+          price
+        ) ||
         price < 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Please enter a valid plan price",
+            "Price must be a valid amount",
 
         });
 
       }
 
 
+      // =====================================================
+      // UPDATE
+      // =====================================================
+
       const result =
         await pool.query(
           `
-
           UPDATE membership_plans
 
           SET
@@ -4703,31 +4422,28 @@ const updateMembershipPlan =
             updated_at =
               CURRENT_TIMESTAMP
 
-          WHERE id = $5
+          WHERE
+            id = $5
 
           RETURNING *
-
           `,
           [
             name,
-
             durationYears,
-
             price,
-
             isActive,
-
             id,
           ]
         );
 
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -4769,9 +4485,7 @@ const updateMembershipPlan =
             ),
 
           isActive:
-            Boolean(
-              plan.is_active
-            ),
+            plan.is_active,
 
           createdAt:
             plan.created_at,
@@ -4783,7 +4497,9 @@ const updateMembershipPlan =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Update membership plan error:",
@@ -4791,12 +4507,22 @@ const updateMembershipPlan =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
           "Unable to update membership plan",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
@@ -4806,7 +4532,8 @@ const updateMembershipPlan =
 
 
 // =========================================================
-// ADMIN - DELETE / DISABLE MEMBERSHIP PLAN
+// ADMIN - DELETE / DEACTIVATE MEMBERSHIP PLAN
+//
 // DELETE /api/membership/admin/plans/:id
 // =========================================================
 
@@ -4828,53 +4555,150 @@ const deleteMembershipPlan =
 
 
       if (
-        !Number.isInteger(id) ||
+        !Number.isInteger(
+          id
+        ) ||
         id <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
           message:
-            "Invalid membership plan ID",
+            "Invalid plan ID",
 
         });
 
       }
 
 
+      // =====================================================
+      // CHECK EXISTING MEMBERSHIPS
+      // =====================================================
+
+      const usageResult =
+        await pool.query(
+          `
+          SELECT
+
+            COUNT(*)::INTEGER
+              AS count
+
+          FROM memberships
+
+          WHERE
+            plan_id = $1
+          `,
+          [
+            id
+          ]
+        );
+
+
+      const usageCount =
+        Number(
+          usageResult.rows[0].count
+        );
+
+
+      // =====================================================
+      // IF USED, DEACTIVATE INSTEAD
+      // =====================================================
+
+      if (
+        usageCount > 0
+      ) {
+
+        const result =
+          await pool.query(
+            `
+            UPDATE membership_plans
+
+            SET
+
+              is_active =
+                FALSE,
+
+              updated_at =
+                CURRENT_TIMESTAMP
+
+            WHERE
+              id = $1
+
+            RETURNING *
+            `,
+            [
+              id
+            ]
+          );
+
+
+        if (
+          result.rows.length === 0
+        ) {
+
+          return res.status(
+            404
+          ).json({
+
+            success: false,
+
+            message:
+              "Membership plan not found",
+
+          });
+
+        }
+
+
+        return res.json({
+
+          success: true,
+
+          message:
+            "Plan is already used by memberships, so it has been deactivated instead of deleted.",
+
+          deleted:
+            false,
+
+          deactivated:
+            true,
+
+        });
+
+      }
+
+
+      // =====================================================
+      // DELETE
+      // =====================================================
+
       const result =
         await pool.query(
           `
+          DELETE FROM membership_plans
 
-          UPDATE membership_plans
-
-          SET
-
-            is_active =
-              FALSE,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
+          WHERE
+            id = $1
 
           RETURNING *
-
           `,
           [
-            id,
+            id
           ]
         );
 
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -4891,38 +4715,16 @@ const deleteMembershipPlan =
         success: true,
 
         message:
-          "Membership plan disabled successfully",
+          "Membership plan deleted successfully",
 
-        plan: {
-
-          id:
-            result.rows[0].id,
-
-          name:
-            result.rows[0].name,
-
-          durationYears:
-            Number(
-              result.rows[0]
-                .duration_years
-            ),
-
-          price:
-            Number(
-              result.rows[0].price
-            ),
-
-          isActive:
-            Boolean(
-              result.rows[0]
-                .is_active
-            ),
-
-        },
+        deleted:
+          true,
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Delete membership plan error:",
@@ -4930,20 +4732,33 @@ const deleteMembershipPlan =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
-          "Unable to disable membership plan",
+          "Unable to delete membership plan",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
     }
 
   };
-  // =========================================================
+
+
+// =========================================================
 // ADMIN - GET PAYMENT SETTINGS
+//
 // GET /api/membership/admin/payment-settings
 // =========================================================
 
@@ -4961,7 +4776,6 @@ const getPaymentSettings =
       const result =
         await pool.query(
           `
-
           SELECT
 
             id,
@@ -4976,62 +4790,77 @@ const getPaymentSettings =
 
           FROM membership_payment_settings
 
-          WHERE id = 1
+          WHERE
+            id = 1
 
           LIMIT 1
-
           `
         );
 
 
+      if (
+        result.rows.length === 0
+      ) {
+
+        return res.json({
+
+          success: true,
+
+          settings: {
+
+            id: 1,
+
+            upiId:
+              null,
+
+            accountName:
+              null,
+
+            qrCode:
+              null,
+
+            updatedAt:
+              null,
+
+          },
+
+        });
+
+      }
+
+
       const settings =
-        result.rows[0] ||
-        null;
+        result.rows[0];
 
 
       return res.json({
 
         success: true,
 
-        settings: settings
-          ? {
+        settings: {
 
-              id:
-                settings.id,
+          id:
+            settings.id,
 
-              upiId:
-                settings.upi_id ||
-                "",
+          upiId:
+            settings.upi_id,
 
-              accountName:
-                settings.account_name ||
-                "",
+          accountName:
+            settings.account_name,
 
-              qrCode:
-                settings.qr_code ||
-                "",
+          qrCode:
+            settings.qr_code,
 
-              updatedAt:
-                settings.updated_at,
+          updatedAt:
+            settings.updated_at,
 
-            }
-          : {
-
-              id: 1,
-
-              upiId: "",
-
-              accountName: "",
-
-              qrCode: "",
-
-              updatedAt: null,
-
-            },
+        },
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Get payment settings error:",
@@ -5039,12 +4868,22 @@ const getPaymentSettings =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
           "Unable to load payment settings",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
@@ -5055,6 +4894,7 @@ const getPaymentSettings =
 
 // =========================================================
 // ADMIN - UPDATE PAYMENT SETTINGS
+//
 // PUT /api/membership/admin/payment-settings
 // =========================================================
 
@@ -5071,30 +4911,35 @@ const updatePaymentSettings =
 
       const upiId =
         String(
-          req.body?.upiId ||
-          ""
+          req.body.upiId || ""
         ).trim();
 
 
       const accountName =
         String(
-          req.body?.accountName ||
-          ""
+          req.body.accountName || ""
         ).trim();
 
 
       const qrCode =
-        String(
-          req.body?.qrCode ||
-          ""
-        ).trim();
+        req.body.qrCode
+          ? String(
+              req.body.qrCode
+            ).trim()
+          : null;
 
+
+      // =====================================================
+      // VALIDATION
+      // =====================================================
 
       if (
         !upiId
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -5110,7 +4955,9 @@ const updatePaymentSettings =
         !accountName
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -5122,10 +4969,13 @@ const updatePaymentSettings =
       }
 
 
+      // =====================================================
+      // UPDATE
+      // =====================================================
+
       const result =
         await pool.query(
           `
-
           INSERT INTO
             membership_payment_settings
           (
@@ -5170,14 +5020,11 @@ const updatePaymentSettings =
               CURRENT_TIMESTAMP
 
           RETURNING *
-
           `,
           [
             upiId,
-
             accountName,
-
-            qrCode || null,
+            qrCode,
           ]
         );
 
@@ -5214,7 +5061,9 @@ const updatePaymentSettings =
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Update payment settings error:",
@@ -5222,12 +5071,22 @@ const updatePaymentSettings =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
           "Unable to update payment settings",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
@@ -5238,11 +5097,8 @@ const updatePaymentSettings =
 
 // =========================================================
 // PUBLIC - GET PAYMENT SETTINGS
+//
 // GET /api/membership/payment-settings
-// =========================================================
-//
-// Only payment-related public information is returned.
-//
 // =========================================================
 
 const getPublicPaymentSettings =
@@ -5259,7 +5115,6 @@ const getPublicPaymentSettings =
       const result =
         await pool.query(
           `
-
           SELECT
 
             upi_id,
@@ -5270,12 +5125,38 @@ const getPublicPaymentSettings =
 
           FROM membership_payment_settings
 
-          WHERE id = 1
+          WHERE
+            id = 1
 
           LIMIT 1
-
           `
         );
+
+
+      if (
+        result.rows.length === 0
+      ) {
+
+        return res.json({
+
+          success: true,
+
+          settings: {
+
+            upiId:
+              null,
+
+            accountName:
+              null,
+
+            qrCode:
+              null,
+
+          },
+
+        });
+
+      }
 
 
       const settings =
@@ -5289,22 +5170,21 @@ const getPublicPaymentSettings =
         settings: {
 
           upiId:
-            settings?.upi_id ||
-            "",
+            settings.upi_id,
 
           accountName:
-            settings?.account_name ||
-            "",
+            settings.account_name,
 
           qrCode:
-            settings?.qr_code ||
-            "",
+            settings.qr_code,
 
         },
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Get public payment settings error:",
@@ -5312,7 +5192,9 @@ const getPublicPaymentSettings =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
@@ -5327,540 +5209,9 @@ const getPublicPaymentSettings =
 
 
 // =========================================================
-// ADMIN - MEMBERSHIP STATISTICS
-// GET /api/membership/admin/stats
-// =========================================================
-
-const getMembershipStats =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      await markAllExpired();
-
-
-      const result =
-        await pool.query(
-          `
-
-          SELECT
-
-            COUNT(*)::INTEGER
-              AS total,
-
-            COUNT(*) FILTER (
-              WHERE status =
-                'pending'
-            )::INTEGER
-              AS pending,
-
-            COUNT(*) FILTER (
-              WHERE status =
-                'approved'
-            )::INTEGER
-              AS approved,
-
-            COUNT(*) FILTER (
-              WHERE status =
-                'rejected'
-            )::INTEGER
-              AS rejected,
-
-            COUNT(*) FILTER (
-              WHERE status =
-                'expired'
-            )::INTEGER
-              AS expired,
-
-            COUNT(*) FILTER (
-              WHERE payment_status =
-                'received'
-            )::INTEGER
-              AS payment_received,
-
-            COUNT(*) FILTER (
-              WHERE payment_status =
-                'submitted'
-            )::INTEGER
-              AS payment_submitted,
-
-            COUNT(*) FILTER (
-              WHERE whatsapp_status =
-                'sent'
-            )::INTEGER
-              AS whatsapp_sent,
-
-            COUNT(*) FILTER (
-              WHERE whatsapp_status =
-                'failed'
-            )::INTEGER
-              AS whatsapp_failed,
-
-            COALESCE(
-              SUM(
-                amount
-              ) FILTER (
-                WHERE
-                  payment_status =
-                    'received'
-              ),
-              0
-            ) AS total_revenue
-
-          FROM memberships
-
-          `
-        );
-
-
-      const stats =
-        result.rows[0];
-
-
-      return res.json({
-
-        success: true,
-
-        stats: {
-
-          total:
-            Number(
-              stats.total
-            ),
-
-          pending:
-            Number(
-              stats.pending
-            ),
-
-          approved:
-            Number(
-              stats.approved
-            ),
-
-          rejected:
-            Number(
-              stats.rejected
-            ),
-
-          expired:
-            Number(
-              stats.expired
-            ),
-
-          paymentReceived:
-            Number(
-              stats.payment_received
-            ),
-
-          paymentSubmitted:
-            Number(
-              stats.payment_submitted
-            ),
-
-          whatsappSent:
-            Number(
-              stats.whatsapp_sent
-            ),
-
-          whatsappFailed:
-            Number(
-              stats.whatsapp_failed
-            ),
-
-          totalRevenue:
-            Number(
-              stats.total_revenue
-            ),
-
-        },
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Get membership stats error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to load membership statistics",
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
-// ADMIN - RESEND APPROVAL WHATSAPP
-// POST /api/membership/admin/:id/resend-whatsapp
-// =========================================================
-//
-// This allows admin to resend the approval message when:
-//
-// - Membership is already approved
-// - Previous WhatsApp message failed
-// - User did not receive the message
-//
-// =========================================================
-
-const resendApprovalWhatsApp =
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      await ensureMembershipSchema();
-
-
-      const id =
-        Number(
-          req.params.id
-        );
-
-
-      if (
-        !Number.isInteger(id) ||
-        id <= 0
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid membership ID",
-
-        });
-
-      }
-
-
-      // =====================================================
-      // GET APPROVED MEMBERSHIP
-      // =====================================================
-
-      const result =
-        await pool.query(
-          `
-
-          ${membershipSelect}
-
-          WHERE m.id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            id,
-          ]
-        );
-
-
-      if (
-        result.rows.length ===
-        0
-      ) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Membership not found",
-
-        });
-
-      }
-
-
-      const membership =
-        result.rows[0];
-
-
-      // =====================================================
-      // MUST BE APPROVED
-      // =====================================================
-
-      if (
-        membership.status !==
-        "approved"
-      ) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "WhatsApp approval notification can only be sent for an approved membership",
-
-        });
-
-      }
-
-
-      // =====================================================
-      // USER
-      // =====================================================
-
-      const userResult =
-        await pool.query(
-          `
-
-          SELECT
-
-            id,
-
-            full_name,
-
-            mobile
-
-          FROM users
-
-          WHERE id = $1
-
-          LIMIT 1
-
-          `,
-          [
-            membership.user_id,
-          ]
-        );
-
-
-      const user =
-        userResult.rows[0];
-
-
-      if (!user) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message:
-            "Member user account not found",
-
-        });
-
-      }
-
-
-      if (!user.mobile) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Member does not have a mobile number",
-
-        });
-
-      }
-
-
-      // =====================================================
-      // SEND
-      // =====================================================
-
-      let whatsappResult;
-
-
-      try {
-
-        whatsappResult =
-          await sendMembershipApprovalWhatsApp({
-
-            mobile:
-              user.mobile,
-
-            fullName:
-              user.full_name ||
-              "Member",
-
-            membershipNumber:
-              membership.membership_number,
-
-            planName:
-              membership.plan_name ||
-              "Membership",
-
-            amount:
-              getAmount(
-                membership
-              ),
-
-            startDate:
-              membership.start_date,
-
-            expiryDate:
-              membership.expiry_date,
-
-            verificationUrl:
-              `${getClientUrl()}/membership/verify/${encodeURIComponent(
-                membership.membership_number
-              )}`,
-
-          });
-
-      } catch (error) {
-
-        console.error(
-          "Resend WhatsApp error:",
-          error
-        );
-
-
-        whatsappResult = {
-
-          sent: false,
-
-          status: "failed",
-
-          messageId: null,
-
-          error:
-            error?.message ||
-            "Unable to send WhatsApp message",
-
-        };
-
-      }
-
-
-      // =====================================================
-      // SAVE RESULT
-      // =====================================================
-
-      await pool.query(
-        `
-
-        UPDATE memberships
-
-        SET
-
-          whatsapp_status =
-            $1,
-
-          whatsapp_message_id =
-            $2,
-
-          whatsapp_sent_at =
-            CASE
-
-              WHEN $1 = 'sent'
-
-              THEN CURRENT_TIMESTAMP
-
-              ELSE whatsapp_sent_at
-
-            END,
-
-          whatsapp_error =
-            $3,
-
-          updated_at =
-            CURRENT_TIMESTAMP
-
-        WHERE id = $4
-
-        `,
-        [
-          whatsappResult.status,
-
-          whatsappResult.messageId,
-
-          whatsappResult.error,
-
-          id,
-        ]
-      );
-
-
-      // =====================================================
-      // RESPONSE
-      // =====================================================
-
-      return res.json({
-
-        success:
-          whatsappResult.sent === true,
-
-        message:
-          whatsappResult.sent
-            ? "WhatsApp approval notification sent successfully."
-            : "Unable to send WhatsApp approval notification.",
-
-        whatsapp: {
-
-          sent:
-            whatsappResult.sent,
-
-          status:
-            whatsappResult.status,
-
-          messageId:
-            whatsappResult.messageId,
-
-          error:
-            process.env.NODE_ENV !==
-            "production"
-              ? whatsappResult.error
-              : undefined,
-
-        },
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "Resend approval WhatsApp controller error:",
-        error
-      );
-
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to resend WhatsApp notification",
-
-      });
-
-    }
-
-  };
-
-
-// =========================================================
 // ADMIN - DELETE MEMBERSHIP
+//
 // DELETE /api/membership/admin/:id
-// =========================================================
-//
-// Hard delete is intentionally restricted to prevent accidental
-// removal of financial/membership history.
-//
-// This endpoint changes the membership to rejected instead.
-//
 // =========================================================
 
 const deleteMembership =
@@ -5881,11 +5232,15 @@ const deleteMembership =
 
 
       if (
-        !Number.isInteger(id) ||
+        !Number.isInteger(
+          id
+        ) ||
         id <= 0
       ) {
 
-        return res.status(400).json({
+        return res.status(
+          400
+        ).json({
 
           success: false,
 
@@ -5900,40 +5255,26 @@ const deleteMembership =
       const result =
         await pool.query(
           `
+          DELETE FROM memberships
 
-          UPDATE memberships
+          WHERE
+            id = $1
 
-          SET
-
-            status =
-              'rejected',
-
-            rejection_reason =
-              'Removed by administrator',
-
-            rejected_at =
-              CURRENT_TIMESTAMP,
-
-            updated_at =
-              CURRENT_TIMESTAMP
-
-          WHERE id = $1
-
-          RETURNING *
-
+          RETURNING id
           `,
           [
-            id,
+            id
           ]
         );
 
 
       if (
-        result.rows.length ===
-        0
+        result.rows.length === 0
       ) {
 
-        return res.status(404).json({
+        return res.status(
+          404
+        ).json({
 
           success: false,
 
@@ -5950,16 +5291,13 @@ const deleteMembership =
         success: true,
 
         message:
-          "Membership removed successfully",
-
-        membership:
-          cleanMembership(
-            result.rows[0]
-          ),
+          "Membership deleted successfully",
 
       });
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Delete membership error:",
@@ -5967,12 +5305,176 @@ const deleteMembership =
       );
 
 
-      return res.status(500).json({
+      return res.status(
+        500
+      ).json({
 
         success: false,
 
         message:
-          "Unable to remove membership",
+          "Unable to delete membership",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
+
+      });
+
+    }
+
+  };
+
+
+// =========================================================
+// ADMIN - DASHBOARD STATISTICS
+//
+// GET /api/membership/admin/stats
+// =========================================================
+
+const getMembershipStats =
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      await ensureMembershipSchema();
+
+
+      await markAllExpired();
+
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+
+            COUNT(*)::INTEGER
+              AS total,
+
+            COUNT(*) FILTER (
+              WHERE status =
+                'pending'
+            )::INTEGER
+              AS pending,
+
+            COUNT(*) FILTER (
+              WHERE status =
+                'approved'
+            )::INTEGER
+              AS approved,
+
+            COUNT(*) FILTER (
+              WHERE status =
+                'expired'
+            )::INTEGER
+              AS expired,
+
+            COUNT(*) FILTER (
+              WHERE status =
+                'rejected'
+            )::INTEGER
+              AS rejected,
+
+            COUNT(*) FILTER (
+              WHERE payment_status =
+                'submitted'
+            )::INTEGER
+              AS payment_submitted,
+
+            COUNT(*) FILTER (
+              WHERE payment_status =
+                'received'
+            )::INTEGER
+              AS payment_received
+
+          FROM memberships
+          `
+        );
+
+
+      const stats =
+        result.rows[0];
+
+
+      return res.json({
+
+        success: true,
+
+        stats: {
+
+          total:
+            Number(
+              stats.total || 0
+            ),
+
+          pending:
+            Number(
+              stats.pending || 0
+            ),
+
+          approved:
+            Number(
+              stats.approved || 0
+            ),
+
+          expired:
+            Number(
+              stats.expired || 0
+            ),
+
+          rejected:
+            Number(
+              stats.rejected || 0
+            ),
+
+          paymentSubmitted:
+            Number(
+              stats.payment_submitted ||
+              0
+            ),
+
+          paymentReceived:
+            Number(
+              stats.payment_received ||
+              0
+            ),
+
+        },
+
+      });
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Get membership stats error:",
+        error
+      );
+
+
+      return res.status(
+        500
+      ).json({
+
+        success: false,
+
+        message:
+          "Unable to load membership statistics",
+
+        debug:
+          process.env.NODE_ENV !==
+          "production"
+
+            ? error.message
+
+            : undefined,
 
       });
 
@@ -5984,19 +5486,12 @@ const deleteMembership =
 // =========================================================
 // EXPORTS
 // =========================================================
-//
-// IMPORTANT:
-//
-// These names must match the names used in
-// membershipRoutes.js.
-//
-// =========================================================
 
 module.exports = {
 
-  // =======================================================
+  // -------------------------------------------------------
   // USER
-  // =======================================================
+  // -------------------------------------------------------
 
   getMyMembership,
 
@@ -6009,46 +5504,39 @@ module.exports = {
   renewMembership,
 
 
-  // =======================================================
+  // -------------------------------------------------------
   // PUBLIC
-  // =======================================================
+  // -------------------------------------------------------
 
   verifyMembership,
 
   getPublicPaymentSettings,
 
 
-  // =======================================================
-  // ADMIN - MEMBERSHIP
-  // =======================================================
+  // -------------------------------------------------------
+  // ADMIN
+  // -------------------------------------------------------
 
   getAllMemberships,
 
   getMembershipById,
 
-  markPaymentReceived,
-
-  markPaymentNotReceived,
-
   approveMembership,
 
   rejectMembership,
 
+  markPaymentReceived,
+
+  markPaymentNotReceived,
+
   deleteMembership,
 
 
-  // =======================================================
-  // ADMIN - WHATSAPP
-  // =======================================================
-
-  resendApprovalWhatsApp,
-
-
-  // =======================================================
+  // -------------------------------------------------------
   // ADMIN - PLANS
-  // =======================================================
+  // -------------------------------------------------------
 
-  getMembershipPlansAdmin,
+  getAdminMembershipPlans,
 
   createMembershipPlan,
 
@@ -6057,18 +5545,18 @@ module.exports = {
   deleteMembershipPlan,
 
 
-  // =======================================================
+  // -------------------------------------------------------
   // ADMIN - PAYMENT SETTINGS
-  // =======================================================
+  // -------------------------------------------------------
 
   getPaymentSettings,
 
   updatePaymentSettings,
 
 
-  // =======================================================
-  // ADMIN - STATS
-  // =======================================================
+  // -------------------------------------------------------
+  // ADMIN - DASHBOARD
+  // -------------------------------------------------------
 
   getMembershipStats,
 

@@ -239,10 +239,134 @@ const getMediaItemUrl = (
     item.imageUrl ||
     item.video_url ||
     item.videoUrl ||
+    item.youtube_url ||
+    item.youtubeUrl ||
     item.document_url ||
     item.documentUrl ||
     item.cloudinary_url ||
     item.cloudinaryUrl
+  );
+};
+
+
+// =========================================================
+// YOUTUBE HELPERS
+// =========================================================
+
+const getYouTubeVideoId = (
+  value
+) => {
+
+  if (!value) {
+    return "";
+  }
+
+  const url = String(value).trim();
+
+  if (
+    /^[A-Za-z0-9_-]{11}$/.test(url)
+  ) {
+    return url;
+  }
+
+  try {
+
+    const parsed =
+      new URL(url);
+
+    const hostname =
+      parsed.hostname
+        .replace(/^www\./, "")
+        .toLowerCase();
+
+    if (
+      hostname === "youtube.com" ||
+      hostname === "m.youtube.com"
+    ) {
+
+      const watchId =
+        parsed.searchParams.get("v");
+
+      if (watchId) {
+        return watchId;
+      }
+
+      const embedMatch =
+        parsed.pathname.match(
+          /^\/embed\/([^/?]+)/
+        );
+
+      if (embedMatch?.[1]) {
+        return embedMatch[1];
+      }
+
+      const shortsMatch =
+        parsed.pathname.match(
+          /^\/shorts\/([^/?]+)/
+        );
+
+      if (shortsMatch?.[1]) {
+        return shortsMatch[1];
+      }
+
+      const liveMatch =
+        parsed.pathname.match(
+          /^\/live\/([^/?]+)/
+        );
+
+      if (liveMatch?.[1]) {
+        return liveMatch[1];
+      }
+    }
+
+    if (
+      hostname === "youtu.be"
+    ) {
+
+      const id =
+        parsed.pathname
+          .split("/")
+          .filter(Boolean)[0];
+
+      if (id) {
+        return id;
+      }
+    }
+
+  } catch {
+    // Fall through to the fallback matcher.
+  }
+
+  const fallbackMatch =
+    url.match(
+      /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+    );
+
+  return fallbackMatch?.[1] || "";
+};
+
+
+const getYouTubeEmbedUrl = (
+  value
+) => {
+
+  const videoId =
+    getYouTubeVideoId(value);
+
+  if (!videoId) {
+    return "";
+  }
+
+  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+};
+
+
+const isYouTubeUrl = (
+  value
+) => {
+
+  return Boolean(
+    getYouTubeVideoId(value)
   );
 };
 
@@ -1231,8 +1355,15 @@ function EventDetails() {
           video
         );
 
+      const videoSource =
+        url ||
+        video?.youtube_url ||
+        video?.youtubeUrl ||
+        video?.video_url ||
+        video?.videoUrl ||
+        "";
 
-      if (!url) {
+      if (!videoSource) {
 
         alert(
           "Video URL is not available."
@@ -1240,7 +1371,6 @@ function EventDetails() {
 
         return;
       }
-
 
       setActiveVideo(
         video
@@ -2290,14 +2420,47 @@ function EventDetails() {
                             className="event-video-preview"
                           >
 
-                            <video
-                              src={
-                                videoUrl
-                              }
-                              preload="metadata"
-                              controls
-                              playsInline
-                            />
+                            {isYouTubeUrl(
+                              videoUrl ||
+                              video?.youtube_url ||
+                              video?.youtubeUrl ||
+                              video?.video_url ||
+                              video?.videoUrl
+                            ) ? (
+
+                              <iframe
+                                src={
+                                  getYouTubeEmbedUrl(
+                                    videoUrl ||
+                                    video?.youtube_url ||
+                                    video?.youtubeUrl ||
+                                    video?.video_url ||
+                                    video?.videoUrl
+                                  )
+                                }
+                                title={
+                                  getMediaItemName(
+                                    video,
+                                    `Event Video ${index + 1}`
+                                  )
+                                }
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                              />
+
+                            ) : (
+
+                              <video
+                                src={
+                                  videoUrl
+                                }
+                                preload="metadata"
+                                controls
+                                playsInline
+                              />
+
+                            )}
 
                             <button
                               type="button"
@@ -2948,16 +3111,52 @@ function EventDetails() {
             </button>
 
 
-            <video
-              src={
-                getMediaItemUrl(
-                  activeVideo
-                )
-              }
-              controls
-              autoPlay
-              playsInline
-            />
+            {isYouTubeUrl(
+              getMediaItemUrl(
+                activeVideo
+              ) ||
+              activeVideo?.youtube_url ||
+              activeVideo?.youtubeUrl ||
+              activeVideo?.video_url ||
+              activeVideo?.videoUrl
+            ) ? (
+
+              <iframe
+                src={
+                  getYouTubeEmbedUrl(
+                    getMediaItemUrl(
+                      activeVideo
+                    ) ||
+                    activeVideo?.youtube_url ||
+                    activeVideo?.youtubeUrl ||
+                    activeVideo?.video_url ||
+                    activeVideo?.videoUrl
+                  )
+                }
+                title={
+                  getMediaItemName(
+                    activeVideo,
+                    "Event Video"
+                  )
+                }
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+
+            ) : (
+
+              <video
+                src={
+                  getMediaItemUrl(
+                    activeVideo
+                  )
+                }
+                controls
+                autoPlay
+                playsInline
+              />
+
+            )}
 
           </div>
 

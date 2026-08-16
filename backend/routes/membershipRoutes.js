@@ -6,6 +6,7 @@ const express = require("express");
 // =========================================================
 
 const {
+
   // =======================================================
   // USER
   // =======================================================
@@ -47,7 +48,7 @@ const {
   // ADMIN - MEMBERSHIP PLANS
   // =======================================================
 
-  getMembershipPlansAdmin,
+  getAdminMembershipPlans,
   createMembershipPlan,
   updateMembershipPlan,
   deleteMembershipPlan,
@@ -58,7 +59,9 @@ const {
   // =======================================================
 
   getPaymentSettings,
+  getPublicPaymentSettings,
   updatePaymentSettings,
+
 
 } = require("../controllers/membershipController");
 
@@ -70,6 +73,7 @@ const {
 const authMiddleware =
   require("../middleware/authMiddleware");
 
+
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
@@ -77,8 +81,6 @@ const adminMiddleware =
 // =========================================================
 // QR UPLOAD MIDDLEWARE
 // =========================================================
-//
-// IMPORTANT:
 //
 // qrUpload.js already handles:
 //
@@ -100,7 +102,7 @@ const adminMiddleware =
 //     ↓
 // qrUpload
 //     ↓
-// Multer memoryStorage
+// multer.memoryStorage()
 //     ↓
 // Cloudinary
 //     ↓
@@ -238,6 +240,17 @@ router.post(
 // =========================================================
 // PUBLIC MEMBERSHIP VERIFICATION
 // =========================================================
+//
+// IMPORTANT:
+//
+// This route MUST remain before:
+//
+// /admin/:id
+//
+// It is a different static path and should be
+// publicly accessible.
+//
+// =========================================================
 
 
 // =========================================================
@@ -262,10 +275,6 @@ router.get(
 // =========================================================
 // PUBLIC PAYMENT SETTINGS
 // =========================================================
-
-
-// =========================================================
-// GET PAYMENT SETTINGS
 //
 // GET /api/membership/payment-settings
 //
@@ -283,7 +292,7 @@ router.get(
 
 router.get(
   "/payment-settings",
-  getPaymentSettings
+  getPublicPaymentSettings
 );
 
 
@@ -320,7 +329,7 @@ router.get(
 router.get(
   "/admin/plans",
   adminMiddleware,
-  getMembershipPlansAdmin
+  getAdminMembershipPlans
 );
 
 
@@ -506,6 +515,13 @@ router.get(
 //
 // ADMIN ONLY
 //
+// IMPORTANT:
+//
+// Keep this AFTER:
+//
+// /admin/plans
+// /admin/payment-settings
+//
 // =========================================================
 
 router.get(
@@ -645,7 +661,7 @@ router.put(
 router.post(
   "/admin/:id/whatsapp",
   adminMiddleware,
-  resendApprovalWhatsApp
+  
 );
 
 

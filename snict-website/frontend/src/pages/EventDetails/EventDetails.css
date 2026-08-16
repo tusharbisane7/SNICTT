@@ -4184,3 +4184,118 @@
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   YOUTUBE VIDEO SUPPORT
+   Works with the updated EventDetails.jsx
+   ========================================================= */
+
+.event-video-card iframe,
+.event-video-item iframe,
+.event-videos-grid iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  border-radius: inherit;
+  background: #07111f;
+  object-fit: cover;
+}
+
+/* Keep YouTube videos inside the same media frame. */
+.event-video-card,
+.event-video-item,
+.event-videos-grid > * {
+  position: relative;
+}
+
+/* Full-screen video modal iframe */
+.event-video-modal iframe,
+.event-video-lightbox iframe,
+.event-video-viewer iframe {
+  width: min(1100px, 92vw);
+  height: min(78vh, 680px);
+  display: block;
+  border: 0;
+  border-radius: 16px;
+  background: #000;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+}
+
+/* Make iframe responsive on narrow screens. */
+@media (max-width: 700px) {
+
+  .event-video-card iframe,
+  .event-video-item iframe,
+  .event-videos-grid iframe {
+    min-height: 220px;
+  }
+
+  .event-video-modal iframe,
+  .event-video-lightbox iframe,
+  .event-video-viewer iframe {
+    width: 94vw;
+    height: 56vw;
+    max-height: 70vh;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .event-video-card iframe,
+  .event-video-item iframe,
+  .event-videos-grid iframe {
+    min-height: 200px;
+  }
+
+  .event-video-modal iframe,
+  .event-video-lightbox iframe,
+  .event-video-viewer iframe {
+    width: 96vw;
+    height: 54vw;
+    border-radius: 10px;
+  }
+}
+
+/* =========================================================
+   YOUTUBE + EXISTING PLAY OVERLAY
+   ========================================================= */
+
+.event-video-card .event-video-play,
+.event-video-item .event-video-play,
+.event-videos-grid .event-video-play {
+  z-index: 5;
+}
+
+/*
+ * YouTube already provides its own play controls.
+ * Keep the custom overlay subtle so it does not block
+ * the embedded player's controls.
+ */
+.event-video-card iframe + .event-video-play,
+.event-video-item iframe + .event-video-play,
+.event-videos-grid iframe + .event-video-play {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.event-video-card:hover iframe + .event-video-play,
+.event-video-item:hover iframe + .event-video-play,
+.event-videos-grid > *:hover iframe + .event-video-play {
+  opacity: 0;
+}
+
+/* =========================================================
+   ACCESSIBILITY / REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .event-video-card iframe,
+  .event-video-item iframe,
+  .event-videos-grid iframe {
+    animation: none !important;
+  }
+}
