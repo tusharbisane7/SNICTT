@@ -1,5 +1,9 @@
 const express = require("express");
 
+// =========================================================
+// CONTROLLERS
+// =========================================================
+
 const {
   getSliders,
   getAllSliders,
@@ -10,8 +14,9 @@ const {
   toggleSlider,
 } = require("../controllers/sliderController");
 
-const authMiddleware =
-  require("../middleware/authMiddleware");
+// =========================================================
+// MIDDLEWARE
+// =========================================================
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
@@ -19,13 +24,24 @@ const adminMiddleware =
 const sliderUpload =
   require("../middleware/sliderUpload");
 
+// =========================================================
+// ROUTER
+// =========================================================
+
 const router = express.Router();
 
 // =========================================================
 // PUBLIC ROUTES
 // =========================================================
 
+// ---------------------------------------------------------
+// GET PUBLISHED SLIDERS
+//
 // GET /api/sliders
+//
+// No authentication required.
+// ---------------------------------------------------------
+
 router.get(
   "/",
   getSliders
@@ -33,38 +49,69 @@ router.get(
 
 // =========================================================
 // ADMIN ROUTES
+//
+// IMPORTANT:
+//
+// Admin authentication uses:
+//
+// snict_admin_token
+//
+// Therefore DO NOT use authMiddleware here.
+//
+// adminMiddleware is responsible for validating
+// the admin authentication.
 // =========================================================
 
+// ---------------------------------------------------------
+// GET ALL SLIDERS
+//
 // GET /api/sliders/admin/all
+//
+// ADMIN ONLY
+// ---------------------------------------------------------
+
 router.get(
   "/admin/all",
-  authMiddleware,
   adminMiddleware,
   getAllSliders
 );
 
+// ---------------------------------------------------------
+// GET SINGLE SLIDER
+//
 // GET /api/sliders/admin/:id
+//
+// ADMIN ONLY
+// ---------------------------------------------------------
+
 router.get(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   getSliderById
 );
 
 // =========================================================
 // CREATE SLIDER
+// =========================================================
+//
 // POST /api/sliders/admin
 //
 // Content-Type:
 // multipart/form-data
 //
-// Image field:
+// FormData:
+//
 // image
+// title
+// description
+// slideDate
+// displayOrder
+// published
+//
 // =========================================================
 
 router.post(
   "/admin",
-  authMiddleware,
   adminMiddleware,
   sliderUpload,
   createSlider
@@ -72,14 +119,23 @@ router.post(
 
 // =========================================================
 // UPDATE SLIDER
+// =========================================================
+//
 // PUT /api/sliders/admin/:id
 //
-// Image optional
+// Image is optional.
+//
+// If image is selected:
+//     upload new image
+//     update Cloudinary URL
+//
+// If image is not selected:
+//     keep existing image
+//
 // =========================================================
 
 router.put(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   sliderUpload,
   updateSlider
@@ -87,24 +143,30 @@ router.put(
 
 // =========================================================
 // DELETE SLIDER
+// =========================================================
+//
 // DELETE /api/sliders/admin/:id
+//
+// ADMIN ONLY
 // =========================================================
 
 router.delete(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   deleteSlider
 );
 
 // =========================================================
 // TOGGLE SLIDER
+// =========================================================
+//
 // PATCH /api/sliders/admin/:id/toggle
+//
+// ADMIN ONLY
 // =========================================================
 
 router.patch(
   "/admin/:id/toggle",
-  authMiddleware,
   adminMiddleware,
   toggleSlider
 );
