@@ -447,11 +447,11 @@ function Navbar() {
     }
 
     // Use the configured API URL.
-    // Example: https://snict.net/api
+    // Example: https://snict-backend.onrender.com/api
     const apiBaseUrl =
       import.meta.env.VITE_API_URL ||
       api.defaults?.baseURL ||
-      "https://snict.net/api";
+      "https://snict-backend.onrender.com/api";
 
     const cleanApiUrl = String(apiBaseUrl)
       .trim()

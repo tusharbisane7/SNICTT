@@ -1,6 +1,5 @@
 const express = require("express");
 
-
 // =========================================================
 // CONTROLLERS
 // =========================================================
@@ -15,13 +14,9 @@ const {
   deleteCommitteeMember,
 } = require("../controllers/committeeController");
 
-
 // =========================================================
 // MIDDLEWARE
 // =========================================================
-
-const authMiddleware =
-  require("../middleware/authMiddleware");
 
 const adminMiddleware =
   require("../middleware/adminMiddleware");
@@ -29,25 +24,22 @@ const adminMiddleware =
 const committeeUpload =
   require("../middleware/committeeUpload");
 
-
 // =========================================================
 // ROUTER
 // =========================================================
 
 const router = express.Router();
 
-
 // =========================================================
 // PUBLIC ROUTES
 // =========================================================
-
 
 // ---------------------------------------------------------
 // GET ALL ACTIVE COMMITTEE MEMBERS
 //
 // GET /api/committees
 //
-// Returns all active members grouped/ordered by committee.
+// Public
 // ---------------------------------------------------------
 
 router.get(
@@ -55,19 +47,22 @@ router.get(
   getCommitteeMembers
 );
 
-
 // =========================================================
 // ADMIN ROUTES
+//
 // IMPORTANT:
 //
-// These routes MUST remain before:
+// Admin authentication uses the admin token.
+// Therefore DO NOT use authMiddleware here.
+//
+// adminMiddleware is responsible for validating:
+//
+// snict_admin_token
+//
+// These routes must remain before:
 //
 // /:committeeName
-//
-// Otherwise "admin" can be interpreted as a
-// committee name.
 // =========================================================
-
 
 // ---------------------------------------------------------
 // GET ALL COMMITTEE MEMBERS
@@ -79,11 +74,9 @@ router.get(
 
 router.get(
   "/admin",
-  authMiddleware,
   adminMiddleware,
   getAllCommitteeMembers
 );
-
 
 // ---------------------------------------------------------
 // GET SINGLE COMMITTEE MEMBER
@@ -95,11 +88,9 @@ router.get(
 
 router.get(
   "/admin/member/:id",
-  authMiddleware,
   adminMiddleware,
   getCommitteeMemberById
 );
-
 
 // =========================================================
 // ADD COMMITTEE MEMBER
@@ -108,9 +99,11 @@ router.get(
 // POST /api/committees/admin
 //
 // Content-Type:
+//
 // multipart/form-data
 //
 // Image field:
+//
 // photo
 //
 // ADMIN ONLY
@@ -118,12 +111,10 @@ router.get(
 
 router.post(
   "/admin",
-  authMiddleware,
   adminMiddleware,
   committeeUpload,
   addCommitteeMember
 );
-
 
 // =========================================================
 // UPDATE COMMITTEE MEMBER
@@ -132,9 +123,11 @@ router.post(
 // PUT /api/committees/admin/:id
 //
 // Content-Type:
+//
 // multipart/form-data
 //
 // Image field:
+//
 // photo
 //
 // Image is optional.
@@ -144,12 +137,10 @@ router.post(
 
 router.put(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   committeeUpload,
   updateCommitteeMember
 );
-
 
 // =========================================================
 // DELETE COMMITTEE MEMBER
@@ -162,11 +153,9 @@ router.put(
 
 router.delete(
   "/admin/:id",
-  authMiddleware,
   adminMiddleware,
   deleteCommitteeMember
 );
-
 
 // =========================================================
 // PUBLIC COMMITTEE BY NAME
@@ -179,29 +168,27 @@ router.delete(
 // 3. ORGANIZING COMMITTEE
 // 4. SCIENTIFIC COMMITTEE
 //
-// Recommended API slugs:
+// PUBLIC API:
 //
 // GET /api/committees/commercial-course-director-faculty
 // GET /api/committees/office-bearers
 // GET /api/committees/organizing-committee
 // GET /api/committees/scientific-committee
 //
-// The controller also supports old slugs for
-// backward compatibility:
+// Backward-compatible:
 //
-// /placement
-// /working
-// /academic
-// /compliance
+// GET /api/committees/placement
+// GET /api/committees/working
+// GET /api/committees/academic
+// GET /api/committees/compliance
 //
-// This route MUST remain after all /admin routes.
+// MUST remain after all /admin routes.
 // =========================================================
 
 router.get(
   "/:committeeName",
   getCommitteeByName
 );
-
 
 // =========================================================
 // EXPORT
